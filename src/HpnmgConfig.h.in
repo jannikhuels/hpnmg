@@ -1,0 +1,3 @@
+// the configured options and settings for Tutorial
+#define hpnmg_MAJORVERSION @hpnmg_MAJORVERSION@
+#define hpnmg_MINORVERSION @hpnmg_MINORVERSION@
