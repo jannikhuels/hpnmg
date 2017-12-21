@@ -73,6 +73,10 @@ add_subdirectory(src)
 # Testing
 # -----------------------------------------------------------------
 
+# Examples
+# -----------------------------------------------------------------
+add_subdirectory(examples)
+
 enable_testing()
 add_subdirectory(test)
 

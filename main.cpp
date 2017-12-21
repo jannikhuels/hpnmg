@@ -10,6 +10,6 @@
 int main (int argc, char *argv[])
 {
   using namespace hypro;
-  //fprintf(stdout,"The square root of %d\n", test());
+  fprintf(stdout,"The square root of %d\n", 12);
   return 0;
 }
