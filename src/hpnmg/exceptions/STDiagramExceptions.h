@@ -29,8 +29,22 @@ namespace hpnmg {
         }
 
         virtual const char* what() const throw()
+        {    
+            return errorDescription.c_str();
+        }
+    };
+
+    class IllegalIntersectionLevelException: public invalid_argument, public Exception {
+    public:
+        IllegalIntersectionLevelException(): invalid_argument("IllegalIntersectionLevelException:") {
+            ostringstream ss;
+            ss.str("");
+            ss << invalid_argument::what() << ": The given intersection Parameters are invalid.";
+            errorDescription.append(ss.str());
+        }
+
+        virtual const char* what() const throw()
         {   
-            
             return errorDescription.c_str();
         }
     };

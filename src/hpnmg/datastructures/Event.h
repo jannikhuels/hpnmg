@@ -5,8 +5,6 @@
 
 namespace hpnmg {
 
-    using Number = double;
-
     enum EventType {
         Immediate = 1,
         General = 2,
@@ -18,20 +16,22 @@ namespace hpnmg {
     class Event {
     private:
         EventType type;
-        std::vector<Number> generalDependencies;
-        int time;
+        std::vector<double> generalDependencies;
+        double time;
 
     public:
-        Event(EventType type, std::vector<Number> generalDependencies, int time);
+        Event(EventType type, std::vector<double> generalDependencies, double time);
         Event();
+        Event(int numberOfGeneralTransitions);
+        Event(const Event &event);
 
         EventType getEventType() const;
         void setEventType(const EventType &eventType);
 
-        std::vector<Number> getGeneralDependencies() const;
-        void setGeneralDependencies(const std::vector<Number> generalDependencies);
+        std::vector<double> getGeneralDependencies() const;
+        void setGeneralDependencies(const std::vector<double> generalDependencies);
 
-        int getTime() const;
-        void setTime(int time);
+        double getTime() const;
+        void setTime(double time);
     };
 }

@@ -3,6 +3,5 @@
 #include "representations/GeometricObject.h"
 
 namespace hpnmg{
-    using Number = double;
-    typedef hypro::HPolytope<Number> Region;
+    typedef hypro::HPolytope<double> Region;
 };

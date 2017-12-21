@@ -14,18 +14,30 @@ namespace hpnmg {
     typedef int NODE_ID;
     typedef NODE_ID PARENT_NODE_ID;
 
-    typedef std::pair<NODE_ID, ParametricLocation> ParametricLocationTreeNode;
-
     class ParametricLocationTree 
     {
+    public:
+        class Node {
+        private:
+            NODE_ID id;
+            Region region;
+            ParametricLocation parametricLocation;
+
+        public:
+            Node(NODE_ID id, const ParametricLocation &parametricLocation);
+            NODE_ID getNodeID() const;
+            Region getRegion() const;
+            void setRegion(const Region &region);
+            ParametricLocation getParametricLocation() const;
+        };
     private:
         NODE_ID currentId;
 
-        std::multimap<PARENT_NODE_ID, ParametricLocationTreeNode> parametricLocations;
+        std::multimap<PARENT_NODE_ID, Node> parametricLocations;
 
-        void insertParametricLocation(PARENT_NODE_ID parentNodeID, const ParametricLocation &parametricLocation);
-
-        std::vector<ParametricLocationTreeNode> getNodes(NODE_ID id);
+        Node insertParametricLocation(PARENT_NODE_ID parentNodeID, const ParametricLocation &parametricLocation);
+       
+        std::vector<Node> getNodes(PARENT_NODE_ID parentID);
 
         void setRootNode(const ParametricLocation &rootLocation);
 
@@ -33,16 +45,35 @@ namespace hpnmg {
 
         int maxTime;
 
+        Region baseRegion;
+
+        void recursivelySetRegions(Node &startNode);
+
+        void recursivelyCollectRegions(const Node &startNode, vector<Region> &regions);
+
+        void recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, bool (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension);
+
+        std::vector<Event> getSourceEventsFromNodes(const std::vector<Node> &nodes);
+
     public:
+
         ParametricLocationTree(const ParametricLocation &rootLocation, int maxTime);
 
-        ParametricLocationTreeNode getRootNode();
+        Node getRootNode();
 
-        std::vector<ParametricLocationTreeNode> getChildNodes(const ParametricLocationTreeNode parentNode);
+        std::vector<Node> getChildNodes(const Node &parentNode);
 
-        void setChildNode(const ParametricLocationTreeNode parentNode, const ParametricLocation &childLocation);
+        Node setChildNode(const Node parentNode, const ParametricLocation &childLocation);
 
         int getDimension();
+
+        void updateRegions();
+
+        void print(bool cummulative);
+
+        std::vector<Node> getCandidateLocationsForTime(double time);
+
+        std::vector<Node> getCandidateLocationsForTimeInterval(std::pair<double,double> interval);  
 
     }; 
 }
