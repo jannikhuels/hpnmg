@@ -72,13 +72,12 @@ add_subdirectory(src)
 
 # Testing
 # -----------------------------------------------------------------
+enable_testing()
+add_subdirectory(test)
 
 # Examples
 # -----------------------------------------------------------------
 add_subdirectory(examples)
-
-enable_testing()
-add_subdirectory(test)
 
 # Executable
 # -----------------------------------------------------------------
