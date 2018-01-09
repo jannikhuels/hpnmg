@@ -6,12 +6,34 @@ namespace hpnmg {
         return discretePlaces.size() + fluidPlaces.size();
     }
 
-    void HybridPetriNet::addDiscretePlace(DiscretePlace &discretePlace) {
-        discretePlaces.push_back(discretePlace);
+    unsigned long HybridPetriNet::num_transistions() {
+        return deterministicTransitions.size() + fluidTransitions.size() + generalTransitions.size() +
+               immediateTransitions.size();
     }
 
-    void HybridPetriNet::addFluidPlace(FluidPlace &fluidPlace) {
-        fluidPlaces.push_back(fluidPlace);
+    void HybridPetriNet::addDiscretePlace(DiscretePlace &place) {
+        discretePlaces.push_back(place);
     }
+
+    void HybridPetriNet::addFluidPlace(FluidPlace &place) {
+        fluidPlaces.push_back(place);
+    }
+
+    void HybridPetriNet::addDeterministicTransition(DeterministicTransition &transition) {
+        deterministicTransitions.push_back(transition);
+    }
+
+    void HybridPetriNet::addFluidTransition(FluidTransition &transition) {
+        fluidTransitions.push_back(transition);
+    }
+
+    void HybridPetriNet::addGeneralTransition(GeneralTransition &transition) {
+        generalTransitions.push_back(transition);
+    }
+
+    void HybridPetriNet::addImmediateTransition(ImmediateTransition &transition) {
+        immediateTransitions.push_back(transition);
+    }
+
 
 }

@@ -23,8 +23,20 @@ namespace hpnmg {
 
     public:
         unsigned long num_places();
-        void addDiscretePlace(DiscretePlace &discretePlace);
-        void addFluidPlace(FluidPlace &fluidPlace);
+
+        unsigned long num_transistions();
+
+        void addDiscretePlace(DiscretePlace &place);
+
+        void addFluidPlace(FluidPlace &place);
+
+        void addDeterministicTransition(DeterministicTransition &transition);
+
+        void addFluidTransition(FluidTransition &transition);
+
+        void addGeneralTransition(GeneralTransition &transition);
+
+        void addImmediateTransition(ImmediateTransition &transition);
 
     private:
         std::vector<DiscretePlace> discretePlaces;
