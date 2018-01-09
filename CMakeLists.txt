@@ -63,6 +63,10 @@ endif()
 add_subdirectory(resources)
 find_package(hypro REQUIRED)
 find_package(carl REQUIRED)
+include(FindXercesC)
+find_package(XercesC REQUIRED)
+include_directories( ${XercesC_INCLUDE_DIR} )
+
 
 # Include files
 # -----------------------------------------------------------------
@@ -75,6 +79,7 @@ add_subdirectory(src)
 
 # Examples
 # -----------------------------------------------------------------
+
 add_subdirectory(examples)
 
 enable_testing()
@@ -85,3 +90,4 @@ add_subdirectory(test)
 
 add_executable(main main.cpp)
 target_link_libraries(main hpnmg)
+target_link_libraries(main ${XercesC_LIBRARY})

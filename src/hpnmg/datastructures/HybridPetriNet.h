@@ -21,6 +21,11 @@ namespace hpnmg {
 
     class HybridPetriNet {
 
+    public:
+        unsigned long num_places();
+        void addDiscretePlace(DiscretePlace &discretePlace);
+        void addFluidPlace(FluidPlace &fluidPlace);
+
     private:
         std::vector<DiscretePlace> discretePlaces;
         std::vector<FluidPlace> fluidPlaces;
