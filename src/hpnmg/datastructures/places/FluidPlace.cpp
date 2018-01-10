@@ -2,11 +2,7 @@
 
 
 namespace hpnmg {
-    double FluidPlace::getFluidLevel() const {
-        return fluidLevel;
-    }
-
-    void FluidPlace::setFluidLevel(double fluidLevel) {
-        FluidPlace::fluidLevel = fluidLevel;
-    }
+    FluidPlace::FluidPlace(std::string id, float capacity, float level, bool infinitecapacity)
+            : Place(id), capacity(capacity), level(level), infiniteCapacity(infinitecapacity)
+    {}
 }

@@ -1,9 +1,11 @@
 #pragma once
 
+#include <string>
 
 namespace hpnmg {
     class Place {
-
-        //todo: id?
+    public:
+        std::string id;
+        Place(std::string id);
     };
 }

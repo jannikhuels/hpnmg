@@ -1,20 +1,8 @@
 #include "DeterministicTransition.h"
 
+using namespace std;
 namespace hpnmg {
-
-    double DeterministicTransition::getPassedTimeEnabled() const {
-        return passedTimeEnabled;
-    }
-
-    void DeterministicTransition::setPassedTimeEnabled(double passedTimeEnabled) {
-        DeterministicTransition::passedTimeEnabled = passedTimeEnabled;
-    }
-
-    bool DeterministicTransition::isEnabled() const {
-        return enabled;
-    }
-
-    void DeterministicTransition::setEnabled(bool enabled) {
-        DeterministicTransition::enabled = enabled;
-    }
+    DeterministicTransition::DeterministicTransition(std::string id, unsigned long priority, float weight, float discTime)
+        : Transition(id), priority(priority), weight(weight), discTime(discTime)
+    {}
 }

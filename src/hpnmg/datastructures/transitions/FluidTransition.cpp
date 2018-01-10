@@ -2,12 +2,7 @@
 
 
 namespace hpnmg {
-
-    bool FluidTransition::isEnabled() const {
-        return enabled;
-    }
-
-    void FluidTransition::setEnabled(bool enabled) {
-        FluidTransition::enabled = enabled;
-    }
+    FluidTransition::FluidTransition(std::string id, float rate)
+        : Transition(id), rate(rate)
+    {}
 }

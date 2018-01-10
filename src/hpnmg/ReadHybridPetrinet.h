@@ -49,6 +49,7 @@ namespace hpnmg {
         HybridPetriNet* readHybridPetrinet(const std::string &filepath);
         void parsePlaces(xercesc::DOMElement* placesNode);
         void parseTransitions(xercesc::DOMElement* transitionsNode);
+        void parseArcs(xercesc::DOMElement* arcsNode);
 
     };
 

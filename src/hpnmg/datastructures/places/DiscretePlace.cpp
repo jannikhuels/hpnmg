@@ -1,12 +1,7 @@
 #include "DiscretePlace.h"
 
 namespace hpnmg {
-
-    int DiscretePlace::getNumberOfMarkings() const {
-        return numberOfMarkings;
-    }
-
-    void DiscretePlace::setNumberOfMarkings(int numberOfMarkings) {
-        DiscretePlace::numberOfMarkings = numberOfMarkings;
-    }
+    DiscretePlace::DiscretePlace(std::string id, unsigned long marking)
+        : Place(id), marking(marking)
+    {}
 }

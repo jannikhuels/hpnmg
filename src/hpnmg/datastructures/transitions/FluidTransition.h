@@ -6,10 +6,9 @@ namespace hpnmg {
     class FluidTransition : public Transition {
 
     private:
-        double flowRate;
+        float rate;
 
     public:
-        bool isEnabled() const;
-        void setEnabled(bool enabled);
+        FluidTransition(std::string id, float rate);
     };
 }

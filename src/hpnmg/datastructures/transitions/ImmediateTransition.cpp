@@ -1,13 +1,9 @@
 #include "ImmediateTransition.h"
 
 
+using namespace std;
 namespace hpnmg {
-
-    bool ImmediateTransition::isEnabled() const {
-        return enabled;
-    }
-
-    void ImmediateTransition::setEnabled(bool enabled) {
-        ImmediateTransition::enabled = enabled;
-    }
+    ImmediateTransition::ImmediateTransition(std::string id, unsigned long priority, float weight)
+        : Transition(id), priority(priority), weight(weight)
+    {}
 }

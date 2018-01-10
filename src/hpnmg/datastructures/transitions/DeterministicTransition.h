@@ -6,13 +6,11 @@ namespace hpnmg {
     class DeterministicTransition : public Transition {
 
     private:
-        double firingTime;
-        double passedTimeEnabled;
+        unsigned long priority;
+        float weight;
+        float discTime;
 
     public:
-        double getPassedTimeEnabled() const;
-        void setPassedTimeEnabled(double passedTimeEnabled);
-        bool isEnabled() const;
-        void setEnabled(bool enabled);
+        DeterministicTransition(std::string id, unsigned long priority, float weight, float discTime);
     };
 }

@@ -1,9 +1,13 @@
 #pragma once
 
+#include <string>
+
 namespace hpnmg {
     class Transition {
 
     public:
-        bool enabled;
+        std::string id;
+
+        Transition(std::string id);
     };
 }

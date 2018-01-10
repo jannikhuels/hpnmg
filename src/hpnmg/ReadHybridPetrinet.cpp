@@ -79,6 +79,7 @@ namespace hpnmg {
 
             DOMNodeList *children = elementRoot->getChildNodes();
 
+            // First parse places and transitions
             for (XMLSize_t xx = 0; xx < children->getLength(); ++xx) {
                 DOMNode *currentNode = children->item(xx);
                 if (currentNode->getNodeType() && currentNode->getNodeType() == DOMNode::ELEMENT_NODE) {
@@ -90,6 +91,18 @@ namespace hpnmg {
                     }
                 }
             }
+
+            // Then parse arcs (we need places and transitions)
+            for (XMLSize_t xx = 0; xx < children->getLength(); ++xx) {
+                DOMNode *currentNode = children->item(xx);
+                if (currentNode->getNodeType() && currentNode->getNodeType() == DOMNode::ELEMENT_NODE) {
+                    auto currentElement = dynamic_cast< xercesc::DOMElement * >( currentNode );
+                    if (XMLString::equals(currentElement->getTagName(), XMLString::transcode("arcs"))) {
+                        parseArcs(currentElement);
+                    }
+                }
+            }
+
         }
         catch (xercesc::XMLException &e) {
             // char* message = xercesc::XMLString::transcode( e.getMessage() );
@@ -105,47 +118,43 @@ namespace hpnmg {
         for (XMLSize_t j = 0; j < placeNodes->getLength(); ++j) {
             DOMNode *placeNode = placeNodes->item(j);
             if (placeNode->getNodeType() && placeNode->getNodeType() == DOMNode::ELEMENT_NODE) {
+                DOMNamedNodeMap *attributes = placeNode->getAttributes();
+                string id;
                 // place is discrete place
                 if (XMLString::equals(placeNode->getNodeName(), XMLString::transcode("discretePlace"))) {
-                    DOMNamedNodeMap *attributes = placeNode->getAttributes();
+                    unsigned long marking;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
-                        const XMLCh *id;
-                        const XMLCh *marking;
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
-                            id = attribute->getNodeValue();
+                            id = XMLString::transcode(attribute->getNodeValue());
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("marking"))) {
-                            marking = attribute->getNodeValue();
+                            marking = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
                         }
                     }
-                    DiscretePlace place = DiscretePlace();
+                    DiscretePlace place = DiscretePlace(id, marking);
                     hybridPetriNet.addDiscretePlace(place);
 
                     // place is continous place
                 } else if (XMLString::equals(placeNode->getNodeName(), XMLString::transcode("continuousPlace"))) {
-                    DOMNamedNodeMap *attributes = placeNode->getAttributes();
+                    float capacity;
+                    bool infiniteCapacity;
+                    float level;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
-                        const XMLCh *id;
-                        const XMLCh *capacity;
-                        const XMLCh *infiniteCapacity;
-                        const XMLCh *level;
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
-                            id = attribute->getNodeValue();
+                            id = XMLString::transcode(attribute->getNodeValue());
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("capacity"))) {
-                            capacity = attribute->getNodeValue();
+                            capacity = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         } else if (XMLString::equals(attribute->getNodeName(),
                                                      XMLString::transcode("infiniteCapacity"))) {
-                            infiniteCapacity = attribute->getNodeValue();
+                            infiniteCapacity = XMLString::equals(attribute->getNodeValue(), XMLString::transcode("0"));
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("level"))) {
-                            level = attribute->getNodeValue();
+                            level = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    FluidPlace place = FluidPlace();
+                    FluidPlace place = FluidPlace(id, capacity, level, infiniteCapacity);
                     hybridPetriNet.addFluidPlace(place);
-                } else {
-                    throw (std::runtime_error("Unknown place type."));
-                }
+                } else throw (std::runtime_error("Unknown place type."));
             }
         }
     }
@@ -157,90 +166,178 @@ namespace hpnmg {
             DOMNode *transitionNode = transitionNodes->item(j);
 
             if (transitionNode->getNodeType() && transitionNode->getNodeType() == DOMNode::ELEMENT_NODE) {
+                DOMNamedNodeMap *attributes = transitionNode->getAttributes();
+                string id;
                 // transition is deterministic transition
                 if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("deterministicTransition"))) {
-                    DOMNamedNodeMap *attributes = transitionNode->getAttributes();
+                    unsigned long priority;
+                    float weight;
+                    float discTime;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
-                        const XMLCh *id;
-                        const XMLCh *discTime;
-                        const XMLCh *priority;
-                        const XMLCh *weight;
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
-                            id = attribute->getNodeValue();
-                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("discTime"))) {
-                            discTime = attribute->getNodeValue();
+                            id = XMLString::transcode(attribute->getNodeValue());
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("priority"))) {
-                            priority = attribute->getNodeValue();
+                            priority = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("weight"))) {
-                            weight = attribute->getNodeValue();
+                            weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("discTime"))) {
+                            discTime = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    DeterministicTransition transition = DeterministicTransition();
+                    DeterministicTransition transition = DeterministicTransition(id, priority, weight, discTime);
                     hybridPetriNet.addDeterministicTransition(transition);
                 }
 
                 // transition is fluid transition
                 if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("continuousTransition"))) {
-                    DOMNamedNodeMap *attributes = transitionNode->getAttributes();
+                    float rate;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
-                        const XMLCh *id;
-                        const XMLCh *rate;
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
-                            id = attribute->getNodeValue();
+                            id = XMLString::transcode(attribute->getNodeValue());
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("rate"))) {
-                            rate = attribute->getNodeValue();
+                            rate = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    FluidTransition transition = FluidTransition();
+                    FluidTransition transition = FluidTransition(id, rate);
                     hybridPetriNet.addFluidTransition(transition);
                 }
 
                 // transition is general transition todo: attribute parameter
                 if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("generalTransition"))) {
-                    DOMNamedNodeMap *attributes = transitionNode->getAttributes();
+                    unsigned long priority;
+                    float weight;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
-                        const XMLCh *id;
-                        const XMLCh *cdf;
-                        const XMLCh *priority;
-                        const XMLCh *weight;
-                        const XMLCh *policy;
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
-                            id = attribute->getNodeValue();
-                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("cdf"))) {
-                            cdf = attribute->getNodeValue();
-                        }  else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("priority"))) {
-                            priority = attribute->getNodeValue();
+                            id = XMLString::transcode(attribute->getNodeValue());
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("priority"))) {
+                            priority = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("weight"))) {
-                            weight = attribute->getNodeValue();
-                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("policy"))) {
-                            policy = attribute->getNodeValue();
+                            weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    GeneralTransition transition = GeneralTransition();
+                    GeneralTransition transition = GeneralTransition(id, priority, weight);
                     hybridPetriNet.addGeneralTransition(transition);
                 }
 
                 // transition is immediate transition
                 if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("immediateTransition"))) {
-                    DOMNamedNodeMap *attributes = transitionNode->getAttributes();
+                    unsigned long priority;
+                    float weight;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
-                        const XMLCh *id;
-                        const XMLCh *priority;
-                        const XMLCh *weight;
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
-                            id = attribute->getNodeValue();
+                            id = XMLString::transcode(attribute->getNodeValue());
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("priority"))) {
-                            priority = attribute->getNodeValue();
+                            priority = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("weight"))) {
-                            weight = attribute->getNodeValue();
+                            weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    ImmediateTransition transition = ImmediateTransition();
+                    ImmediateTransition transition = ImmediateTransition(id, priority, weight);
                     hybridPetriNet.addImmediateTransition(transition);
+                }
+            }
+        }
+    }
+
+    void ReadHybridPetrinet::parseArcs(DOMElement *arcsNode) {
+        DOMNodeList *arcNodes = arcsNode->getChildNodes();
+
+        for (XMLSize_t j = 0; j < arcNodes->getLength(); ++j) {
+            DOMNode *arcNode = arcNodes->item(j);
+
+            if (arcNode->getNodeType() && arcNode->getNodeType() == DOMNode::ELEMENT_NODE) {
+                DOMNamedNodeMap *attributes = arcNode->getAttributes();
+                string id;
+                float weight;
+                bool isInputArc;
+                Place place = Place("");
+                Transition transition = Transition("");
+                // arc is discrete arc
+                if (XMLString::equals(arcNode->getNodeName(), XMLString::transcode("discreteArc"))) {
+                    for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
+                        DOMNode *attribute = attributes->item(i);
+                        if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
+                            id = XMLString::transcode(attribute->getNodeValue());
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("weight"))) {
+                            weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("fromNode")) or
+                                   XMLString::equals(attribute->getNodeName(), XMLString::transcode("toNode"))) {
+                            string nodeId = XMLString::transcode(attribute->getNodeValue());
+                            string nodeType = hybridPetriNet.getNodeTypeByID(nodeId);
+                            if (nodeType == "place") {
+                                place = hybridPetriNet.getPlaceById(nodeId);
+                                isInputArc = XMLString::equals(attribute->getNodeName(),
+                                                               XMLString::transcode("fromNode"));
+                            } else if (nodeType == "transition") {
+                                transition = hybridPetriNet.getTransitionById(nodeId);
+                            } else throw (std::runtime_error("Arc for unknown node."));
+                        }
+                    }
+                    DiscreteArc arc = DiscreteArc(id, weight, transition, place, isInputArc);
+                    hybridPetriNet.addDiscreteArc(arc);
+                }
+
+                // arc is  fluid arc
+                else if (XMLString::equals(arcNode->getNodeName(), XMLString::transcode("continuousArc"))) {
+                    unsigned long priority;
+                    float share;
+                    for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
+                        DOMNode *attribute = attributes->item(i);
+                        if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
+                            id = XMLString::transcode(attribute->getNodeValue());
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("weight"))) {
+                            weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("fromNode")) or
+                                   XMLString::equals(attribute->getNodeName(), XMLString::transcode("toNode"))) {
+                            string nodeId = XMLString::transcode(attribute->getNodeValue());
+                            string nodeType = hybridPetriNet.getNodeTypeByID(nodeId);
+                            if (nodeType == "place") {
+                                place = hybridPetriNet.getPlaceById(nodeId);
+                                isInputArc = XMLString::equals(attribute->getNodeName(),
+                                                               XMLString::transcode("fromNode"));
+                            } else if (nodeType == "transition") {
+                                transition = hybridPetriNet.getTransitionById(nodeId);
+                            } else throw (std::runtime_error("Arc for unknown node."));
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("priority"))) {
+                            priority = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("share"))) {
+                            share = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        }
+                    }
+                    FluidArc arc = FluidArc(id, weight, transition, place, isInputArc, priority, share);
+                    hybridPetriNet.addFluidArc(arc);
+                }
+
+                // arc is  guard arc
+                else if (XMLString::equals(arcNode->getNodeName(), XMLString::transcode("guardArc"))) {
+                    bool isInhibitor;
+                    for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
+                        DOMNode *attribute = attributes->item(i);
+                        if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
+                            id = XMLString::transcode(attribute->getNodeValue());
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("weight"))) {
+                            weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("fromNode")) or
+                                   XMLString::equals(attribute->getNodeName(), XMLString::transcode("toNode"))) {
+                            string nodeId = XMLString::transcode(attribute->getNodeValue());
+                            string nodeType = hybridPetriNet.getNodeTypeByID(nodeId);
+                            if (nodeType == "place") {
+                                place = hybridPetriNet.getPlaceById(nodeId);
+                                isInputArc = XMLString::equals(attribute->getNodeName(),
+                                                               XMLString::transcode("fromNode"));
+                            } else if (nodeType == "transition") {
+                                transition = hybridPetriNet.getTransitionById(nodeId);
+                            } else throw (std::runtime_error("Arc for unknown node."));
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("isInhibitor"))) {
+                            isInhibitor = XMLString::equals(attribute->getNodeValue(), XMLString::transcode("0"));
+                        }
+                    }
+                    GuardArc arc = GuardArc(id, weight, transition, place, isInputArc, isInhibitor);
+                    hybridPetriNet.addGuardArc(arc);
                 }
             }
         }

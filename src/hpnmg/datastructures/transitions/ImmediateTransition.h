@@ -5,8 +5,11 @@
 namespace hpnmg {
     class ImmediateTransition : public Transition {
 
+    private:
+        unsigned long priority;
+        float weight;
+
     public:
-        bool isEnabled() const;
-        void setEnabled(bool enabled);
+        ImmediateTransition(std::string id, unsigned long priority, float weight);
     };
 }

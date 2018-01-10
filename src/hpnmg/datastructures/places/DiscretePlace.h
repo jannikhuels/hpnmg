@@ -7,11 +7,9 @@ namespace hpnmg {
     class DiscretePlace : public Place {
 
     private:
-        int numberOfMarkings;
-        int initialMarking;
+        unsigned long marking;
 
     public:
-        int getNumberOfMarkings() const;
-        void setNumberOfMarkings(int numberOfMarkings);
+        DiscretePlace(std::string id, unsigned long marking);
     };
 }

@@ -11,20 +11,26 @@
 #include "transitions/GeneralTransition.h"
 #include "transitions/ImmediateTransition.h"
 #include "transitions/Transition.h"
+#include "arcs/Arc.h"
+#include "arcs/DiscreteArc.h"
+#include "arcs/FluidArc.h"
+#include "arcs/GuardArc.h"
 
 namespace hpnmg {
-    struct Arc {
-        Place place;
-        Transition transition;
-        std::string arcType;
-    };
-
     class HybridPetriNet {
 
     public:
         unsigned long num_places();
 
         unsigned long num_transistions();
+
+        unsigned long num_arcs();
+
+        std::string getNodeTypeByID(std::string id);
+
+        Place getPlaceById(std::string id);
+
+        Transition getTransitionById(std::string id);
 
         void addDiscretePlace(DiscretePlace &place);
 
@@ -38,6 +44,12 @@ namespace hpnmg {
 
         void addImmediateTransition(ImmediateTransition &transition);
 
+        void addDiscreteArc(DiscreteArc &arc);
+
+        void addFluidArc(FluidArc &arc);
+
+        void addGuardArc(GuardArc &arc);
+
     private:
         std::vector<DiscretePlace> discretePlaces;
         std::vector<FluidPlace> fluidPlaces;
@@ -45,8 +57,9 @@ namespace hpnmg {
         std::vector<FluidTransition> fluidTransitions;
         std::vector<GeneralTransition> generalTransitions;
         std::vector<ImmediateTransition> immediateTransitions;
-        std::vector<Arc> inputArcs;
-        std::vector<Arc> outputArcs;
+        std::vector<DiscreteArc> discreteArcs;
+        std::vector<FluidArc> fluidArcs;
+        std::vector<GuardArc> guardArcs;
 
     };
 }

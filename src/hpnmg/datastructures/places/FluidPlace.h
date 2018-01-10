@@ -7,13 +7,11 @@ namespace hpnmg {
     class FluidPlace : public Place {
 
     private:
-        double capacity;
-        double fluidLevel;
-        double initialFluidLevel;
+        float capacity;
+        float level;
+        bool infiniteCapacity;
 
     public:
-        double getFluidLevel() const;
-
-        void setFluidLevel(double fluidLevel);
+        FluidPlace(std::string id, float capacity, float level, bool infinitecapacity);
     };
 }

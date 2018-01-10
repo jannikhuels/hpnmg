@@ -6,12 +6,11 @@ namespace hpnmg {
     class GeneralTransition : public Transition {
 
     private:
-        double passedTimeEnabled;
+        unsigned long priority;
+        float weight;
+        //todo: add missing attributes
 
     public:
-        double getPassedTimeEnabled() const;
-        void setPassedTimeEnabled(double passedTimeEnabled);
-        bool isEnabled() const;
-        void setEnabled(bool enabled);
+        GeneralTransition(std::string id, unsigned long priority, float weight);
     };
 }
