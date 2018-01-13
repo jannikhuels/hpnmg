@@ -204,10 +204,12 @@ namespace hpnmg {
                     hybridPetriNet.addFluidTransition(transition);
                 }
 
-                // transition is general transition todo: attribute parameter
+                // transition is general transition
                 if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("generalTransition"))) {
                     unsigned long priority;
                     float weight;
+                    string cdf;
+                    std::map<std::string, float> parameter;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
@@ -216,9 +218,30 @@ namespace hpnmg {
                             priority = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("weight"))) {
                             weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("cdf"))) {
+                            cdf = XMLString::transcode(attribute->getNodeValue());
                         }
                     }
-                    GeneralTransition transition = GeneralTransition(id, priority, weight);
+                    DOMNodeList* parameterNodes = transitionNode->getChildNodes();
+                    for (XMLSize_t k = 0; k < parameterNodes->getLength(); ++k) {
+                        DOMNode* parameterNode = parameterNodes->item(k);
+                        if (XMLString::equals(parameterNode->getNodeName(), XMLString::transcode("parameter"))) {
+                            DOMNamedNodeMap* parameterAttributes = parameterNode->getAttributes();
+                            string parameterName;
+                            float value;
+                            for(XMLSize_t l=0; l<parameterAttributes->getLength(); ++l) {
+                                DOMNode* parameterAttribute = parameterAttributes->item(l);
+                                if (XMLString::equals(parameterAttribute->getNodeName(), XMLString::transcode("name"))) {
+                                    parameterName = XMLString::transcode(parameterAttribute->getNodeValue());
+                                } else if (XMLString::equals(parameterAttribute->getNodeName(), XMLString::transcode("value"))) {
+                                    value = strtof(XMLString::transcode(parameterAttribute->getNodeValue()), nullptr);
+                                }
+                            }
+                            parameter[parameterName] = value;
+                        }
+                    }
+
+                    GeneralTransition transition = GeneralTransition(id, priority, weight, cdf, parameter);
                     hybridPetriNet.addGeneralTransition(transition);
                 }
 

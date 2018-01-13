@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include "Transition.h"
 
 namespace hpnmg {
@@ -8,9 +9,12 @@ namespace hpnmg {
     private:
         unsigned long priority;
         float weight;
-        //todo: add missing attributes
+        std::string cdf;
+        std::map<std::string, float> parameter;
+        // todo: policy
 
     public:
-        GeneralTransition(std::string id, unsigned long priority, float weight);
+        GeneralTransition(std::string id, unsigned long priority, float weight, std::string cdf,
+                          std::map<std::string, float> parameter);
     };
 }
