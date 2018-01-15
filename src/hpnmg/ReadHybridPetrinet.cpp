@@ -209,7 +209,8 @@ namespace hpnmg {
                     unsigned long priority;
                     float weight;
                     string cdf;
-                    std::map<std::string, float> parameter;
+                    map<string, float> parameter;
+                    string policy;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
@@ -220,6 +221,8 @@ namespace hpnmg {
                             weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("cdf"))) {
                             cdf = XMLString::transcode(attribute->getNodeValue());
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("cdf"))) {
+                            policy = XMLString::transcode(attribute->getNodeValue());
                         }
                     }
                     DOMNodeList* parameterNodes = transitionNode->getChildNodes();
@@ -241,7 +244,7 @@ namespace hpnmg {
                         }
                     }
 
-                    auto transition = make_shared<GeneralTransition>(id, priority, weight, cdf, parameter);
+                    auto transition = make_shared<GeneralTransition>(id, priority, weight, cdf, parameter, policy);
                     hybridPetriNet.addTransition(transition);
                 }
 

@@ -2,7 +2,7 @@
 
 using namespace std;
 namespace hpnmg {
-    GeneralTransition::GeneralTransition(std::string id, unsigned long priority, float weight, string cdf, map<string, float> parameter)
-        : Transition(id), priority(priority), weight(weight), cdf(cdf), parameter(parameter)
-    {}
+    GeneralTransition::GeneralTransition(string id, unsigned long priority, float weight, string cdf,
+                                         map<string, float> parameter, string policy)
+            : Transition(id), priority(priority), weight(weight), cdf(cdf), parameter(parameter), policy(policy) {}
 }

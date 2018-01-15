@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 #include <string>
 #include <memory>
 
@@ -22,22 +21,21 @@ namespace hpnmg {
     class HybridPetriNet {
 
     private:
-        vector<shared_ptr<DiscretePlace>> discretePlaces;
-        vector<shared_ptr<FluidPlace>> fluidPlaces;
-        vector<shared_ptr<DeterministicTransition>> deterministicTransitions;
-        vector<shared_ptr<FluidTransition>> fluidTransitions;
-        vector<shared_ptr<GeneralTransition>> generalTransitions;
-        vector<shared_ptr<ImmediateTransition>> immediateTransitions;
+        map<string, shared_ptr<DiscretePlace>> discretePlaces;
+        map<string, shared_ptr<FluidPlace>> fluidPlaces;
+        map<string, shared_ptr<DeterministicTransition>> deterministicTransitions;
+        map<string, shared_ptr<FluidTransition>> fluidTransitions;
+        map<string, shared_ptr<GeneralTransition>> generalTransitions;
+        map<string, shared_ptr<ImmediateTransition>> immediateTransitions;
 
     public:
         unsigned long num_places();
 
-        unsigned long num_transistions();
+        unsigned long num_transitions();
 
         string getNodeTypeByID(string id);
 
         shared_ptr<Place> getPlaceById(string id);
-
         shared_ptr<Transition> getTransitionById(string id);
 
         void addPlace(shared_ptr<DiscretePlace> &place);

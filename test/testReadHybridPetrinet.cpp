@@ -14,10 +14,10 @@ TEST(ReadHybridPetrinet, ReadTransitions)
 {
     auto reader= new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/example.xml");
-    ASSERT_EQ(hybridPetrinet->num_transistions(), 4);
+    ASSERT_EQ(hybridPetrinet->num_transitions(), 4);
 }
 
-TEST(ReadHybridPetrinet, AddArcsToTransitions)
+TEST(ReadHybridPetrinet, AddArcsToTransition)
 {
     auto reader= new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/example.xml");

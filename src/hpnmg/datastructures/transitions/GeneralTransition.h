@@ -1,20 +1,20 @@
 #pragma once
 
-#include <map>
 #include "Transition.h"
 
+using namespace std;
 namespace hpnmg {
     class GeneralTransition : public Transition {
 
     private:
         unsigned long priority;
         float weight;
-        std::string cdf;
-        std::map<std::string, float> parameter;
-        // todo: policy
+        string cdf;
+        map<string, float> parameter;
+        string policy;
 
     public:
-        GeneralTransition(std::string id, unsigned long priority, float weight, std::string cdf,
-                          std::map<std::string, float> parameter);
+        GeneralTransition(string id, unsigned long priority, float weight, string cdf, map<string, float> parameter,
+                          string policy);
     };
 }
