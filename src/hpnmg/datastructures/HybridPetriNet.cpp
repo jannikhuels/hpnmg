@@ -12,90 +12,151 @@ namespace hpnmg {
                immediateTransitions.size();
     }
 
-    unsigned long HybridPetriNet::num_arcs() {
-        return discreteArcs.size() + fluidArcs.size() + guardArcs.size();
-    }
-
     string HybridPetriNet::getNodeTypeByID(string id) {
-        for(auto place : discretePlaces)
-            if (place.id == id)
+        for(shared_ptr<DiscretePlace> &place : discretePlaces)
+            if (place->id == id)
                 return "place";
-        for(auto place : fluidPlaces)
-            if (place.id == id)
+        for(shared_ptr<FluidPlace> &place : fluidPlaces)
+            if (place->id == id)
                 return "place";
-        for(auto transition : deterministicTransitions)
-            if (transition.id == id)
+        for(shared_ptr<DeterministicTransition> &transition : deterministicTransitions)
+            if (transition->id == id)
                 return "transition";
-        for(auto transition : fluidTransitions)
-            if (transition.id == id)
+        for(shared_ptr<FluidTransition> &transition : fluidTransitions)
+            if (transition->id == id)
                 return "transition";
-        for(auto transition : generalTransitions)
-            if (transition.id == id)
+        for(shared_ptr<GeneralTransition> &transition : generalTransitions)
+            if (transition->id == id)
                 return "transition";
-        for(auto transition : immediateTransitions)
-            if (transition.id == id)
+        for(shared_ptr<ImmediateTransition> &transition : immediateTransitions)
+            if (transition->id == id)
                 return "transition";
         return "unknown";
     }
 
-
-    Place HybridPetriNet::getPlaceById(std::string id) {
+    shared_ptr<Place> HybridPetriNet::getPlaceById(std::string id) {
         for(auto place : discretePlaces)
-            if (place.id == id)
+            if (place->id == id)
                 return place;
         for(auto place : fluidPlaces)
-            if (place.id == id)
+            if (place->id == id)
                 return place;
     }
 
-    Transition HybridPetriNet::getTransitionById(std::string id) {
+    shared_ptr<Transition> HybridPetriNet::getTransitionById(std::string id) {
         for(auto transition : deterministicTransitions)
-            if (transition.id == id)
+            if (transition->id == id)
                 return transition;
         for(auto transition : fluidTransitions)
-            if (transition.id == id)
+            if (transition->id == id)
                 return transition;
         for(auto transition : generalTransitions)
-            if (transition.id == id)
+            if (transition->id == id)
                 return transition;
         for(auto transition : immediateTransitions)
-            if (transition.id == id)
+            if (transition->id == id)
                 return transition;
     }
 
-    void HybridPetriNet::addDiscretePlace(DiscretePlace &place) {
-        discretePlaces.push_back(place);
-    }
+    void HybridPetriNet::addPlace(shared_ptr<DiscretePlace> &place) { discretePlaces.push_back(place); }
+    void HybridPetriNet::addPlace(shared_ptr<FluidPlace> &place) { fluidPlaces.push_back(place); }
 
-    void HybridPetriNet::addFluidPlace(FluidPlace &place) {
-        fluidPlaces.push_back(place);
-    }
-
-    void HybridPetriNet::addDeterministicTransition(DeterministicTransition &transition) {
+    void HybridPetriNet::addTransition(shared_ptr<DeterministicTransition> &transition) {
         deterministicTransitions.push_back(transition);
     }
-
-    void HybridPetriNet::addFluidTransition(FluidTransition &transition) {
+    void HybridPetriNet::addTransition(shared_ptr<FluidTransition> &transition) {
         fluidTransitions.push_back(transition);
     }
-
-    void HybridPetriNet::addGeneralTransition(GeneralTransition &transition) {
+    void HybridPetriNet::addTransition(shared_ptr<GeneralTransition> &transition) {
         generalTransitions.push_back(transition);
     }
-
-    void HybridPetriNet::addImmediateTransition(ImmediateTransition &transition) {
+    void HybridPetriNet::addTransition(shared_ptr<ImmediateTransition> &transition) {
         immediateTransitions.push_back(transition);
     }
 
-    void HybridPetriNet::addDiscreteArc(DiscreteArc &arc) {
-        discreteArcs.push_back(arc);
+    void HybridPetriNet::addInputArc(std::string transitionID, std::shared_ptr<DiscreteArc> &arc) {
+        for(shared_ptr<DeterministicTransition> &transition : deterministicTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+        for(shared_ptr<FluidTransition> &transition : fluidTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+        for(shared_ptr<GeneralTransition> &transition : generalTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+        for(shared_ptr<ImmediateTransition> &transition : immediateTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+    }
+    void HybridPetriNet::addInputArc(std::string transitionID, std::shared_ptr<FluidArc> &arc) {
+        for(shared_ptr<DeterministicTransition> &transition : deterministicTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+        for(shared_ptr<FluidTransition> &transition : fluidTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+        for(shared_ptr<GeneralTransition> &transition : generalTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+        for(shared_ptr<ImmediateTransition> &transition : immediateTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+    }
+    void HybridPetriNet::addInputArc(std::string transitionID, std::shared_ptr<GuardArc> &arc) {
+        for(shared_ptr<DeterministicTransition> &transition : deterministicTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+        for(shared_ptr<FluidTransition> &transition : fluidTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+        for(shared_ptr<GeneralTransition> &transition : generalTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
+        for(shared_ptr<ImmediateTransition> &transition : immediateTransitions)
+            if (transition->id == transitionID)
+                transition->addInputArc(arc);
     }
 
-    void HybridPetriNet::addFluidArc(FluidArc &arc) {
-        fluidArcs.push_back(arc);
+    void HybridPetriNet::addOutputArc(std::string transitionID, std::shared_ptr<DiscreteArc> &arc) {
+        for(shared_ptr<DeterministicTransition> &transition : deterministicTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+        for(shared_ptr<FluidTransition> &transition : fluidTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+        for(shared_ptr<GeneralTransition> &transition : generalTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+        for(shared_ptr<ImmediateTransition> &transition : immediateTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
     }
-
-    void HybridPetriNet::addGuardArc(GuardArc &arc) {
-        guardArcs.push_back(arc);
+    void HybridPetriNet::addOutputArc(std::string transitionID, std::shared_ptr<FluidArc> &arc) {
+        for(shared_ptr<DeterministicTransition> &transition : deterministicTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+        for(shared_ptr<FluidTransition> &transition : fluidTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+        for(shared_ptr<GeneralTransition> &transition : generalTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+        for(shared_ptr<ImmediateTransition> &transition : immediateTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+    }
+    void HybridPetriNet::addOutputArc(std::string transitionID, std::shared_ptr<GuardArc> &arc) {
+        for(shared_ptr<DeterministicTransition> &transition : deterministicTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+        for(shared_ptr<FluidTransition> &transition : fluidTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+        for(shared_ptr<GeneralTransition> &transition : generalTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
+        for(shared_ptr<ImmediateTransition> &transition : immediateTransitions)
+            if (transition->id == transitionID)
+                transition->addOutputArc(arc);
     }
 }

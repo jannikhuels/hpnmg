@@ -17,9 +17,15 @@ TEST(ReadHybridPetrinet, ReadTransitions)
     ASSERT_EQ(hybridPetrinet->num_transistions(), 4);
 }
 
-TEST(ReadHybridPetrinet, ReadArcs)
+TEST(ReadHybridPetrinet, AddArcsToTransitions)
 {
     auto reader= new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/example.xml");
-    ASSERT_EQ(hybridPetrinet->num_arcs(), 6);
+    auto gTrans = hybridPetrinet->getTransitionById("tg1");
+    ASSERT_EQ(gTrans->getDiscreteInputArcs().size(), 1);
+    ASSERT_EQ(gTrans->getFluidInputArcs().size(), 0);
+    ASSERT_EQ(gTrans->getGuardInputArcs().size(), 0);
+    ASSERT_EQ(gTrans->getDiscreteOutputArcs().size(), 0);
+    ASSERT_EQ(gTrans->getFluidOutputArcs().size(), 0);
+    ASSERT_EQ(gTrans->getGuardOutputArcs().size(), 0);
 }

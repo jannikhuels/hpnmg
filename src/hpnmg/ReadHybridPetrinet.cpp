@@ -131,8 +131,8 @@ namespace hpnmg {
                             marking = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
                         }
                     }
-                    DiscretePlace place = DiscretePlace(id, marking);
-                    hybridPetriNet.addDiscretePlace(place);
+                    auto place = make_shared<DiscretePlace>(id, marking);
+                    hybridPetriNet.addPlace(place);
 
                     // place is continous place
                 } else if (XMLString::equals(placeNode->getNodeName(), XMLString::transcode("continuousPlace"))) {
@@ -152,8 +152,8 @@ namespace hpnmg {
                             level = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    FluidPlace place = FluidPlace(id, capacity, level, infiniteCapacity);
-                    hybridPetriNet.addFluidPlace(place);
+                    auto place = make_shared<FluidPlace>(id, capacity, level, infiniteCapacity);
+                    hybridPetriNet.addPlace(place);
                 } else throw (std::runtime_error("Unknown place type."));
             }
         }
@@ -185,8 +185,8 @@ namespace hpnmg {
                             discTime = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    DeterministicTransition transition = DeterministicTransition(id, priority, weight, discTime);
-                    hybridPetriNet.addDeterministicTransition(transition);
+                    auto transition = make_shared<DeterministicTransition>(id, priority, weight, discTime);
+                    hybridPetriNet.addTransition(transition);
                 }
 
                 // transition is fluid transition
@@ -200,8 +200,8 @@ namespace hpnmg {
                             rate = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    FluidTransition transition = FluidTransition(id, rate);
-                    hybridPetriNet.addFluidTransition(transition);
+                    auto transition = make_shared<FluidTransition>(id, rate);
+                    hybridPetriNet.addTransition(transition);
                 }
 
                 // transition is general transition
@@ -241,8 +241,8 @@ namespace hpnmg {
                         }
                     }
 
-                    GeneralTransition transition = GeneralTransition(id, priority, weight, cdf, parameter);
-                    hybridPetriNet.addGeneralTransition(transition);
+                    auto transition = make_shared<GeneralTransition>(id, priority, weight, cdf, parameter);
+                    hybridPetriNet.addTransition(transition);
                 }
 
                 // transition is immediate transition
@@ -259,8 +259,8 @@ namespace hpnmg {
                             weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    ImmediateTransition transition = ImmediateTransition(id, priority, weight);
-                    hybridPetriNet.addImmediateTransition(transition);
+                    auto transition = make_shared<ImmediateTransition>(id, priority, weight);
+                    hybridPetriNet.addTransition(transition);
                 }
             }
         }
@@ -277,8 +277,8 @@ namespace hpnmg {
                 string id;
                 float weight;
                 bool isInputArc;
-                Place place = Place("");
-                Transition transition = Transition("");
+                shared_ptr<Place> place;
+                string transitionId;
                 // arc is discrete arc
                 if (XMLString::equals(arcNode->getNodeName(), XMLString::transcode("discreteArc"))) {
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
@@ -296,12 +296,16 @@ namespace hpnmg {
                                 isInputArc = XMLString::equals(attribute->getNodeName(),
                                                                XMLString::transcode("fromNode"));
                             } else if (nodeType == "transition") {
-                                transition = hybridPetriNet.getTransitionById(nodeId);
+                                transitionId = nodeId;
                             } else throw (std::runtime_error("Arc for unknown node."));
                         }
                     }
-                    DiscreteArc arc = DiscreteArc(id, weight, transition, place, isInputArc);
-                    hybridPetriNet.addDiscreteArc(arc);
+                    shared_ptr<DiscreteArc> arc = make_shared<DiscreteArc>(id, weight, place);
+                    if (isInputArc) {
+                        hybridPetriNet.addInputArc(transitionId, arc);
+                    } else {
+                        hybridPetriNet.addOutputArc(transitionId, arc);
+                    }
                 }
 
                 // arc is  fluid arc
@@ -323,7 +327,7 @@ namespace hpnmg {
                                 isInputArc = XMLString::equals(attribute->getNodeName(),
                                                                XMLString::transcode("fromNode"));
                             } else if (nodeType == "transition") {
-                                transition = hybridPetriNet.getTransitionById(nodeId);
+                                transitionId = nodeId;
                             } else throw (std::runtime_error("Arc for unknown node."));
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("priority"))) {
                             priority = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
@@ -331,8 +335,12 @@ namespace hpnmg {
                             share = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
-                    FluidArc arc = FluidArc(id, weight, transition, place, isInputArc, priority, share);
-                    hybridPetriNet.addFluidArc(arc);
+                    auto arc = make_shared<FluidArc>(id, weight, place, priority, share);
+                    if (isInputArc) {
+                        hybridPetriNet.addInputArc(transitionId, arc);
+                    } else {
+                        hybridPetriNet.addOutputArc(transitionId, arc);
+                    }
                 }
 
                 // arc is  guard arc
@@ -353,14 +361,18 @@ namespace hpnmg {
                                 isInputArc = XMLString::equals(attribute->getNodeName(),
                                                                XMLString::transcode("fromNode"));
                             } else if (nodeType == "transition") {
-                                transition = hybridPetriNet.getTransitionById(nodeId);
+                                transitionId = nodeId;
                             } else throw (std::runtime_error("Arc for unknown node."));
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("isInhibitor"))) {
                             isInhibitor = XMLString::equals(attribute->getNodeValue(), XMLString::transcode("0"));
                         }
                     }
-                    GuardArc arc = GuardArc(id, weight, transition, place, isInputArc, isInhibitor);
-                    hybridPetriNet.addGuardArc(arc);
+                    auto arc = make_shared<GuardArc>(id, weight, place, isInhibitor);
+                    if (isInputArc) {
+                        hybridPetriNet.addInputArc(transitionId, arc);
+                    } else {
+                        hybridPetriNet.addOutputArc(transitionId, arc);
+                    }
                 }
             }
         }

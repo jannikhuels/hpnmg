@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "places/DiscretePlace.h"
 #include "places/FluidPlace.h"
@@ -16,50 +17,43 @@
 #include "arcs/FluidArc.h"
 #include "arcs/GuardArc.h"
 
+using namespace std;
 namespace hpnmg {
     class HybridPetriNet {
+
+    private:
+        vector<shared_ptr<DiscretePlace>> discretePlaces;
+        vector<shared_ptr<FluidPlace>> fluidPlaces;
+        vector<shared_ptr<DeterministicTransition>> deterministicTransitions;
+        vector<shared_ptr<FluidTransition>> fluidTransitions;
+        vector<shared_ptr<GeneralTransition>> generalTransitions;
+        vector<shared_ptr<ImmediateTransition>> immediateTransitions;
 
     public:
         unsigned long num_places();
 
         unsigned long num_transistions();
 
-        unsigned long num_arcs();
+        string getNodeTypeByID(string id);
 
-        std::string getNodeTypeByID(std::string id);
+        shared_ptr<Place> getPlaceById(string id);
 
-        Place getPlaceById(std::string id);
+        shared_ptr<Transition> getTransitionById(string id);
 
-        Transition getTransitionById(std::string id);
+        void addPlace(shared_ptr<DiscretePlace> &place);
+        void addPlace(shared_ptr<FluidPlace> &place);
 
-        void addDiscretePlace(DiscretePlace &place);
+        void addTransition(shared_ptr<DeterministicTransition> &transition);
+        void addTransition(shared_ptr<FluidTransition> &transition);
+        void addTransition(shared_ptr<GeneralTransition> &transition);
+        void addTransition(shared_ptr<ImmediateTransition> &transition);
 
-        void addFluidPlace(FluidPlace &place);
+        void addInputArc(string transitionID, shared_ptr<DiscreteArc> &arc);
+        void addInputArc(string transitionID, shared_ptr<FluidArc> &arc);
+        void addInputArc(string transitionID, shared_ptr<GuardArc> &arc);
 
-        void addDeterministicTransition(DeterministicTransition &transition);
-
-        void addFluidTransition(FluidTransition &transition);
-
-        void addGeneralTransition(GeneralTransition &transition);
-
-        void addImmediateTransition(ImmediateTransition &transition);
-
-        void addDiscreteArc(DiscreteArc &arc);
-
-        void addFluidArc(FluidArc &arc);
-
-        void addGuardArc(GuardArc &arc);
-
-    private:
-        std::vector<DiscretePlace> discretePlaces;
-        std::vector<FluidPlace> fluidPlaces;
-        std::vector<DeterministicTransition> deterministicTransitions;
-        std::vector<FluidTransition> fluidTransitions;
-        std::vector<GeneralTransition> generalTransitions;
-        std::vector<ImmediateTransition> immediateTransitions;
-        std::vector<DiscreteArc> discreteArcs;
-        std::vector<FluidArc> fluidArcs;
-        std::vector<GuardArc> guardArcs;
-
+        void addOutputArc(string transitionID, shared_ptr<DiscreteArc> &arc);
+        void addOutputArc(string transitionID, shared_ptr<FluidArc> &arc);
+        void addOutputArc(string transitionID, shared_ptr<GuardArc> &arc);
     };
 }

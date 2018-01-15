@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "../transitions/Transition.h"
+#include <memory>
 #include "../places/Place.h"
 
 
@@ -11,10 +11,8 @@ namespace hpnmg {
     public:
         std::string id;
         float weight;
-        Transition transition;
-        Place place;
-        bool isInputArc;
+        std::shared_ptr<Place> place;
 
-        Arc(std::string id, float weight, Transition transition, Place place, bool isInputArc);
+        Arc(std::string id, float weight, std::shared_ptr<Place> place);
     };
 }

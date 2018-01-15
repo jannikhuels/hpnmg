@@ -8,6 +8,6 @@ namespace hpnmg {
         bool isInhibitor;
 
     public:
-        GuardArc(std::string id, float weight, Transition transition, Place place, bool isInputArc, bool isInhibitor);
+        GuardArc(std::string id, float weight, std::shared_ptr<Place> place, bool isInhibitor);
     };
 }
