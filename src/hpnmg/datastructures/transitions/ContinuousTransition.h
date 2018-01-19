@@ -3,12 +3,12 @@
 #include "Transition.h"
 
 namespace hpnmg {
-    class FluidTransition : public Transition {
+    class ContinuousTransition : public Transition {
 
     private:
         float rate;
 
     public:
-        FluidTransition(std::string id, float rate);
+        ContinuousTransition(std::string id, float rate);
     };
 }

@@ -12,11 +12,11 @@
 #include <stdexcept>
 
 
-#include "datastructures/HybridPetriNet.h"
+#include "datastructures/HybridPetrinet.h"
 #include "datastructures/places/DiscretePlace.h"
-#include "datastructures/places/FluidPlace.h"
+#include "datastructures/places/ContinuousPlace.h"
 #include "datastructures/transitions/DeterministicTransition.h"
-#include "datastructures/transitions/FluidTransition.h"
+#include "datastructures/transitions/ContinuousTransition.h"
 #include "datastructures/transitions/GeneralTransition.h"
 #include "datastructures/transitions/ImmediateTransition.h"
 
@@ -40,13 +40,13 @@ namespace hpnmg {
 
     private:
         xercesc::XercesDOMParser *xmlParser;
-        HybridPetriNet hybridPetriNet;
+        shared_ptr<HybridPetrinet> hybridPetrinet;
 
     public:
         ReadHybridPetrinet();
         ~ReadHybridPetrinet();
 
-        HybridPetriNet* readHybridPetrinet(const std::string &filepath);
+        shared_ptr<HybridPetrinet> readHybridPetrinet(const std::string &filepath);
         void parsePlaces(xercesc::DOMElement* placesNode);
         void parseTransitions(xercesc::DOMElement* transitionsNode);
         void parseArcs(xercesc::DOMElement* arcsNode);

@@ -11,5 +11,6 @@ namespace hpnmg {
 
     public:
         DiscretePlace(std::string id, unsigned long marking);
+        unsigned long getMarking();
     };
 }

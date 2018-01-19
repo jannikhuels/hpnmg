@@ -23,9 +23,9 @@ TEST(ReadHybridPetrinet, AddArcsToTransition)
     auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/example.xml");
     auto gTrans = hybridPetrinet->getTransitionById("tg1");
     ASSERT_EQ(gTrans->getDiscreteInputArcs().size(), 1);
-    ASSERT_EQ(gTrans->getFluidInputArcs().size(), 0);
+    ASSERT_EQ(gTrans->getContinuousInputArcs().size(), 0);
     ASSERT_EQ(gTrans->getGuardInputArcs().size(), 0);
     ASSERT_EQ(gTrans->getDiscreteOutputArcs().size(), 0);
-    ASSERT_EQ(gTrans->getFluidOutputArcs().size(), 0);
+    ASSERT_EQ(gTrans->getContinuousOutputArcs().size(), 0);
     ASSERT_EQ(gTrans->getGuardOutputArcs().size(), 0);
 }
