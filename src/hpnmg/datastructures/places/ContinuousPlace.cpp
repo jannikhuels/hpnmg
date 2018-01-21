@@ -7,4 +7,6 @@ namespace hpnmg {
     {}
 
     double ContinuousPlace::getLevel() { return level; }
+    double ContinuousPlace::getCapacity() { return capacity; }
+    bool ContinuousPlace::getInfiniteCapacity() { return infiniteCapacity; }
 }

@@ -191,13 +191,13 @@ namespace hpnmg {
 
                 // transition is continuous transition
                 if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("continuousTransition"))) {
-                    float rate;
+                    double rate;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
                             id = XMLString::transcode(attribute->getNodeValue());
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("rate"))) {
-                            rate = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                            rate = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
                     auto transition = make_shared<ContinuousTransition>(id, rate);

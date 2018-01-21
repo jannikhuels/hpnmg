@@ -9,5 +9,6 @@ namespace hpnmg {
 
     public:
         GuardArc(std::string id, float weight, std::shared_ptr<Place> place, bool isInhibitor);
+        bool getIsInhibitor();
     };
 }

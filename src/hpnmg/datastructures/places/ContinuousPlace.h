@@ -14,6 +14,7 @@ namespace hpnmg {
     public:
         ContinuousPlace(string id, double capacity, double level, bool infinitecapacity);
         double getLevel();
-        
+        double getCapacity();
+        bool getInfiniteCapacity();
     };
 }

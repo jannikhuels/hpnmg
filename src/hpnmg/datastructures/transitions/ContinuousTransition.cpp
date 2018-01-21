@@ -1,8 +1,10 @@
 #include "ContinuousTransition.h"
 
-
+using namespace std;
 namespace hpnmg {
-    ContinuousTransition::ContinuousTransition(std::string id, float rate)
+    ContinuousTransition::ContinuousTransition(string id, double rate)
         : Transition(id), rate(rate)
     {}
+
+    double ContinuousTransition::getRate() { return rate; }
 }

@@ -11,5 +11,6 @@ namespace hpnmg {
 
     public:
         ImmediateTransition(std::string id, unsigned long priority, float weight);
+        unsigned long getPriority();
     };
 }

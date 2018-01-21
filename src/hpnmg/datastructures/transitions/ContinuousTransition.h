@@ -6,9 +6,10 @@ namespace hpnmg {
     class ContinuousTransition : public Transition {
 
     private:
-        float rate;
+        double rate;
 
     public:
-        ContinuousTransition(std::string id, float rate);
+        ContinuousTransition(std::string id, double rate);
+        double getRate();
     };
 }
