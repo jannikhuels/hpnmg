@@ -7,10 +7,12 @@ namespace hpnmg {
 
     private:
         unsigned long priority;
-        float weight;
-        float discTime;
+        double weight;
+        double discTime;
 
     public:
-        DeterministicTransition(std::string id, unsigned long priority, float weight, float discTime);
+        DeterministicTransition(std::string id, unsigned long priority, double weight, double discTime);
+        double getDiscTime();
+        double getWeight();
     };
 }

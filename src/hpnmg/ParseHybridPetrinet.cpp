@@ -17,6 +17,10 @@ namespace hpnmg {
         for (auto i = continuousPlaces.begin(); i != continuousPlaces.end(); ++i) {
             continuousPlaceIDs.push_back(i->first);
         }
+        map<string, shared_ptr<DeterministicTransition>> deterministicTransitions = hybridPetrinet->getDeterministicTransitions();
+        for (auto i = deterministicTransitions.begin(); i != deterministicTransitions.end(); ++i) {
+            deterministicTransitionIDs.push_back(i->first);
+        }
 
         ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, maxTime);
 
@@ -57,6 +61,11 @@ namespace hpnmg {
             static_cast<int>(numGeneralTransitions), Event(EventType::Root,vector<double>{0, 0}, 0),
             leftBoundaries, rightBoundaries);
 
+        vector<double> deterministicClock(deterministicTransitionIDs.size());
+        fill(deterministicClock.begin(), deterministicClock.end(), 0);
+
+        rootLocation.setDeterministicClock(deterministicClock);
+
         return rootLocation;
     }
 
@@ -91,19 +100,57 @@ namespace hpnmg {
         for(auto i = generalTransitions.begin(); i!=generalTransitions.end(); ++i) {
             shared_ptr<Transition> transition = i->second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet))
-                enabledGeneralTransitions.push_back(transition->id);
+                enabledGeneralTransitions.push_back(transition->id); // todo: add fire event for every enabled transition
         }
-        // Now we can consider timed transitions and fluid places, we need alle events that start first
-        double minimumTime = 0;
-        auto deterministicTransitions = hybridPetrinet->getDeterministicTransitions();
+        // Now we can consider timed transitions and fluid places, we need all events that start first
+        double minimumTime = -1;
+        vector<shared_ptr<DeterministicTransition>> nextTransitions;
         // get enabled transitions
-        for(auto i = deterministicTransitions.begin(); i!=deterministicTransitions.end(); ++i) {
-            shared_ptr<DeterministicTransition> transition = i->second;
-            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet))
-                // get Time when transitions are enabled
-                double minimumTime = 1; //todo: remaining time
+        for(int pos=0; pos<deterministicTransitionIDs.size(); ++pos) {
+            shared_ptr<DeterministicTransition> transition = hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[pos]];
+            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
+                // get time when transitions are enabled
+                double elapsedTime =  node.getParametricLocation().getDeterministicClock()[pos];
+                double remainingTime = transition->getDiscTime() - elapsedTime;
+                if (nextTransitions.empty()) {
+                    nextTransitions.push_back(transition);
+                    minimumTime = remainingTime;
+                } else if (remainingTime < minimumTime) {
+                    nextTransitions.clear();
+                    nextTransitions.push_back(transition);
+                    minimumTime = remainingTime;
+                } else if (remainingTime == minimumTime) {
+                    nextTransitions.push_back(transition);
+                }
+            }
         }
-
+        vector<shared_ptr<ContinuousPlace>> nextPlaces;
+        vector<double> drift = node.getParametricLocation().getDrift();
+        for(int pos=0; pos<continuousPlaceIDs.size(); ++pos) {
+            if (drift[pos] == 0)
+                continue;
+            shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[continuousPlaceIDs[pos]];
+            double level = node.getParametricLocation().getContinuousMarking()[pos][0];
+            double remainingTime;
+            if (drift[pos] < 0) {
+                remainingTime = level / drift[pos];
+            } else {
+                if (place->getInfiniteCapacity())
+                    continue;
+                remainingTime = (place->getCapacity() - level) / drift[pos];
+            }
+            if (nextTransitions.empty() && nextPlaces.empty()) {
+                minimumTime = remainingTime;
+                nextPlaces.push_back(place);
+            } else if (remainingTime < minimumTime) {
+                nextTransitions.clear();
+                nextPlaces.clear();
+                nextPlaces.push_back(place);
+            } else if (remainingTime == minimumTime) {
+                nextPlaces.push_back(place);
+            }
+        }
+        // now we have the minimumTime and all events that happen at this time
     }
 
     bool ParseHybridPetrinet::transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,

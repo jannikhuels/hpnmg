@@ -35,11 +35,11 @@ namespace hpnmg {
     std::vector<double> ParametricLocation::getDrift() const{ return drift; }
     void ParametricLocation::setDrift(const std::vector<double> &drift){ this->drift = drift; }
 
-    std::vector<int> ParametricLocation::getDeterministicClock() const{ return deterministicClock; }
-    void ParametricLocation::setDeterministicClock(const std::vector<int> &deterministicClock){ this->deterministicClock = deterministicClock; }
+    std::vector<double> ParametricLocation::getDeterministicClock() const{ return deterministicClock; }
+    void ParametricLocation::setDeterministicClock(const std::vector<double> &deterministicClock){ this->deterministicClock = deterministicClock; }
 
-    std::vector<int> ParametricLocation::getGeneralClock() const{ return generalClock; }
-    void ParametricLocation::setGeneralClock(const std::vector<int> &generalClock){ this->generalClock = generalClock; }
+    std::vector<double> ParametricLocation::getGeneralClock() const{ return generalClock; }
+    void ParametricLocation::setGeneralClock(const std::vector<double> &generalClock){ this->generalClock = generalClock; }
 
     std::vector<double> ParametricLocation::getGeneralIntervalBoundLeft() const{ return generalIntervalBoundLeft; }
     void ParametricLocation::setGeneralIntervalBoundLeft(const std::vector<double> &generalIntervalBoundLeft){ this->generalIntervalBoundLeft = generalIntervalBoundLeft; }

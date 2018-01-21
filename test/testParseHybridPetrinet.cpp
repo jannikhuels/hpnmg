@@ -19,4 +19,5 @@ TEST(ParseHybridPetrinet, InitialLocation)
     ASSERT_EQ(initState.getGeneralIntervalBoundRight().size(), 1);
     ASSERT_EQ(initState.getGeneralIntervalBoundRight()[0], 20);
     ASSERT_EQ(initState.getDrift()[0], 1);
+    ASSERT_EQ(initState.getDeterministicClock().size(), 1);
 }

@@ -10,6 +10,7 @@ namespace hpnmg {
         shared_ptr<ParametricLocationTree> parametriclocationTree;
         vector<string> discretePlaceIDs;
         vector<string> continuousPlaceIDs;
+        vector<string> deterministicTransitionIDs;
         vector<ParametricLocationTree::Node> locationQueue;
 
     public:

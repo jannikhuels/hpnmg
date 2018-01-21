@@ -171,8 +171,8 @@ namespace hpnmg {
                 // transition is deterministic transition
                 if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("deterministicTransition"))) {
                     unsigned long priority;
-                    float weight;
-                    float discTime;
+                    double weight;
+                    double discTime;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
@@ -180,9 +180,9 @@ namespace hpnmg {
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("priority"))) {
                             priority = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("weight"))) {
-                            weight = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                            weight = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("discTime"))) {
-                            discTime = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                            discTime = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
                     auto transition = make_shared<DeterministicTransition>(id, priority, weight, discTime);

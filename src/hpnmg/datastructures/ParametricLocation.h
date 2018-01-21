@@ -10,8 +10,8 @@ namespace hpnmg {
         std::vector<int> discreteMarking;
         std::vector<std::vector<double>> continuousMarking;
         std::vector<double> drift;
-        std::vector<int> deterministicClock;
-        std::vector<int> generalClock;
+        std::vector<double> deterministicClock;
+        std::vector<double> generalClock;
         std::vector<double> generalIntervalBoundLeft;
         std::vector<double> generalIntervalBoundRight;
         Event sourceEvent;
@@ -35,11 +35,11 @@ namespace hpnmg {
         std::vector<double> getDrift() const;
         void setDrift(const std::vector<double> &continuousMarking);
 
-        std::vector<int> getDeterministicClock() const;
-        void setDeterministicClock(const std::vector<int> &deterministicClock);
+        std::vector<double> getDeterministicClock() const;
+        void setDeterministicClock(const std::vector<double> &deterministicClock);
 
-        std::vector<int> getGeneralClock() const;
-        void setGeneralClock(const std::vector<int> &generalClock);
+        std::vector<double> getGeneralClock() const;
+        void setGeneralClock(const std::vector<double> &generalClock);
 
         std::vector<double> getGeneralIntervalBoundLeft() const;
         void setGeneralIntervalBoundLeft(const std::vector<double> &generalIntervalBoundLeft);
