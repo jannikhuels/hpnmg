@@ -314,7 +314,7 @@ namespace hpnmg {
                 // arc is  continuous arc
                 else if (XMLString::equals(arcNode->getNodeName(), XMLString::transcode("continuousArc"))) {
                     unsigned long priority;
-                    float share;
+                    double share;
                     for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
                         DOMNode *attribute = attributes->item(i);
                         if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
@@ -335,7 +335,7 @@ namespace hpnmg {
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("priority"))) {
                             priority = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("share"))) {
-                            share = strtof(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                            share = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }
                     }
                     auto arc = make_shared<ContinuousArc>(id, weight, place, priority, share);

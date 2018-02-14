@@ -6,9 +6,11 @@ namespace hpnmg {
     class ContinuousArc : public Arc {
     private:
         unsigned long priority;
-        float share;
+        double share;
 
     public:
-        ContinuousArc(std::string id, float weight, std::shared_ptr<Place> place, unsigned long priority, float share);
+        ContinuousArc(std::string id, float weight, std::shared_ptr<Place> place, unsigned long priority, double share);
+        unsigned long getPriority();
+        double getShare();
     };
 }
