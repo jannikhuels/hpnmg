@@ -106,7 +106,7 @@ namespace hpnmg {
         // Now we can consider timed transitions and fluid places, we need all events that start first
         double minimumTime = -1;
         vector<shared_ptr<DeterministicTransition>> nextTransitions;
-        // get enabled transitions
+        // get enabled deterministic transitions (we ignore priority)
         for(int pos=0; pos<deterministicTransitionIDs.size(); ++pos) {
             shared_ptr<DeterministicTransition> transition = hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[pos]];
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
@@ -299,18 +299,24 @@ namespace hpnmg {
                             shared_ptr<ContinuousArc> arc = get<1>(transItem);
                             double newRate = leftOutputRate * arc->getShare() / sumShare;
                             if (transitionRate[transition->id] != newRate) {
+                                double rateDiff = transitionRate[transition->id] - newRate;
                                 transitionRate[transition->id] = newRate;
                                 for (auto arcItem : transition->getContinuousOutputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;
                                     if (place->id != placeToCheck->id) {
-                                        placesToCheck.push_back(
-                                                hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
+                                        placesToCheck.push_back(hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
+                                        long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeToCheck->id) - continuousPlaceIDs.begin();
+                                        inputDrift[pos] -= rateDiff;
+                                        drift[pos] -= rateDiff;
                                     }
                                 }
                                 for (auto arcItem : transition->getContinuousInputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;
                                     if (place->id != placeToCheck->id) {
                                         placesToCheck.push_back(hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
+                                        long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeToCheck->id) - continuousPlaceIDs.begin();
+                                        outputDrift[pos] -= rateDiff;
+                                        drift[pos] += rateDiff;
                                     }
                                 }
                             }
@@ -365,17 +371,24 @@ namespace hpnmg {
                             shared_ptr<ContinuousArc> arc = get<1>(transItem);
                             double newRate = leftInputRate * arc->getShare() / sumShare;
                             if (transitionRate[transition->id] != newRate) {
+                                double rateDiff = transitionRate[transition->id] - newRate;
                                 transitionRate[transition->id] = newRate;
                                 for (auto arcItem : transition->getContinuousOutputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;
                                     if (place->id != placeToCheck->id) {
                                         placesToCheck.push_back(hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
+                                        long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeToCheck->id) - continuousPlaceIDs.begin();
+                                        inputDrift[pos] -= rateDiff;
+                                        drift[pos] -= rateDiff;
                                     }
                                 }
                                 for (auto arcItem : transition->getContinuousInputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;
                                     if (place->id != placeToCheck->id) {
                                         placesToCheck.push_back(hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
+                                        long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeToCheck->id) - continuousPlaceIDs.begin();
+                                        outputDrift[pos] -= rateDiff;
+                                        drift[pos] += rateDiff;
                                     }
                                 }
                             }
