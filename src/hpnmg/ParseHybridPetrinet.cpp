@@ -8,7 +8,8 @@ namespace hpnmg {
 
     shared_ptr<ParametricLocationTree> ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, int maxTime) {
         // TODO: all floats to double?
-        // todo: propabilities when det or imm trans fire at same time with same prio (weight)
+        // todo: propabilities when imm trans fire at same time with same prio (weight)
+
         // Add place IDs from map to vector, so the places have an order
         map<string, shared_ptr<DiscretePlace>> discretePlaces = hybridPetrinet->getDiscretePlaces();
         for (auto i = discretePlaces.begin(); i != discretePlaces.end(); ++i) {
@@ -18,9 +19,18 @@ namespace hpnmg {
         for (auto i = continuousPlaces.begin(); i != continuousPlaces.end(); ++i) {
             continuousPlaceIDs.push_back(i->first);
         }
+        // Also for deterministic Transitions
         map<string, shared_ptr<DeterministicTransition>> deterministicTransitions = hybridPetrinet->getDeterministicTransitions();
         for (auto i = deterministicTransitions.begin(); i != deterministicTransitions.end(); ++i) {
             deterministicTransitionIDs.push_back(i->first);
+        }
+
+        // Initialize aleatory variable counter for deterministic transitions and continuous places
+        for (string id : deterministicTransitionIDs) {
+            deterTransAleatoryVariables[id] = {};
+        }
+        for (string id : continuousPlaceIDs) {
+            contPlaceAleatoryVariables[id] = {};
         }
 
         ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, maxTime);
@@ -66,6 +76,7 @@ namespace hpnmg {
         fill(deterministicClock.begin(), deterministicClock.end(), 0);
 
         rootLocation.setDeterministicClock(deterministicClock);
+        rootLocation.setConflictProbability(1);
 
         return rootLocation;
     }
@@ -76,13 +87,15 @@ namespace hpnmg {
 
         // Immediate Transition have highest priority, so we consider them first
         vector<shared_ptr<ImmediateTransition>> enabledImmediateTransition;
-        unsigned long highestPriority = 0;
+        unsigned long highestPriority = ULONG_MAX;
         auto immediateTransitions = hybridPetrinet->getImmediateTransitions();
         for(auto i = immediateTransitions.begin(); i!=immediateTransitions.end(); ++i) {
             shared_ptr<ImmediateTransition> transition = i->second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
-                if (transition->getPriority() > highestPriority) {
-                    enabledImmediateTransition.clear(); // priority is higher so we don't consider transitions with lower priority
+                if (transition->getPriority() < highestPriority) {
+                    highestPriority = transition->getPriority();
+                    // priority is higher (number is smaller), so we don't consider transitions with lower priority
+                    enabledImmediateTransition.clear();
                     enabledImmediateTransition.push_back(transition);
                 } else if (transition->getPriority() == highestPriority) {
                     enabledImmediateTransition.push_back(transition);
@@ -90,8 +103,14 @@ namespace hpnmg {
             }
         }
         if (!enabledImmediateTransition.empty()) {
+            float sumWeight = 0;
             for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
-                addFireEvent(transition, node, hybridPetrinet, maxTime);
+                sumWeight += transition->getWeight();
+            for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
+                addLocationForImmediateEvent(transition, node, transition->getWeight() / sumWeight, hybridPetrinet);
+            for (ParametricLocationTree::Node childNode : parametriclocationTree->getChildNodes(node)) {
+                locationQueue.push_back(childNode);
+            }
             return; // no other event has to be considered
         }
 
@@ -103,6 +122,7 @@ namespace hpnmg {
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet))
                 enabledGeneralTransitions.push_back(transition->id); // todo: add fire event for every enabled transition
         }
+
         // Now we can consider timed transitions and fluid places, we need all events that start first
         double minimumTime = -1;
         vector<shared_ptr<DeterministicTransition>> nextTransitions;
@@ -111,7 +131,7 @@ namespace hpnmg {
             shared_ptr<DeterministicTransition> transition = hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[pos]];
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
                 // get time when transitions are enabled
-                double elapsedTime =  node.getParametricLocation().getDeterministicClock()[pos];
+                double elapsedTime = node.getParametricLocation().getDeterministicClock()[pos];
                 double remainingTime = transition->getDiscTime() - elapsedTime;
                 if (nextTransitions.empty()) {
                     nextTransitions.push_back(transition);
@@ -133,6 +153,7 @@ namespace hpnmg {
             shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[continuousPlaceIDs[pos]];
             double level = node.getParametricLocation().getContinuousMarking()[pos][0];
             double remainingTime;
+            // todo: consider guard arcs get enabled
             if (drift[pos] < 0) {
                 remainingTime = level / drift[pos];
             } else {
@@ -149,9 +170,9 @@ namespace hpnmg {
                 nextPlaces.push_back(place);
             }
         }
-        // todo: consider guard arcs get enabled
 
         // now we have the minimumTime and all events that happen at this time
+
     }
 
     bool ParseHybridPetrinet::transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,
@@ -186,17 +207,17 @@ namespace hpnmg {
         return true;
     }
 
-    void ParseHybridPetrinet::addFireEvent(shared_ptr<ImmediateTransition> transition, ParametricLocationTree::Node node,
-                                           shared_ptr<HybridPetrinet> hybridPetrinet, int maxTime) {
-        ParametricLocation parentLocation = node.getParametricLocation();
+    void ParseHybridPetrinet::addLocationForImmediateEvent(shared_ptr<ImmediateTransition> transition,
+            ParametricLocationTree::Node parentNode, float probability, shared_ptr<HybridPetrinet> hybridPetrinet) {
+        ParametricLocation parentLocation = parentNode.getParametricLocation();
         // get new markings
-        vector<int> markings = node.getParametricLocation().getDiscreteMarking();
+        vector<int> markings = parentNode.getParametricLocation().getDiscreteMarking();
         for(auto arcItem : transition->getDiscreteInputArcs()) {
             shared_ptr<DiscreteArc> arc = arcItem.second;
             long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
             markings[pos] -= arc->weight;
         }
-        for(auto arcItem : transition->getDiscreteInputArcs()) {
+        for(auto arcItem : transition->getDiscreteOutputArcs()) {
             shared_ptr<DiscreteArc> arc = arcItem.second;
             long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
             markings[pos] += arc->weight;
@@ -208,11 +229,17 @@ namespace hpnmg {
 
         // add new Location
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
+        double eventTime = parentNode.getParametricLocation().getSourceEvent().getTime();
         // todo: was muss ich bei den anderen parametern der events angeben?
+        Event event = Event(EventType::Immediate,vector<double>{0, 0}, eventTime);
         ParametricLocation newLocation = ParametricLocation(markings, continuousMarking, drift,
-            static_cast<int>(numGeneralTransitions), Event(EventType::Immediate,vector<double>{0, 0}, 0),
-            parentLocation.getGeneralIntervalBoundLeft(), parentLocation.getGeneralIntervalBoundRight());
-        parametriclocationTree->setChildNode(node, newLocation);
+            static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
+            parentLocation.getGeneralIntervalBoundRight());
+
+        newLocation.setDeterministicClock(parentNode.getParametricLocation().getDeterministicClock());
+        newLocation.setConflictProbability(probability);
+
+        parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
     vector<double> ParseHybridPetrinet::getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking,

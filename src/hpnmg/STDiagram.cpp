@@ -3,7 +3,7 @@
 namespace hpnmg {
 
     Region STDiagram::createBaseRegion(int dimension, int maxTime) {
-        if (dimension < 2)
+        if (dimension < 1)
             throw IllegalDimensionException(dimension);
         if (maxTime < 1) {
             throw IllegalMaxTimeException(maxTime);

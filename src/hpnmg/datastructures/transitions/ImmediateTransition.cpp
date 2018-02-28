@@ -8,4 +8,5 @@ namespace hpnmg {
     {}
 
     unsigned long ImmediateTransition::getPriority() { return priority; }
+    float ImmediateTransition::getWeight() { return weight; }
 }
