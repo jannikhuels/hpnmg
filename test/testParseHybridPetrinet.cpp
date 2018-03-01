@@ -22,6 +22,7 @@ TEST(ParseHybridPetrinet, InitialLocation)
     ASSERT_EQ(initState.getDeterministicClock().size(), 1);
 }
 
+
 TEST(ParseHybridPetrinet, ImmediateTransitions)
 {
     auto reader = new ReadHybridPetrinet();
@@ -54,4 +55,22 @@ TEST(ParseHybridPetrinet, ImmediateTransitions)
 
     ASSERT_EQ(0, plt->getChildNodes(children[0]).size());
     ASSERT_EQ(0, plt->getChildNodes(children[1]).size());
+}
+
+
+TEST(ParseHybridPetrinet, RateAdaption) {
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/exampleRateAdaption.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto initState = plt->getRootNode();
+    auto initLocation = initState.getParametricLocation();
+
+    std::vector<std::vector<double>> expectedContRootMarking = {{0},{0},{0},{0},{0}};
+    std::vector<double> expectedDrift = {0,1,2,1,0};
+//    ASSERT_EQ(1, plt->getChildNodes(initState).size());
+    ASSERT_EQ(expectedContRootMarking, initLocation.getContinuousMarking());
+    ASSERT_EQ(expectedDrift, initLocation.getDrift());
+
+//    auto nextState = plt->getChildNodes(initState)[0];
 }

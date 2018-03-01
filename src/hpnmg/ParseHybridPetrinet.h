@@ -34,7 +34,18 @@ namespace hpnmg {
                                  shared_ptr<Transition> transition, shared_ptr<HybridPetrinet> hybridPetrinet);
 
         void addLocationForImmediateEvent(shared_ptr<ImmediateTransition> transition,
-                 ParametricLocationTree::Node parentNode, float probability, shared_ptr<HybridPetrinet> hybridPetrinet);
+                                          ParametricLocationTree::Node parentNode, float probability,
+                                          shared_ptr<HybridPetrinet> hybridPetrinet);
+
+        void addLocationForGuardEvent(double timeDelta, ParametricLocationTree::Node parentNode,
+                                      shared_ptr<HybridPetrinet> hybridPetrinet);
+
+        void addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition, double probability,
+                                              double timeDelta, ParametricLocationTree::Node parentNode,
+                                              shared_ptr<HybridPetrinet> hybridPetrinet);
+
+        void addLocationForBoundaryEvent(double timeDelta, ParametricLocationTree::Node parentNode,
+                                         shared_ptr<HybridPetrinet> hybridPetrinet);
 
         vector<double> getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking,
                                 shared_ptr<HybridPetrinet> hybridPetrinet);
