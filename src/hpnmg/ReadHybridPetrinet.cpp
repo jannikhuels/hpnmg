@@ -37,13 +37,67 @@ namespace hpnmg {
         catch (xercesc::XMLException &e) {
             char *message = xercesc::XMLString::transcode(e.getMessage());
 
-            cerr << "XML ttolkit teardown error: " << message << endl;
+            cerr << "XML toolkit teardown error: " << message << endl;
             XMLString::release(&message);
         }
     }
 
+    class ParserErrorHandler : public ErrorHandler
+    {
+    private:
+        void reportParseException(const SAXParseException& ex)
+        {
+            char* msg = XMLString::transcode(ex.getMessage());
+            fprintf(stderr, "at line %llu column %llu, %s\n",
+                    ex.getColumnNumber(), ex.getLineNumber(), msg);
+            XMLString::release(&msg);
+        }
+
+    public:
+        void warning(const SAXParseException& ex)
+        {
+            reportParseException(ex);
+        }
+
+        void error(const SAXParseException& ex)
+        {
+            reportParseException(ex);
+        }
+
+        void fatalError(const SAXParseException& ex)
+        {
+            reportParseException(ex);
+        }
+
+        void resetErrors()
+        {
+        }
+    };
+
+    bool ReadHybridPetrinet::validateSchema(const string &filepath) {
+        string schemaFilePath = "/home/pati/Desktop/hpnmg/src/hpnmg/datastructures/HPnG.xsd"; // todo: we need c++ 17
+        XercesDOMParser domParser;
+        if (domParser.loadGrammar(schemaFilePath.c_str(), Grammar::SchemaGrammarType) == NULL)
+            throw ("Couldn't load schema");
+
+        ParserErrorHandler parserErrorHandler;
+
+        domParser.setErrorHandler(&parserErrorHandler);
+        domParser.setValidationScheme(XercesDOMParser::Val_Always);
+        domParser.setDoNamespaces(true);
+        domParser.setDoSchema(true);
+        domParser.setValidationSchemaFullChecking(true);
+
+        domParser.setExternalNoNamespaceSchemaLocation(schemaFilePath.c_str());
+
+        domParser.parse(filepath.c_str());
+        return (domParser.getErrorCount() == 0);
+    }
 
     shared_ptr<HybridPetrinet> ReadHybridPetrinet::readHybridPetrinet(const std::string &filepath) {
+        if (!validateSchema(filepath))
+            throw (runtime_error("Invalid XML Schema"));
+
         hybridPetrinet = make_shared<HybridPetrinet>();
 
         // Check if file is valid
@@ -134,7 +188,7 @@ namespace hpnmg {
                     shared_ptr<DiscretePlace> place = make_shared<DiscretePlace>(id, marking);
                     hybridPetrinet->addPlace(place);
 
-                    // place is continous place
+                    // place is continuous place
                 } else if (XMLString::equals(placeNode->getNodeName(), XMLString::transcode("continuousPlace"))) {
                     double capacity;
                     bool infiniteCapacity;
@@ -147,7 +201,7 @@ namespace hpnmg {
                             capacity = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         } else if (XMLString::equals(attribute->getNodeName(),
                                                      XMLString::transcode("infiniteCapacity"))) {
-                            infiniteCapacity = XMLString::equals(attribute->getNodeValue(), XMLString::transcode("0"));
+                            infiniteCapacity = !XMLString::equals(attribute->getNodeValue(), XMLString::transcode("0"));
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("level"))) {
                             level = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
                         }

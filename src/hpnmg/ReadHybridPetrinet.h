@@ -29,6 +29,8 @@
 #include <xercesc/dom/DOMNodeIterator.hpp>
 #include <xercesc/dom/DOMNodeList.hpp>
 #include <xercesc/dom/DOMText.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
 
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
@@ -50,6 +52,7 @@ namespace hpnmg {
         void parsePlaces(xercesc::DOMElement* placesNode);
         void parseTransitions(xercesc::DOMElement* transitionsNode);
         void parseArcs(xercesc::DOMElement* arcsNode);
+        bool validateSchema(const std::string &filepath);
 
     };
 
