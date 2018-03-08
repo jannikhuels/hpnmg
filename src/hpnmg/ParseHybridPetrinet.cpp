@@ -6,31 +6,30 @@ namespace hpnmg {
 
     ParseHybridPetrinet::~ParseHybridPetrinet() {}
 
-    shared_ptr<ParametricLocationTree> ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, int maxTime) {
+    shared_ptr<ParametricLocationTree> ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime) {
         // TODO: all floats to double?
 
         // Add place IDs from map to vector, so the places have an order
         map<string, shared_ptr<DiscretePlace>> discretePlaces = hybridPetrinet->getDiscretePlaces();
-        for (auto i = discretePlaces.begin(); i != discretePlaces.end(); ++i) {
+        for (auto i = discretePlaces.begin(); i != discretePlaces.end(); ++i)
             discretePlaceIDs.push_back(i->first);
-        }
         map<string, shared_ptr<ContinuousPlace>> continuousPlaces = hybridPetrinet->getContinuousPlaces();
-        for (auto i = continuousPlaces.begin(); i != continuousPlaces.end(); ++i) {
+        for (auto i = continuousPlaces.begin(); i != continuousPlaces.end(); ++i)
             continuousPlaceIDs.push_back(i->first);
-        }
-        // Also for deterministic Transitions
+
+        // Also for deterministic and general Transitions
         map<string, shared_ptr<DeterministicTransition>> deterministicTransitions = hybridPetrinet->getDeterministicTransitions();
-        for (auto i = deterministicTransitions.begin(); i != deterministicTransitions.end(); ++i) {
+        for (auto i = deterministicTransitions.begin(); i != deterministicTransitions.end(); ++i)
             deterministicTransitionIDs.push_back(i->first);
-        }
+        map<string, shared_ptr<GeneralTransition>> generalTransitions = hybridPetrinet->getGeneralTransitions();
+        for (auto i = generalTransitions.begin(); i != generalTransitions.end(); ++i)
+            generalTransitionIDs.push_back(i->first);
 
         // Initialize aleatory variable counter for deterministic transitions and continuous places
-        for (string id : deterministicTransitionIDs) {
+        for (string id : deterministicTransitionIDs)
             deterTransAleatoryVariables[id] = {};
-        }
-        for (string id : continuousPlaceIDs) {
+        for (string id : continuousPlaceIDs)
             contPlaceAleatoryVariables[id] = {};
-        }
 
         ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, maxTime);
 
@@ -46,14 +45,14 @@ namespace hpnmg {
         return parametriclocationTree;
     }
 
-    ParametricLocation ParseHybridPetrinet::generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, int maxTime) {
+    ParametricLocation ParseHybridPetrinet::generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime) {
         // Get root discrete markings
         vector<int> rootDiscreteMarking;
         for (string &placeId: discretePlaceIDs)
             rootDiscreteMarking.push_back(static_cast<int>(hybridPetrinet->getDiscretePlaces()[placeId]->getMarking()));
 
         // Get root continuous marking
-        vector<vector<double>> rootContinuousMarking; // todo: warum eine Matrix?
+        vector<vector<double>> rootContinuousMarking;
         for (string &placeId: continuousPlaceIDs) {
             rootContinuousMarking.push_back({hybridPetrinet->getContinuousPlaces()[placeId]->getLevel()});
         }
@@ -62,25 +61,32 @@ namespace hpnmg {
 
         // Fill left and right bounds
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
-        vector<double> leftBoundaries(numGeneralTransitions);
-        fill(leftBoundaries.begin(), leftBoundaries.end(), 0);
-        vector<double> rightBoundaries(numGeneralTransitions);
-        fill(rightBoundaries.begin(), rightBoundaries.end(), maxTime);
+        vector<vector<double>> leftBoundaries;
+        vector<vector<double>> rightBoundaries;
+        vector<vector<double>> generalClocks;
+        for (int i=0; i<numGeneralTransitions; ++i) {
+            leftBoundaries.push_back({0});
+            rightBoundaries.push_back({maxTime});
+            generalClocks.push_back({0});
+        }
 
         ParametricLocation rootLocation = ParametricLocation(rootDiscreteMarking, rootContinuousMarking, drift,
             static_cast<int>(numGeneralTransitions), Event(EventType::Root,vector<double>{0, 0}, 0),
             leftBoundaries, rightBoundaries);
 
-        vector<double> deterministicClock(deterministicTransitionIDs.size());
-        fill(deterministicClock.begin(), deterministicClock.end(), 0);
+        vector<vector<double>> deterministicClocks;
+        for (string id : deterministicTransitionIDs)
+            deterministicClocks.push_back({0});
 
-        rootLocation.setDeterministicClock(deterministicClock);
+        rootLocation.setDeterministicClock(deterministicClocks);
+        rootLocation.setGeneralClock(generalClocks);
+        rootLocation.setGeneralTransitionsFired({});
         rootLocation.setConflictProbability(1);
 
         return rootLocation;
     }
 
-    void ParseHybridPetrinet::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, int maxTime) {
+    void ParseHybridPetrinet::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime) {
         vector<int> discreteMarking = node.getParametricLocation().getDiscreteMarking();
         vector<vector<double>> continuousMarking = node.getParametricLocation().getContinuousMarking();
 
@@ -169,7 +175,7 @@ namespace hpnmg {
             shared_ptr<DeterministicTransition> transition = hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[pos]];
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
                 // get time when transitions are enabled
-                double elapsedTime = node.getParametricLocation().getDeterministicClock()[pos];
+                double elapsedTime = node.getParametricLocation().getDeterministicClock()[pos][0];
                 double remainingTime = transition->getDiscTime() - elapsedTime;
                 if (remainingTime == minimumTime) {
                     nextTransitions.push_back(transition);
@@ -220,6 +226,9 @@ namespace hpnmg {
             for (auto arcItem : transition->getGuardInputArcs()) {
                 shared_ptr<GuardArc> arc = arcItem.second;
                 string placeId = arc->place->id;
+                // arc is connected to discrete place (no event will happen)
+                if (find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) == continuousPlaceIDs.end())
+                    continue;
                 long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) - continuousPlaceIDs.begin();
                 shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[placeId];
                 // drift is negative and level is over arc weight
@@ -426,6 +435,8 @@ namespace hpnmg {
             parentLocation.getGeneralIntervalBoundRight());
 
         newLocation.setDeterministicClock(parentNode.getParametricLocation().getDeterministicClock());
+        newLocation.setGeneralClock(parentNode.getParametricLocation().getGeneralClock());
+        newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(probability);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
@@ -454,11 +465,18 @@ namespace hpnmg {
                    parentLocation.getGeneralIntervalBoundRight());
 
         // get new deterministic clocks
-        vector<double> deterministicClocks = parentLocation.getDeterministicClock();
+        vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
         for (int i=0; i<deterministicClocks.size(); ++i)
-            deterministicClocks[i] += timeDelta;
+            deterministicClocks[i][0] += timeDelta;
+
+        // get new general clocks
+        vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
+        for (int i=0; i<generalClocks.size(); ++i)
+            generalClocks[i][0] += timeDelta;
 
         newLocation.setDeterministicClock(deterministicClocks);
+        newLocation.setGeneralClock(generalClocks);
+        newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(1);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
@@ -495,15 +513,22 @@ namespace hpnmg {
                    parentLocation.getGeneralIntervalBoundRight());
 
         // get new deterministic clocks
-        vector<double> deterministicClocks = parentLocation.getDeterministicClock();
+        vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
         for (int i=0; i<deterministicClocks.size(); ++i) {
             if (deterministicTransitionIDs[i] == transition->id)
-                deterministicClocks[i] = 0;
+                deterministicClocks[i][0] = 0;
             else
-                deterministicClocks[i] += timeDelta;
+                deterministicClocks[i][0] += timeDelta;
         }
 
+        // get new general clocks
+        vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
+        for (int i=0; i<generalClocks.size(); ++i)
+            generalClocks[i][0] += timeDelta;
+
         newLocation.setDeterministicClock(deterministicClocks);
+        newLocation.setGeneralClock(generalClocks);
+        newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(probability);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
@@ -532,12 +557,18 @@ namespace hpnmg {
                    parentLocation.getGeneralIntervalBoundRight());
 
         // get new deterministic clocks
-        vector<double> deterministicClocks = parentLocation.getDeterministicClock();
-        for (int i=0; i<deterministicClocks.size(); ++i) {
-            deterministicClocks[i] += timeDelta;
-        }
+        vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
+        for (int i=0; i<deterministicClocks.size(); ++i)
+            deterministicClocks[i][0] += timeDelta;
+
+        // get new general clocks
+        vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
+        for (int i=0; i<generalClocks.size(); ++i)
+            generalClocks[i][0] += timeDelta;
 
         newLocation.setDeterministicClock(deterministicClocks);
+        newLocation.setGeneralClock(generalClocks);
+        newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(1);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
@@ -579,6 +610,8 @@ namespace hpnmg {
         for (auto placeItem :  hybridPetrinet->getContinuousPlaces())
             placesToCheck.push_back(placeItem.second);
         map <string, double> transitionRate;
+        map <string, double> outputDriftNeeded;
+        map <string, double> inputDriftNeeded;
         for (auto transition : hybridPetrinet->getContinuousTransitions())
             transitionRate[transition.first] = transition.second->getRate();
         while (!placesToCheck.empty()) {
@@ -628,6 +661,10 @@ namespace hpnmg {
                             double newRate = leftOutputRate * arc->getShare() / sumShare;
                             if (transitionRate[transition->id] != newRate) {
                                 double rateDiff = transitionRate[transition->id] - newRate;
+                                if (outputDriftNeeded.find(transition->id) == outputDriftNeeded.end())
+                                    outputDriftNeeded[transition->id] = rateDiff;
+                                else
+                                    outputDriftNeeded[transition->id] += rateDiff;
                                 transitionRate[transition->id] = newRate;
                                 for (auto arcItem : transition->getContinuousOutputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;
@@ -697,6 +734,10 @@ namespace hpnmg {
                             double newRate = leftInputRate * arc->getShare() / sumShare;
                             if (transitionRate[transition->id] != newRate) {
                                 double rateDiff = transitionRate[transition->id] - newRate;
+                                if (inputDriftNeeded.find(transition->id) == inputDriftNeeded.end())
+                                    inputDriftNeeded[transition->id] = rateDiff;
+                                else
+                                    inputDriftNeeded[transition->id] += rateDiff;
                                 transitionRate[transition->id] = newRate;
                                 for (auto arcItem : transition->getContinuousOutputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;

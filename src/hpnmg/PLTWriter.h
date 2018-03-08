@@ -16,7 +16,6 @@ namespace hpnmg {
         xercesc::DOMImplementation *domImplementation;
         xercesc::DOMLSSerializer *serializer;
         xercesc::XMLFormatTarget *target;
-        unsigned long idCounter = 1;
 
     public:
         PLTWriter();

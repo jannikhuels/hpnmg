@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<PLT maxTime="20.000000">
+
+  <ParametricLocation eventType="Root" id="1" probability="1.000000" time="0.000000">
+    <continuousMarkings>
+      <marking value="0.000000"/>
+    </continuousMarkings>
+    <drifts>
+      <drift value="1.000000"/>
+    </drifts>
+    <discreteMarkings>
+      <marking value="1"/>
+      <marking value="1"/>
+    </discreteMarkings>
+    <deterministicClocks>
+      <clock value="0.000000"/>
+    </deterministicClocks>
+    <generalClocks>
+      <clock value="0.000000"/>
+    </generalClocks>
+    <boundaries>
+      <boundary leftBound="0.000000" rightBound="20.000000"/>
+    </boundaries>
+    <childNodes>
+      <ParametricLocation eventType="Timed" id="2" probability="inf" time="5.000000">
+        <continuousMarkings>
+          <marking value="0.000000"/>
+        </continuousMarkings>
+        <drifts>
+          <drift value="1.000000"/>
+        </drifts>
+        <discreteMarkings>
+          <marking value="1"/>
+          <marking value="0"/>
+        </discreteMarkings>
+        <deterministicClocks>
+          <clock value="0.000000"/>
+        </deterministicClocks>
+        <generalClocks>
+          <clock value="5.000000"/>
+        </generalClocks>
+        <boundaries>
+          <boundary leftBound="0.000000" rightBound="20.000000"/>
+        </boundaries>
+        <childNodes>
+          <ParametricLocation eventType="Continuous" id="3" probability="1.000000" time="15.000000">
+            <continuousMarkings>
+              <marking value="10.000000"/>
+            </continuousMarkings>
+            <drifts>
+              <drift value="0.000000"/>
+            </drifts>
+            <discreteMarkings>
+              <marking value="1"/>
+              <marking value="0"/>
+            </discreteMarkings>
+            <deterministicClocks>
+              <clock value="10.000000"/>
+            </deterministicClocks>
+            <generalClocks>
+              <clock value="15.000000"/>
+            </generalClocks>
+            <boundaries>
+              <boundary leftBound="0.000000" rightBound="20.000000"/>
+            </boundaries>
+            <childNodes/>
+          </ParametricLocation>
+        </childNodes>
+      </ParametricLocation>
+    </childNodes>
+  </ParametricLocation>
+
+</PLT>

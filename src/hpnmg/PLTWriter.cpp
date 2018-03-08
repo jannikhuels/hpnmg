@@ -41,8 +41,7 @@ namespace hpnmg {
     DOMNode *PLTWriter::generateParametricLocationElement(shared_ptr<ParametricLocationTree> plt,
                                                           ParametricLocationTree::Node node, DOMDocument *domDocument) {
         DOMElement *element = domDocument->createElement(XMLString::transcode("ParametricLocation"));
-        element->setAttribute(XMLString::transcode("id"), XMLString::transcode(to_string(idCounter).c_str()));
-        idCounter += 1;
+        element->setAttribute(XMLString::transcode("id"), XMLString::transcode(to_string(node.getNodeID()).c_str()));
 
         // set attributes from Node
         ParametricLocation location = node.getParametricLocation();
@@ -89,10 +88,10 @@ namespace hpnmg {
 
         // add deterministic clocks
         DOMElement *deterministicClocksElement = domDocument->createElement(XMLString::transcode("deterministicClocks"));
-        vector<double> deterministicClocks = location.getDeterministicClock();
+        vector<vector<double>> deterministicClocks = location.getDeterministicClock();
         for (int i = 0; i < deterministicClocks.size(); ++i) {
             DOMElement *clockElement = domDocument->createElement(XMLString::transcode("clock"));
-            double value = deterministicClocks[i];
+            double value = deterministicClocks[i][0];
             clockElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(to_string(value).c_str()));
             deterministicClocksElement->appendChild(clockElement);
         }
@@ -100,10 +99,10 @@ namespace hpnmg {
 
         // add general clocks
         DOMElement *generalClocksElement = domDocument->createElement(XMLString::transcode("generalClocks"));
-        vector<double> generalClocks = location.getGeneralClock();
+        vector<vector<double>> generalClocks = location.getGeneralClock();
         for (int i = 0; i < generalClocks.size(); ++i) {
             DOMElement *clockElement = domDocument->createElement(XMLString::transcode("clock"));
-            double value = generalClocks[i];
+            double value = generalClocks[i][0];
             clockElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(to_string(value).c_str()));
             generalClocksElement->appendChild(clockElement);
         }
@@ -111,12 +110,12 @@ namespace hpnmg {
 
         // add general boundaries
         DOMElement* generalBoundariesElement = domDocument->createElement(XMLString::transcode("boundaries"));
-        vector<double> generalBoundariesLeft = location.getGeneralIntervalBoundLeft();
-        vector<double> generalBoundariesRight = location.getGeneralIntervalBoundRight();
+        vector<vector<double>> generalBoundariesLeft = location.getGeneralIntervalBoundLeft();
+        vector<vector<double>> generalBoundariesRight = location.getGeneralIntervalBoundRight();
         for (int i=0; i<generalBoundariesLeft.size(); ++i) {
             DOMElement* boundaryElement = domDocument->createElement(XMLString::transcode("boundary"));
-            double valueLeft = generalBoundariesLeft[i];
-            double valueRight = generalBoundariesRight[i];
+            double valueLeft = generalBoundariesLeft[i][0];
+            double valueRight = generalBoundariesRight[i][0];
             boundaryElement->setAttribute(XMLString::transcode("leftBound"), XMLString::transcode(to_string(valueLeft).c_str()));
             boundaryElement->setAttribute(XMLString::transcode("rightBound"), XMLString::transcode(to_string(valueRight).c_str()));
             generalBoundariesElement->appendChild(boundaryElement);

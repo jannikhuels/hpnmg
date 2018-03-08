@@ -12,6 +12,7 @@ namespace hpnmg {
         vector<string> discretePlaceIDs;
         vector<string> continuousPlaceIDs;
         vector<string> deterministicTransitionIDs;
+        vector<string> generalTransitionIDs;
         vector<ParametricLocationTree::Node> locationQueue;
 
         // Aleatory variable counter for deterministic transitions and continuous places
@@ -24,11 +25,11 @@ namespace hpnmg {
 
         ~ParseHybridPetrinet();
 
-        shared_ptr<ParametricLocationTree> parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, int maxTime);
+        shared_ptr<ParametricLocationTree> parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
 
-        ParametricLocation generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, int maxTime);
+        ParametricLocation generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
 
-        void processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, int maxTime);
+        void processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
 
         bool transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,
                                  shared_ptr<Transition> transition, shared_ptr<HybridPetrinet> hybridPetrinet);

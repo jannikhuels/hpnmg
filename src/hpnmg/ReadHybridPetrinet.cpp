@@ -42,6 +42,7 @@ namespace hpnmg {
         }
     }
 
+    // src: https://sivachandranp.wordpress.com/2010/10/10/xml-schema-validation-using-xerces-c/
     class ParserErrorHandler : public ErrorHandler
     {
     private:

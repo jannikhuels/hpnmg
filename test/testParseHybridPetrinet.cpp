@@ -17,9 +17,9 @@ TEST(ParseHybridPetrinet, InitialLocation)
     ASSERT_EQ(initState.getContinuousMarking().size(), 1);
     ASSERT_EQ(initState.getContinuousMarking()[0][0], 0.0);
     ASSERT_EQ(initState.getGeneralIntervalBoundRight().size(), 1);
-    ASSERT_EQ(initState.getGeneralIntervalBoundRight()[0], 20);
+    ASSERT_EQ(initState.getGeneralIntervalBoundRight()[0][0], 20);
     ASSERT_EQ(initState.getDrift()[0], 1);
-    ASSERT_EQ(initState.getDeterministicClock().size(), 1);
+    ASSERT_EQ(initState.getDeterministicClock().size(), {1});
 }
 
 
@@ -64,13 +64,21 @@ TEST(ParseHybridPetrinet, RateAdaption) {
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
-    auto initLocation = initState.getParametricLocation();
+    ParametricLocation initLocation = initState.getParametricLocation();
 
     std::vector<std::vector<double>> expectedContRootMarking = {{0},{0},{0},{0},{0}};
-    std::vector<double> expectedDrift = {0,1,2,1,0};
-//    ASSERT_EQ(1, plt->getChildNodes(initState).size());
+    std::vector<double> expectedRootDrift = {0,1,2,1,0};
+    ASSERT_EQ(1, plt->getChildNodes(initState).size());
     ASSERT_EQ(expectedContRootMarking, initLocation.getContinuousMarking());
-    ASSERT_EQ(expectedDrift, initLocation.getDrift());
+    ASSERT_EQ(expectedRootDrift, initLocation.getDrift());
 
-//    auto nextState = plt->getChildNodes(initState)[0];
+    auto nextState = plt->getChildNodes(initState)[0];
+    ParametricLocation nextLocation = nextState.getParametricLocation();
+
+    std::vector<std::vector<double>> expectedContMarking1 = {{0},{0.5},{1},{0.5},{0}};
+    std::vector<double> expectedDrift1 = {0,1,0,2,1};
+//    ASSERT_EQ(2, plt->getChildNodes(nextState).size());
+    ASSERT_EQ(0.5, nextState.getParametricLocation().getSourceEvent().getTime());
+    ASSERT_EQ(expectedContMarking1, nextLocation.getContinuousMarking());
+//    ASSERT_EQ(expectedDrift1, nextLocation.getDrift()); todo: does not work correct
 }
