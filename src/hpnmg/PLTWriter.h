@@ -26,5 +26,7 @@ namespace hpnmg {
         generateParametricLocationElement(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node node,
                                           xercesc::DOMDocument *domNode);
         std::string getEventName(EventType eventType);
+        std::string formatTimes(double time, vector<double> generalDependencies);
+        std::string formatTimes(vector<double> generalDependencies);
     };
 }

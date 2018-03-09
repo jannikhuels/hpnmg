@@ -45,8 +45,9 @@ namespace hpnmg {
 
         // set attributes from Node
         ParametricLocation location = node.getParametricLocation();
-        double time = location.getSourceEvent().getTime();
-        element->setAttribute(XMLString::transcode("time"), XMLString::transcode(to_string(time).c_str()));
+        vector<double> generalDependencies = location.getSourceEvent().getGeneralDependencies();
+        string timeString = formatTimes(location.getSourceEvent().getTime(), generalDependencies);
+        element->setAttribute(XMLString::transcode("time"), XMLString::transcode(timeString.c_str()));
         EventType eventType = location.getSourceEvent().getEventType();
         element->setAttribute(XMLString::transcode("eventType"), XMLString::transcode(getEventName(eventType).c_str()));
         double probability = location.getConflictProbability();
@@ -58,8 +59,8 @@ namespace hpnmg {
         vector<vector<double>> contMarkings = location.getContinuousMarking();
         for (int i = 0; i < contMarkings.size(); ++i) {
             DOMElement *markingElement = domDocument->createElement(XMLString::transcode("marking"));
-            double value = contMarkings[i][0];
-            markingElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(to_string(value).c_str()));
+            string value = formatTimes(contMarkings[i]);
+            markingElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(value.c_str()));
             contMarkingsElement->appendChild(markingElement);
         }
         element->appendChild(contMarkingsElement);
@@ -91,8 +92,8 @@ namespace hpnmg {
         vector<vector<double>> deterministicClocks = location.getDeterministicClock();
         for (int i = 0; i < deterministicClocks.size(); ++i) {
             DOMElement *clockElement = domDocument->createElement(XMLString::transcode("clock"));
-            double value = deterministicClocks[i][0];
-            clockElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(to_string(value).c_str()));
+            string value = formatTimes(deterministicClocks[i]);
+            clockElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(value.c_str()));
             deterministicClocksElement->appendChild(clockElement);
         }
         element->appendChild(deterministicClocksElement);
@@ -102,8 +103,8 @@ namespace hpnmg {
         vector<vector<double>> generalClocks = location.getGeneralClock();
         for (int i = 0; i < generalClocks.size(); ++i) {
             DOMElement *clockElement = domDocument->createElement(XMLString::transcode("clock"));
-            double value = generalClocks[i][0];
-            clockElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(to_string(value).c_str()));
+            string value = formatTimes(generalClocks[i]);
+            clockElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(value.c_str()));
             generalClocksElement->appendChild(clockElement);
         }
         element->appendChild(generalClocksElement);
@@ -114,10 +115,10 @@ namespace hpnmg {
         vector<vector<double>> generalBoundariesRight = location.getGeneralIntervalBoundRight();
         for (int i=0; i<generalBoundariesLeft.size(); ++i) {
             DOMElement* boundaryElement = domDocument->createElement(XMLString::transcode("boundary"));
-            double valueLeft = generalBoundariesLeft[i][0];
-            double valueRight = generalBoundariesRight[i][0];
-            boundaryElement->setAttribute(XMLString::transcode("leftBound"), XMLString::transcode(to_string(valueLeft).c_str()));
-            boundaryElement->setAttribute(XMLString::transcode("rightBound"), XMLString::transcode(to_string(valueRight).c_str()));
+            string valueLeft = formatTimes(generalBoundariesLeft[i]);
+            string valueRight = formatTimes(generalBoundariesRight[i]);
+            boundaryElement->setAttribute(XMLString::transcode("leftBound"), XMLString::transcode(valueLeft.c_str()));
+            boundaryElement->setAttribute(XMLString::transcode("rightBound"), XMLString::transcode(valueRight.c_str()));
             generalBoundariesElement->appendChild(boundaryElement);
         }
         element->appendChild(generalBoundariesElement);
@@ -149,5 +150,17 @@ namespace hpnmg {
             case EventType::Guard :
                 return "Guard";
         }
+    }
+
+    string PLTWriter::formatTimes(double time, vector<double> generalDependencies) {
+        string dependencyString;
+        for (int i=0; i<generalDependencies.size(); ++i)
+            dependencyString += " + " + to_string(generalDependencies[i]) + " S_" + to_string(i);
+        return to_string(time) + dependencyString;
+    }
+
+    std::string PLTWriter::formatTimes(vector<double> generalDependencies) {
+        vector<double> variables(generalDependencies.begin() + 1, generalDependencies.end());
+        return formatTimes(generalDependencies[0], variables);
     }
 }

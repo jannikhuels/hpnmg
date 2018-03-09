@@ -77,7 +77,7 @@ namespace hpnmg {
 
         std::vector<int> getGeneralTransitionsFired() const;
 
-        void setGeneralTransitionsFired(const std::vector<int> &generalTransitionsFired);
+        void setGeneralTransitionsFired(const std::vector<int> &eneralTransitionsFired);
 
         int getId() const;
     };

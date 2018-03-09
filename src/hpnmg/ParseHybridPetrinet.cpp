@@ -71,7 +71,7 @@ namespace hpnmg {
         }
 
         ParametricLocation rootLocation = ParametricLocation(rootDiscreteMarking, rootContinuousMarking, drift,
-            static_cast<int>(numGeneralTransitions), Event(EventType::Root,vector<double>{0, 0}, 0),
+            static_cast<int>(numGeneralTransitions), Event(EventType::Root,{}, 0),
             leftBoundaries, rightBoundaries);
 
         vector<vector<double>> deterministicClocks;
@@ -117,16 +117,6 @@ namespace hpnmg {
                 locationQueue.push_back(childNode);
             }
             return; // no other event has to be considered
-        }
-
-        // If no immediate transition is enabled we have to consider all enabled general transitions
-        vector<string> enabledGeneralTransitions;
-        auto generalTransitions = hybridPetrinet->getGeneralTransitions();
-        for(auto i = generalTransitions.begin(); i!=generalTransitions.end(); ++i) {
-            shared_ptr<Transition> transition = i->second;
-            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet))
-                enabledGeneralTransitions.push_back(transition->id);
-                // todo: add fire event for every enabled general transition
         }
 
         // Now we can consider timed transitions, guard arcs and boundaries of fluid places
@@ -344,13 +334,22 @@ namespace hpnmg {
         }
 
 
+        // If no immediate transition is enabled we have to consider all enabled general transitions
+        vector<string> enabledGeneralTransitions;
+        auto generalTransitions = hybridPetrinet->getGeneralTransitions();
+        for(auto i = generalTransitions.begin(); i!=generalTransitions.end(); ++i) {
+            shared_ptr<GeneralTransition> transition = i->second;
+            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet))
+                addLocationForGeneralEvent(transition, minimumTime, node, hybridPetrinet);
+        }
+
         // now we have the minimumTime and all events that happen at this time
         if (!nextImmediateGuards.empty()) {
             for (auto &transition : nextImmediateGuards)
                 addLocationForGuardEvent(minimumTime, node, hybridPetrinet);
         } else if (!nextTransitions.empty()) {
             double sumWeight = 0;
-            for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
+            for (shared_ptr<DeterministicTransition> &transition : nextTransitions)
                 sumWeight += transition->getWeight();
             for (auto &transition : nextTransitions) {
                 double probability = transition->getWeight() / sumWeight;
@@ -428,8 +427,9 @@ namespace hpnmg {
         // add new Location
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
         double eventTime = parentNode.getParametricLocation().getSourceEvent().getTime();
-        // todo: was muss ich bei den anderen parametern der events angeben?
-        Event event = Event(EventType::Immediate,vector<double>{0, 0}, eventTime);
+        vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+
+        Event event = Event(EventType::Immediate,generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(markings, continuousMarking, drift,
             static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
             parentLocation.getGeneralIntervalBoundRight());
@@ -457,9 +457,10 @@ namespace hpnmg {
         }
         vector<double> drift = getDrift(discreteMarking, continuousMarking, hybridPetrinet);
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
+        vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
 
         double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta;
-        Event event = Event(EventType::Guard,vector<double>{0, 0}, eventTime);
+        Event event = Event(EventType::Guard,generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                    static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
                    parentLocation.getGeneralIntervalBoundRight());
@@ -502,12 +503,16 @@ namespace hpnmg {
 
         // get new drift
         vector<vector<double>> continuousMarking = parentLocation.getContinuousMarking();
+        vector<double> parentDrift = parentLocation.getDrift();
+        for (int pos=0; pos < continuousMarking.size(); ++pos)
+            continuousMarking[pos][0] += parentDrift[pos] * timeDelta;
         vector<double> drift = getDrift(discreteMarking, continuousMarking, hybridPetrinet);
 
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
 
         double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta;
-        Event event = Event(EventType::Timed, vector<double>{0, 0}, eventTime);
+        vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+        Event event = Event(EventType::Timed, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                    static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
                    parentLocation.getGeneralIntervalBoundRight());
@@ -551,7 +556,8 @@ namespace hpnmg {
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
 
         double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta;
-        Event event = Event(EventType::Continuous, vector<double>{0, 0}, eventTime);
+        vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+        Event event = Event(EventType::Continuous, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                    static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
                    parentLocation.getGeneralIntervalBoundRight());
@@ -565,6 +571,84 @@ namespace hpnmg {
         vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
         for (int i=0; i<generalClocks.size(); ++i)
             generalClocks[i][0] += timeDelta;
+
+        newLocation.setDeterministicClock(deterministicClocks);
+        newLocation.setGeneralClock(generalClocks);
+        newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
+        newLocation.setConflictProbability(1);
+
+        parametriclocationTree->setChildNode(parentNode, newLocation);
+    }
+
+    void ParseHybridPetrinet::addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double timeDelta,
+                                                         ParametricLocationTree::Node parentNode,
+                                                         shared_ptr<HybridPetrinet> hybridPetrinet) {
+        ParametricLocation parentLocation = parentNode.getParametricLocation();
+        long transitionPos = find(generalTransitionIDs.begin(), generalTransitionIDs.end(), transition->id) - generalTransitionIDs.begin();
+
+        vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
+        vector<double> transitionClock = generalClocks[transitionPos];
+
+        // get new discrete markings
+        vector<int> discreteMarking = parentNode.getParametricLocation().getDiscreteMarking();
+        for(auto arcItem : transition->getDiscreteInputArcs()) {
+            shared_ptr<DiscreteArc> arc = arcItem.second;
+            long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
+            discreteMarking[pos] -= arc->weight;
+        }
+        for(auto arcItem : transition->getDiscreteOutputArcs()) {
+            shared_ptr<DiscreteArc> arc = arcItem.second;
+            long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
+            discreteMarking[pos] += arc->weight;
+        }
+
+        // get drift and new continuous markings
+        vector<double> parentDrift = parentLocation.getDrift();
+        vector<vector<double>> continuousMarking = parentLocation.getContinuousMarking();
+        for (int pos=0; pos < continuousMarking.size(); ++pos) {
+            for (int timePos=0; timePos<continuousMarking[pos].size(); ++timePos)
+                continuousMarking[pos][timePos] -= transitionClock[timePos] * parentDrift[pos];
+            continuousMarking[pos].push_back(parentDrift[pos]);
+        }
+        vector<double> drift = getDrift(discreteMarking, continuousMarking, hybridPetrinet);
+
+        unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
+
+        double eventTime = parentLocation.getSourceEvent().getTime();
+        vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+        for (int pos=0; pos<transitionClock.size(); ++pos) {
+            if (pos == 0) {
+                eventTime -= transitionClock[pos];
+                continue;
+            }
+            generalDependecies[pos - 1] -= transitionClock[pos];
+        }
+        generalDependecies.push_back(1.0);
+
+        Event event = Event(EventType::General, generalDependecies, eventTime);
+        ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
+                   static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
+                   parentLocation.getGeneralIntervalBoundRight()); // todo: bounds
+
+        // get new deterministic clocks
+        vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
+        for (int i=0; i<deterministicClocks.size(); ++i) {
+            for (int j=0; j<deterministicClocks.size(); ++j)
+                deterministicClocks[i][j] -= transitionClock[j];
+            deterministicClocks[i].push_back(1);
+        }
+
+        // get new general clocks
+        for (int i=0; i<generalClocks.size(); ++i) {
+            if (i == transitionPos) {
+                fill(generalClocks[transitionPos].begin(), generalClocks[transitionPos].end(), 0);
+                generalClocks[transitionPos].push_back(0);
+                continue;
+            }
+            for (int j=0; j<generalClocks.size(); ++j)
+                generalClocks[i][j] -= transitionClock[j];
+            generalClocks[i].push_back(1);
+        }
 
         newLocation.setDeterministicClock(deterministicClocks);
         newLocation.setGeneralClock(generalClocks);

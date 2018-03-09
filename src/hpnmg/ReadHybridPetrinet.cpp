@@ -422,7 +422,7 @@ namespace hpnmg {
                                 transitionId = nodeId;
                             } else throw (std::runtime_error("Arc for unknown node."));
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("isInhibitor"))) {
-                            isInhibitor = XMLString::equals(attribute->getNodeValue(), XMLString::transcode("0"));
+                            isInhibitor = !XMLString::equals(attribute->getNodeValue(), XMLString::transcode("0"));
                         }
                     }
                     auto arc = make_shared<GuardArc>(id, weight, place, isInhibitor);

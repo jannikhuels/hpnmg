@@ -25,7 +25,8 @@ namespace hpnmg {
 
         ~ParseHybridPetrinet();
 
-        shared_ptr<ParametricLocationTree> parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
+        shared_ptr<ParametricLocationTree>
+        parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
 
         ParametricLocation generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
 
@@ -37,6 +38,10 @@ namespace hpnmg {
         void addLocationForImmediateEvent(shared_ptr<ImmediateTransition> transition,
                                           ParametricLocationTree::Node parentNode, float probability,
                                           shared_ptr<HybridPetrinet> hybridPetrinet);
+
+        void addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double timeDelta,
+                                        ParametricLocationTree::Node parentNode,
+                                        shared_ptr<HybridPetrinet> hybridPetrinet);
 
         void addLocationForGuardEvent(double timeDelta, ParametricLocationTree::Node parentNode,
                                       shared_ptr<HybridPetrinet> hybridPetrinet);
