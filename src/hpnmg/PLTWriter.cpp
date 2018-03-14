@@ -111,14 +111,18 @@ namespace hpnmg {
 
         // add general boundaries
         DOMElement* generalBoundariesElement = domDocument->createElement(XMLString::transcode("boundaries"));
-        vector<vector<double>> generalBoundariesLeft = location.getGeneralIntervalBoundLeft();
-        vector<vector<double>> generalBoundariesRight = location.getGeneralIntervalBoundRight();
+        vector<vector<vector<double>>> generalBoundariesLeft = location.getGeneralIntervalBoundLeft();
+        vector<vector<vector<double>>> generalBoundariesRight = location.getGeneralIntervalBoundRight();
         for (int i=0; i<generalBoundariesLeft.size(); ++i) {
-            DOMElement* boundaryElement = domDocument->createElement(XMLString::transcode("boundary"));
-            string valueLeft = formatTimes(generalBoundariesLeft[i]);
-            string valueRight = formatTimes(generalBoundariesRight[i]);
-            boundaryElement->setAttribute(XMLString::transcode("leftBound"), XMLString::transcode(valueLeft.c_str()));
-            boundaryElement->setAttribute(XMLString::transcode("rightBound"), XMLString::transcode(valueRight.c_str()));
+            DOMElement* boundaryElement = domDocument->createElement(XMLString::transcode("boundaries"));
+            for (int j=0; j<generalBoundariesLeft[i].size(); ++j) {
+                DOMElement* boundaryFiringElement = domDocument->createElement(XMLString::transcode("boundary"));
+                string valueLeft = formatTimes(generalBoundariesLeft[i][j]);
+                string valueRight = formatTimes(generalBoundariesRight[i][j]);
+                boundaryFiringElement->setAttribute(XMLString::transcode("leftBound"), XMLString::transcode(valueLeft.c_str()));
+                boundaryFiringElement->setAttribute(XMLString::transcode("rightBound"), XMLString::transcode(valueRight.c_str()));
+                boundaryElement->appendChild(boundaryFiringElement);
+            }
             generalBoundariesElement->appendChild(boundaryElement);
         }
         element->appendChild(generalBoundariesElement);

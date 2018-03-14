@@ -61,12 +61,12 @@ namespace hpnmg {
 
         // Fill left and right bounds
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
-        vector<vector<double>> leftBoundaries;
-        vector<vector<double>> rightBoundaries;
+        vector<vector<vector<double>>> leftBoundaries;
+        vector<vector<vector<double>>> rightBoundaries;
         vector<vector<double>> generalClocks;
         for (int i=0; i<numGeneralTransitions; ++i) {
-            leftBoundaries.push_back({0});
-            rightBoundaries.push_back({maxTime});
+            leftBoundaries.push_back({{0}});
+            rightBoundaries.push_back({{maxTime}});
             generalClocks.push_back({0});
         }
 
@@ -340,7 +340,7 @@ namespace hpnmg {
         for(auto i = generalTransitions.begin(); i!=generalTransitions.end(); ++i) {
             shared_ptr<GeneralTransition> transition = i->second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet))
-                addLocationForGeneralEvent(transition, minimumTime, node, hybridPetrinet);
+                addLocationForGeneralEvent(transition, maxTime, minimumTime, node, hybridPetrinet);
         }
 
         // now we have the minimumTime and all events that happen at this time
@@ -446,6 +446,15 @@ namespace hpnmg {
                                                        shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
 
+        // adjust boundaries
+        // (we have to do this first because we need the old markings)
+        vector<vector<vector<double>>> generalIntervalBoundLeft = parentLocation.getGeneralIntervalBoundLeft();
+        vector<vector<vector<double>>> generalIntervalBoundRight = parentLocation.getGeneralIntervalBoundRight();
+        for (int i=0; i<generalTransitionIDs.size(); ++i)
+            if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
+                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
+                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][0]+= timeDelta;
+
         vector<vector<double>> parentContinuousMarking = parentLocation.getContinuousMarking();
         vector<double> parentDrift = parentLocation.getDrift();
 
@@ -462,8 +471,7 @@ namespace hpnmg {
         double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta;
         Event event = Event(EventType::Guard,generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
-                   static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
-                   parentLocation.getGeneralIntervalBoundRight());
+                   static_cast<int>(numGeneralTransitions), event, generalIntervalBoundLeft, generalIntervalBoundRight);
 
         // get new deterministic clocks
         vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
@@ -487,6 +495,15 @@ namespace hpnmg {
                                double probability, double timeDelta, ParametricLocationTree::Node parentNode,
                                                                shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
+
+        // adjust boundaries
+        // (we have to do this first because we need the old markings)
+        vector<vector<vector<double>>> generalIntervalBoundLeft = parentLocation.getGeneralIntervalBoundLeft();
+        vector<vector<vector<double>>> generalIntervalBoundRight = parentLocation.getGeneralIntervalBoundRight();
+        for (int i=0; i<generalTransitionIDs.size(); ++i)
+            if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
+                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
+                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][0]+= timeDelta;
 
         // get new markings
         vector<int> discreteMarking = parentNode.getParametricLocation().getDiscreteMarking();
@@ -514,8 +531,7 @@ namespace hpnmg {
         vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
         Event event = Event(EventType::Timed, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
-                   static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
-                   parentLocation.getGeneralIntervalBoundRight());
+                   static_cast<int>(numGeneralTransitions), event, generalIntervalBoundLeft, generalIntervalBoundRight);
 
         // get new deterministic clocks
         vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
@@ -543,6 +559,15 @@ namespace hpnmg {
                                                           shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
 
+        // adjust boundaries
+        // (we have to do this first because we need the old markings)
+        vector<vector<vector<double>>> generalIntervalBoundLeft = parentLocation.getGeneralIntervalBoundLeft();
+        vector<vector<vector<double>>> generalIntervalBoundRight = parentLocation.getGeneralIntervalBoundRight();
+        for (int i=0; i<generalTransitionIDs.size(); ++i)
+            if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
+                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
+                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][0]+= timeDelta;
+
         // get new markings
         vector<vector<double>> parentContinuousMarking = parentLocation.getContinuousMarking();
         vector<double> parentDrift = parentLocation.getDrift();
@@ -559,8 +584,7 @@ namespace hpnmg {
         vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
         Event event = Event(EventType::Continuous, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
-                   static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
-                   parentLocation.getGeneralIntervalBoundRight());
+                   static_cast<int>(numGeneralTransitions), event, generalIntervalBoundLeft, generalIntervalBoundRight);
 
         // get new deterministic clocks
         vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
@@ -580,14 +604,39 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    void ParseHybridPetrinet::addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double timeDelta,
-                                                         ParametricLocationTree::Node parentNode,
-                                                         shared_ptr<HybridPetrinet> hybridPetrinet) {
+    void ParseHybridPetrinet::addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double maxTime,
+                 double timeDelta, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
         long transitionPos = find(generalTransitionIDs.begin(), generalTransitionIDs.end(), transition->id) - generalTransitionIDs.begin();
 
         vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
         vector<double> transitionClock = generalClocks[transitionPos];
+
+        // adjust boundaries
+        // (we have to do this first because we need the old markings)
+        vector<vector<vector<double>>> generalIntervalBoundLeft = parentLocation.getGeneralIntervalBoundLeft();
+        vector<vector<vector<double>>> generalIntervalBoundRight = parentLocation.getGeneralIntervalBoundRight();
+        for (int i=0; i<generalTransitionIDs.size(); ++i) {
+            if (generalTransitionIDs[i] == transition->id) {
+                vector<vector<double>> currentBoundLeft = generalIntervalBoundLeft[i];
+                vector<vector<double>> currentBoundRight = generalIntervalBoundRight[i];
+                currentBoundRight[currentBoundRight.size() - 1] = generalClocks[i];
+                currentBoundRight[currentBoundRight.size() - 1][0] += timeDelta;
+                vector<double> vectorLeft = vector<double>(currentBoundLeft[currentBoundLeft.size() - 1].size() + 1);
+                vector<double> vectorRight = vector<double>(currentBoundRight[currentBoundRight.size() - 1].size() + 1);
+                fill(vectorLeft.begin(), vectorLeft.end(), 0);
+                fill(vectorRight.begin(), vectorRight.end(), 0);
+                vectorRight[0] = maxTime;
+                currentBoundLeft.push_back(vectorLeft);
+                currentBoundRight.push_back(vectorRight);
+                generalIntervalBoundLeft[i] = currentBoundLeft;
+                generalIntervalBoundRight[i] = currentBoundRight;
+            }
+            else if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
+                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet)) {
+                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][0] += timeDelta;
+            }
+        }
 
         // get new discrete markings
         vector<int> discreteMarking = parentNode.getParametricLocation().getDiscreteMarking();
@@ -627,8 +676,7 @@ namespace hpnmg {
 
         Event event = Event(EventType::General, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
-                   static_cast<int>(numGeneralTransitions), event, parentLocation.getGeneralIntervalBoundLeft(),
-                   parentLocation.getGeneralIntervalBoundRight()); // todo: bounds
+                   static_cast<int>(numGeneralTransitions), event, generalIntervalBoundLeft, generalIntervalBoundRight);
 
         // get new deterministic clocks
         vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();

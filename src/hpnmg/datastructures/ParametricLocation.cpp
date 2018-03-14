@@ -26,8 +26,8 @@ namespace hpnmg {
 
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces,
                                            int numberOfGeneralTransitions, const Event &sourceEvent,
-                                           std::vector<std::vector<double>> generalIntervalBoundLeft,
-                                           std::vector<std::vector<double>> generalIntervalBoundRight)
+                                           std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft,
+                                           std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight)
             : ParametricLocation(
             numberOfDiscretePlaces, numberOfContinuousPlaces, numberOfGeneralTransitions, sourceEvent) {
         setGeneralIntervalBoundLeft(generalIntervalBoundLeft);
@@ -37,8 +37,10 @@ namespace hpnmg {
     ParametricLocation::ParametricLocation(std::vector<int> discreteMarking,
                                            std::vector<std::vector<double>> continuousMarking,
                                            std::vector<double> drift, int numberOfGeneralTransitions,
-                                           const Event &sourceEvent, std::vector<std::vector<double>> intervalBoundLeft,
-                                           std::vector<std::vector<double>> intervalBoundRight) : ParametricLocation(
+                                           const Event &sourceEvent,
+                                           std::vector<std::vector<std::vector<double>>> intervalBoundLeft,
+                                           std::vector<std::vector<std::vector<double>>> intervalBoundRight)
+            : ParametricLocation(
             discreteMarking.size(), continuousMarking.size(), numberOfGeneralTransitions, sourceEvent,
             intervalBoundLeft, intervalBoundRight) {
         setDiscreteMarking(discreteMarking);
@@ -82,17 +84,21 @@ namespace hpnmg {
     void ParametricLocation::setGeneralClock(
             const std::vector<std::vector<double>> &generalClock) { this->generalClock = generalClock; }
 
-    std::vector<std::vector<double>>
+    std::vector<std::vector<std::vector<double>>>
     ParametricLocation::getGeneralIntervalBoundLeft() const { return generalIntervalBoundLeft; }
 
     void ParametricLocation::setGeneralIntervalBoundLeft(
-            const std::vector<std::vector<double>> &generalIntervalBoundLeft) { this->generalIntervalBoundLeft = generalIntervalBoundLeft; }
+            const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundLeft) {
+        this->generalIntervalBoundLeft = generalIntervalBoundLeft;
+    }
 
-    std::vector<std::vector<double>>
+    std::vector<std::vector<std::vector<double>>>
     ParametricLocation::getGeneralIntervalBoundRight() const { return generalIntervalBoundRight; }
 
     void ParametricLocation::setGeneralIntervalBoundRight(
-            const std::vector<std::vector<double>> &generalIntervalBoundRight) { this->generalIntervalBoundRight = generalIntervalBoundRight; }
+            const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundRight) {
+        this->generalIntervalBoundRight = generalIntervalBoundRight;
+    }
 
     Event ParametricLocation::getSourceEvent() const { return sourceEvent; }
 

@@ -12,8 +12,8 @@ namespace hpnmg {
         std::vector<double> drift;
         std::vector<std::vector<double>> deterministicClock;
         std::vector<std::vector<double>> generalClock;
-        std::vector<std::vector<double>> generalIntervalBoundLeft;
-        std::vector<std::vector<double>> generalIntervalBoundRight;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         Event sourceEvent;
         double conflictProbability;
@@ -29,13 +29,13 @@ namespace hpnmg {
         ParametricLocation(const ParametricLocation &parametricLocation);
 
         ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces, int numberOfGeneralTransitions,
-                           const Event &sourceEvent, std::vector<std::vector<double>> intervalBoundLeft,
-                           std::vector<std::vector<double>> intervalBoundRight);
+                           const Event &sourceEvent, std::vector<std::vector<std::vector<double>>> intervalBoundLeft,
+                           std::vector<std::vector<std::vector<double>>> intervalBoundRight);
 
         ParametricLocation(std::vector<int> discreteMarking, std::vector<std::vector<double>> continuousMarking,
                            std::vector<double> drift, int numberOfGeneralTransitions, const Event &sourceEvent,
-                           std::vector<std::vector<double>> intervalBoundLeft,
-                           std::vector<std::vector<double>> intervalBoundRight);
+                           std::vector<std::vector<std::vector<double>>> intervalBoundLeft,
+                           std::vector<std::vector<std::vector<double>>> intervalBoundRight);
 
         std::vector<int> getDiscreteMarking() const;
 
@@ -57,13 +57,13 @@ namespace hpnmg {
 
         void setGeneralClock(const std::vector<std::vector<double>> &generalClock);
 
-        std::vector<std::vector<double>> getGeneralIntervalBoundLeft() const;
+        std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundLeft() const;
 
-        void setGeneralIntervalBoundLeft(const std::vector<std::vector<double>> &generalIntervalBoundLeft);
+        void setGeneralIntervalBoundLeft(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundLeft);
 
-        std::vector<std::vector<double>> getGeneralIntervalBoundRight() const;
+        std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundRight() const;
 
-        void setGeneralIntervalBoundRight(const std::vector<std::vector<double>> &generalIntervalBoundRight);
+        void setGeneralIntervalBoundRight(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundRight);
 
         Event getSourceEvent() const;
 

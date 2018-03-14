@@ -39,7 +39,7 @@ namespace hpnmg {
                                           ParametricLocationTree::Node parentNode, float probability,
                                           shared_ptr<HybridPetrinet> hybridPetrinet);
 
-        void addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double timeDelta,
+        void addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double maxTime, double timeDelta,
                                         ParametricLocationTree::Node parentNode,
                                         shared_ptr<HybridPetrinet> hybridPetrinet);
 
