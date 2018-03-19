@@ -55,6 +55,7 @@ namespace hpnmg {
             generalIntervalBoundLeft(parametricLocation.generalIntervalBoundLeft),
             generalIntervalBoundRight(parametricLocation.generalIntervalBoundRight),
             conflictProbability(parametricLocation.conflictProbability), dimension(parametricLocation.dimension),
+            generalTransitionFired(parametricLocation.generalTransitionFired),
             sourceEvent(parametricLocation.sourceEvent) {
 
     }
@@ -106,13 +107,13 @@ namespace hpnmg {
 
     double ParametricLocation::getConflictProbability() const { return conflictProbability; }
 
-    void ParametricLocation::setConflictProbability(
-            double conflictProbability) { this->conflictProbability = conflictProbability; }
+    void ParametricLocation::setConflictProbability(double conflictProbability) {
+        this->conflictProbability = conflictProbability; }
 
     int ParametricLocation::getDimension() const { return dimension; }
 
     std::vector<int> ParametricLocation::getGeneralTransitionsFired() const { return generalTransitionFired; }
 
-    void ParametricLocation::setGeneralTransitionsFired(
-            const std::vector<int> &generalTransitionsFired) { this->generalTransitionFired = generalTransitionsFired; }
+    void ParametricLocation::setGeneralTransitionsFired(std::vector<int> generalTransitionsFired) {
+        this->generalTransitionFired = generalTransitionsFired; }
 }
