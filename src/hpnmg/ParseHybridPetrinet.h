@@ -32,21 +32,15 @@ namespace hpnmg {
 
         void processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
 
-        vector<pair<double, shared_ptr<DeterministicTransition>>> getNewNextDeterministicTransitions(double maximumTime,
-                                vector<pair<double, shared_ptr<DeterministicTransition>>> nextDeterministicTransitions);
-        vector<pair<double, shared_ptr<ImmediateTransition>>> getNewNextImmediateGuards(double maximumTime,
-                                            vector<pair<double, shared_ptr<ImmediateTransition>>> nextImmediateGuards);
-        vector<pair<double, shared_ptr<ContinuousPlace>>> getNewNextPlaces(double maximumTime,
-                                                        vector<pair<double, shared_ptr<ContinuousPlace>>> nextPlaces);
-        vector<pair<double, shared_ptr<ContinuousTransition>>> getNewNextContinuousGuards(double maximumTime,
-                                        vector<pair<double, shared_ptr<ContinuousTransition>>> nextContinuousGuards);
-        vector<pair<double, shared_ptr<DeterministicTransition>>> getNewNextDeterministicGuards(double maximumTime,
-                                    vector<pair<double, shared_ptr<DeterministicTransition>>> nextDeterministicGuards);
-        vector<pair<double, shared_ptr<GeneralTransition>>> getNewNextGeneralGuards(double maximumTime,
-                                                vector<pair<double, shared_ptr<GeneralTransition>>> nextGeneralGuards);
+        vector<double> getTimeDelta(shared_ptr<GuardArc> arc, vector<int> generalTransitionsFired,
+                                    vector<vector<vector<double>>> generalIntervalBoundLeft,
+                                    vector<vector<vector<double>>> generalIntervalBoundRight,
+                                    vector<vector<double>> levels, vector<double> drifts);
+
+        vector<double> computeUnequationCut(vector<double> time1, vector<double> time2);
 
         double getBoundedTime(vector<int> generalTransitionsFired, vector<vector<vector<double>>> generalBounds,
-                              vector<double> time);
+                              vector<vector<vector<double>>> oppositeGeneralBounds, vector<double> time);
 
         bool transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,
                                  shared_ptr<Transition> transition, shared_ptr<HybridPetrinet> hybridPetrinet);
@@ -55,18 +49,21 @@ namespace hpnmg {
                                           ParametricLocationTree::Node parentNode, float probability,
                                           shared_ptr<HybridPetrinet> hybridPetrinet);
 
-        void addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double maxTime, double timeDelta,
+        void addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double maxTime,
+                                        vector<double> timeDelta, vector<vector<double>> timeDeltas,
                                         ParametricLocationTree::Node parentNode,
                                         shared_ptr<HybridPetrinet> hybridPetrinet);
 
-        void addLocationForGuardEvent(double timeDelta, ParametricLocationTree::Node parentNode,
+        void addLocationForGuardEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas,
+                                      ParametricLocationTree::Node parentNode,
                                       shared_ptr<HybridPetrinet> hybridPetrinet);
 
         void addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition, double probability,
-                                              double timeDelta, ParametricLocationTree::Node parentNode,
+                                              vector<double> timeDelta, vector<vector<double>> timeDeltas,
+                                              ParametricLocationTree::Node parentNode,
                                               shared_ptr<HybridPetrinet> hybridPetrinet);
 
-        void addLocationForBoundaryEvent(double timeDelta, ParametricLocationTree::Node parentNode,
+        void addLocationForBoundaryEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode,
                                          shared_ptr<HybridPetrinet> hybridPetrinet);
 
         vector<double> getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking,

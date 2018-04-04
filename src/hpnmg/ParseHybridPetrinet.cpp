@@ -94,11 +94,11 @@ namespace hpnmg {
         ParametricLocation location = node.getParametricLocation();
         vector<int> discreteMarking = location.getDiscreteMarking();
         vector<vector<double>> continuousMarking = location.getContinuousMarking();
+        map<string, shared_ptr<ImmediateTransition>> immediateTransitions = hybridPetrinet->getImmediateTransitions();
 
-        // Immediate Transition have highest priority, so we consider them first
+        // step 1: Immediate Transition have highest priority, so we consider them first
         vector<shared_ptr<ImmediateTransition>> enabledImmediateTransition;
         unsigned long highestPriority = ULONG_MAX;
-        auto immediateTransitions = hybridPetrinet->getImmediateTransitions();
         for (auto i = immediateTransitions.begin(); i != immediateTransitions.end(); ++i) {
             shared_ptr<ImmediateTransition> transition = i->second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
@@ -124,313 +124,369 @@ namespace hpnmg {
             return; // no other event has to be considered
         }
 
-        // Now we can consider timed transitions, guard arcs and boundaries of fluid places
-        // we need all events that start first (their minimumTime of firing is less than the lowest maximumTime)
-        double firstMaximumTime = maxTime; // todo: maybe change
-//        vector<double> generalDependencies = node.getParametricLocation().getSourceEvent().getGeneralDependencies();
-//        firstMaximumTime.push_back(maxTime - node.getParametricLocation().getSourceEvent().getTime());
-//        firstMaximumTime.insert(firstMaximumTime.end(), generalDependencies.begin(), generalDependencies.end() );
+        // extract important data from location
+        vector<vector<double>> levels = location.getContinuousMarking();
+        vector<double> drifts = location.getDrift();
+        vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
+        vector<vector<vector<double>>> generalIntervalBoundLeft = location.getGeneralIntervalBoundLeft();
+        vector<vector<vector<double>>> generalIntervalBoundRight = location.getGeneralIntervalBoundRight();
+        map<string, shared_ptr<DeterministicTransition>> deterministicTransitions = hybridPetrinet->getDeterministicTransitions();
+        map<string, shared_ptr<GeneralTransition>> generalTransitions = hybridPetrinet->getGeneralTransitions();
+        vector<vector<double>> deterministicClocks = location.getDeterministicClock();
+        vector<vector<double>> generalClock = location.getGeneralClock();
 
-        vector<vector<double>> levels = node.getParametricLocation().getContinuousMarking();
-        vector<double> drift = node.getParametricLocation().getDrift();
-
-        // Order I: guard arcs for immediate transitions
-        // next immediate transitions with their minimumTime
-        vector<pair<double, shared_ptr<ImmediateTransition>>> nextImmediateGuards;
-        for (auto transitionItem : hybridPetrinet->getImmediateTransitions()) {
+        // step 2: get all time-delta for timed events
+        vector<vector<double>> timeDeltas;
+        // 2.1 guard arcs
+        for (auto transitionItem : immediateTransitions) {
             shared_ptr<ImmediateTransition> transition = transitionItem.second;
             for (auto arcItem : transition->getGuardInputArcs()) {
-                shared_ptr<GuardArc> arc = arcItem.second;
-                string placeId = arc->place->id;
-                long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) -
-                                continuousPlaceIDs.begin();
-                double minimumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                     location.getGeneralIntervalBoundLeft(), levels[placePos]);
-                double maximumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                     location.getGeneralIntervalBoundRight(), levels[placePos]);
-                // todo: ist es möglich, dass das arc weight zwischen minimum und maximum level liegt?
-                // drift is negative and level is over arc weight
-                if (drift[placePos] < 0 && arc->weight < minimumLevel) {
-                    double remainingMinimumTime = (arc->weight - minimumLevel) / drift[placePos];
-                    double remainingMaximumTime = (arc->weight - maximumLevel) / drift[placePos];
-                    if (remainingMaximumTime < firstMaximumTime) {
-                        firstMaximumTime = remainingMaximumTime;
-                        nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
+                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+                                                        drifts);
+                if (timeDelta.size() > 0)
+                    timeDeltas.push_back(timeDelta);
+            }
+        }
+        for (auto transitionItem : generalTransitions) {
+            shared_ptr<GeneralTransition> transition = transitionItem.second;
+            for (auto arcItem : transition->getGuardInputArcs()) {
+                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+                                                        drifts);
+                if (timeDelta.size() > 0)
+                    timeDeltas.push_back(timeDelta);
+            }
+        }
+        for (auto transitionItem : deterministicTransitions) {
+            shared_ptr<DeterministicTransition> transition = transitionItem.second;
+            for (auto arcItem : transition->getGuardInputArcs()) {
+                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+                                                        drifts);
+                if (timeDelta.size() > 0)
+                    timeDeltas.push_back(timeDelta);
+            }
+        }
+        for (auto transitionItem : hybridPetrinet->getContinuousTransitions()) {
+            shared_ptr<ContinuousTransition> transition = transitionItem.second;
+            for (auto arcItem : transition->getGuardInputArcs()) {
+                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+                                                        drifts);
+                if (timeDelta.size() > 0)
+                    timeDeltas.push_back(timeDelta);
+            }
+        }
+        // 2.2 Deterministic transitions
+        for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
+            shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
+            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
+                // get time when transitions are fired (disctime - clock)
+                vector<double> timeDelta = deterministicClocks[pos];
+                for (int i = 0; i < timeDelta.size(); ++i) {
+                    timeDelta[i] = 0 - timeDelta[i];
+                    if (i == 0) {
+                        timeDelta[i] += transition->getDiscTime();
                     }
-                    if (remainingMinimumTime <= firstMaximumTime) {
-                        nextImmediateGuards.push_back(make_pair(remainingMinimumTime, transition));
-                    }
-                    // drift is positive and level is under arc weight
-                } else if (drift[placePos] > 0 && arc->weight > maximumLevel) {
-                    double remainingMinimumTime = (arc->weight - maximumLevel) / drift[placePos];
-                    double remainingMaximumTime = (arc->weight - minimumLevel) / drift[placePos];
-                    if (remainingMaximumTime < firstMaximumTime) {
-                        firstMaximumTime = remainingMaximumTime;
-                        nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                    }
-                    if (remainingMinimumTime <= firstMaximumTime) {
-                        nextImmediateGuards.push_back(make_pair(remainingMinimumTime, transition));
-                    }
+                }
+                timeDeltas.push_back(timeDelta);
+            }
+        }
+        // 2.3 Continuous Places
+        for (int pos = 0; pos < continuousPlaceIDs.size(); ++pos) {
+            shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[continuousPlaceIDs[pos]];
+            vector<double> level = levels[pos];
+            double drift = drifts[pos];
+            if (drift < 0) { // negative drift
+                // remaining time is level / abs(drift)
+                vector<double> timeDelta;
+                for (int i = 0; i < level.size(); ++i)
+                    timeDelta.push_back(level[i] / (0 - drift));
+                timeDeltas.push_back(timeDelta);
+            } else if (drift > 0 && !place->getInfiniteCapacity()) { // positive drift
+                // remaining time is (maxLevel - level) / drift
+                vector<double> timeDelta;
+                for (int i = 0; i < level.size(); ++i) {
+                    double value = 0 - level[i];
+                    if (i == 0)
+                        value += place->getCapacity();
+                    timeDelta.push_back(value / drift);
+                }
+
+                timeDeltas.push_back(timeDelta);
+            }
+        }
+
+        // step 3: get all minimal time-delta and save minimal maximum
+        // 3.1 get minimal maximumTime
+        double minimalMaximum = maxTime;
+        for (int i = 0; i < timeDeltas.size(); ++i) {
+            vector<double> timeDelta = timeDeltas[i];
+            double maximalTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundRight,
+                                                generalIntervalBoundLeft, timeDelta);
+            if (maximalTime < minimalMaximum)
+                minimalMaximum = maximalTime;
+        }
+        // 3.1 get all minimum times
+        vector<vector<double>> minimalTimeDeltas;
+        for (int i = 0; i < timeDeltas.size(); ++i) {
+            vector<double> timeDelta = timeDeltas[i];
+            double minimalTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+                                                generalIntervalBoundRight, timeDelta);
+            if (minimalTime <= minimalMaximum)
+                minimalTimeDeltas.push_back(timeDelta);
+        }
+        // 3.2 remove duplicates
+        for (int i = 1; i < timeDeltas.size(); ++i) {
+            vector<double> timeDelta = timeDeltas[i];
+            for (int j = 0; j < i; ++j) {
+                vector<double> timeDelta2 = timeDeltas[j];
+                if (timeDelta2.size() != timeDelta.size())
+                    continue;
+                bool duplicate = true;
+                for (int k = 0; k < timeDelta.size(); ++k)
+                    if (timeDelta[k] != timeDelta2[k])
+                        duplicate = false;
+                if (duplicate)
+                    timeDeltas.erase(timeDeltas.begin() + i);
+            }
+            double minimalTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+                                                generalIntervalBoundRight, timeDelta);
+            if (minimalTime <= minimalMaximum)
+                minimalTimeDeltas.push_back(timeDelta);
+        }
+
+        // step 4: add parametric locations for every general transition
+        for (auto transitionItem : generalTransitions) {
+            shared_ptr<GeneralTransition> transition = transitionItem.second;
+            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
+                // if we have no minimal timeDelta we use maxTime
+                if (minimalTimeDeltas.size() < 1)
+                    addLocationForGeneralEvent(transition, maxTime, {maxTime}, {{}}, node, hybridPetrinet);
+
+                // for every general transition we need one parametric location per minimal timedelta
+                for (int i = 0; i < minimalTimeDeltas.size(); ++i)
+                    addLocationForGeneralEvent(transition, maxTime, minimalTimeDeltas[i], minimalTimeDeltas, node,
+                                               hybridPetrinet);
+            }
+        }
+
+        // step 5: add one (maybe sometimes 2?) parametric location for every timed event with minimal time delta
+        // if minimum of time-delta equals minimalMaximum consider order
+        bool consideringOrder = false;
+
+        // Order I: guard arcs for immediate transitions
+        for (auto transitionItem : immediateTransitions) {
+            shared_ptr<ImmediateTransition> transition = transitionItem.second;
+            for (auto arcItem : transition->getGuardInputArcs()) {
+                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+                                                        drifts);
+                if (timeDelta.size() < 1)
+                    continue;
+                double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+                                                    generalIntervalBoundRight, timeDelta);
+                if (minimumTime <= minimalMaximum) {
+                    if (minimumTime == minimalMaximum)
+                        consideringOrder = true;
+                    addLocationForGuardEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                 }
             }
         }
 
         // Order II: firing of deterministic transition
-        vector<pair<double, shared_ptr<DeterministicTransition>>> nextDeterministicTransitions;
         // get enabled deterministic transitions (we ignore priority)
-        for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
-            shared_ptr<DeterministicTransition> transition = hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[pos]];
-            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
-                // get time when transitions are enabled
-                double elapsedMinimumTime = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                           location.getGeneralIntervalBoundLeft(),
-                                                           location.getDeterministicClock()[pos]);
-                double remainingMaximumTime = transition->getDiscTime() - elapsedMinimumTime;
-                if (remainingMaximumTime < firstMaximumTime) {
-                    firstMaximumTime = remainingMaximumTime;
-                    nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                    nextDeterministicTransitions = getNewNextDeterministicTransitions(firstMaximumTime,
-                                                                                      nextDeterministicTransitions);
+        if (!consideringOrder) {
+            vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> nextDeterministicTransitions;
+            for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
+                shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
+                if (!transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet))
+                    continue;
+                vector<double> clock = location.getDeterministicClock()[pos];
+                vector<double> timeDelta;
+                for (int i = 0; i < clock.size(); ++i) {
+                    double value = 0 - clock[i];
+                    if (i == 0)
+                        value += transition->getDiscTime();
+                    timeDelta.push_back(value);
                 }
-                double elapsedMaximumTime = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                           location.getGeneralIntervalBoundRight(),
-                                                           location.getDeterministicClock()[pos]);
-                double remainingMinimumTime = transition->getDiscTime() - elapsedMaximumTime;
-                if (remainingMinimumTime <= firstMaximumTime)
-                    nextDeterministicTransitions.push_back(make_pair(remainingMinimumTime, transition));
+                double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+                                                    generalIntervalBoundRight, timeDelta);
+                if (minimumTime <= minimalMaximum) {
+                    if (minimumTime == minimalMaximum)
+                        consideringOrder = true;
+                    nextDeterministicTransitions.push_back(make_pair(transition, timeDelta));
+                }
+            }
+            double sumWeight = 0;
+            for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : nextDeterministicTransitions)
+                sumWeight += transitionItem.first->getWeight();
+            for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : nextDeterministicTransitions) {
+                double probability = transitionItem.first->getWeight() / sumWeight;
+                addLocationForDeterministicEvent(transitionItem.first, probability, transitionItem.second, timeDeltas,
+                                                 node, hybridPetrinet);
             }
         }
 
         // Order III: ContinuousPlace reaches boundary or guard arc for continuous transition
-        vector<pair<double, shared_ptr<ContinuousPlace>>> nextPlaces;
-        for (int pos = 0; pos < continuousPlaceIDs.size(); ++pos) {
-            shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[continuousPlaceIDs[pos]];
-            double minimumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                 location.getGeneralIntervalBoundLeft(), levels[pos]);
-            double maximumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                 location.getGeneralIntervalBoundRight(), levels[pos]);
-            double remainingMaximumTime;
-            double remainingMinimumTime;
-            if (drift[pos] < 0) { // negative drift
-                remainingMaximumTime = maximumLevel / drift[pos];
-                if (remainingMaximumTime < firstMaximumTime) {
-                    firstMaximumTime = remainingMaximumTime;
-                    nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                    nextDeterministicTransitions = getNewNextDeterministicTransitions(firstMaximumTime,
-                                                                                      nextDeterministicTransitions);
-                    nextPlaces = getNewNextPlaces(firstMaximumTime, nextPlaces);
-                }
-                remainingMinimumTime = minimumLevel / drift[pos];
-                if (remainingMinimumTime <= firstMaximumTime)
-                    nextPlaces.push_back(make_pair(remainingMinimumTime, place));
-            } else if (drift[pos] > 0 && !place->getInfiniteCapacity()) { // positive drift
-                if (place->getInfiniteCapacity())
+        if (!consideringOrder) {
+            for (int pos = 0; pos < continuousPlaceIDs.size(); ++pos) {
+                shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[continuousPlaceIDs[pos]];
+                vector<double> level = levels[pos];
+
+                vector<double> timeDelta;
+                double drift = drifts[pos];
+                if (drift < 0) { // negative drift
+                    // remaining time is level / abs(drift)
+                    for (int i = 0; i < level.size(); ++i)
+                        timeDelta.push_back(level[i] / (0 - drift));
+                } else if (drift > 0 && !place->getInfiniteCapacity()) { // positive drift
+                    // remaining time is (maxLevel - level) / drift
+                    for (int i = 0; i < level.size(); ++i) {
+                        double value = 0 - level[i];
+                        if (i == 0)
+                            value += place->getCapacity();
+                        timeDelta.push_back(value / drift);
+                    }
+                } else {
                     continue;
-                remainingMaximumTime = (place->getCapacity() - minimumLevel) / drift[pos];
-                if (remainingMaximumTime < firstMaximumTime) {
-                    firstMaximumTime = remainingMaximumTime;
-                    nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                    nextDeterministicTransitions = getNewNextDeterministicTransitions(firstMaximumTime,
-                                                                                      nextDeterministicTransitions);
-                    nextPlaces = getNewNextPlaces(firstMaximumTime, nextPlaces);
                 }
-                remainingMinimumTime = (place->getCapacity() - maximumLevel) / drift[pos];
-                if (remainingMinimumTime <= firstMaximumTime)
-                    nextPlaces.push_back(make_pair(remainingMinimumTime, place));
+                double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+                                                    generalIntervalBoundRight, timeDelta);
+                if (minimumTime <= minimalMaximum) {
+                    if (minimumTime == minimalMaximum)
+                        consideringOrder = true;
+                    addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet);
+                }
             }
-        }
-        vector<pair<double, shared_ptr<ContinuousTransition>>> nextContinuousGuards;
-        for (auto transitionItem : hybridPetrinet->getContinuousTransitions()) {
-            shared_ptr<ContinuousTransition> transition = transitionItem.second;
-            for (auto arcItem : transition->getGuardInputArcs()) {
-                shared_ptr<GuardArc> arc = arcItem.second;
-                string placeId = arc->place->id;
-                // arc is connected to discrete place (no event will happen)
-                if (find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) == continuousPlaceIDs.end())
-                    continue;
-                long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) -
-                                continuousPlaceIDs.begin();
-                shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[placeId];
-                double minimumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                     location.getGeneralIntervalBoundLeft(), levels[placePos]);
-                double maximumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                     location.getGeneralIntervalBoundRight(), levels[placePos]);
-                // drift is negative and level is over arc weight
-                if (drift[placePos] < 0 && arc->weight < minimumLevel) {
-                    double remainingMaximumTime = (arc->weight - maximumLevel) / drift[placePos];
-                    if (remainingMaximumTime < firstMaximumTime) {
-                        firstMaximumTime = remainingMaximumTime;
-                        nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                        nextDeterministicTransitions = getNewNextDeterministicTransitions(firstMaximumTime,
-                                                                                          nextDeterministicTransitions);
-                        nextPlaces = getNewNextPlaces(firstMaximumTime, nextPlaces);
-                        nextContinuousGuards = getNewNextContinuousGuards(firstMaximumTime, nextContinuousGuards);
+            vector<pair<double, shared_ptr<ContinuousTransition>>> nextContinuousGuards;
+            for (auto transitionItem : hybridPetrinet->getContinuousTransitions()) {
+                shared_ptr<ContinuousTransition> transition = transitionItem.second;
+                for (auto arcItem : transition->getGuardInputArcs()) {
+                    vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+                                                            generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+                                                            drifts);
+                    if (timeDelta.size() < 1)
+                        continue;
+                    double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+                                                        generalIntervalBoundRight, timeDelta);
+                    if (minimumTime <= minimalMaximum) {
+                        if (minimumTime == minimalMaximum)
+                            consideringOrder = true;
+                        addLocationForGuardEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                     }
-                    double remainingMinimumTime = (arc->weight - minimumLevel) / drift[placePos];
-                    if (remainingMinimumTime <= firstMaximumTime)
-                        nextContinuousGuards.push_back(make_pair(remainingMinimumTime, transition));
-                    // drift is positive and level is under arc weight
-                } else if (drift[placePos] > 0 && arc->weight > maximumLevel) {
-                    double remainingMaximumTime = (arc->weight - minimumLevel) / drift[placePos];
-                    if (remainingMaximumTime < firstMaximumTime) {
-                        firstMaximumTime = remainingMaximumTime;
-                        nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                        nextDeterministicTransitions = getNewNextDeterministicTransitions(firstMaximumTime,
-                                                                                          nextDeterministicTransitions);
-                        nextPlaces = getNewNextPlaces(firstMaximumTime, nextPlaces);
-                        nextContinuousGuards = getNewNextContinuousGuards(firstMaximumTime, nextContinuousGuards);
-                    }
-                    double remainingMinimumTime = (arc->weight - maximumLevel) / drift[placePos];
-                    if (remainingMinimumTime <= firstMaximumTime)
-                        nextContinuousGuards.push_back(make_pair(remainingMinimumTime, transition));
                 }
             }
         }
 
         // Order IV: guard arc for deterministic or general transition
-        vector<pair<double, shared_ptr<DeterministicTransition>>> nextDeterministicGuards;
-        for (auto transitionItem : hybridPetrinet->getDeterministicTransitions()) {
-            shared_ptr<DeterministicTransition> transition = transitionItem.second;
-            for (auto arcItem : transition->getGuardInputArcs()) {
-                shared_ptr<GuardArc> arc = arcItem.second;
-                string placeId = arc->place->id;
-                long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) -
-                                continuousPlaceIDs.begin();
-                shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[placeId];
-                double minimumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                     location.getGeneralIntervalBoundLeft(), levels[placePos]);
-                double maximumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                     location.getGeneralIntervalBoundRight(), levels[placePos]);
-                // drift is negative and level is over arc weight
-                if (drift[placePos] < 0 && arc->weight < minimumLevel) {
-                    double remainingMaximumTime = (arc->weight - maximumLevel) / drift[placePos];
-                    if (remainingMaximumTime < firstMaximumTime) {
-                        firstMaximumTime = remainingMaximumTime;
-                        nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                        nextDeterministicTransitions = getNewNextDeterministicTransitions(firstMaximumTime,
-                                                                                          nextDeterministicTransitions);
-                        nextPlaces = getNewNextPlaces(firstMaximumTime, nextPlaces);
-                        nextContinuousGuards = getNewNextContinuousGuards(firstMaximumTime, nextContinuousGuards);
-                        nextDeterministicGuards = getNewNextDeterministicGuards(firstMaximumTime,
-                                                                                nextDeterministicGuards);
+        if (!consideringOrder) {
+            vector<pair<double, shared_ptr<DeterministicTransition>>> nextDeterministicGuards;
+            for (auto transitionItem : hybridPetrinet->getDeterministicTransitions()) {
+                shared_ptr<DeterministicTransition> transition = transitionItem.second;
+                for (auto arcItem : transition->getGuardInputArcs()) {
+                    vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+                                                            generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+                                                            drifts);
+                    if (timeDelta.size() < 1)
+                        continue;
+                    double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+                                                        generalIntervalBoundRight, timeDelta);
+                    if (minimumTime <= minimalMaximum) {
+                        addLocationForGuardEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                     }
-                    double remainingMinimumTime = (arc->weight - minimumLevel) / drift[placePos];
-                    if (remainingMinimumTime <= firstMaximumTime)
-                        nextDeterministicGuards.push_back(make_pair(remainingMinimumTime, transition));
-                    // drift is positive and level is under arc weight
-                } else if (drift[placePos] > 0 && arc->weight > maximumLevel) {
-                    double remainingMaximumTime = (arc->weight - minimumLevel) / drift[placePos];
-                    if (remainingMaximumTime < firstMaximumTime) {
-                        firstMaximumTime = remainingMaximumTime;
-                        nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                        nextDeterministicTransitions = getNewNextDeterministicTransitions(firstMaximumTime,
-                                                                                          nextDeterministicTransitions);
-                        nextPlaces = getNewNextPlaces(firstMaximumTime, nextPlaces);
-                        nextContinuousGuards = getNewNextContinuousGuards(firstMaximumTime, nextContinuousGuards);
-                        nextDeterministicGuards = getNewNextDeterministicGuards(firstMaximumTime,
-                                                                                nextDeterministicGuards);
-                    }
-                    double remainingMinimumTime = (arc->weight - maximumLevel) / drift[placePos];
-                    if (remainingMinimumTime <= firstMaximumTime)
-                        nextDeterministicGuards.push_back(make_pair(remainingMinimumTime, transition));
                 }
             }
-        }
-        vector<pair<double, shared_ptr<GeneralTransition>>> nextGeneralGuards;
-        for (auto transitionItem : hybridPetrinet->getGeneralTransitions()) {
-            shared_ptr<GeneralTransition> transition = transitionItem.second;
-            for (auto arcItem : transition->getGuardInputArcs()) {
-                shared_ptr<GuardArc> arc = arcItem.second;
-                string placeId = arc->place->id;
-                long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) -
-                                continuousPlaceIDs.begin();
-                shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[placeId];
-                double minimumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                     location.getGeneralIntervalBoundLeft(), levels[placePos]);
-                double maximumLevel = getBoundedTime(location.getGeneralTransitionsFired(),
-                                                     location.getGeneralIntervalBoundRight(), levels[placePos]);
-                // drift is negative and level is over arc weight
-                if (drift[placePos] < 0 && arc->weight < minimumLevel) {
-                    double remainingMaximumTime = (arc->weight - maximumLevel) / drift[placePos];
-                    if (remainingMaximumTime < firstMaximumTime) {
-                        firstMaximumTime = remainingMaximumTime;
-                        nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                        nextDeterministicTransitions = getNewNextDeterministicTransitions(firstMaximumTime,
-                                                                                          nextDeterministicTransitions);
-                        nextPlaces = getNewNextPlaces(firstMaximumTime, nextPlaces);
-                        nextContinuousGuards = getNewNextContinuousGuards(firstMaximumTime, nextContinuousGuards);
-                        nextDeterministicGuards = getNewNextDeterministicGuards(firstMaximumTime,
-                                                                                nextDeterministicGuards);
-                        nextGeneralGuards = getNewNextGeneralGuards(firstMaximumTime, nextGeneralGuards);
+            vector<pair<double, shared_ptr<GeneralTransition>>> nextGeneralGuards;
+            for (auto transitionItem : hybridPetrinet->getGeneralTransitions()) {
+                shared_ptr<GeneralTransition> transition = transitionItem.second;
+                for (auto arcItem : transition->getGuardInputArcs()) {
+                    vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+                                                            generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+                                                            drifts);
+                    if (timeDelta.size() < 1)
+                        continue;
+                    double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+                                                        generalIntervalBoundRight, timeDelta);
+                    if (minimumTime <= minimalMaximum) {
+                        addLocationForGuardEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                     }
-                    double remainingMinimumTime = (arc->weight - minimumLevel) / drift[placePos];
-                    if (remainingMinimumTime <= firstMaximumTime)
-                        nextGeneralGuards.push_back(make_pair(remainingMinimumTime, transition));
-                    // drift is positive and level is under arc weight
-                } else if (drift[placePos] > 0 && arc->weight > maximumLevel) {
-                    double remainingMaximumTime = (arc->weight - minimumLevel) / drift[placePos];
-                    if (remainingMaximumTime < firstMaximumTime) {
-                        firstMaximumTime = remainingMaximumTime;
-                        nextImmediateGuards = getNewNextImmediateGuards(firstMaximumTime, nextImmediateGuards);
-                        nextDeterministicTransitions = getNewNextDeterministicTransitions(firstMaximumTime,
-                                                                                          nextDeterministicTransitions);
-                        nextPlaces = getNewNextPlaces(firstMaximumTime, nextPlaces);
-                        nextContinuousGuards = getNewNextContinuousGuards(firstMaximumTime, nextContinuousGuards);
-                        nextDeterministicGuards = getNewNextDeterministicGuards(firstMaximumTime,
-                                                                                nextDeterministicGuards);
-                        nextGeneralGuards = getNewNextGeneralGuards(firstMaximumTime, nextGeneralGuards);
-                    }
-                    double remainingMinimumTime = (arc->weight - maximumLevel) / drift[placePos];
-                    if (remainingMinimumTime <= firstMaximumTime)
-                        nextGeneralGuards.push_back(make_pair(remainingMinimumTime, transition));
                 }
             }
-        }
-
-
-        // If no immediate transition is enabled we have to consider all enabled general transitions
-        // todo: get real time for events, not just minimumTime
-        vector<string> enabledGeneralTransitions;
-        auto generalTransitions = hybridPetrinet->getGeneralTransitions();
-        for (auto i = generalTransitions.begin(); i != generalTransitions.end(); ++i) {
-            shared_ptr<GeneralTransition> transition = i->second;
-            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet))
-                addLocationForGeneralEvent(transition, maxTime, firstMaximumTime, node, hybridPetrinet);
-        }
-
-        // now we have the minimumTime and all events that happen at this time
-        // todo: if minimumTime is not equal maximumtime here can happen more events
-        if (!nextImmediateGuards.empty()) {
-            for (auto &transition : nextImmediateGuards)
-                addLocationForGuardEvent(transition.first, node, hybridPetrinet);
-        } else if (!nextDeterministicTransitions.empty()) {
-            double sumWeight = 0;
-            for (pair<double, shared_ptr<DeterministicTransition>> &transition : nextDeterministicTransitions)
-                sumWeight += transition.second->getWeight();
-            for (pair<double, shared_ptr<DeterministicTransition>> &transition : nextDeterministicTransitions) {
-                double probability = transition.second->getWeight() / sumWeight;
-                addLocationForDeterministicEvent(transition.second, probability, transition.first, node, hybridPetrinet);
-            }
-        } else if (!nextPlaces.empty() || !nextContinuousGuards.empty()) {
-            for (auto &place : nextPlaces)
-                addLocationForBoundaryEvent(place.first, node, hybridPetrinet);
-            for (auto &transition : nextContinuousGuards)
-                addLocationForGuardEvent(transition.first, node, hybridPetrinet);
-        } else if (!nextDeterministicGuards.empty() || !nextGeneralGuards.empty()) {
-            for (auto &transition : nextDeterministicGuards)
-                addLocationForGuardEvent(transition.first, node, hybridPetrinet);
-            for (auto &transition : nextGeneralGuards)
-                addLocationForGuardEvent(transition.first, node, hybridPetrinet);
         }
 
         for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
-            locationQueue.push_back(childNode);
+            if (childNode.getNodeID() <= 20) // to avoid zeno behavior
+                locationQueue.push_back(childNode);
         }
     }
 
+    vector<double> ParseHybridPetrinet::getTimeDelta(shared_ptr<GuardArc> arc, vector<int> generalTransitionsFired,
+                                                     vector<vector<vector<double>>> generalIntervalBoundLeft,
+                                                     vector<vector<vector<double>>> generalIntervalBoundRight,
+                                                     vector<vector<double>> levels, vector<double> drifts) {
+        double weight = arc->weight;
+        string placeId = arc->place->id;
+        long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) -
+                        continuousPlaceIDs.begin();
+        if (placePos >= continuousPlaceIDs.size())
+            return {};
+        vector<double> level = levels[placePos];
+        double drift = drifts[placePos];
+        double minimumLevel = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+                                             generalIntervalBoundRight, level);
+        double maximumLevel = getBoundedTime(generalTransitionsFired, generalIntervalBoundRight,
+                                             generalIntervalBoundLeft, level);
+        // drift is negative and level is over arc weight
+        if (drift < 0 && weight < minimumLevel) {
+            // remaining time is (level - arc) / abs(drift)
+            vector<double> levelDelta = level;
+            levelDelta[0] -= weight;
+            vector<double> timeDelta;
+            for (int i = 0; i < levelDelta.size(); ++i) {
+                timeDelta.push_back(levelDelta[i] / (0 - drift));
+            }
+            return timeDelta;
+            // drift is positive and level is under arc weight
+        } else if (drift > 0 && weight > maximumLevel) {
+            // remaining time is (arc - level) / drift
+            vector<double> timeDelta;
+            for (int i = 0; i < level.size(); ++i) {
+                double value = 0 - level[i];
+                if (i == 0)
+                    value += weight;
+                timeDelta.push_back(value / drift);
+            }
+            return timeDelta;
+        } else {
+            return {};
+        }
+    }
+
+    vector<double> ParseHybridPetrinet::computeUnequationCut(vector<double> time1, vector<double> time2) {
+        unsigned long minSize = min(time1.size(), time2.size());
+        long k = -1;
+        double diffK;
+        for (long i = minSize - 1; i >= 0; --i) {
+            if (time1[i] != time2[i]) {
+                k = i;
+                diffK = time2[i] - time1[i];
+                break;
+            }
+        }
+        if (k < 1)
+            return {};
+        vector<double> unequationCut;
+        for (int i = 0; i < k; ++i)
+            unequationCut.push_back((time1[i] - time2[i]) / diffK);
+        return unequationCut;
+    }
+
     double ParseHybridPetrinet::getBoundedTime(vector<int> generalTransitionsFired,
-                                               vector<vector<vector<double>>> generalBounds, vector<double> time) {
-        // todo: denken: muss man bei negativen values evtl den anderen bound betrachten?
+                                               vector<vector<vector<double>>> generalBounds,
+                                               vector<vector<vector<double>>> oppositeGeneralBounds,
+                                               vector<double> time) {
         assert(time.size() == generalTransitionsFired.size() + 1);
         vector<int> counter = vector<int>(generalTransitionIDs.size());
         fill(counter.begin(), counter.end(), 0);
@@ -445,69 +501,19 @@ namespace hpnmg {
             int transitionPos = generalTransitionsFired[time.size() - 1];
             int firingTime = counter[transitionPos];
             vector<double> boundaries = generalBounds[transitionPos][firingTime];
+            vector<double> oppositeBoundaries = oppositeGeneralBounds[transitionPos][firingTime];
             counter[transitionPos] -= 1;
 
             // add boundaries multiplicated with value to time vector
 //            assert(boundaries.size() <= time.size()); todo
             for (int i = 0; i < time.size(); ++i)
-                time[i] += value * boundaries[i];
+                if (value >= 0)
+                    time[i] += value * boundaries[i];
+                else
+                    time[i] += value * oppositeBoundaries[i];
+
         }
         return time[0];
-    }
-
-    vector<pair<double, shared_ptr<ImmediateTransition>>> ParseHybridPetrinet::getNewNextImmediateGuards(
-            double maximumTime, vector<pair<double, shared_ptr<ImmediateTransition>>> nextImmediateGuards) {
-        vector<pair<double, shared_ptr<ImmediateTransition>>> newNextImmediateGuards;
-        for (pair<double, shared_ptr<ImmediateTransition>> guard : nextImmediateGuards)
-            if (guard.first <= maximumTime)
-                newNextImmediateGuards.push_back(guard);
-        return newNextImmediateGuards;
-    }
-
-    vector<pair<double, shared_ptr<DeterministicTransition>>> ParseHybridPetrinet::getNewNextDeterministicTransitions(
-            double maximumTime,
-            vector<pair<double, shared_ptr<DeterministicTransition>>> nextDeterministicTransitions) {
-        vector<pair<double, shared_ptr<DeterministicTransition>>> newNextDeterministicTransitions;
-        for (pair<double, shared_ptr<DeterministicTransition>> transition : nextDeterministicTransitions)
-            if (transition.first <= maximumTime)
-                newNextDeterministicTransitions.push_back(transition);
-        return newNextDeterministicTransitions;
-    }
-
-    vector<pair<double, shared_ptr<ContinuousPlace>>> ParseHybridPetrinet::getNewNextPlaces(double maximumTime,
-                                                                                            vector<pair<double, shared_ptr<ContinuousPlace>>> nextPlaces) {
-        vector<pair<double, shared_ptr<ContinuousPlace>>> newNextPlaces;
-        for (pair<double, shared_ptr<ContinuousPlace>> place : nextPlaces)
-            if (place.first <= maximumTime)
-                newNextPlaces.push_back(place);
-        return newNextPlaces;
-    }
-
-    vector<pair<double, shared_ptr<ContinuousTransition>>> ParseHybridPetrinet::getNewNextContinuousGuards(
-            double maximumTime, vector<pair<double, shared_ptr<ContinuousTransition>>> nextContinuousGuards) {
-        vector<pair<double, shared_ptr<ContinuousTransition>>> newNextContinuousGuards;
-        for (pair<double, shared_ptr<ContinuousTransition>> transition : nextContinuousGuards)
-            if (transition.first <= maximumTime)
-                newNextContinuousGuards.push_back(transition);
-        return newNextContinuousGuards;
-    }
-
-    vector<pair<double, shared_ptr<DeterministicTransition>>> ParseHybridPetrinet::getNewNextDeterministicGuards(
-            double maximumTime, vector<pair<double, shared_ptr<DeterministicTransition>>> nextDeterministicGuards) {
-        vector<pair<double, shared_ptr<DeterministicTransition>>> newNextDeterministicGuards;
-        for (pair<double, shared_ptr<DeterministicTransition>> guard : nextDeterministicGuards)
-            if (guard.first <= maximumTime)
-                newNextDeterministicGuards.push_back(guard);
-        return newNextDeterministicGuards;
-    }
-
-    vector<pair<double, shared_ptr<GeneralTransition>>> ParseHybridPetrinet::getNewNextGeneralGuards(
-            double maximumTime, vector<pair<double, shared_ptr<GeneralTransition>>> nextGeneralGuards) {
-        vector<pair<double, shared_ptr<GeneralTransition>>> newNextGeneralGuards;
-        for (pair<double, shared_ptr<GeneralTransition>> guard : nextGeneralGuards)
-            if (guard.first <= maximumTime)
-                newNextGeneralGuards.push_back(guard);
-        return newNextGeneralGuards;
     }
 
     bool ParseHybridPetrinet::transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,
@@ -587,7 +593,8 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    void ParseHybridPetrinet::addLocationForGuardEvent(double timeDelta, ParametricLocationTree::Node parentNode,
+    void ParseHybridPetrinet::addLocationForGuardEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas,
+                                                       ParametricLocationTree::Node parentNode,
                                                        shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
 
@@ -595,10 +602,13 @@ namespace hpnmg {
         // (we have to do this first because we need the old markings)
         vector<vector<vector<double>>> generalIntervalBoundLeft = parentLocation.getGeneralIntervalBoundLeft();
         vector<vector<vector<double>>> generalIntervalBoundRight = parentLocation.getGeneralIntervalBoundRight();
-        for (int i = 0; i < generalTransitionIDs.size(); ++i)
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
             if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
-                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
-                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][0] += timeDelta;
+                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet)) {
+                for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
+                    generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+            }
+        }
 
         vector<vector<double>> parentContinuousMarking = parentLocation.getContinuousMarking();
         vector<double> parentDrift = parentLocation.getDrift();
@@ -606,14 +616,55 @@ namespace hpnmg {
         vector<int> discreteMarking = parentLocation.getDiscreteMarking();
         vector<vector<double>> continuousMarking;
         for (int pos = 0; pos < parentContinuousMarking.size(); ++pos) {
-            vector<double> newMarking = {parentContinuousMarking[pos][0] + (parentDrift[pos] * timeDelta)};
+            double drift = parentDrift[pos];
+            vector<double> oldMarking = parentContinuousMarking[pos];
+            vector<double> newMarking;
+            for (int j = 0; j < oldMarking.size() || j < timeDelta.size(); ++j) {
+                if (j >= oldMarking.size())
+                    newMarking.push_back(timeDelta[j] * drift);
+                else if (j >= timeDelta.size())
+                    newMarking.push_back(oldMarking[j]);
+                else
+                    newMarking.push_back(oldMarking[j] + timeDelta[j] * drift);
+            }
             continuousMarking.push_back(newMarking);
         }
         vector<double> drift = getDrift(discreteMarking, continuousMarking, hybridPetrinet);
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
-        vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+        vector<double> generalDependecies = parentLocation.getSourceEvent().getGeneralDependencies();
+        for (int j = 1; j - 1 < generalDependecies.size() || j < timeDelta.size(); ++j) {
+            if (j - 1 >= generalDependecies.size())
+                generalDependecies.push_back(timeDelta[j]);
+            else if (j >= timeDelta.size())
+                continue;
+            else
+                generalDependecies[j - 1] = generalDependecies[j - 1] + timeDelta[j];
+        }
 
-        double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta;
+        // adjust general bounds for every other timeDelta, than timeDelta
+        vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
+        if (timeDeltas.size() > 1) {
+            for (int i = 0; i < timeDeltas.size(); ++i) {
+                if (timeDeltas[i] == timeDelta)
+                    continue;
+                vector<double> unequationCut = computeUnequationCut(timeDelta, timeDeltas[i]);
+                long k = unequationCut.size();
+                // adjust bounds for random variable that fired as kth general transition
+                if (k > 0) {
+                    int generalTransitionPos = generalTransitionsFired[k];
+                    int counter = 0;
+                    for (int j = 0; j < k; ++j)
+                        if (generalTransitionsFired[j] == k)
+                            ++counter;
+                    if (timeDelta[k] > timeDeltas[i][k])
+                        generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
+                    else
+                        generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
+                }
+            }
+        }
+
+        double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta[0];
         Event event = Event(EventType::Guard, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
@@ -621,13 +672,36 @@ namespace hpnmg {
 
         // get new deterministic clocks
         vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
-        for (int i = 0; i < deterministicClocks.size(); ++i)
-            deterministicClocks[i][0] += timeDelta;
+        for (int i = 0; i < deterministicClocks.size(); ++i) {
+            if (!transitionIsEnabled(discreteMarking, parentContinuousMarking,
+                                     hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
+                                     hybridPetrinet))
+                continue;
+            for (int j = 0; j < deterministicClocks[i].size() || j < timeDelta.size(); ++j) {
+                if (j >= deterministicClocks[i].size())
+                    deterministicClocks[i].push_back(timeDelta[j]);
+                else if (j >= timeDelta.size())
+                    continue;
+                else
+                    deterministicClocks[i][j] = deterministicClocks[i][j] + timeDelta[j];
+            }
+        }
 
         // get new general clocks
         vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
-        for (int i = 0; i < generalClocks.size(); ++i)
-            generalClocks[i][0] += timeDelta;
+        for (int i = 0; i < generalClocks.size(); ++i) {
+            if (!transitionIsEnabled(discreteMarking, parentContinuousMarking,
+                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
+                continue;
+            for (int j = 0; j < generalClocks[i].size() || j < timeDelta.size(); ++j) {
+                if (j >= generalClocks[i].size())
+                    generalClocks[i].push_back(timeDelta[j]);
+                else if (j >= timeDelta.size())
+                    continue;
+                else
+                    generalClocks[i][j] = generalClocks[i][j] + timeDelta[j];
+            }
+        }
 
         newLocation.setDeterministicClock(deterministicClocks);
         newLocation.setGeneralClock(generalClocks);
@@ -638,7 +712,8 @@ namespace hpnmg {
     }
 
     void ParseHybridPetrinet::addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition,
-                                                               double probability, double timeDelta,
+                                                               double probability, vector<double> timeDelta,
+                                                               vector<vector<double>> timeDeltas,
                                                                ParametricLocationTree::Node parentNode,
                                                                shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
@@ -647,13 +722,38 @@ namespace hpnmg {
         // (we have to do this first because we need the old markings)
         vector<vector<vector<double>>> generalIntervalBoundLeft = parentLocation.getGeneralIntervalBoundLeft();
         vector<vector<vector<double>>> generalIntervalBoundRight = parentLocation.getGeneralIntervalBoundRight();
-        for (int i = 0; i < generalTransitionIDs.size(); ++i)
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
             if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
-                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
-                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][0] += timeDelta;
+                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet)) {
+                for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
+                    generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+            }
+        }
+        // adjust general bounds for every other timeDelta, than timeDelta
+        vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
+        if (timeDeltas.size() > 1) {
+            for (int i = 0; i < timeDeltas.size(); ++i) {
+                if (timeDeltas[i] == timeDelta)
+                    continue;
+                vector<double> unequationCut = computeUnequationCut(timeDelta, timeDeltas[i]);
+                long k = unequationCut.size();
+                // adjust bounds for random variable that fired as kth general transition
+                if (k > 0) {
+                    int generalTransitionPos = generalTransitionsFired[k];
+                    int counter = 0;
+                    for (int j = 0; j < k; ++j)
+                        if (generalTransitionsFired[j] == k)
+                            ++counter;
+                    if (timeDelta[k] > timeDeltas[i][k])
+                        generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
+                    else
+                        generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
+                }
+            }
+        }
 
         // get new markings
-        vector<int> discreteMarking = parentNode.getParametricLocation().getDiscreteMarking();
+        vector<int> discreteMarking = parentLocation.getDiscreteMarking();
         for (auto arcItem : transition->getDiscreteInputArcs()) {
             shared_ptr<DiscreteArc> arc = arcItem.second;
             long pos =
@@ -668,15 +768,28 @@ namespace hpnmg {
         }
 
         // get new drift
-        vector<vector<double>> continuousMarking = parentLocation.getContinuousMarking();
+        vector<vector<double>> parentContinuousMarking = parentLocation.getContinuousMarking();
         vector<double> parentDrift = parentLocation.getDrift();
-        for (int pos = 0; pos < continuousMarking.size(); ++pos)
-            continuousMarking[pos][0] += parentDrift[pos] * timeDelta;
+        vector<vector<double>> continuousMarking;
+        for (int pos = 0; pos < parentContinuousMarking.size(); ++pos) {
+            double drift = parentDrift[pos];
+            vector<double> oldMarking = parentContinuousMarking[pos];
+            vector<double> newMarking;
+            for (int j = 0; j < oldMarking.size() || j < timeDelta.size(); ++j) {
+                if (j >= oldMarking.size())
+                    newMarking.push_back(timeDelta[j] * drift);
+                else if (j >= timeDelta.size())
+                    newMarking.push_back(oldMarking[j]);
+                else
+                    newMarking.push_back(oldMarking[j] + timeDelta[j] * drift);
+            }
+            continuousMarking.push_back(newMarking);
+        }
         vector<double> drift = getDrift(discreteMarking, continuousMarking, hybridPetrinet);
 
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
 
-        double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta;
+        double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta[0];
         vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
         Event event = Event(EventType::Timed, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
@@ -686,16 +799,40 @@ namespace hpnmg {
         // get new deterministic clocks
         vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
         for (int i = 0; i < deterministicClocks.size(); ++i) {
-            if (deterministicTransitionIDs[i] == transition->id)
-                deterministicClocks[i][0] = 0;
-            else
-                deterministicClocks[i][0] += timeDelta;
+            if (deterministicTransitionIDs[i] == transition->id) {
+                vector<double> initVector{0.0};
+                deterministicClocks[i] = initVector;
+                continue;
+            }
+            if (!transitionIsEnabled(parentLocation.getDiscreteMarking(), parentContinuousMarking,
+                                     hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
+                                     hybridPetrinet))
+                continue;
+            for (int j = 0; j < deterministicClocks[i].size() || j < timeDelta.size(); ++j) {
+                if (j >= deterministicClocks[i].size())
+                    deterministicClocks[i].push_back(timeDelta[j]);
+                else if (j >= timeDelta.size())
+                    continue;
+                else
+                    deterministicClocks[i][j] = deterministicClocks[i][j] + timeDelta[j];
+            }
         }
 
         // get new general clocks
         vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
-        for (int i = 0; i < generalClocks.size(); ++i)
-            generalClocks[i][0] += timeDelta;
+        for (int i = 0; i < generalClocks.size(); ++i) {
+            if (!transitionIsEnabled(parentLocation.getDiscreteMarking(), parentContinuousMarking,
+                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
+                continue;
+            for (int j = 0; j < generalClocks[i].size() || j < timeDelta.size(); ++j) {
+                if (j >= generalClocks[i].size())
+                    generalClocks[i].push_back(timeDelta[j]);
+                else if (j >= timeDelta.size())
+                    continue;
+                else
+                    generalClocks[i][j] = generalClocks[i][j] + timeDelta[j];
+            }
+        }
 
         newLocation.setDeterministicClock(deterministicClocks);
         newLocation.setGeneralClock(generalClocks);
@@ -705,7 +842,8 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    void ParseHybridPetrinet::addLocationForBoundaryEvent(double timeDelta, ParametricLocationTree::Node parentNode,
+    void ParseHybridPetrinet::addLocationForBoundaryEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas,
+                                                          ParametricLocationTree::Node parentNode,
                                                           shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
 
@@ -713,10 +851,35 @@ namespace hpnmg {
         // (we have to do this first because we need the old markings)
         vector<vector<vector<double>>> generalIntervalBoundLeft = parentLocation.getGeneralIntervalBoundLeft();
         vector<vector<vector<double>>> generalIntervalBoundRight = parentLocation.getGeneralIntervalBoundRight();
-        for (int i = 0; i < generalTransitionIDs.size(); ++i)
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
             if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
-                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
-                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][0] += timeDelta;
+                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet)) {
+                for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
+                    generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+            }
+        }
+        // adjust general bounds for every other timeDelta, than timeDelta
+        vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
+        if (timeDeltas.size() > 1) {
+            for (int i = 0; i < timeDeltas.size(); ++i) {
+                if (timeDeltas[i] == timeDelta)
+                    continue;
+                vector<double> unequationCut = computeUnequationCut(timeDelta, timeDeltas[i]);
+                long k = unequationCut.size();
+                // adjust bounds for random variable that fired as kth general transition
+                if (k > 0) {
+                    int generalTransitionPos = generalTransitionsFired[k];
+                    int counter = 0;
+                    for (int j = 0; j < k; ++j)
+                        if (generalTransitionsFired[j] == k)
+                            ++counter;
+                    if (timeDelta[k] > timeDeltas[i][k])
+                        generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
+                    else
+                        generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
+                }
+            }
+        }
 
         // get new markings
         vector<vector<double>> parentContinuousMarking = parentLocation.getContinuousMarking();
@@ -724,13 +887,23 @@ namespace hpnmg {
         vector<int> discreteMarking = parentLocation.getDiscreteMarking();
         vector<vector<double>> continuousMarking;
         for (int pos = 0; pos < parentContinuousMarking.size(); ++pos) {
-            vector<double> newMarking = {parentContinuousMarking[pos][0] + (parentDrift[pos] * timeDelta)};
+            double drift = parentDrift[pos];
+            vector<double> oldMarking = parentContinuousMarking[pos];
+            vector<double> newMarking;
+            for (int j = 0; j < oldMarking.size() || j < timeDelta.size(); ++j) {
+                if (j >= oldMarking.size())
+                    newMarking.push_back(timeDelta[j] * drift);
+                else if (j >= timeDelta.size())
+                    newMarking.push_back(oldMarking[j]);
+                else
+                    newMarking.push_back(oldMarking[j] + timeDelta[j] * drift);
+            }
             continuousMarking.push_back(newMarking);
         }
         vector<double> drift = getDrift(discreteMarking, continuousMarking, hybridPetrinet);
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
 
-        double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta;
+        double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta[0];
         vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
         Event event = Event(EventType::Continuous, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
@@ -739,13 +912,36 @@ namespace hpnmg {
 
         // get new deterministic clocks
         vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
-        for (int i = 0; i < deterministicClocks.size(); ++i)
-            deterministicClocks[i][0] += timeDelta;
+        for (int i = 0; i < deterministicClocks.size(); ++i) {
+            if (!transitionIsEnabled(discreteMarking, parentContinuousMarking,
+                                     hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
+                                     hybridPetrinet))
+                continue;
+            for (int j = 0; j < deterministicClocks[i].size() || j < timeDelta.size(); ++j) {
+                if (j >= deterministicClocks[i].size())
+                    deterministicClocks[i].push_back(timeDelta[j]);
+                else if (j >= timeDelta.size())
+                    continue;
+                else
+                    deterministicClocks[i][j] = deterministicClocks[i][j] + timeDelta[j];
+            }
+        }
 
         // get new general clocks
         vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
-        for (int i = 0; i < generalClocks.size(); ++i)
-            generalClocks[i][0] += timeDelta;
+        for (int i = 0; i < generalClocks.size(); ++i) {
+            if (!transitionIsEnabled(discreteMarking, parentContinuousMarking,
+                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
+                continue;
+            for (int j = 0; j < generalClocks[i].size() || j < timeDelta.size(); ++j) {
+                if (j >= generalClocks[i].size())
+                    generalClocks[i].push_back(timeDelta[j]);
+                else if (j >= timeDelta.size())
+                    continue;
+                else
+                    generalClocks[i][j] = generalClocks[i][j] + timeDelta[j];
+            }
+        }
 
         newLocation.setDeterministicClock(deterministicClocks);
         newLocation.setGeneralClock(generalClocks);
@@ -756,7 +952,8 @@ namespace hpnmg {
     }
 
     void ParseHybridPetrinet::addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double maxTime,
-                                                         double timeDelta, ParametricLocationTree::Node parentNode,
+                                                         vector<double> timeDelta, vector<vector<double>> timeDeltas,
+                                                         ParametricLocationTree::Node parentNode,
                                                          shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
         long transitionPos = find(generalTransitionIDs.begin(), generalTransitionIDs.end(), transition->id) -
@@ -765,34 +962,23 @@ namespace hpnmg {
         vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
         vector<double> transitionClock = generalClocks[transitionPos];
 
-        // adjust boundaries
+        // adjust left boundaries for enabled transitions
         // (we have to do this first because we need the old markings)
         vector<vector<vector<double>>> generalIntervalBoundLeft = parentLocation.getGeneralIntervalBoundLeft();
         vector<vector<vector<double>>> generalIntervalBoundRight = parentLocation.getGeneralIntervalBoundRight();
         for (int i = 0; i < generalTransitionIDs.size(); ++i) {
-            if (generalTransitionIDs[i] == transition->id) {
-                vector<vector<double>> currentBoundLeft = generalIntervalBoundLeft[i];
-                vector<vector<double>> currentBoundRight = generalIntervalBoundRight[i];
-                currentBoundRight[currentBoundRight.size() - 1] = generalClocks[i];
-                currentBoundRight[currentBoundRight.size() - 1][0] += timeDelta;
-                vector<double> vectorLeft = vector<double>(currentBoundLeft[currentBoundLeft.size() - 1].size() + 1);
-                vector<double> vectorRight = vector<double>(currentBoundRight[currentBoundRight.size() - 1].size() + 1);
-                fill(vectorLeft.begin(), vectorLeft.end(), 0);
-                fill(vectorRight.begin(), vectorRight.end(), 0);
-                vectorRight[0] = maxTime;
-                currentBoundLeft.push_back(vectorLeft);
-                currentBoundRight.push_back(vectorRight);
-                generalIntervalBoundLeft[i] = currentBoundLeft;
-                generalIntervalBoundRight[i] = currentBoundRight;
-            } else if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
-                                           hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]],
-                                           hybridPetrinet)) {
-                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][0] += timeDelta;
-            }
+            string currentId = generalTransitionIDs[i];
+            if (currentId == transition->id)
+                continue;
+            if (!transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
+                                    hybridPetrinet->getGeneralTransitions()[currentId], hybridPetrinet))
+                continue;
+            for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
+                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
         }
 
         // get new discrete markings
-        vector<int> discreteMarking = parentNode.getParametricLocation().getDiscreteMarking();
+        vector<int> discreteMarking = parentLocation.getDiscreteMarking();
         for (auto arcItem : transition->getDiscreteInputArcs()) {
             shared_ptr<DiscreteArc> arc = arcItem.second;
             long pos =
@@ -819,7 +1005,7 @@ namespace hpnmg {
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
 
         double eventTime = parentLocation.getSourceEvent().getTime();
-        vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+        vector<double> generalDependecies = parentLocation.getSourceEvent().getGeneralDependencies();
         for (int pos = 0; pos < transitionClock.size(); ++pos) {
             if (pos == 0) {
                 eventTime -= transitionClock[pos];
@@ -829,6 +1015,52 @@ namespace hpnmg {
         }
         generalDependecies.push_back(1.0);
 
+        vector<double> maxTimeVector {maxTime};
+        // adjust general bounds
+        // adjust fired transition bounds
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
+            if (generalTransitionIDs[i] == transition->id) {
+                vector<vector<double>> currentBoundLeft = generalIntervalBoundLeft[i];
+                vector<vector<double>> currentBoundRight = generalIntervalBoundRight[i];
+                if (timeDelta != maxTimeVector) {
+                    currentBoundRight[currentBoundRight.size() - 1] = generalClocks[i];
+                    for (int j = 0; j < currentBoundRight.size() && j < timeDelta.size(); ++j)
+                        currentBoundRight[currentBoundRight.size() - 1][j] += timeDelta[j];
+                }
+                vector<double> vectorLeft = vector<double>(currentBoundLeft[currentBoundLeft.size() - 1].size() + 1);
+                vector<double> vectorRight = vector<double>(currentBoundRight[currentBoundRight.size() - 1].size() + 1);
+                fill(vectorLeft.begin(), vectorLeft.end(), 0);
+                fill(vectorRight.begin(), vectorRight.end(), 0);
+                vectorRight[0] = maxTime;
+                currentBoundLeft.push_back(vectorLeft);
+                currentBoundRight.push_back(vectorRight);
+                generalIntervalBoundLeft[i] = currentBoundLeft;
+                generalIntervalBoundRight[i] = currentBoundRight;
+            }
+        }
+        // adjust bounds for every other timeDelta, than timeDelta
+        vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
+        if (timeDeltas.size() > 1) {
+            for (int i = 0; i < timeDeltas.size(); ++i) {
+                if (timeDeltas[i] == timeDelta)
+                    continue;
+                vector<double> unequationCut = computeUnequationCut(timeDelta, timeDeltas[i]);
+                long k = unequationCut.size();
+                // adjust bounds for random variable that fired as kth general transition
+                if (k > 0) {
+                    int generalTransitionPos = generalTransitionsFired[k];
+                    int counter = 0;
+                    for (int j = 0; j < k; ++j)
+                        if (generalTransitionsFired[j] == k)
+                            ++counter;
+                    if (timeDelta[k] > timeDeltas[i][k])
+                        generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
+                    else
+                        generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
+                }
+            }
+        }
+
         Event event = Event(EventType::General, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
@@ -837,6 +1069,10 @@ namespace hpnmg {
         // get new deterministic clocks
         vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
         for (int i = 0; i < deterministicClocks.size(); ++i) {
+            if (!transitionIsEnabled(discreteMarking, parentLocation.getContinuousMarking(),
+                                     hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
+                                     hybridPetrinet))
+                continue;
             for (int j = 0; j < deterministicClocks.size(); ++j)
                 deterministicClocks[i][j] -= transitionClock[j];
             deterministicClocks[i].push_back(1);
@@ -844,6 +1080,15 @@ namespace hpnmg {
 
         // get new general clocks
         for (int i = 0; i < generalClocks.size(); ++i) {
+            if (generalTransitionIDs[i] == transition->id) {
+                vector<double> initVector = {0.0};
+                generalClocks[i] = initVector;
+                continue;
+            }
+            if (!transitionIsEnabled(discreteMarking, parentLocation.getContinuousMarking(),
+                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]],
+                                     hybridPetrinet))
+                continue;
             if (i == transitionPos) {
                 fill(generalClocks[transitionPos].begin(), generalClocks[transitionPos].end(), 0);
                 generalClocks[transitionPos].push_back(0);
@@ -854,7 +1099,6 @@ namespace hpnmg {
             generalClocks[i].push_back(1);
         }
 
-        vector<int> generalTransitionsFired = parentNode.getParametricLocation().getGeneralTransitionsFired();
         generalTransitionsFired.push_back(static_cast<int>(transitionPos));
 
         newLocation.setDeterministicClock(deterministicClocks);
@@ -913,7 +1157,19 @@ namespace hpnmg {
                     find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), place->id) - continuousPlaceIDs.begin();
             // Check if we need to adapt the rate
             // Case 1: we have to adapt the output transition (place is empty and drift is negative)
-            if (drift[pos] < 0 && continuousMarking[pos][0] == 0.0) {
+            bool placeEmpty = true;
+            bool placeFull = false;
+            for (int i = 0; i < continuousMarking[pos].size(); ++i) {
+                double levelAtI = continuousMarking[pos][i];
+                if (levelAtI > 0.0) {
+                    placeEmpty = false; // minimum 1 time is not 0
+                    placeFull = false; // place is only full when first level is capacity and rest is 0
+                }
+                if (i == 0 && levelAtI == place->getCapacity()) {
+                    placeFull = true;
+                }
+            }
+            if (drift[pos] < 0 && placeEmpty) {
                 double leftOutputRate = inputDrift[pos];
                 outputDrift[pos] = inputDrift[pos];
                 drift[pos] = 0;
@@ -990,8 +1246,7 @@ namespace hpnmg {
                 placesToCheck.erase(placesToCheck.begin());
             }
                 // Case 2: we have to adapt the input transitions (place is full and drift is positive)
-            else if (!place->getInfiniteCapacity() && drift[pos] > 0 &&
-                     continuousMarking[pos][0] == place->getCapacity()) {
+            else if (!place->getInfiniteCapacity() && drift[pos] > 0 && placeFull) {
                 double leftInputRate = outputDrift[pos];
                 inputDrift[pos] = outputDrift[pos];
                 drift[pos] = 0;
