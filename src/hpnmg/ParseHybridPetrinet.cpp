@@ -253,10 +253,6 @@ namespace hpnmg {
                 if (duplicate)
                     timeDeltas.erase(timeDeltas.begin() + i);
             }
-            double minimalTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
-                                                generalIntervalBoundRight, timeDelta);
-            if (minimalTime <= minimalMaximum)
-                minimalTimeDeltas.push_back(timeDelta);
         }
 
         // step 4: add parametric locations for every general transition
@@ -419,7 +415,7 @@ namespace hpnmg {
         }
 
         for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
-            if (childNode.getNodeID() <= 20) // to avoid zeno behavior
+            if (childNode.getNodeID() <= 50) // to avoid zeno behavior
                 locationQueue.push_back(childNode);
         }
     }
@@ -634,14 +630,8 @@ namespace hpnmg {
         vector<double> drift = getDrift(discreteMarking, continuousMarking, hybridPetrinet);
         unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
         vector<double> generalDependecies = parentLocation.getSourceEvent().getGeneralDependencies();
-        for (int j = 1; j - 1 < generalDependecies.size() || j < timeDelta.size(); ++j) {
-            if (j - 1 >= generalDependecies.size())
-                generalDependecies.push_back(timeDelta[j]);
-            else if (j >= timeDelta.size())
-                continue;
-            else
-                generalDependecies[j - 1] = generalDependecies[j - 1] + timeDelta[j];
-        }
+        for (int j = 1; j < timeDelta.size(); ++j)
+            generalDependecies[j-1] += timeDelta[j];
 
         // adjust general bounds for every other timeDelta, than timeDelta
         vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
@@ -653,10 +643,10 @@ namespace hpnmg {
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
-                    int generalTransitionPos = generalTransitionsFired[k-1];
+                    int generalTransitionPos = generalTransitionsFired[k - 1];
                     int counter = 0;
-                    for (int j = 0; j < k-1; ++j)
-                        if (generalTransitionsFired[j] == k-1)
+                    for (int j = 0; j < k - 1; ++j)
+                        if (generalTransitionsFired[j] == k - 1)
                             ++counter;
                     if (timeDelta[k] > timeDeltas[i][k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
@@ -741,10 +731,10 @@ namespace hpnmg {
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
-                    int generalTransitionPos = generalTransitionsFired[k-1];
+                    int generalTransitionPos = generalTransitionsFired[k - 1];
                     int counter = 0;
-                    for (int j = 0; j < k-1; ++j)
-                        if (generalTransitionsFired[j] == k-1)
+                    for (int j = 0; j < k - 1; ++j)
+                        if (generalTransitionsFired[j] == k - 1)
                             ++counter;
                     if (timeDelta[k] > timeDeltas[i][k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
@@ -793,6 +783,8 @@ namespace hpnmg {
 
         double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta[0];
         vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+        for (int i=1; i<timeDelta.size(); ++i)
+            generalDependecies[i-1] += timeDelta[i];
         Event event = Event(EventType::Timed, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
@@ -803,6 +795,9 @@ namespace hpnmg {
         for (int i = 0; i < deterministicClocks.size(); ++i) {
             if (deterministicTransitionIDs[i] == transition->id) {
                 vector<double> initVector{0.0};
+                for (int j=0; j<generalTransitionsFired.size(); ++j) {
+                    initVector.push_back(0.0);
+                }
                 deterministicClocks[i] = initVector;
                 continue;
             }
@@ -870,10 +865,10 @@ namespace hpnmg {
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
-                    int generalTransitionPos = generalTransitionsFired[k-1];
+                    int generalTransitionPos = generalTransitionsFired[k - 1];
                     int counter = 0;
-                    for (int j = 0; j < k-1; ++j)
-                        if (generalTransitionsFired[j] == k-1)
+                    for (int j = 0; j < k - 1; ++j)
+                        if (generalTransitionsFired[j] == k - 1)
                             ++counter;
                     if (timeDelta[k] > timeDeltas[i][k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
@@ -907,6 +902,8 @@ namespace hpnmg {
 
         double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta[0];
         vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+        for (int i=1; i<timeDelta.size(); ++i)
+            generalDependecies[i-1] += timeDelta[i];
         Event event = Event(EventType::Continuous, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
@@ -973,10 +970,10 @@ namespace hpnmg {
             if (currentId == transition->id)
                 continue;
             if (!transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
-                                    hybridPetrinet->getGeneralTransitions()[currentId], hybridPetrinet))
+                                     hybridPetrinet->getGeneralTransitions()[currentId], hybridPetrinet))
                 continue;
-            for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
-                generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+            generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].push_back(1);
+            generalIntervalBoundRight[i][generalIntervalBoundRight[i].size() - 1].push_back(0);
         }
 
         // get new discrete markings
@@ -1017,7 +1014,7 @@ namespace hpnmg {
         }
         generalDependecies.push_back(1.0);
 
-        vector<double> maxTimeVector {maxTime};
+        vector<double> maxTimeVector{maxTime};
         // adjust general bounds
         // adjust fired transition bounds
         for (int i = 0; i < generalTransitionIDs.size(); ++i) {
@@ -1026,7 +1023,7 @@ namespace hpnmg {
                 vector<vector<double>> currentBoundRight = generalIntervalBoundRight[i];
                 if (timeDelta != maxTimeVector) {
                     currentBoundRight[currentBoundRight.size() - 1] = generalClocks[i];
-                    for (int j = 0; j < currentBoundRight.size() && j < timeDelta.size(); ++j)
+                    for (int j = 0; j < currentBoundRight[currentBoundRight.size() - 1].size() && j < timeDelta.size(); ++j)
                         currentBoundRight[currentBoundRight.size() - 1][j] += timeDelta[j];
                 }
                 vector<double> vectorLeft = vector<double>(currentBoundLeft[currentBoundLeft.size() - 1].size() + 1);
@@ -1050,12 +1047,12 @@ namespace hpnmg {
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
-                    int generalTransitionPos = generalTransitionsFired[k-1];
+                    int generalTransitionPos = generalTransitionsFired[k - 1];
                     int counter = 0;
-                    for (int j = 0; j < k-1; ++j)
-                        if (generalTransitionsFired[j] == k)
+                    for (int j = 0; j < k - 1; ++j)
+                        if (generalTransitionsFired[j] == k - 1)
                             ++counter;
-                    if (timeDelta[k] > timeDeltas[i][k-1])
+                    if (timeDelta[k] > timeDeltas[i][k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
                     else
                         generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
@@ -1075,7 +1072,7 @@ namespace hpnmg {
                                      hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
                                      hybridPetrinet))
                 continue;
-            for (int j = 0; j < deterministicClocks.size(); ++j)
+            for (int j = 0; j < deterministicClocks[i].size(); ++j)
                 deterministicClocks[i][j] -= transitionClock[j];
             deterministicClocks[i].push_back(1);
         }
@@ -1084,13 +1081,18 @@ namespace hpnmg {
         for (int i = 0; i < generalClocks.size(); ++i) {
             if (generalTransitionIDs[i] == transition->id) {
                 vector<double> initVector = {0.0};
+                for (int i=0; i<generalTransitionsFired.size() + 1; ++i) {
+                    initVector.push_back(0.0);
+                }
                 generalClocks[i] = initVector;
                 continue;
             }
             if (!transitionIsEnabled(discreteMarking, parentLocation.getContinuousMarking(),
                                      hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]],
-                                     hybridPetrinet))
+                                     hybridPetrinet)) {
+                generalClocks[i].push_back(0);
                 continue;
+            }
             if (i == transitionPos) {
                 fill(generalClocks[transitionPos].begin(), generalClocks[transitionPos].end(), 0);
                 generalClocks[transitionPos].push_back(0);

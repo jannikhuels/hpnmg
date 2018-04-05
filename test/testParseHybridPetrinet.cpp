@@ -178,3 +178,230 @@ TEST(ParseHybridPetrinet, BoundarysMainExample) {
         }
     }
 }
+
+TEST(ParseHybridPetrinet, Example2General) {
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/example2general.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto initState = plt->getRootNode().getParametricLocation();
+
+    // in example L=1
+    vector<vector<vector<double>>> expectedLeftBound{{{0}},{{0}}};
+    vector<vector<vector<double>>> expectedRightBound{{{20}},{{20}}};
+    ASSERT_EQ(expectedLeftBound, initState.getGeneralIntervalBoundLeft());
+    ASSERT_EQ(expectedRightBound, initState.getGeneralIntervalBoundRight());
+    ASSERT_EQ(plt->getChildNodes(plt->getRootNode()).size(), 3);
+    vector<vector<double>> expectedContMarking {{0}};
+    vector<int> expectedDiscMarking {1, 1, 1};
+    vector<double> expectedDrift {1};
+    ASSERT_EQ(expectedContMarking, initState.getContinuousMarking());
+    ASSERT_EQ(expectedDiscMarking, initState.getDiscreteMarking());
+    ASSERT_EQ(expectedDrift, initState.getDrift());
+    vector<vector<double>> expectedDetClocks {{0}};
+    vector<vector<double>> expectedGenClocks {{0}, {0}};
+    vector<double> expectedGeneralDependencies {};
+    ASSERT_EQ(0, initState.getSourceEvent().getTime());
+    ASSERT_EQ(expectedGeneralDependencies, initState.getSourceEvent().getGeneralDependencies());
+    ASSERT_EQ(expectedDetClocks, initState.getDeterministicClock());
+    ASSERT_EQ(expectedGenClocks, initState.getGeneralClock());
+
+    for (ParametricLocationTree::Node childNode : plt->getChildNodes(plt->getRootNode())) {
+        ParametricLocation location = childNode.getParametricLocation();
+        if (location.getSourceEvent().getEventType() == EventType::General) {
+            vector<int> wantedDiscreteMarking {0,1,1};
+            if (location.getDiscreteMarking() == wantedDiscreteMarking) {
+                // in example L=2
+                expectedLeftBound = {{{0}, {0, 0}}, {{0, 1}}};
+                expectedRightBound = {{{8}, {20, 0}}, {{20, 0}}};
+                ASSERT_EQ(expectedLeftBound, location.getGeneralIntervalBoundLeft());
+                ASSERT_EQ(expectedRightBound, location.getGeneralIntervalBoundRight());
+                ASSERT_EQ(plt->getChildNodes(childNode).size(), 4);
+                expectedContMarking = {{0, 1}};
+                expectedDiscMarking = {0, 1, 1};
+                expectedDrift = {2};
+                ASSERT_EQ(expectedContMarking, location.getContinuousMarking());
+                ASSERT_EQ(expectedDiscMarking, location.getDiscreteMarking());
+                ASSERT_EQ(expectedDrift, location.getDrift());
+                expectedDetClocks = {{0, 1}};
+                expectedGenClocks = {{0, 0}, {0, 1}};
+                expectedGeneralDependencies = {1};
+                ASSERT_EQ(0, location.getSourceEvent().getTime());
+                ASSERT_EQ(expectedGeneralDependencies, location.getSourceEvent().getGeneralDependencies());
+                ASSERT_EQ(expectedDetClocks, location.getDeterministicClock());
+                ASSERT_EQ(expectedGenClocks, location.getGeneralClock());
+
+                vector<vector<vector<double>>> expectedLeftBound1 {{{0}, {0, 0}},{{0, 1}, {0, 0, 0}}};
+                vector<vector<vector<double>>> expectedRightBound1 {{{6}, {20, 0}},{{5, 0.5}, {20, 0, 0}}};
+                vector<vector<vector<double>>> expectedLeftBound2 {{{6}, {0, 0}},{{0, 1}, {0, 0, 0}}};
+                vector<vector<vector<double>>> expectedRightBound2 {{{8}, {20, 0}},{{8, 0}, {20, 0, 0}}};
+                ParametricLocationTree::Node node = plt->getChildNodes(childNode)[0];
+                location = node.getParametricLocation();
+                ParametricLocationTree::Node node5 = node;
+                ParametricLocationTree::Node node6 = node;
+                ParametricLocation location5 = location;
+                ParametricLocation location6 = location;
+                if (location.getGeneralIntervalBoundLeft() == expectedLeftBound1) {
+                    node6 = plt->getChildNodes(childNode)[1];
+                    location6 = node6.getParametricLocation();
+                } else {
+                    node5 = plt->getChildNodes(childNode)[1];
+                    location5 = node5.getParametricLocation();
+                }
+
+                // in example L=5
+                ASSERT_EQ(EventType::General, location5.getSourceEvent().getEventType());
+                ASSERT_EQ(expectedLeftBound1, location5.getGeneralIntervalBoundLeft());
+                ASSERT_EQ(expectedRightBound1, location5.getGeneralIntervalBoundRight());
+                ASSERT_EQ(2, plt->getChildNodes(node5).size());
+                expectedContMarking = {{0, -1, 2}};
+                expectedDiscMarking = {0, 0, 1};
+                expectedDrift = {1};
+                ASSERT_EQ(expectedContMarking, location5.getContinuousMarking());
+                ASSERT_EQ(expectedDiscMarking, location5.getDiscreteMarking());
+                ASSERT_EQ(expectedDrift, location5.getDrift());
+                expectedDetClocks = {{0, 0, 1}};
+                expectedGenClocks = {{0, 0, 0}, {0, 0, 0}};
+                expectedGeneralDependencies = {0, 1};
+                ASSERT_EQ(0, location5.getSourceEvent().getTime());
+                ASSERT_EQ(expectedGeneralDependencies, location5.getSourceEvent().getGeneralDependencies());
+                ASSERT_EQ(expectedDetClocks, location5.getDeterministicClock());
+                ASSERT_EQ(expectedGenClocks, location5.getGeneralClock());
+
+                expectedLeftBound1 = {{{0}, {0, 0}},{{0, 1}, {0, 0, 0}}};
+                expectedRightBound1 = {{{6}, {20, 0}},{{5, 0.5}, {20, 0, 0}}};
+                for (ParametricLocationTree::Node childChildNode : plt->getChildNodes(node5)) {
+                    location = childChildNode.getParametricLocation();
+                    if (location.getSourceEvent().getEventType() == EventType::Timed) {
+                        // in example L=9
+                        expectedGeneralDependencies = {0, 0};
+                        ASSERT_EQ(8, location.getSourceEvent().getTime());
+                        ASSERT_EQ(expectedGeneralDependencies, location.getSourceEvent().getGeneralDependencies());
+                        expectedLeftBound = {{{0}, {0, 0}},{{0, 1}, {0, 0, 0}}};
+                        expectedRightBound = {{{6}, {20, 0}},{{2, 1}, {20, 0, 0}}};
+                        ASSERT_EQ(expectedLeftBound, location.getGeneralIntervalBoundLeft());
+                        ASSERT_EQ(expectedRightBound, location.getGeneralIntervalBoundRight());
+                        ASSERT_EQ(0, plt->getChildNodes(childChildNode).size());
+                        expectedContMarking = {{8, -1, 1}};
+                        expectedDiscMarking = {0, 0, 0};
+                        expectedDrift = {0};
+                        ASSERT_EQ(expectedContMarking, location.getContinuousMarking());
+                        ASSERT_EQ(expectedDiscMarking, location.getDiscreteMarking());
+                        ASSERT_EQ(expectedDrift, location.getDrift());
+                        expectedDetClocks = {{0, 0, 0}};
+                        expectedGenClocks = {{0, 0, 0}, {0, 0, 0}};
+                        expectedGeneralDependencies = {0, 0};
+                        ASSERT_EQ(8, location.getSourceEvent().getTime());
+                        ASSERT_EQ(expectedGeneralDependencies, location.getSourceEvent().getGeneralDependencies());
+                        ASSERT_EQ(expectedDetClocks, location.getDeterministicClock());
+                        ASSERT_EQ(expectedGenClocks, location.getGeneralClock());
+                    } else {
+                        // in example L=10
+                        ASSERT_EQ(EventType::Continuous, location.getSourceEvent().getEventType());
+                        expectedGeneralDependencies = {1, -1};
+                        ASSERT_EQ(10, location.getSourceEvent().getTime());
+                        ASSERT_EQ(expectedGeneralDependencies, location.getSourceEvent().getGeneralDependencies());
+                        expectedLeftBound = {{{0}, {0, 0}},{{2, 1}, {0, 0, 0}}};
+                        expectedRightBound = {{{6}, {20, 0}},{{5, 0.5}, {20, 0, 0}}};
+                        ASSERT_EQ(expectedLeftBound, location.getGeneralIntervalBoundLeft());
+                        ASSERT_EQ(expectedRightBound, location.getGeneralIntervalBoundRight());
+                        ASSERT_EQ(1, plt->getChildNodes(childChildNode).size());
+                        expectedContMarking = {{10, 0, 0}};
+                        expectedDiscMarking = {0, 0, 1};
+                        expectedDrift = {0};
+                        ASSERT_EQ(expectedContMarking, location.getContinuousMarking());
+                        ASSERT_EQ(expectedDiscMarking, location.getDiscreteMarking());
+                        ASSERT_EQ(expectedDrift, location.getDrift());
+                        expectedDetClocks = {{10, 1, -1}};
+                        expectedGenClocks = {{0, 0, 0}, {0, 0, 0}};
+                        expectedGeneralDependencies = {1, -1};
+                        ASSERT_EQ(10, location.getSourceEvent().getTime());
+                        ASSERT_EQ(expectedGeneralDependencies, location.getSourceEvent().getGeneralDependencies());
+                        ASSERT_EQ(expectedDetClocks, location.getDeterministicClock());
+                        ASSERT_EQ(expectedGenClocks, location.getGeneralClock());
+                    }
+                }
+
+                // in example L=6
+                ASSERT_EQ(EventType::General, location6.getSourceEvent().getEventType());
+                ASSERT_EQ(expectedLeftBound2, location6.getGeneralIntervalBoundLeft());
+                ASSERT_EQ(expectedRightBound2, location6.getGeneralIntervalBoundRight());
+                ASSERT_EQ(2, plt->getChildNodes(node6).size());
+                expectedContMarking = {{0, -1, 2}};
+                expectedDiscMarking = {0, 0, 1};
+                expectedDrift = {1};
+                ASSERT_EQ(expectedContMarking, location6.getContinuousMarking());
+                ASSERT_EQ(expectedDiscMarking, location6.getDiscreteMarking());
+                ASSERT_EQ(expectedDrift, location6.getDrift());
+                expectedDetClocks = {{0, 0, 1}};
+                expectedGenClocks = {{0, 0, 0}, {0, 0, 0}};
+                expectedGeneralDependencies = {0, 1};
+                ASSERT_EQ(0, location6.getSourceEvent().getTime());
+                ASSERT_EQ(expectedGeneralDependencies, location6.getSourceEvent().getGeneralDependencies());
+                ASSERT_EQ(expectedDetClocks, location6.getDeterministicClock());
+                ASSERT_EQ(expectedGenClocks, location6.getGeneralClock());
+
+                expectedLeftBound1 = {{{6}, {0, 0}},{{0, 1}, {0, 0, 0}}};
+                expectedRightBound1 = {{{8}, {20, 0}},{{8, 0}, {20, 0, 0}}};
+                for (ParametricLocationTree::Node childChildNode : plt->getChildNodes(node6)) {
+                    location = childChildNode.getParametricLocation();
+                    if (location.getSourceEvent().getEventType() == EventType::Timed) {
+                        // in example L=11
+                        expectedGeneralDependencies = {0, 0};
+                        ASSERT_EQ(8, location.getSourceEvent().getTime());
+                        ASSERT_EQ(expectedGeneralDependencies, location.getSourceEvent().getGeneralDependencies());
+                        expectedLeftBound = {{{6}, {0, 0}},{{0, 1}, {0, 0, 0}}};
+                        expectedRightBound = {{{8}, {20, 0}},{{2, 1}, {20, 0, 0}}};
+                        ASSERT_EQ(expectedLeftBound, location.getGeneralIntervalBoundLeft());
+                        ASSERT_EQ(expectedRightBound, location.getGeneralIntervalBoundRight());
+                        ASSERT_EQ(0, plt->getChildNodes(childChildNode).size());
+                        expectedContMarking = {{8, -1, 1}};
+                        expectedDiscMarking = {0, 0, 0};
+                        expectedDrift = {0};
+                        ASSERT_EQ(expectedContMarking, location.getContinuousMarking());
+                        ASSERT_EQ(expectedDiscMarking, location.getDiscreteMarking());
+                        ASSERT_EQ(expectedDrift, location.getDrift());
+                        expectedDetClocks = {{0, 0, 0}};
+                        expectedGenClocks = {{0, 0, 0}, {0, 0, 0}};
+                        expectedGeneralDependencies = {0, 0};
+                        ASSERT_EQ(8, location.getSourceEvent().getTime());
+                        ASSERT_EQ(expectedGeneralDependencies, location.getSourceEvent().getGeneralDependencies());
+                        ASSERT_EQ(expectedDetClocks, location.getDeterministicClock());
+                        ASSERT_EQ(expectedGenClocks, location.getGeneralClock());
+                    } else {
+                        // in example L=12
+                        ASSERT_EQ(EventType::Continuous, location.getSourceEvent().getEventType());
+                        expectedGeneralDependencies = {1, -1};
+                        ASSERT_EQ(10, location.getSourceEvent().getTime());
+                        ASSERT_EQ(expectedGeneralDependencies, location.getSourceEvent().getGeneralDependencies());
+                        expectedLeftBound = {{{6}, {0, 0}},{{2, 1}, {0, 0, 0}}};
+                        expectedRightBound = {{{8}, {20, 0}},{{8, 0}, {20, 0, 0}}};
+                        ASSERT_EQ(expectedLeftBound, location.getGeneralIntervalBoundLeft());
+                        ASSERT_EQ(expectedRightBound, location.getGeneralIntervalBoundRight());
+                        ASSERT_EQ(1, plt->getChildNodes(childChildNode).size());
+                        expectedContMarking = {{10, 0, 0}};
+                        expectedDiscMarking = {0, 0, 1};
+                        expectedDrift = {0};
+                        ASSERT_EQ(expectedContMarking, location.getContinuousMarking());
+                        ASSERT_EQ(expectedDiscMarking, location.getDiscreteMarking());
+                        ASSERT_EQ(expectedDrift, location.getDrift());
+                        expectedDetClocks = {{10, 1, -1}};
+                        expectedGenClocks = {{0, 0, 0}, {0, 0, 0}};
+                        expectedGeneralDependencies = {1, -1};
+                        ASSERT_EQ(10, location.getSourceEvent().getTime());
+                        ASSERT_EQ(expectedGeneralDependencies, location.getSourceEvent().getGeneralDependencies());
+                        ASSERT_EQ(expectedDetClocks, location.getDeterministicClock());
+                        ASSERT_EQ(expectedGenClocks, location.getGeneralClock());
+                    }
+                }
+            } else {
+                // in example L=3
+                vector<int> expectedDiscreteMarking {1,0,1};
+                ASSERT_EQ(expectedDiscreteMarking, location.getDiscreteMarking());
+            }
+        } else {
+            // in example L=4
+            ASSERT_EQ(EventType::Timed, location.getSourceEvent().getEventType());
+        }
+    }
+}
