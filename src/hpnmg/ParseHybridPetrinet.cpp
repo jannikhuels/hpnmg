@@ -96,6 +96,8 @@ namespace hpnmg {
         vector<vector<double>> continuousMarking = location.getContinuousMarking();
         map<string, shared_ptr<ImmediateTransition>> immediateTransitions = hybridPetrinet->getImmediateTransitions();
 
+        // TODO: write timedelta in general dependencies
+
         // step 1: Immediate Transition have highest priority, so we consider them first
         vector<shared_ptr<ImmediateTransition>> enabledImmediateTransition;
         unsigned long highestPriority = ULONG_MAX;
@@ -651,10 +653,10 @@ namespace hpnmg {
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
-                    int generalTransitionPos = generalTransitionsFired[k];
+                    int generalTransitionPos = generalTransitionsFired[k-1];
                     int counter = 0;
-                    for (int j = 0; j < k; ++j)
-                        if (generalTransitionsFired[j] == k)
+                    for (int j = 0; j < k-1; ++j)
+                        if (generalTransitionsFired[j] == k-1)
                             ++counter;
                     if (timeDelta[k] > timeDeltas[i][k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
@@ -739,10 +741,10 @@ namespace hpnmg {
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
-                    int generalTransitionPos = generalTransitionsFired[k];
+                    int generalTransitionPos = generalTransitionsFired[k-1];
                     int counter = 0;
-                    for (int j = 0; j < k; ++j)
-                        if (generalTransitionsFired[j] == k)
+                    for (int j = 0; j < k-1; ++j)
+                        if (generalTransitionsFired[j] == k-1)
                             ++counter;
                     if (timeDelta[k] > timeDeltas[i][k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
@@ -868,10 +870,10 @@ namespace hpnmg {
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
-                    int generalTransitionPos = generalTransitionsFired[k];
+                    int generalTransitionPos = generalTransitionsFired[k-1];
                     int counter = 0;
-                    for (int j = 0; j < k; ++j)
-                        if (generalTransitionsFired[j] == k)
+                    for (int j = 0; j < k-1; ++j)
+                        if (generalTransitionsFired[j] == k-1)
                             ++counter;
                     if (timeDelta[k] > timeDeltas[i][k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
@@ -1048,12 +1050,12 @@ namespace hpnmg {
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
-                    int generalTransitionPos = generalTransitionsFired[k];
+                    int generalTransitionPos = generalTransitionsFired[k-1];
                     int counter = 0;
-                    for (int j = 0; j < k; ++j)
+                    for (int j = 0; j < k-1; ++j)
                         if (generalTransitionsFired[j] == k)
                             ++counter;
-                    if (timeDelta[k] > timeDeltas[i][k])
+                    if (timeDelta[k] > timeDeltas[i][k-1])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
                     else
                         generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
