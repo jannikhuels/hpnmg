@@ -2,9 +2,9 @@
 
 using namespace std;
 namespace hpnmg {
-    ParseHybridPetrinet::ParseHybridPetrinet() {}
+    ParseHybridPetrinet::ParseHybridPetrinet() = default;
 
-    ParseHybridPetrinet::~ParseHybridPetrinet() {}
+    ParseHybridPetrinet::~ParseHybridPetrinet() = default;
 
     shared_ptr<ParametricLocationTree>
     ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime) {
@@ -12,24 +12,24 @@ namespace hpnmg {
 
         // Add place IDs from map to vector, so the places have an order
         map<string, shared_ptr<DiscretePlace>> discretePlaces = hybridPetrinet->getDiscretePlaces();
-        for (auto i = discretePlaces.begin(); i != discretePlaces.end(); ++i)
-            discretePlaceIDs.push_back(i->first);
+        for (auto &discretePlace : discretePlaces)
+            discretePlaceIDs.push_back(discretePlace.first);
         map<string, shared_ptr<ContinuousPlace>> continuousPlaces = hybridPetrinet->getContinuousPlaces();
-        for (auto i = continuousPlaces.begin(); i != continuousPlaces.end(); ++i)
-            continuousPlaceIDs.push_back(i->first);
+        for (auto &continuousPlace : continuousPlaces)
+            continuousPlaceIDs.push_back(continuousPlace.first);
 
         // Also for deterministic and general Transitions
         map<string, shared_ptr<DeterministicTransition>> deterministicTransitions = hybridPetrinet->getDeterministicTransitions();
-        for (auto i = deterministicTransitions.begin(); i != deterministicTransitions.end(); ++i)
-            deterministicTransitionIDs.push_back(i->first);
+        for (auto &deterministicTransition : deterministicTransitions)
+            deterministicTransitionIDs.push_back(deterministicTransition.first);
         map<string, shared_ptr<GeneralTransition>> generalTransitions = hybridPetrinet->getGeneralTransitions();
-        for (auto i = generalTransitions.begin(); i != generalTransitions.end(); ++i)
-            generalTransitionIDs.push_back(i->first);
+        for (auto &generalTransition : generalTransitions)
+            generalTransitionIDs.push_back(generalTransition.first);
 
         // Initialize aleatory variable counter for deterministic transitions and continuous places
-        for (string id : deterministicTransitionIDs)
+        for (string &id : deterministicTransitionIDs)
             deterTransAleatoryVariables[id] = {};
-        for (string id : continuousPlaceIDs)
+        for (string &id : continuousPlaceIDs)
             contPlaceAleatoryVariables[id] = {};
 
         ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, maxTime);
@@ -56,7 +56,7 @@ namespace hpnmg {
         // Get root continuous marking
         vector<vector<double>> rootContinuousMarking;
         for (string &placeId: continuousPlaceIDs) {
-            rootContinuousMarking.push_back({hybridPetrinet->getContinuousPlaces()[placeId]->getLevel()});
+            rootContinuousMarking.push_back({hybridPetrinet->getContinuousPlaces()[placeId]->getLevel()}); // NOLINT
         }
 
         vector<double> drift = getDrift(rootDiscreteMarking, rootContinuousMarking, hybridPetrinet);
@@ -67,9 +67,9 @@ namespace hpnmg {
         vector<vector<vector<double>>> rightBoundaries;
         vector<vector<double>> generalClocks;
         for (int i = 0; i < numGeneralTransitions; ++i) {
-            leftBoundaries.push_back({{0}});
-            rightBoundaries.push_back({{maxTime}});
-            generalClocks.push_back({0});
+            leftBoundaries.push_back({{0}}); // NOLINT
+            rightBoundaries.push_back({{maxTime}}); // NOLINT
+            generalClocks.push_back({0}); // NOLINT
         }
 
         ParametricLocation rootLocation = ParametricLocation(rootDiscreteMarking, rootContinuousMarking, drift,
@@ -78,8 +78,8 @@ namespace hpnmg {
                                                              leftBoundaries, rightBoundaries);
 
         vector<vector<double>> deterministicClocks;
-        for (string id : deterministicTransitionIDs)
-            deterministicClocks.push_back({0});
+        for (string &id : deterministicTransitionIDs)
+            deterministicClocks.push_back({0}); // NOLINT
 
         rootLocation.setDeterministicClock(deterministicClocks);
         rootLocation.setGeneralClock(generalClocks);
@@ -96,13 +96,11 @@ namespace hpnmg {
         vector<vector<double>> continuousMarking = location.getContinuousMarking();
         map<string, shared_ptr<ImmediateTransition>> immediateTransitions = hybridPetrinet->getImmediateTransitions();
 
-        // TODO: write timedelta in general dependencies
-
         // step 1: Immediate Transition have highest priority, so we consider them first
         vector<shared_ptr<ImmediateTransition>> enabledImmediateTransition;
         unsigned long highestPriority = ULONG_MAX;
-        for (auto i = immediateTransitions.begin(); i != immediateTransitions.end(); ++i) {
-            shared_ptr<ImmediateTransition> transition = i->second;
+        for (auto &immediateTransition : immediateTransitions) {
+            shared_ptr<ImmediateTransition> transition = immediateTransition.second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
                 if (transition->getPriority() < highestPriority) {
                     highestPriority = transition->getPriority();
@@ -120,7 +118,7 @@ namespace hpnmg {
                 sumWeight += transition->getWeight();
             for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
                 addLocationForImmediateEvent(transition, node, transition->getWeight() / sumWeight, hybridPetrinet);
-            for (ParametricLocationTree::Node childNode : parametriclocationTree->getChildNodes(node)) {
+            for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
                 locationQueue.push_back(childNode);
             }
             return; // no other event has to be considered
@@ -146,7 +144,7 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (timeDelta.size() > 0)
+                if (!timeDelta.empty())
                     timeDeltas.push_back(timeDelta);
             }
         }
@@ -156,7 +154,7 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (timeDelta.size() > 0)
+                if (!timeDelta.empty())
                     timeDeltas.push_back(timeDelta);
             }
         }
@@ -166,7 +164,7 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (timeDelta.size() > 0)
+                if (!timeDelta.empty())
                     timeDeltas.push_back(timeDelta);
             }
         }
@@ -176,7 +174,7 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (timeDelta.size() > 0)
+                if (!timeDelta.empty())
                     timeDeltas.push_back(timeDelta);
             }
         }
@@ -203,8 +201,8 @@ namespace hpnmg {
             if (drift < 0) { // negative drift
                 // remaining time is level / abs(drift)
                 vector<double> timeDelta;
-                for (int i = 0; i < level.size(); ++i)
-                    timeDelta.push_back(level[i] / (0 - drift));
+                for (double levelPart : level)
+                    timeDelta.push_back(levelPart / (0 - drift));
                 timeDeltas.push_back(timeDelta);
             } else if (drift > 0 && !place->getInfiniteCapacity()) { // positive drift
                 // remaining time is (maxLevel - level) / drift
@@ -223,8 +221,7 @@ namespace hpnmg {
         // step 3: get all minimal time-delta and save minimal maximum
         // 3.1 get minimal maximumTime
         double minimalMaximum = maxTime;
-        for (int i = 0; i < timeDeltas.size(); ++i) {
-            vector<double> timeDelta = timeDeltas[i];
+        for (vector<double> &timeDelta : timeDeltas) {
             double maximalTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundRight,
                                                 generalIntervalBoundLeft, timeDelta);
             if (maximalTime < minimalMaximum)
@@ -232,8 +229,7 @@ namespace hpnmg {
         }
         // 3.1 get all minimum times
         vector<vector<double>> minimalTimeDeltas;
-        for (int i = 0; i < timeDeltas.size(); ++i) {
-            vector<double> timeDelta = timeDeltas[i];
+        for (vector<double> &timeDelta : timeDeltas) {
             double minimalTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                 generalIntervalBoundRight, timeDelta);
             if (minimalTime <= minimalMaximum)
@@ -260,7 +256,7 @@ namespace hpnmg {
             shared_ptr<GeneralTransition> transition = transitionItem.second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
                 // if we have no minimal timeDelta we use maxTime
-                if (minimalTimeDeltas.size() < 1)
+                if (minimalTimeDeltas.empty())
                     addLocationForGeneralEvent(transition, maxTime, {maxTime}, {{}}, node, hybridPetrinet);
 
                 // for every general transition we need one parametric location per minimal timedelta
@@ -281,7 +277,7 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (timeDelta.size() < 1)
+                if (timeDelta.empty())
                     continue;
                 double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                     generalIntervalBoundRight, timeDelta);
@@ -314,7 +310,7 @@ namespace hpnmg {
                 if (minimumTime <= minimalMaximum) {
                     if (minimumTime == minimalMaximum)
                         consideringOrder = true;
-                    nextDeterministicTransitions.push_back(make_pair(transition, timeDelta));
+                    nextDeterministicTransitions.push_back(make_pair(transition, timeDelta)); // NOLINT
                 }
             }
             double sumWeight = 0;
@@ -337,8 +333,8 @@ namespace hpnmg {
                 double drift = drifts[pos];
                 if (drift < 0) { // negative drift
                     // remaining time is level / abs(drift)
-                    for (int i = 0; i < level.size(); ++i)
-                        timeDelta.push_back(level[i] / (0 - drift));
+                    for (double levelPart : level)
+                        timeDelta.push_back(levelPart / (0 - drift));
                 } else if (drift > 0 && !place->getInfiniteCapacity()) { // positive drift
                     // remaining time is (maxLevel - level) / drift
                     for (int i = 0; i < level.size(); ++i) {
@@ -365,7 +361,7 @@ namespace hpnmg {
                     vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                             generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                             drifts);
-                    if (timeDelta.size() < 1)
+                    if (timeDelta.empty())
                         continue;
                     double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                         generalIntervalBoundRight, timeDelta);
@@ -387,7 +383,7 @@ namespace hpnmg {
                     vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                             generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                             drifts);
-                    if (timeDelta.size() < 1)
+                    if (timeDelta.empty())
                         continue;
                     double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                         generalIntervalBoundRight, timeDelta);
@@ -403,7 +399,7 @@ namespace hpnmg {
                     vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                             generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                             drifts);
-                    if (timeDelta.size() < 1)
+                    if (timeDelta.empty())
                         continue;
                     double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                         generalIntervalBoundRight, timeDelta);
@@ -442,8 +438,8 @@ namespace hpnmg {
             vector<double> levelDelta = level;
             levelDelta[0] -= weight;
             vector<double> timeDelta;
-            for (int i = 0; i < levelDelta.size(); ++i) {
-                timeDelta.push_back(levelDelta[i] / (0 - drift));
+            for (double deltaPart : levelDelta) {
+                timeDelta.push_back(deltaPart / (0 - drift));
             }
             return timeDelta;
             // drift is positive and level is under arc weight
@@ -465,7 +461,7 @@ namespace hpnmg {
     vector<double> ParseHybridPetrinet::computeUnequationCut(vector<double> time1, vector<double> time2) {
         unsigned long minSize = min(time1.size(), time2.size());
         long k = -1;
-        double diffK;
+        double diffK = 0.0;
         for (long i = minSize - 1; i >= 0; --i) {
             if (time1[i] != time2[i]) {
                 k = i;
@@ -473,7 +469,7 @@ namespace hpnmg {
                 break;
             }
         }
-        if (k < 1)
+        if (k < 1 || diffK == 0.0)
             return {};
         vector<double> unequationCut;
         for (int i = 0; i < k; ++i)
@@ -488,8 +484,8 @@ namespace hpnmg {
         assert(time.size() == generalTransitionsFired.size() + 1);
         vector<int> counter = vector<int>(generalTransitionIDs.size());
         fill(counter.begin(), counter.end(), 0);
-        for (int i = 0; i < generalTransitionsFired.size(); ++i)
-            counter[generalTransitionsFired[i]] += 1;
+        for (int &firedTransition : generalTransitionsFired)
+            counter[firedTransition] += 1;
         while (time.size() > 1) {
             // get last value in timevector
             double value = time.back();
@@ -503,7 +499,6 @@ namespace hpnmg {
             counter[transitionPos] -= 1;
 
             // add boundaries multiplicated with value to time vector
-//            assert(boundaries.size() <= time.size()); todo
             for (int i = 0; i < time.size(); ++i)
                 if (value >= 0)
                     time[i] += value * boundaries[i];
@@ -541,6 +536,7 @@ namespace hpnmg {
                 shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[arc->place->id];
                 long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), place->id) -
                            continuousPlaceIDs.begin();
+                // todo: can be dependent on random variables
                 double level = continousMarking[pos][0];
                 if ((level > arc->weight && arc->getIsInhibitor()) || ((level < arc->weight && !arc->getIsInhibitor())))
                     return false;
@@ -636,10 +632,10 @@ namespace hpnmg {
         // adjust general bounds for every other timeDelta, than timeDelta
         vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
         if (timeDeltas.size() > 1) {
-            for (int i = 0; i < timeDeltas.size(); ++i) {
-                if (timeDeltas[i] == timeDelta)
+            for (vector<double> &oppositeTimeDelta : timeDeltas) {
+                if (oppositeTimeDelta == timeDelta)
                     continue;
-                vector<double> unequationCut = computeUnequationCut(timeDelta, timeDeltas[i]);
+                vector<double> unequationCut = computeUnequationCut(timeDelta, oppositeTimeDelta);
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
@@ -648,7 +644,7 @@ namespace hpnmg {
                     for (int j = 0; j < k - 1; ++j)
                         if (generalTransitionsFired[j] == k - 1)
                             ++counter;
-                    if (timeDelta[k] > timeDeltas[i][k])
+                    if (timeDelta[k] > oppositeTimeDelta[k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
                     else
                         generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
@@ -724,10 +720,10 @@ namespace hpnmg {
         // adjust general bounds for every other timeDelta, than timeDelta
         vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
         if (timeDeltas.size() > 1) {
-            for (int i = 0; i < timeDeltas.size(); ++i) {
-                if (timeDeltas[i] == timeDelta)
+            for (vector<double> oppositeTimeDelta : timeDeltas) {
+                if (oppositeTimeDelta == timeDelta)
                     continue;
-                vector<double> unequationCut = computeUnequationCut(timeDelta, timeDeltas[i]);
+                vector<double> unequationCut = computeUnequationCut(timeDelta, oppositeTimeDelta);
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
@@ -736,7 +732,7 @@ namespace hpnmg {
                     for (int j = 0; j < k - 1; ++j)
                         if (generalTransitionsFired[j] == k - 1)
                             ++counter;
-                    if (timeDelta[k] > timeDeltas[i][k])
+                    if (timeDelta[k] > oppositeTimeDelta[k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
                     else
                         generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
@@ -858,10 +854,10 @@ namespace hpnmg {
         // adjust general bounds for every other timeDelta, than timeDelta
         vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
         if (timeDeltas.size() > 1) {
-            for (int i = 0; i < timeDeltas.size(); ++i) {
-                if (timeDeltas[i] == timeDelta)
+            for (vector<double> &oppositeTimeDelta : timeDeltas) {
+                if (oppositeTimeDelta == timeDelta)
                     continue;
-                vector<double> unequationCut = computeUnequationCut(timeDelta, timeDeltas[i]);
+                vector<double> unequationCut = computeUnequationCut(timeDelta, oppositeTimeDelta);
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
@@ -870,7 +866,7 @@ namespace hpnmg {
                     for (int j = 0; j < k - 1; ++j)
                         if (generalTransitionsFired[j] == k - 1)
                             ++counter;
-                    if (timeDelta[k] > timeDeltas[i][k])
+                    if (timeDelta[k] > oppositeTimeDelta[k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
                     else
                         generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
@@ -1040,10 +1036,10 @@ namespace hpnmg {
         // adjust bounds for every other timeDelta, than timeDelta
         vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
         if (timeDeltas.size() > 1) {
-            for (int i = 0; i < timeDeltas.size(); ++i) {
-                if (timeDeltas[i] == timeDelta)
+            for (vector<double> &oppositeTimeDelta : timeDeltas) {
+                if (oppositeTimeDelta == timeDelta)
                     continue;
-                vector<double> unequationCut = computeUnequationCut(timeDelta, timeDeltas[i]);
+                vector<double> unequationCut = computeUnequationCut(timeDelta, oppositeTimeDelta);
                 long k = unequationCut.size();
                 // adjust bounds for random variable that fired as kth general transition
                 if (k > 0) {
@@ -1052,7 +1048,7 @@ namespace hpnmg {
                     for (int j = 0; j < k - 1; ++j)
                         if (generalTransitionsFired[j] == k - 1)
                             ++counter;
-                    if (timeDelta[k] > timeDeltas[i][k])
+                    if (timeDelta[k] > oppositeTimeDelta[k])
                         generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
                     else
                         generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
@@ -1081,9 +1077,8 @@ namespace hpnmg {
         for (int i = 0; i < generalClocks.size(); ++i) {
             if (generalTransitionIDs[i] == transition->id) {
                 vector<double> initVector = {0.0};
-                for (int i=0; i<generalTransitionsFired.size() + 1; ++i) {
+                for (int j=0; j<generalTransitionsFired.size() + 1; ++j)
                     initVector.push_back(0.0);
-                }
                 generalClocks[i] = initVector;
                 continue;
             }
@@ -1123,8 +1118,8 @@ namespace hpnmg {
         fill(outputDrift.begin(), outputDrift.end(), 0);
         // get drift for every place
         auto continuousTransitions = hybridPetrinet->getContinuousTransitions();
-        for (auto i = continuousTransitions.begin(); i != continuousTransitions.end(); ++i) {
-            shared_ptr<ContinuousTransition> transition = i->second;
+        for (auto &continuousTransition : continuousTransitions) {
+            shared_ptr<ContinuousTransition> transition = continuousTransition.second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet)) {
                 for (auto arcItem : transition->getContinuousInputArcs()) {
                     shared_ptr<ContinuousArc> arc = arcItem.second;
@@ -1194,8 +1189,8 @@ namespace hpnmg {
                     }
                 }
                 // Adapt rate for some transitions
-                for (auto iter = transitionsByPrio.begin(); iter != transitionsByPrio.end(); ++iter) {
-                    vector<tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>>> prioTransitions = iter->second;
+                for (auto &iter : transitionsByPrio) {
+                    vector<tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>>> prioTransitions = iter.second;
                     double sumOutRate = 0.0;
                     double sumShare = 0;
                     for (tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>> transItem : prioTransitions) {
@@ -1225,10 +1220,10 @@ namespace hpnmg {
                                     if (place->id != placeToCheck->id) {
                                         placesToCheck.push_back(
                                                 hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
-                                        long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
+                                        long plasePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
                                                         placeToCheck->id) - continuousPlaceIDs.begin();
-                                        inputDrift[pos] -= rateDiff;
-                                        drift[pos] -= rateDiff;
+                                        inputDrift[plasePos] -= rateDiff;
+                                        drift[plasePos] -= rateDiff;
                                     }
                                 }
                                 for (auto arcItem : transition->getContinuousInputArcs()) {
@@ -1236,10 +1231,10 @@ namespace hpnmg {
                                     if (place->id != placeToCheck->id) {
                                         placesToCheck.push_back(
                                                 hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
-                                        long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
+                                        long plasePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
                                                         placeToCheck->id) - continuousPlaceIDs.begin();
-                                        outputDrift[pos] -= rateDiff;
-                                        drift[pos] += rateDiff;
+                                        outputDrift[plasePos] -= rateDiff;
+                                        drift[plasePos] += rateDiff;
                                     }
                                 }
                             }
@@ -1271,8 +1266,8 @@ namespace hpnmg {
                     }
                 }
                 // Adapt rate for some transitions
-                for (auto iter = transitionsByPrio.begin(); iter != transitionsByPrio.end(); ++iter) {
-                    vector<tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>>> prioTransitions = iter->second;
+                for (auto &iter : transitionsByPrio) {
+                    vector<tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>>> prioTransitions = iter.second;
                     double sumInRate = 0.0;
                     double sumShare = 0;
                     for (tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>> transItem : prioTransitions) {
@@ -1302,10 +1297,10 @@ namespace hpnmg {
                                     if (place->id != placeToCheck->id) {
                                         placesToCheck.push_back(
                                                 hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
-                                        long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
+                                        long plasePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
                                                         placeToCheck->id) - continuousPlaceIDs.begin();
-                                        inputDrift[pos] -= rateDiff;
-                                        drift[pos] -= rateDiff;
+                                        inputDrift[plasePos] -= rateDiff;
+                                        drift[plasePos] -= rateDiff;
                                     }
                                 }
                                 for (auto arcItem : transition->getContinuousInputArcs()) {
@@ -1313,10 +1308,10 @@ namespace hpnmg {
                                     if (place->id != placeToCheck->id) {
                                         placesToCheck.push_back(
                                                 hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
-                                        long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
+                                        long plasePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
                                                         placeToCheck->id) - continuousPlaceIDs.begin();
-                                        outputDrift[pos] -= rateDiff;
-                                        drift[pos] += rateDiff;
+                                        outputDrift[plasePos] -= rateDiff;
+                                        drift[plasePos] += rateDiff;
                                     }
                                 }
                             }
