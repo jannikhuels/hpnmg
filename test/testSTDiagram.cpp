@@ -45,15 +45,15 @@ TEST(STDiagramTest, VertexTest)
     ASSERT_EQ(baseRegion.vertices().size(), 4);
 }
 
-TEST(STDiagramTest, DimensionErrorTest)
-{
-    try {
-        Region baseRegion = STDiagram::createBaseRegion(1,10);
-        FAIL() << "Dimension of 1 not allowed. (Dimension must be >= 2)";
-    } catch (IllegalDimensionException e) {
-        SUCCEED();
-    }    
-}
+//TEST(STDiagramTest, DimensionErrorTest)
+//{
+//    try {
+//        Region baseRegion = STDiagram::createBaseRegion(1,10);
+//        FAIL() << "Dimension of 1 not allowed. (Dimension must be >= 2)";
+//    } catch (IllegalDimensionException e) {
+//        SUCCEED();
+//    }
+//}
 
 TEST(STDiagramTest, MaxTimeErrorTest)
 {

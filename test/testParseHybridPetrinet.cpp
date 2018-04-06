@@ -1,3 +1,4 @@
+#include <hpnmg/PLTWriter.h>
 #include "gtest/gtest.h"
 #include "ReadHybridPetrinet.h"
 #include "ParseHybridPetrinet.h"
@@ -404,4 +405,13 @@ TEST(ParseHybridPetrinet, Example2General) {
             ASSERT_EQ(EventType::Timed, location.getSourceEvent().getEventType());
         }
     }
+}
+
+TEST(ParseHybridPetrinet, Example5General) {
+    auto reader= new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/jannik5general.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, 20);
 }

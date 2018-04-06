@@ -4,6 +4,7 @@
 #include "datastructures/Event.h"
 
 using namespace hpnmg;
+using namespace std;
 
 #define MAX_TIME 10
 
@@ -16,11 +17,11 @@ protected:
     }
 
     virtual void SetUp() {
-        
+
     }
 
     virtual void TearDown() {
-    
+
     }
 };
 
@@ -37,18 +38,26 @@ protected:
         ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
         ParametricLocation childNode = rootNode.getParametricLocation();
 
-        ParametricLocationTree::Node detNode = parametricLocationTree.setChildNode(rootNode, ParametricLocation(1,1,1,Event(EventType::Timed, vector<double>{0}, 5)));
-        ParametricLocationTree::Node stocNode = parametricLocationTree.setChildNode(rootNode, ParametricLocation(1,1,1,Event(EventType::General, vector<double>{-1}, 0)));
-        ParametricLocationTree::Node emptyNode = parametricLocationTree.setChildNode(stocNode, ParametricLocation(1,1,1,Event(EventType::General, vector<double>{-2}, 0)));
-        parametricLocationTree.setChildNode(stocNode, ParametricLocation(1,1,1,Event(EventType::Timed, vector<double>{0}, 5), std::vector<double> {0}, std::vector<double> {2.5}));
-        parametricLocationTree.setChildNode(emptyNode, ParametricLocation(1,1,1,Event(EventType::Timed, vector<double>{0}, 5), std::vector<double> {2.5}, std::vector<double> {5}));
-        parametricLocationTree.setChildNode(detNode, ParametricLocation(1,1,1,Event(EventType::General, vector<double>{-1}, 0), std::vector<double> {5}, std::vector<double> {7.5}));
-        ParametricLocationTree::Node fullNode = parametricLocationTree.setChildNode(detNode, ParametricLocation(1,1,1,Event(EventType::Timed, vector<double>{0}, 7.5)));
-        parametricLocationTree.setChildNode(fullNode, ParametricLocation(1,1,1,Event(EventType::Timed, vector<double>{-1}, 0), std::vector<double> {7.5}, std::vector<double> {10}));
+        ParametricLocationTree::Node detNode = parametricLocationTree.setChildNode(rootNode,
+                                      ParametricLocation(1,1,1,Event(EventType::Timed, vector<double>{0}, 5)));
+        ParametricLocationTree::Node stocNode = parametricLocationTree.setChildNode(rootNode,
+                                      ParametricLocation(1,1,1,Event(EventType::General, vector<double>{-1}, 0)));
+        ParametricLocationTree::Node emptyNode = parametricLocationTree.setChildNode(stocNode,
+                                      ParametricLocation(1,1,1,Event(EventType::General, vector<double>{-2}, 0)));
+        parametricLocationTree.setChildNode(stocNode, ParametricLocation(1,1,1,Event(EventType::Timed,
+            vector<double>{0}, 5), vector<vector<vector<double>>> {{{0}}}, vector<vector<vector<double>>> {{{2.5}}}));
+        parametricLocationTree.setChildNode(emptyNode, ParametricLocation(1,1,1,Event(EventType::Timed,
+            vector<double>{0}, 5), vector<vector<vector<double>>> {{{2.5}}}, vector<vector<vector<double>>> {{{5}}}));
+        parametricLocationTree.setChildNode(detNode, ParametricLocation(1,1,1,Event(EventType::General,
+            vector<double>{-1}, 0), vector<vector<vector<double>>> {{{5}}}, vector<vector<vector<double>>> {{{7.5}}}));
+        ParametricLocationTree::Node fullNode = parametricLocationTree.setChildNode(detNode, ParametricLocation(1,1,1,
+                                                                   Event(EventType::Timed, vector<double>{0}, 7.5)));
+        parametricLocationTree.setChildNode(fullNode, ParametricLocation(1,1,1,Event(EventType::Timed,
+            vector<double>{-1}, 0), vector<vector<vector<double>>> {{{7.5}}}, vector<vector<vector<double>>> {{{10}}}));
     }
 
     virtual void TearDown() {
-    
+
     }
 };
 
@@ -63,7 +72,7 @@ TEST_F(ParametricLocationEmptyTreeTest, RootNodeTest)
 TEST_F(ParametricLocationEmptyTreeTest, NoChildNodes)
 {
     ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
-    std::vector<ParametricLocationTree::Node> childNodes = parametricLocationTree.getChildNodes(rootNode);
+    vector<ParametricLocationTree::Node> childNodes = parametricLocationTree.getChildNodes(rootNode);
     ASSERT_EQ(childNodes.size(), 0);
 }
 
@@ -82,9 +91,9 @@ TEST_F(ParametricLocationTreeTest, InvalidParentNode)
 TEST_F(ParametricLocationTreeTest, ChildNode)
 {
     ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
-    std::vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree.getChildNodes(rootNode);
-    std::vector<ParametricLocationTree::Node> stocChildNodes;
-    std::vector<ParametricLocationTree::Node> detChildNodes;
+    vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree.getChildNodes(rootNode);
+    vector<ParametricLocationTree::Node> stocChildNodes;
+    vector<ParametricLocationTree::Node> detChildNodes;
     for (ParametricLocationTree::Node node: rootChildNodes) {
         if (node.getParametricLocation().getSourceEvent().getEventType() == EventType::General) {
             stocChildNodes = parametricLocationTree.getChildNodes(node);
@@ -114,8 +123,8 @@ TEST_F(ParametricLocationTreeTest, RegionTest)
     point << 1,2;
     ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), false);
 
-    std::vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree.getChildNodes(rootNode);
-    std::vector<ParametricLocationTree::Node> stocChildNodes;
+    vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree.getChildNodes(rootNode);
+    vector<ParametricLocationTree::Node> stocChildNodes;
     for (ParametricLocationTree::Node node: rootChildNodes) {
         if (node.getParametricLocation().getSourceEvent().getEventType() == EventType::General) {
             point << 2,2;
@@ -135,7 +144,7 @@ TEST_F(ParametricLocationTreeTest, RegionTest)
     }
 }
 
-TEST_F(ParametricLocationEmptyTreeTest, IncorrectChildNode) 
+TEST_F(ParametricLocationEmptyTreeTest, IncorrectChildNode)
 {
     try {
         ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
@@ -153,7 +162,7 @@ TEST_F(ParametricLocationEmptyTreeTest, IncorrectChildNode)
     } catch(InvalidParentNodeException e) {
         SUCCEED();
     }
-    
+
 }
 
 TEST_F(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
