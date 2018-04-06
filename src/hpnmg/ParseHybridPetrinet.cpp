@@ -26,12 +26,6 @@ namespace hpnmg {
         for (auto &generalTransition : generalTransitions)
             generalTransitionIDs.push_back(generalTransition.first);
 
-        // Initialize aleatory variable counter for deterministic transitions and continuous places
-        for (string &id : deterministicTransitionIDs)
-            deterTransAleatoryVariables[id] = {};
-        for (string &id : continuousPlaceIDs)
-            contPlaceAleatoryVariables[id] = {};
-
         ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, maxTime);
 
         parametriclocationTree = make_shared<ParametricLocationTree>(rootLocation, maxTime);

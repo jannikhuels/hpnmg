@@ -3,7 +3,6 @@
 #include <vector>
 #include "datastructures/HybridPetrinet.h"
 #include "ParametricLocationTree.h"
-#include "AleatoryVariable.h"
 
 namespace hpnmg {
     class ParseHybridPetrinet {
@@ -14,11 +13,6 @@ namespace hpnmg {
         vector<string> deterministicTransitionIDs;
         vector<string> generalTransitionIDs;
         vector<ParametricLocationTree::Node> locationQueue;
-
-        // Aleatory variable counter for deterministic transitions and continuous places
-        // {idDeterministicTransition: [<aleatoryVariable, amount>]}
-        map<string, vector<tuple<shared_ptr<AleatoryVariable>, double>>> deterTransAleatoryVariables;
-        map<string, vector<tuple<shared_ptr<AleatoryVariable>, double>>> contPlaceAleatoryVariables;
 
     public:
         ParseHybridPetrinet();
