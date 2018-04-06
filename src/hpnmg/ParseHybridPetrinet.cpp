@@ -9,6 +9,10 @@ namespace hpnmg {
     shared_ptr<ParametricLocationTree>
     ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime) {
         // TODO: all floats to double?
+        discretePlaceIDs = {};
+        continuousPlaceIDs = {};
+        deterministicTransitionIDs = {};
+        generalTransitionIDs = {};
 
         // Add place IDs from map to vector, so the places have an order
         map<string, shared_ptr<DiscretePlace>> discretePlaces = hybridPetrinet->getDiscretePlaces();
@@ -405,8 +409,11 @@ namespace hpnmg {
         }
 
         for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
-            if (childNode.getNodeID() <= 50) // to avoid zeno behavior
+            if (childNode.getNodeID() <= 2000) { // to avoid zeno behavior
                 locationQueue.push_back(childNode);
+                if (childNode.getNodeID() == 2000)
+                    cout << "2000 locations or more, some locations may not be shown" << endl;
+            }
         }
     }
 
@@ -1087,7 +1094,7 @@ namespace hpnmg {
                 generalClocks[transitionPos].push_back(0);
                 continue;
             }
-            for (int j = 0; j < generalClocks.size(); ++j)
+            for (int j = 0; j < generalClocks[i].size(); ++j)
                 generalClocks[i][j] -= transitionClock[j];
             generalClocks[i].push_back(1);
         }
