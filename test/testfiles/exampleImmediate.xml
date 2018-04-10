@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="pd1" marking="2"/>
+        <discretePlace id="pd2" marking="0"/>
+        <discretePlace id="pd3" marking="0"/>
+        <discretePlace id="pd4" marking="1"/>
+    </places>
+    <transitions>
+        <immediateTransition id="ti1" priority="1" weight="1.0E0"/>
+        <immediateTransition id="ti2" priority="2" weight="1.0E0"/>
+        <immediateTransition id="ti3" priority="2" weight="2.0E0"/>
+    </transitions>
+    <arcs>
+        <discreteArc id="da1" fromNode="pd1" toNode="ti1" weight="1.0E0"/>
+        <discreteArc id="da2" fromNode="pd1" toNode="ti2" weight="1.0E0"/>
+        <discreteArc id="da3" fromNode="pd1" toNode="ti3" weight="1.0E0"/>
+        <discreteArc id="da4" fromNode="ti1" toNode="pd2" weight="1.0E0"/>
+        <discreteArc id="da5" fromNode="ti2" toNode="pd2" weight="1.0E0"/>
+        <discreteArc id="da6" fromNode="ti3" toNode="pd3" weight="1.0E0"/>
+        <discreteArc id="da7" fromNode="pd4" toNode="ti1" weight="1.0E0"/>
+    </arcs>
+</HPnG>

@@ -100,7 +100,7 @@ namespace hpnmg {
                 recursivelySetRegions(it->second);
             }
         } else {
-            Region region = STDiagram::createRegionNoEvent(baseRegion, startNode.getParametricLocation().getSourceEvent(), startNode.getParametricLocation().getGeneralIntervalBoundLeft(), startNode.getParametricLocation().getGeneralIntervalBoundRight());
+            Region region = STDiagram::createRegionNoEvent(baseRegion, startNode.getParametricLocation().getSourceEvent(), startNode.getParametricLocation().getGeneralIntervalBoundLeft()[0][0], startNode.getParametricLocation().getGeneralIntervalBoundRight()[0][0]);
             startNode.setRegion(region);
         }
     }
