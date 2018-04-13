@@ -17,6 +17,7 @@ namespace hpnmg {
         static std::vector<carl::Interval<double>> discreteFormulaIntervalSetsAtTime(ParametricLocationTree &parametricLocationTree, int placeIndex, int value, double time); 
 
         static std::vector<carl::Interval<double>> continuousFormulaIntervalSetsAtTime(ParametricLocationTree &parametricLocationTree, int placeIndex, double value, double time);
-        
+
+        static std::vector<Region> discreteFormulaRegionsAtTime(shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree, int placeIndex, int value, double time);        
     };
 }

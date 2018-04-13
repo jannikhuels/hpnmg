@@ -17,6 +17,14 @@ namespace hpnmg {
 
     }
 
+    void Event::print() const {
+        printf("t=%f [ ", getTime());
+        for (double d : getGeneralDependencies()) {
+            printf(" %f ", d);
+        }
+        printf(" ]\n");
+    }
+
     EventType Event::getEventType() const {return type;}
     void Event::setEventType(const EventType &eventType) {this->type = eventType;}
 

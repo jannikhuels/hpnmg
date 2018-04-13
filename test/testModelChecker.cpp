@@ -1,5 +1,9 @@
 #include "gtest/gtest.h"
 #include "ModelChecker.h"
+#include "ReadHybridPetrinet.h"
+#include "ParseHybridPetrinet.h"
+#include "STDiagram.h"
+#include "ParametricLocationTree.h"
 
 using namespace std;
 using namespace hpnmg;
@@ -20,7 +24,7 @@ protected:
     virtual void SetUp() {
 
         ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
-
+        
         ParametricLocation childNode = rootNode.getParametricLocation();
 
         ParametricLocationTree::Node detNode = parametricLocationTree.setChildNode(rootNode,
@@ -30,12 +34,12 @@ protected:
 
         ParametricLocationTree::Node stocNode = parametricLocationTree.setChildNode(rootNode, ParametricLocation(
                 vector<int>{0, 1}, vector<vector<double>>{vector<double>{1, 0}}, vector<double>{-1}, 1,
-                Event(EventType::General, vector<double>{-1}, 0), vector<vector<vector<double>>> {{{0}}},
+                Event(EventType::General, vector<double>{1}, 0), vector<vector<vector<double>>> {{{0}}},
                 vector<vector<vector<double>>> {{{5}}}));
 
         ParametricLocationTree::Node emptyNode = parametricLocationTree.setChildNode(stocNode, ParametricLocation(
                 vector<int>{0, 1}, vector<vector<double>>{vector<double>{2, 0}}, vector<double>{0}, 1,
-                Event(EventType::General, vector<double>{-2}, 0), vector<vector<vector<double>>> {{{0}}},
+                Event(EventType::General, vector<double>{2}, 0), vector<vector<vector<double>>> {{{0}}},
                 vector<vector<vector<double>>> {{{2.5}}}));
 
         ParametricLocationTree::Node timedAfterStochastic = parametricLocationTree.setChildNode(stocNode,
@@ -50,7 +54,7 @@ protected:
 
         ParametricLocationTree::Node stochasticAfterTimed = parametricLocationTree.setChildNode(detNode,
               ParametricLocation(vector<int>{0, 0}, vector<vector<double>>{vector<double>{2, -5}}, vector<double>{0}, 1,
-                                 Event(EventType::General, vector<double>{-1}, 0), vector<vector<vector<double>>> {{{5}}},
+                                 Event(EventType::General, vector<double>{1}, 0), vector<vector<vector<double>>> {{{5}}},
                                  vector<vector<vector<double>>> {{{7.5}}}));
 
         ParametricLocationTree::Node fullNode = parametricLocationTree.setChildNode(detNode, ParametricLocation(
@@ -60,7 +64,7 @@ protected:
 
         ParametricLocationTree::Node stochasticAfterFull = parametricLocationTree.setChildNode(fullNode,
                ParametricLocation(vector<int>{0, 0}, vector<vector<double>>{vector<double>{0, 10}}, vector<double>{0}, 1,
-                                  Event(EventType::Timed, vector<double>{-1}, 0), vector<vector<vector<double>>> {{{7.5}}},
+                                  Event(EventType::Timed, vector<double>{1}, 0), vector<vector<vector<double>>> {{{7.5}}},
                                   vector<vector<vector<double>>> {{{10}}}));
     }
 
@@ -109,4 +113,25 @@ TEST_F(ModelCheckerTest, ContinuousFormulaTest) {
     ASSERT_EQ(intervalSets[1].upper(), 3);
     ASSERT_EQ(intervalSets[2].lower(), 3);
     ASSERT_EQ(intervalSets[2].upper(), 10);
+}
+
+class ModelCheckerTestXML : public ::testing::Test {
+protected:
+
+    shared_ptr<hpnmg::ParametricLocationTree> plt;
+
+    ModelCheckerTestXML() {
+        ReadHybridPetrinet reader;
+        //TODO Check impl. Pointer seems to be a problem here. (Memory Leak?)
+        shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
+        ParseHybridPetrinet parser;
+        shared_ptr<hpnmg::ParametricLocationTree> pltC = parser.parseHybridPetrinet(hybridPetrinet, 20);
+        plt = pltC;
+    }
+};
+
+TEST_F(ModelCheckerTestXML, DiscreteFormulaTest) {
+    plt->updateRegions();
+    std::vector<Region> regions = ModelChecker::discreteFormulaRegionsAtTime(plt, 0, 0, 2);
+    printf("Number of Regions %lu.\n", regions.size());
 }

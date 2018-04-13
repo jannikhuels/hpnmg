@@ -34,5 +34,7 @@ namespace hpnmg {
 
         double getTime() const;
         void setTime(double time);
+
+        void print() const;
     };
 }

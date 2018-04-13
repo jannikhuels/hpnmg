@@ -69,7 +69,7 @@ namespace hpnmg {
             rightBoundaries.push_back({{maxTime}}); // NOLINT
             generalClocks.push_back({0}); // NOLINT
         }
-
+        //TODO : Create correct Root location here
         ParametricLocation rootLocation = ParametricLocation(rootDiscreteMarking, rootContinuousMarking, drift,
                                                              static_cast<int>(numGeneralTransitions),
                                                              Event(EventType::Root, {}, 0),

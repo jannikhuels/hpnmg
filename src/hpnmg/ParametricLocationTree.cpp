@@ -18,6 +18,10 @@ namespace hpnmg {
         setRootNode(rootLocation);
     }
 
+    ParametricLocationTree::ParametricLocationTree() {
+        
+    }
+
     ParametricLocationTree::Node ParametricLocationTree::getRootNode() {
         return getNodes(ROOT_NODE_INDEX)[0];
     }
@@ -48,6 +52,10 @@ namespace hpnmg {
 
     int ParametricLocationTree::getDimension() {
         return getRootNode().getParametricLocation().getDimension();
+    }
+
+    int ParametricLocationTree::getMaxTime() {
+        return maxTime;
     }
 
     void ParametricLocationTree::setRootNode(const ParametricLocation &rootLocation){
@@ -89,7 +97,6 @@ namespace hpnmg {
     
     void ParametricLocationTree::recursivelySetRegions(ParametricLocationTree::Node &startNode) {
         std::vector<ParametricLocationTree::Node> childNodes = getChildNodes(startNode);
-        
         if (childNodes.size() > 0) {
             Region region = STDiagram::createRegion(baseRegion, startNode.getParametricLocation().getSourceEvent(), getSourceEventsFromNodes(childNodes));
             startNode.setRegion(region);
@@ -100,6 +107,7 @@ namespace hpnmg {
                 recursivelySetRegions(it->second);
             }
         } else {
+            //TODO Change when a single general transitions fires more than one time
             Region region = STDiagram::createRegionNoEvent(baseRegion, startNode.getParametricLocation().getSourceEvent(), startNode.getParametricLocation().getGeneralIntervalBoundLeft()[0][0], startNode.getParametricLocation().getGeneralIntervalBoundRight()[0][0]);
             startNode.setRegion(region);
         }
@@ -124,6 +132,22 @@ namespace hpnmg {
         vector<Region> regions;
         recursivelyCollectRegions(getRootNode(), regions);
         STDiagram::print(regions, cummulative);
+    }
+
+    void ParametricLocationTree::recursivelyPrintRegions(const ParametricLocationTree::Node &startNode, int depth) {
+        for (int i = 0; i<depth; i++) {
+            printf(" ");
+        }
+
+        startNode.getParametricLocation().getSourceEvent().print();
+
+        for (ParametricLocationTree::Node node : getChildNodes(startNode)) {      
+            recursivelyPrintRegions(node, depth+1);
+        }
+    }
+
+    void ParametricLocationTree::printText() {
+        recursivelyPrintRegions(getRootNode(),0);
     }
 
     void ParametricLocationTree::recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, bool (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension) {

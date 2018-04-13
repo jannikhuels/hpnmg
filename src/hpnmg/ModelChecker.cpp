@@ -42,4 +42,16 @@ namespace hpnmg {
         }
         return intervals;
     }
+
+    std::vector<Region> ModelChecker::discreteFormulaRegionsAtTime(shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree, int placeIndex, int value, double time)
+    {
+        std::vector<Region> regions;
+        std::vector<ParametricLocationTree::Node> candidates = parametricLocationTree->getCandidateLocationsForTime(time);
+        for(ParametricLocationTree::Node candidateNode : candidates) {
+            if (candidateNode.getParametricLocation().getDiscreteMarking().at(placeIndex) == value) {
+                regions.insert(regions.end(), candidateNode.getRegion());
+            }
+        }
+        return regions;
+    }
 }

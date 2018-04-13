@@ -12,14 +12,15 @@ namespace hpnmg {
     class STDiagram
     {
     private: 
-
+        
         STDiagram() {};
 
         static Halfspace<double> createHalfspaceFromDependencies(std::vector<double> dependencies, double offset, bool isVertical);
 
         static Halfspace<double> createHalfspaceFromEvent(const Event &event, bool isSourceEvent);
 
-        static bool isValidEvent(const Event &event);
+        // TODO: Should be isValidEvent but was changed due to automatic creation of PLT
+        static Event makeValidEvent(const Event &event, const Region &baseRegion);
 
         static Halfspace<double> createVerticalHalfspace(std::vector<double> bounds, bool isLeftBound);
 
@@ -32,7 +33,7 @@ namespace hpnmg {
         static vector_t<double> vectorFromBound(double bound, int boundIndex, int dimension);
 
     public:
-
+        // TODO: Do not create a base region but instead try to read it from the PLT.
         static Region createBaseRegion(int dimension, int maxTime);
 
         static Region createRegion(const Region &baseRegion, const Event &sourceEvent, const std::vector<Event> &destinationEvents);

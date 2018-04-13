@@ -55,7 +55,11 @@ namespace hpnmg {
 
         std::vector<Event> getSourceEventsFromNodes(const std::vector<Node> &nodes);
 
+        void recursivelyPrintRegions(const ParametricLocationTree::Node &startNode, int depth);
+
     public:
+
+        ParametricLocationTree();
 
         ParametricLocationTree(const ParametricLocation &rootLocation, int maxTime);
 
@@ -67,9 +71,13 @@ namespace hpnmg {
 
         int getDimension();
 
+        int getMaxTime();
+
         void updateRegions();
 
         void print(bool cummulative);
+
+        void printText();
 
         std::vector<Node> getCandidateLocationsForTime(double time);
 

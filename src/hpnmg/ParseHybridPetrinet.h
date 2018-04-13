@@ -15,6 +15,8 @@ namespace hpnmg {
         vector<ParametricLocationTree::Node> locationQueue;
 
     public:
+        //TODO Check to make it a singleton
+        //TODO Change public / private accessor
         ParseHybridPetrinet();
 
         ~ParseHybridPetrinet();

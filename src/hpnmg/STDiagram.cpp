@@ -29,17 +29,16 @@ namespace hpnmg {
     Region STDiagram::createRegion(const Region &baseRegion, const Event &sourceEvent, const std::vector<Event> &destinationEvents) {
         Region region(baseRegion);
 
-        if (!isValidEvent(sourceEvent)) {
+        /*if (!isValidEvent(sourceEvent, baseRegion)) {
             throw IllegalArgumentException("sourceEvent");
-        }
-
-        region.insert(createHalfspaceFromEvent(sourceEvent,true));
-
+        }*/
+        region.insert(createHalfspaceFromEvent(makeValidEvent(sourceEvent, baseRegion),true));
+        
         for (Event e : destinationEvents) {
-            if (!isValidEvent(e)) {
+            /*if (!isValidEvent(e, baseRegion)) {
                 throw IllegalArgumentException("destinationEvents");
-            }
-            region.insert(createHalfspaceFromEvent(e, false));
+            }*/
+            region.insert(createHalfspaceFromEvent(makeValidEvent(e, baseRegion), false));
         }
         return region;
     }
@@ -48,7 +47,7 @@ namespace hpnmg {
         vector_t<double> direction = vector_t<double>::Zero(dependencies.size()+1);
         int i = 0;
         for (; i < dependencies.size(); i++) {
-            direction[i] = dependencies[i];
+            direction[i] = -dependencies[i];
         }
         if (!isVertical) {
             direction[i] = 1;
@@ -68,11 +67,16 @@ namespace hpnmg {
         return hsp;
     }
 
-    bool STDiagram::isValidEvent(const Event &event) {
-        if (!(event.getGeneralDependencies().size() > 0)) { 
-            return false;
+    Event STDiagram::makeValidEvent(const Event &event, const Region &baseRegion) {
+        Event e(event);
+        if (!(e.getGeneralDependencies().size() == baseRegion.dimension())) { 
+            auto gdependencies = event.getGeneralDependencies();
+            for (int i = gdependencies.size(); i < baseRegion.dimension() - 1; i++) {
+                gdependencies.push_back(0);
+            }
+            e.setGeneralDependencies(gdependencies);                  
         }
-        return true;
+        return e;
     }
 
     void STDiagram::print(const vector<Region> &regionsToPrint, bool cummulative) {
@@ -124,11 +128,11 @@ namespace hpnmg {
     Region STDiagram::createRegionNoEvent(const Region &baseRegion, const Event &sourceEvent, std::vector<double> leftBounds, std::vector<double> rightBounds) {
         Region region(baseRegion);
 
-        if (!isValidEvent(sourceEvent)) {
+        /*if (!isValidEvent(sourceEvent, baseRegion)) {
             throw IllegalArgumentException("sourceEvent");
-        }
+        }*/
 
-        region.insert(createHalfspaceFromEvent(sourceEvent,true));
+        region.insert(createHalfspaceFromEvent(makeValidEvent(sourceEvent, baseRegion),true));
         if (leftBounds.size() > 0)
             region.insert(createVerticalHalfspace(leftBounds, true));
         if (rightBounds.size() > 0)

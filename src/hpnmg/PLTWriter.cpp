@@ -28,7 +28,7 @@ namespace hpnmg {
         if (configuration->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
             configuration->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
 
-        target = new LocalFileFormatTarget("/home/pati/Desktop/hpnmg/test/testfiles/result.xml");
+        target = new LocalFileFormatTarget("result_example.xml");
         output->setByteStream(target);
 
         serializer->write(domDocument, output);

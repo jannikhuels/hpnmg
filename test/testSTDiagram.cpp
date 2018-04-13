@@ -18,7 +18,7 @@ protected:
         sourceEvent.setTime(0);
 
         Event stochasticEvent;
-        stochasticEvent.setGeneralDependencies(vector<double> {-1});
+        stochasticEvent.setGeneralDependencies(vector<double> {1});
         stochasticEvent.setTime(0);
 
         Event deterministicEvent;
@@ -91,7 +91,7 @@ TEST_F(STDiagramRegionTest, CreateRegionTest)
 TEST_F(STDiagramRegionTest, CreateRegionOnlySourceEvent)
 {
     Event testEvent;
-    testEvent.setGeneralDependencies(vector<double> {-1});
+    testEvent.setGeneralDependencies(vector<double> {1});
     testEvent.setTime(0);
 
     std::vector<Event> noDestEvents(0);
@@ -103,21 +103,22 @@ TEST_F(STDiagramRegionTest, CreateRegionOnlySourceEvent)
 
 TEST_F(STDiagramRegionTest, CreateRegionErrorTest)
 {
+    //TODO: Check if we need this. Changed from isValidEvent to makeValidEvent. We should not have invalid events now.
     Event notInitialized;
     try {
         Region region = STDiagram::createRegion(baseRegion, notInitialized, destinationEvents);
-        FAIL();
-    } catch(IllegalArgumentException e) {
         SUCCEED();
+    } catch(IllegalArgumentException e) {
+        FAIL();
     }
 
     vector<Event> notInitializedEvents;
     notInitializedEvents.push_back(notInitialized);
     try {
         Region region = STDiagram::createRegion(baseRegion, sourceEvent, notInitializedEvents);
-        FAIL();
-    } catch(IllegalArgumentException e) {
         SUCCEED();
+    } catch(IllegalArgumentException e) {
+        FAIL();
     }
 }
 
@@ -125,7 +126,7 @@ TEST(STDiagramIntersection, IntersectionTest2D)
 {
     Region baseRegion = STDiagram::createBaseRegion(2,10);
     Event event0 = Event(EventType::Immediate, vector<double> {0}, 0);
-    Event event1 = Event(EventType::Immediate, vector<double> {-1}, 0);
+    Event event1 = Event(EventType::Immediate, vector<double> {1}, 0);
     Event event2 = Event(EventType::Immediate, vector<double> {0}, 5);
     Event event3 = Event(EventType::Immediate, vector<double> {0}, 7);
 
@@ -152,7 +153,7 @@ TEST(STDiagramIntersection, IntersectionTest3D)
 {
     Region baseRegion = STDiagram::createBaseRegion(3,10);
     Event event0 = Event(EventType::Immediate, vector<double> {0,0}, 0);
-    Event event1 = Event(EventType::Immediate, vector<double> {-1,0}, 0);
+    Event event1 = Event(EventType::Immediate, vector<double> {1,0}, 0);
     Event event2 = Event(EventType::Immediate, vector<double> {0,0}, 5);
     Event event3 = Event(EventType::Immediate, vector<double> {0,0}, 7);
 
@@ -227,17 +228,17 @@ TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersection) {
     ASSERT_EQ(resultNoDep.contains(Point<double>{2,6}), false);
     
     
-    Region resultPosDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{1,2}, 1, 5);
+    Region resultPosDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 1, 5);
     ASSERT_EQ(resultPosDep.contains(Point<double>{1,2}), true);
     ASSERT_EQ(resultPosDep.contains(Point<double>{1,5}), false);
 
-    Region resultNegDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 1, 5);
+    Region resultNegDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{1,2}, 1, 5);
     ASSERT_EQ(resultNegDep.contains(Point<double>{2,2}), true);
     ASSERT_EQ(resultNegDep.contains(Point<double>{2,6}), false);
 }
 
 TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersectionZeroDrift) {
-    Region resultNoDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{1,2}, 0, 5);
+    Region resultNoDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 0, 5);
     ASSERT_EQ(resultNoDep.contains(Point<double>{2,2}), true);
     ASSERT_EQ(resultNoDep.contains(Point<double>{6,2}), false);
 
