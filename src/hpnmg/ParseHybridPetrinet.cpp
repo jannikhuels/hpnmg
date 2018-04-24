@@ -69,7 +69,6 @@ namespace hpnmg {
             rightBoundaries.push_back({{maxTime}}); // NOLINT
             generalClocks.push_back({0}); // NOLINT
         }
-        //TODO : Create correct Root location here
         ParametricLocation rootLocation = ParametricLocation(rootDiscreteMarking, rootContinuousMarking, drift,
                                                              static_cast<int>(numGeneralTransitions),
                                                              Event(EventType::Root, {}, 0),
@@ -409,10 +408,10 @@ namespace hpnmg {
         }
 
         for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
-            if (childNode.getNodeID() <= 2000) { // to avoid zeno behavior
+            if (childNode.getNodeID() <= 200) { // to avoid zeno behavior
                 locationQueue.push_back(childNode);
-                if (childNode.getNodeID() == 2000)
-                    cout << "2000 locations or more, some locations may not be shown" << endl;
+                if (childNode.getNodeID() == 200)
+                    cout << "200 locations or more, some locations may not be shown" << endl;
             }
         }
     }

@@ -7,7 +7,6 @@
         <discretePlace id="re2" marking="1"/>
         <continuousPlace id="ps1" capacity="20" infiniteCapacity="0" level="0"/>
         <continuousPlace id="ps2" capacity="20" infiniteCapacity="0" level="0"/>
-        <continuousPlace id="ps2" capacity="20" infiniteCapacity="0" level="0"/>
         <continuousPlace id="pfp11" capacity="2" infiniteCapacity="0" level="0"/>
         <continuousPlace id="pfp12" capacity="2" infiniteCapacity="0" level="0"/>
         <continuousPlace id="pfp21" capacity="2" infiniteCapacity="0" level="0"/>
@@ -62,19 +61,22 @@
         <guardArc fromNode="re2" id="ga8" isInhibitor="0" toNode="tc" weight="1.0E0"/>
         <continuousArc id="ca1" fromNode="ti1" priority="1" share="1.0E0" toNode="ps1" weight="1.0E0"/>
         <continuousArc id="ca2" fromNode="ps1" priority="1" share="1.0E0" toNode="ta" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="ps1" priority="1" share="1.0E0" toNode="tr" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="ti2" priority="1" share="1.0E0" toNode="ps2" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="ps2" priority="1" share="1.0E0" toNode="tb" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="ps2" priority="1" share="1.0E0" toNode="tc" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="ta" priority="1" share="1.0E0" toNode="pfp11" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="tb" priority="1" share="1.0E0" toNode="pfp21" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="tc" priority="1" share="1.0E0" toNode="pfp21" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="tfp11" priority="1" share="1.0E0" toNode="pfp12" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="tfp21" priority="1" share="1.0E0" toNode="pfp22" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="pfp12" priority="1" share="1.0E0" toNode="tfp12" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="pfp22" priority="1" share="1.0E0" toNode="tfp22" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="tfp12" priority="1" share="1.0E0" toNode="pf" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="tfp22" priority="1" share="1.0E0" toNode="pf" weight="1.0E0"/>
-        <continuousArc id="ca2" fromNode="pf" priority="1" share="1.0E0" toNode="tout" weight="1.0E0"/>
+        <continuousArc id="ca3" fromNode="ps1" priority="1" share="1.0E0" toNode="tr" weight="1.0E0"/>
+        <continuousArc id="ca4" fromNode="ti2" priority="1" share="1.0E0" toNode="ps2" weight="1.0E0"/>
+        <continuousArc id="ca5" fromNode="ps2" priority="1" share="1.0E0" toNode="tb" weight="1.0E0"/>
+        <continuousArc id="ca6" fromNode="ps2" priority="1" share="1.0E0" toNode="tc" weight="1.0E0"/>
+        <continuousArc id="ca7" fromNode="ta" priority="1" share="1.0E0" toNode="pfp11" weight="1.0E0"/>
+        <continuousArc id="ca8" fromNode="tb" priority="1" share="1.0E0" toNode="pfp21" weight="1.0E0"/>
+        <continuousArc id="ca9" fromNode="tc" priority="1" share="1.0E0" toNode="pfp21" weight="1.0E0"/>
+        <continuousArc id="ca91" fromNode="pfp11" priority="1" share="1.0E0" toNode="tfp11" weight="1.0E0"/>
+        <continuousArc id="ca92" fromNode="pfp21" priority="1" share="1.0E0" toNode="tfp21" weight="1.0E0"/>
+        <continuousArc id="ca10" fromNode="tfp11" priority="1" share="1.0E0" toNode="pfp12" weight="1.0E0"/>
+        <continuousArc id="ca11" fromNode="tfp21" priority="1" share="1.0E0" toNode="pfp22" weight="1.0E0"/>
+        <continuousArc id="ca12" fromNode="pfp12" priority="1" share="1.0E0" toNode="tfp12" weight="1.0E0"/>
+        <continuousArc id="ca13" fromNode="pfp22" priority="1" share="1.0E0" toNode="tfp22" weight="1.0E0"/>
+        <continuousArc id="ca14" fromNode="tfp12" priority="1" share="1.0E0" toNode="pf" weight="1.0E0"/>
+        <continuousArc id="ca15" fromNode="tfp22" priority="1" share="1.0E0" toNode="pf" weight="1.0E0"/>
+        <continuousArc id="ca16" fromNode="pf" priority="1" share="1.0E0" toNode="tout" weight="1.0E0"/>
+        <continuousArc id="ca17" fromNode="tr" priority="1" share="1.0E0" toNode="ps2" weight="1.0E0"/>
     </arcs>
 </HPnG>
