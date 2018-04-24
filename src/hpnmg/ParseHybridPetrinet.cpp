@@ -408,10 +408,11 @@ namespace hpnmg {
         }
 
         for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
-            if (childNode.getNodeID() <= 200) { // to avoid zeno behavior
+            int nodeMax = 1000;
+            if (childNode.getNodeID() <= nodeMax) { // to avoid zeno behavior
                 locationQueue.push_back(childNode);
-                if (childNode.getNodeID() == 200)
-                    cout << "200 locations or more, some locations may not be shown" << endl;
+                if (childNode.getNodeID() == nodeMax)
+                    cout << nodeMax << " locations or more, some locations may not be shown" << endl;
             }
         }
     }
@@ -954,8 +955,10 @@ namespace hpnmg {
         for (int i = 0; i < deterministicClocks.size(); ++i) {
             if (!transitionIsEnabled(discreteMarking, parentLocation.getContinuousMarking(),
                                      hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
-                                     hybridPetrinet))
+                                     hybridPetrinet)) {
+                deterministicClocks[i].push_back(0);
                 continue;
+            }
             for (int j = 0; j < deterministicClocks[i].size(); ++j)
                 deterministicClocks[i][j] -= transitionClock[j];
             deterministicClocks[i].push_back(1);

@@ -13,9 +13,9 @@ int main (int argc, char *argv[])
     auto parser = new ParseHybridPetrinet();
     auto writer = new PLTWriter();
 
-    cout << "Example with 0 general input transitions:" << endl;
+    cout << "Example with X=1 and Y=1:" << endl;
     clock_t begin0 = clock();
-    auto hybridPetrinet0 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/waterTreatment.xml");
+    auto hybridPetrinet0 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/waterTreatmentTimer.xml");
     auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 20);
     writer->writePLT(plt0, 20);
     clock_t end0 = clock();

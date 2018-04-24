@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="fa1" marking="0"/>
+        <discretePlace id="re1" marking="1"/>
+        <discretePlace id="fa2" marking="0"/>
+        <discretePlace id="re2" marking="1"/>
+        <continuousPlace id="ps1" capacity="20" infiniteCapacity="0" level="0"/>
+        <continuousPlace id="ps2" capacity="20" infiniteCapacity="0" level="0"/>
+        <continuousPlace id="pfp11" capacity="2" infiniteCapacity="0" level="0"/>
+        <continuousPlace id="pfp12" capacity="2" infiniteCapacity="0" level="0"/>
+        <continuousPlace id="pfp21" capacity="2" infiniteCapacity="0" level="0"/>
+        <continuousPlace id="pfp22" capacity="2" infiniteCapacity="0" level="0"/>
+        <continuousPlace id="pf" capacity="10" infiniteCapacity="0" level="0"/>
+        <discretePlace id="wait11" marking="0" />
+        <discretePlace id="wait12" marking="0" />
+        <discretePlace id="wait21" marking="0" />
+        <discretePlace id="wait22" marking="0" />
+    </places>
+    <transitions>
+        <generalTransition id="tfa1" cdf="normal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <generalTransition id="tre1" cdf="normal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <generalTransition id="tfa2" cdf="normal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <generalTransition id="tre2" cdf="normal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <continuousTransition id="ti1" rate="4.0"/>
+        <continuousTransition id="ti2" rate="3.0"/>
+        <continuousTransition id="ta" rate="4.0"/>
+        <continuousTransition id="tb" rate="3.0"/>
+        <continuousTransition id="tc" rate="5.0"/>
+        <continuousTransition id="tfp11" rate="4.0"/>
+        <continuousTransition id="tfp12" rate="4.0"/>
+        <continuousTransition id="tfp21" rate="5.0"/>
+        <continuousTransition id="tfp22" rate="5.0"/>
+        <continuousTransition id="tout" rate="7.0"/>
+        <continuousTransition id="tr" rate="2.0"/>
+        <deterministicTransition id="tdw1" discTime="1.0" priority="1" weight="1.0E0"/>
+        <deterministicTransition id="tdw2" discTime="1.0" priority="1" weight="1.0E0"/>
+    </transitions>
+    <arcs>
+        <discreteArc id="da1" fromNode="tfa1" toNode="fa1" weight="1.0E0"/>
+        <discreteArc id="da2" fromNode="fa1" toNode="tre1" weight="1.0E0"/>
+        <discreteArc id="da2" fromNode="tre1" toNode="re1" weight="1.0E0"/>
+        <discreteArc id="da3" fromNode="re1" toNode="tfa1" weight="1.0E0"/>
+        <discreteArc id="da4" fromNode="tfa2" toNode="fa2" weight="1.0E0"/>
+        <discreteArc id="da5" fromNode="fa2" toNode="tre2" weight="1.0E0"/>
+        <discreteArc id="da6" fromNode="tre2" toNode="re2" weight="1.0E0"/>
+        <discreteArc id="da7" fromNode="re2" toNode="tfa2" weight="1.0E0"/>
+        <guardArc fromNode="fa1" id="ga1" isInhibitor="0" toNode="tr" weight="1.0E0"/>
+        <guardArc fromNode="fa1" id="ga2" isInhibitor="0" toNode="tfa2" weight="1.0E0"/>
+        <guardArc fromNode="fa1" id="ga3" isInhibitor="0" toNode="tc" weight="1.0E0"/>
+        <guardArc fromNode="re1" id="ga4" isInhibitor="0" toNode="ta" weight="1.0E0"/>
+        <guardArc fromNode="re1" id="ga5" isInhibitor="0" toNode="tb" weight="1.0E0"/>
+        <guardArc fromNode="re1" id="ga6" isInhibitor="0" toNode="tre2" weight="1.0E0"/>
+        <guardArc fromNode="re2" id="ga7" isInhibitor="0" toNode="tb" weight="1.0E0"/>
+        <guardArc fromNode="re2" id="ga8" isInhibitor="0" toNode="tc" weight="1.0E0"/>
+        <continuousArc id="ca1" fromNode="ti1" priority="1" share="1.0E0" toNode="ps1" weight="1.0E0"/>
+        <continuousArc id="ca2" fromNode="ps1" priority="1" share="1.0E0" toNode="ta" weight="1.0E0"/>
+        <continuousArc id="ca3" fromNode="ps1" priority="1" share="1.0E0" toNode="tr" weight="1.0E0"/>
+        <continuousArc id="ca4" fromNode="ti2" priority="1" share="1.0E0" toNode="ps2" weight="1.0E0"/>
+        <continuousArc id="ca5" fromNode="ps2" priority="1" share="1.0E0" toNode="tb" weight="1.0E0"/>
+        <continuousArc id="ca6" fromNode="ps2" priority="1" share="1.0E0" toNode="tc" weight="1.0E0"/>
+        <continuousArc id="ca7" fromNode="ta" priority="1" share="1.0E0" toNode="pfp11" weight="1.0E0"/>
+        <continuousArc id="ca8" fromNode="tb" priority="1" share="1.0E0" toNode="pfp21" weight="1.0E0"/>
+        <continuousArc id="ca9" fromNode="tc" priority="1" share="1.0E0" toNode="pfp21" weight="1.0E0"/>
+        <continuousArc id="ca91" fromNode="pfp11" priority="1" share="1.0E0" toNode="tfp11" weight="1.0E0"/>
+        <continuousArc id="ca92" fromNode="pfp21" priority="1" share="1.0E0" toNode="tfp21" weight="1.0E0"/>
+        <continuousArc id="ca10" fromNode="tfp11" priority="1" share="1.0E0" toNode="pfp12" weight="1.0E0"/>
+        <continuousArc id="ca11" fromNode="tfp21" priority="1" share="1.0E0" toNode="pfp22" weight="1.0E0"/>
+        <continuousArc id="ca12" fromNode="pfp12" priority="1" share="1.0E0" toNode="tfp12" weight="1.0E0"/>
+        <continuousArc id="ca13" fromNode="pfp22" priority="1" share="1.0E0" toNode="tfp22" weight="1.0E0"/>
+        <continuousArc id="ca14" fromNode="tfp12" priority="1" share="1.0E0" toNode="pf" weight="1.0E0"/>
+        <continuousArc id="ca15" fromNode="tfp22" priority="1" share="1.0E0" toNode="pf" weight="1.0E0"/>
+        <continuousArc id="ca16" fromNode="pf" priority="1" share="1.0E0" toNode="tout" weight="1.0E0"/>
+        <continuousArc id="ca17" fromNode="tr" priority="1" share="1.0E0" toNode="ps2" weight="1.0E0"/>
+        <discreteArc id="daw1" fromNode="tfa1" toNode="wait11" weight="1.0E0"/>
+        <discreteArc id="daw2" fromNode="wait11" toNode="tdw1" weight="1.0E0"/>
+        <discreteArc id="daw3" fromNode="tdw1" toNode="wait12" weight="1.0E0"/>
+        <discreteArc id="daw4" fromNode="wait12" toNode="tre1" weight="1.0E0"/>
+        <discreteArc id="daw5" fromNode="tfa2" toNode="wait21" weight="1.0E0"/>
+        <discreteArc id="daw6" fromNode="wait21" toNode="tdw2" weight="1.0E0"/>
+        <discreteArc id="daw7" fromNode="tdw1" toNode="wait22" weight="1.0E0"/>
+        <discreteArc id="daw8" fromNode="wait22" toNode="tre2" weight="1.0E0"/>
+    </arcs>
+</HPnG>
