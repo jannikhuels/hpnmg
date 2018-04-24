@@ -970,7 +970,7 @@ namespace hpnmg {
                 generalClocks[i] = initVector;
                 continue;
             }
-            if (!transitionIsEnabled(discreteMarking, parentLocation.getContinuousMarking(),
+            if (!transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
                                      hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]],
                                      hybridPetrinet)) {
                 generalClocks[i].push_back(0);
