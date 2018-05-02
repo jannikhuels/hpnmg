@@ -21,11 +21,27 @@ namespace hpnmg {
 
         ~ParseHybridPetrinet();
 
+        // Parses a hybrid petrinet recursively until reaching maximal time and generates a parametric location tree
+        //
+        // @param hybridPetrinet    hybrid petrinet that should be parsed
+        // @param maxTime           maximal time for resulting parametric location tree
+        // @return                  resulting parametric location tree
         shared_ptr<ParametricLocationTree>
         parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
 
+        // Generates the root parametric location
+        //
+        // @param hybridPetrinet    hybrid petrinet
+        // @param maxTime           maximal time of parsing (only used for right bounds of random variables)
+        // @return                  resulting root location
         ParametricLocation generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
 
+        // Generates all child parametric locations for a node, and adds them to the list of nodes to process
+        //
+        // @param node              node that should be processed
+        // @param hybridPetrinet    hybrid petrinet
+        // @param maxTime           maximal time for resulting parametric location tree
+        // @return                  resulting parametric location tree
         void processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
 
         vector<double> getTimeDelta(shared_ptr<GuardArc> arc, vector<int> generalTransitionsFired,
@@ -33,11 +49,25 @@ namespace hpnmg {
                                     vector<vector<vector<double>>> generalIntervalBoundRight,
                                     vector<vector<double>> levels, vector<double> drifts);
 
+        // Computes for 2 of the comparison of 2 linear functions
+        //
+        // Example:
+        // Linear functions: f1 = 2 + 1 * s1 + 2 * s2, f2 = -1 * s1 + s2
+        // Input: time1: [2, 1, 2], time2: [0, -1, 1]
+        // Return: [-2, -2]
+        // Result : s2 <= -2 -2 s1
         vector<double> computeUnequationCut(vector<double> time1, vector<double> time2);
 
+        // Gets a linear function and the bounds for each random variable in this funktion and returns the minimun or the maximum
+        //
+        // Example:
+        // f = 2 - s1 + s2,  s1 in [0,1], s2 in [2, 2+s1], we want the minimum
+        // Input: generaltransitionsfired: [0, 0], generalBounds: [[[0],[2,0]]], oppgeneralbounds: [[[1],[2,1]]], time: [1,-1,2]
+        // Return: 3
         double getBoundedTime(vector<int> generalTransitionsFired, vector<vector<vector<double>>> generalBounds,
                               vector<vector<vector<double>>> oppositeGeneralBounds, vector<double> time);
 
+        // Returns if a given transition is enabled
         bool transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,
                                  shared_ptr<Transition> transition, shared_ptr<HybridPetrinet> hybridPetrinet);
 
@@ -49,10 +79,6 @@ namespace hpnmg {
                                         vector<double> timeDelta, vector<vector<double>> timeDeltas,
                                         ParametricLocationTree::Node parentNode,
                                         shared_ptr<HybridPetrinet> hybridPetrinet);
-
-        void addLocationForGuardEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas,
-                                      ParametricLocationTree::Node parentNode,
-                                      shared_ptr<HybridPetrinet> hybridPetrinet);
 
         void addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition, double probability,
                                               vector<double> timeDelta, vector<vector<double>> timeDeltas,

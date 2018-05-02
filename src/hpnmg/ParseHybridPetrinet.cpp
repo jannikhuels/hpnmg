@@ -69,7 +69,6 @@ namespace hpnmg {
             rightBoundaries.push_back({{maxTime}}); // NOLINT
             generalClocks.push_back({0}); // NOLINT
         }
-        //TODO : Create correct Root location here
         ParametricLocation rootLocation = ParametricLocation(rootDiscreteMarking, rootContinuousMarking, drift,
                                                              static_cast<int>(numGeneralTransitions),
                                                              Event(EventType::Root, {}, 0),
@@ -282,7 +281,7 @@ namespace hpnmg {
                 if (minimumTime <= minimalMaximum) {
                     if (minimumTime == minimalMaximum)
                         consideringOrder = true;
-                    addLocationForGuardEvent(timeDelta, timeDeltas, node, hybridPetrinet);
+                    addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                 }
             }
         }
@@ -366,7 +365,7 @@ namespace hpnmg {
                     if (minimumTime <= minimalMaximum) {
                         if (minimumTime == minimalMaximum)
                             consideringOrder = true;
-                        addLocationForGuardEvent(timeDelta, timeDeltas, node, hybridPetrinet);
+                        addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                     }
                 }
             }
@@ -386,7 +385,7 @@ namespace hpnmg {
                     double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                         generalIntervalBoundRight, timeDelta);
                     if (minimumTime <= minimalMaximum) {
-                        addLocationForGuardEvent(timeDelta, timeDeltas, node, hybridPetrinet);
+                        addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                     }
                 }
             }
@@ -402,17 +401,18 @@ namespace hpnmg {
                     double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                         generalIntervalBoundRight, timeDelta);
                     if (minimumTime <= minimalMaximum) {
-                        addLocationForGuardEvent(timeDelta, timeDeltas, node, hybridPetrinet);
+                        addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                     }
                 }
             }
         }
 
         for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
-            if (childNode.getNodeID() <= 2000) { // to avoid zeno behavior
+            int nodeMax = 1000;
+            if (childNode.getNodeID() <= nodeMax) { // to avoid zeno behavior
                 locationQueue.push_back(childNode);
-                if (childNode.getNodeID() == 2000)
-                    cout << "2000 locations or more, some locations may not be shown" << endl;
+                if (childNode.getNodeID() == nodeMax)
+                    cout << nodeMax << " locations or more, some locations may not be shown" << endl;
             }
         }
     }
@@ -584,118 +584,6 @@ namespace hpnmg {
         newLocation.setGeneralClock(parentNode.getParametricLocation().getGeneralClock());
         newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(probability);
-
-        parametriclocationTree->setChildNode(parentNode, newLocation);
-    }
-
-    void ParseHybridPetrinet::addLocationForGuardEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas,
-                                                       ParametricLocationTree::Node parentNode,
-                                                       shared_ptr<HybridPetrinet> hybridPetrinet) {
-        ParametricLocation parentLocation = parentNode.getParametricLocation();
-
-        // adjust boundaries
-        // (we have to do this first because we need the old markings)
-        vector<vector<vector<double>>> generalIntervalBoundLeft = parentLocation.getGeneralIntervalBoundLeft();
-        vector<vector<vector<double>>> generalIntervalBoundRight = parentLocation.getGeneralIntervalBoundRight();
-        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
-            if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
-                                    hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet)) {
-                for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
-                    generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
-            }
-        }
-
-        vector<vector<double>> parentContinuousMarking = parentLocation.getContinuousMarking();
-        vector<double> parentDrift = parentLocation.getDrift();
-
-        vector<int> discreteMarking = parentLocation.getDiscreteMarking();
-        vector<vector<double>> continuousMarking;
-        for (int pos = 0; pos < parentContinuousMarking.size(); ++pos) {
-            double drift = parentDrift[pos];
-            vector<double> oldMarking = parentContinuousMarking[pos];
-            vector<double> newMarking;
-            for (int j = 0; j < oldMarking.size() || j < timeDelta.size(); ++j) {
-                if (j >= oldMarking.size())
-                    newMarking.push_back(timeDelta[j] * drift);
-                else if (j >= timeDelta.size())
-                    newMarking.push_back(oldMarking[j]);
-                else
-                    newMarking.push_back(oldMarking[j] + timeDelta[j] * drift);
-            }
-            continuousMarking.push_back(newMarking);
-        }
-        vector<double> drift = getDrift(discreteMarking, continuousMarking, hybridPetrinet);
-        unsigned long numGeneralTransitions = hybridPetrinet->num_general_transitions();
-        vector<double> generalDependecies = parentLocation.getSourceEvent().getGeneralDependencies();
-        for (int j = 1; j < timeDelta.size(); ++j)
-            generalDependecies[j-1] += timeDelta[j];
-
-        // adjust general bounds for every other timeDelta, than timeDelta
-        vector<int> generalTransitionsFired = parentLocation.getGeneralTransitionsFired();
-        if (timeDeltas.size() > 1) {
-            for (vector<double> &oppositeTimeDelta : timeDeltas) {
-                if (oppositeTimeDelta == timeDelta)
-                    continue;
-                vector<double> unequationCut = computeUnequationCut(timeDelta, oppositeTimeDelta);
-                long k = unequationCut.size();
-                // adjust bounds for random variable that fired as kth general transition
-                if (k > 0) {
-                    int generalTransitionPos = generalTransitionsFired[k - 1];
-                    int counter = 0;
-                    for (int j = 0; j < k - 1; ++j)
-                        if (generalTransitionsFired[j] == k - 1)
-                            ++counter;
-                    if (timeDelta[k] > oppositeTimeDelta[k])
-                        generalIntervalBoundRight[generalTransitionPos][counter] = unequationCut;
-                    else
-                        generalIntervalBoundLeft[generalTransitionPos][counter] = unequationCut;
-                }
-            }
-        }
-
-        double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta[0];
-        Event event = Event(EventType::Guard, generalDependecies, eventTime);
-        ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
-                                                            static_cast<int>(numGeneralTransitions), event,
-                                                            generalIntervalBoundLeft, generalIntervalBoundRight);
-
-        // get new deterministic clocks
-        vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
-        for (int i = 0; i < deterministicClocks.size(); ++i) {
-            if (!transitionIsEnabled(discreteMarking, parentContinuousMarking,
-                                     hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
-                                     hybridPetrinet))
-                continue;
-            for (int j = 0; j < deterministicClocks[i].size() || j < timeDelta.size(); ++j) {
-                if (j >= deterministicClocks[i].size())
-                    deterministicClocks[i].push_back(timeDelta[j]);
-                else if (j >= timeDelta.size())
-                    continue;
-                else
-                    deterministicClocks[i][j] = deterministicClocks[i][j] + timeDelta[j];
-            }
-        }
-
-        // get new general clocks
-        vector<vector<double>> generalClocks = parentLocation.getGeneralClock();
-        for (int i = 0; i < generalClocks.size(); ++i) {
-            if (!transitionIsEnabled(discreteMarking, parentContinuousMarking,
-                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet))
-                continue;
-            for (int j = 0; j < generalClocks[i].size() || j < timeDelta.size(); ++j) {
-                if (j >= generalClocks[i].size())
-                    generalClocks[i].push_back(timeDelta[j]);
-                else if (j >= timeDelta.size())
-                    continue;
-                else
-                    generalClocks[i][j] = generalClocks[i][j] + timeDelta[j];
-            }
-        }
-
-        newLocation.setDeterministicClock(deterministicClocks);
-        newLocation.setGeneralClock(generalClocks);
-        newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
-        newLocation.setConflictProbability(1);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
@@ -1067,8 +955,10 @@ namespace hpnmg {
         for (int i = 0; i < deterministicClocks.size(); ++i) {
             if (!transitionIsEnabled(discreteMarking, parentLocation.getContinuousMarking(),
                                      hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
-                                     hybridPetrinet))
+                                     hybridPetrinet)) {
+                deterministicClocks[i].push_back(0);
                 continue;
+            }
             for (int j = 0; j < deterministicClocks[i].size(); ++j)
                 deterministicClocks[i][j] -= transitionClock[j];
             deterministicClocks[i].push_back(1);
@@ -1083,7 +973,7 @@ namespace hpnmg {
                 generalClocks[i] = initVector;
                 continue;
             }
-            if (!transitionIsEnabled(discreteMarking, parentLocation.getContinuousMarking(),
+            if (!transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
                                      hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]],
                                      hybridPetrinet)) {
                 generalClocks[i].push_back(0);

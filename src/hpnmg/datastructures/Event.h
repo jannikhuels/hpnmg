@@ -11,7 +11,6 @@ namespace hpnmg {
         Timed = 3,
         Continuous = 4,
         Root = 5,
-        Guard = 6
     };
 
     class Event {

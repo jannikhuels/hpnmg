@@ -151,8 +151,6 @@ namespace hpnmg {
                 return "Continuous";
             case EventType::Root :
                 return "Root";
-            case EventType::Guard :
-                return "Guard";
         }
     }
 
