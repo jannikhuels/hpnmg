@@ -18,6 +18,19 @@ namespace hpnmg {
 
         static std::vector<carl::Interval<double>> continuousFormulaIntervalSetsAtTime(ParametricLocationTree &parametricLocationTree, int placeIndex, double value, double time);
 
-        static std::vector<Region> discreteFormulaRegionsAtTime(shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree, int placeIndex, int value, double time);        
+        static std::vector<Region> discreteFormulaRegionsAtTime(shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree, int placeIndex, int value, double time, bool negate = false); 
+
+        static std::vector<Region> continuousFormulaRegionsAtTime(shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree, int placeIndex, int value, double time, bool negate = false);  
+
+        static Region dfml(ParametricLocationTree::Node node, int placeIndex, int value, bool neg);
+
+        static Region cfml(ParametricLocationTree::Node node, int placeIndex, int value, bool neg);
+
+        static std::vector<Region> conj(std::vector<Region> a, std::vector<Region> b);
+
+        static std::vector<Region> neg(std::vector<Region> regions, Region nodeRegion);
+
+        static Region until(shared_ptr<hpnmg::ParametricLocationTree> plt, ParametricLocationTree::Node node, double time);
+
     };
 }

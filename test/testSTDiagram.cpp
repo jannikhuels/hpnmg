@@ -133,20 +133,20 @@ TEST(STDiagramIntersection, IntersectionTest2D)
     Region region1 = STDiagram::createRegion(baseRegion, event0, std::vector<Event>{event1,event2});
     Region region2 = STDiagram::createRegion(baseRegion, event2, std::vector<Event>{event3});
 
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(2,region1,2),true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(6,region1,2),false);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(1,3), region1, 2), true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,6), region1, 2), true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(7,10), region1, 2), false);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(2,region1,2).first,true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(6,region1,2).first,false);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(1,3), region1, 2).first, true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,6), region1, 2).first, true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(7,10), region1, 2).first, false);
 
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(2,region2,2),false);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(6,region2,2),true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(7,region2,2),true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(1,3), region2, 2), false);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(5,7), region2, 2), true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(6,8), region2, 2), true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,6), region2, 2), true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,3), region2, 2), false);    
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(2,region2,2).first,false);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(6,region2,2).first,true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(7,region2,2).first,true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(1,3), region2, 2).first, false);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(5,7), region2, 2).first, true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(6,8), region2, 2).first, true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,6), region2, 2).first, true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,3), region2, 2).first, false);    
 }
 
 TEST(STDiagramIntersection, IntersectionTest3D)
@@ -160,18 +160,18 @@ TEST(STDiagramIntersection, IntersectionTest3D)
     Region region1 = STDiagram::createRegion(baseRegion, event0, std::vector<Event>{event1,event2});
     Region region2 = STDiagram::createRegion(baseRegion, event2, std::vector<Event>{event3});
 
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(2,region1,3),true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(6,region1,3),false);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(1,3), region1, 3), true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,6), region1, 3), true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(7,10), region1, 3), false);  
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(2,region2,3),false);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(6,region2,3),true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(7,region2,3),true); 
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(5,7), region2, 3), true);  
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(7,10), region2, 3), true);  
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(4,5), region2, 3), true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,3), region2, 3), false);   
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(2,region1,3).first,true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(6,region1,3).first,false);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(1,3), region1, 3).first, true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,6), region1, 3).first, true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(7,10), region1, 3).first, false);  
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(2,region2,3).first,false);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(6,region2,3).first,true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(7,region2,3).first,true); 
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(5,7), region2, 3).first, true);  
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(7,10), region2, 3).first, true);  
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(4,5), region2, 3).first, true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(2,3), region2, 3).first, false);   
 }
 
 TEST(STDiagramIntersection, IntersectionErrorTest)
@@ -210,16 +210,16 @@ TEST(STDiagramIntersection, IntersectionErrorTest)
 TEST_F(STDiagramRegionTest, TestRegionNoEvent) {
     Event event = Event(EventType::Immediate, vector<double> {0}, 5);
     Region regionNoEvent = STDiagram::createRegionNoEvent(baseRegion, event, std::vector<double>{2}, std::vector<double>{5});
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(4,regionNoEvent,2),false);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(5,regionNoEvent,2),true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(10,regionNoEvent,2),true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(4,regionNoEvent,2).first,false);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(5,regionNoEvent,2).first,true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(10,regionNoEvent,2).first,true);
 
     Region baseRegion3D = STDiagram::createBaseRegion(3,10);
     Event event3D = Event(EventType::Immediate, vector<double> {0,0}, 5);
     Region regionNoEvent3D = STDiagram::createRegionNoEvent(baseRegion3D, event3D, std::vector<double>{2,2}, std::vector<double>{5,5});
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(4,regionNoEvent,2),false);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(5,regionNoEvent,2),true);
-    ASSERT_EQ(STDiagram::regionIsCandidateForTime(10,regionNoEvent,2),true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(4,regionNoEvent,2).first,false);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(5,regionNoEvent,2).first,true);
+    ASSERT_EQ(STDiagram::regionIsCandidateForTime(10,regionNoEvent,2).first,true);
 }
 
 TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersection) {
@@ -251,13 +251,9 @@ TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersectionZeroDrift) {
     ASSERT_EQ(resultNeg.contains(Point<double>{1,1}), false);
     ASSERT_EQ(resultNeg.contains(Point<double>{1,3}), true);
 
-    try {
-        Region region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
-        Region intersectedRegion = STDiagram::intersectRegionForContinuousLevel(region, std::vector<double>{0,2}, 0, 3);
-        FAIL() << " Intersection Arguments are illegal.";
-    } catch (IllegalIntersectionLevelException e) {
-        SUCCEED();
-    }
+    Region region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
+    Region intersectedRegion = STDiagram::intersectRegionForContinuousLevel(region, std::vector<double>{0,2}, 0, 3);
+    ASSERT_EQ(intersectedRegion.empty(), true);
 }
 
 TEST_F(STDiagramRegionTest, TestTimeRegionCreation) {
@@ -269,6 +265,133 @@ TEST_F(STDiagramRegionTest, TestTimeRegionCreation) {
     ASSERT_EQ(timeRegion.contains(Point<double>{6,5}), true);
     ASSERT_EQ(timeRegion.contains(Point<double>{5,6}), false);
 }
+
+TEST(STDiagramIntervalTest, TestDifference1D) 
+{
+    carl::Interval<double> i1(2,4);
+    carl::Interval<double> i2(3,5);
+    carl::Interval<double> i3(1,6);
+    carl::Interval<double> i4(7,9);
+    carl::Interval<double> i5(0,20);
+    carl::Interval<double> i6(3,20);
+
+    // Cut Interval on the left
+    std::vector<Intervals> resPartR = STDiagram::differenceOfIntervals({{i2}},{{i1}});
+    ASSERT_EQ(resPartR.size(), 1);
+    ASSERT_EQ(resPartR[0][0].lower(),4);
+    ASSERT_EQ(resPartR[0][0].upper(),5);
+
+    // Cut Interval on the right
+    std::vector<Intervals> resPartL = STDiagram::differenceOfIntervals({{i1}},{{i2}});
+    ASSERT_EQ(resPartL.size(), 1);
+    ASSERT_EQ(resPartL[0][0].lower(),2);
+    ASSERT_EQ(resPartL[0][0].upper(),3);
+
+    // Cut Interval in the middle
+    std::vector<Intervals> resTwo = STDiagram::differenceOfIntervals({{i3}},{{i1}});
+    ASSERT_EQ(resTwo.size(), 2);
+    ASSERT_EQ(resTwo[0][0].lower(), 1);
+    ASSERT_EQ(resTwo[0][0].upper(), 2);
+    ASSERT_EQ(resTwo[1][0].lower(), 4);
+    ASSERT_EQ(resTwo[1][0].upper(), 6);
+
+    // No Cut
+    std::vector<Intervals> resPartNo = STDiagram::differenceOfIntervals({{i1}},{{i4}});
+    ASSERT_EQ(resPartNo.size(), 1);
+    ASSERT_EQ(resPartNo[0][0].lower(),2);
+    ASSERT_EQ(resPartNo[0][0].upper(),4);
+
+    // Empty Cut
+    std::vector<Intervals> resEmpty = STDiagram::differenceOfIntervals({{i1}},{{i1}});
+    ASSERT_EQ(resEmpty.size(), 0);
+
+    // Complete 
+    std::vector<Intervals> resComplete = STDiagram::differenceOfIntervals({{i1}},{{i3}});
+    ASSERT_EQ(resComplete.size(),0);
+
+    std::vector<Intervals> res = STDiagram::differenceOfIntervals({{i5}},{{i6}});
+    ASSERT_EQ(res.size(), 1);
+    ASSERT_EQ(res[0][0].lower(),0);
+    ASSERT_EQ(res[0][0].upper(),3);
+}
+
+TEST(STDiagramIntervalTest, TestDifference2D) 
+{
+    carl::Interval<double> i1(2,4);
+    carl::Interval<double> i2(7,9);
+    carl::Interval<double> i3(1,3);
+    carl::Interval<double> i4(7,8);
+
+    std::vector<Intervals> resPart = STDiagram::differenceOfIntervals({{i1,i2}},{{i3,i4}});
+    ASSERT_EQ(resPart.size(), 1);
+    ASSERT_EQ(resPart[0][0].lower(),3);
+    ASSERT_EQ(resPart[0][0].upper(),4);  
+    ASSERT_EQ(resPart[0][1].lower(),8);
+    ASSERT_EQ(resPart[0][1].upper(),9);   
+}
+
+TEST(STDiagramIntervalTest, TestIntersection1D) 
+{
+    carl::Interval<double> i1(2,4);
+    carl::Interval<double> i2(1,5);
+    carl::Interval<double> i3(1,3);
+    carl::Interval<double> i4(7,8);
+
+    std::vector<Intervals> resPart = STDiagram::intersectionOfIntervals({{i1}},{{i3}});
+    ASSERT_EQ(resPart.size(), 1);
+    ASSERT_EQ(resPart[0][0].lower(),2);
+    ASSERT_EQ(resPart[0][0].upper(),3);   
+
+    std::vector<Intervals> resComplete = STDiagram::intersectionOfIntervals({{i1}},{{i2}});
+    ASSERT_EQ(resComplete.size(), 1);
+    ASSERT_EQ(resComplete[0][0].lower(),2);
+    ASSERT_EQ(resComplete[0][0].upper(),4);
+
+    std::vector<Intervals> resEmpty = STDiagram::intersectionOfIntervals({{i1}},{{i4}});
+    ASSERT_EQ(resEmpty.size(),0);
+}
+
+TEST(STDiagramIntervalTest, TestIntersection2D)
+{
+    carl::Interval<double> i1(2,4);
+    carl::Interval<double> i2(7,9);
+    carl::Interval<double> i3(1,3);
+    carl::Interval<double> i4(7,8);
+
+    std::vector<Intervals> resPart = STDiagram::intersectionOfIntervals({{i1,i2}},{{i3,i4}});
+    ASSERT_EQ(resPart.size(), 1);
+    ASSERT_EQ(resPart[0][0].lower(),2);
+    ASSERT_EQ(resPart[0][0].upper(),3);  
+    ASSERT_EQ(resPart[0][1].lower(),7);
+    ASSERT_EQ(resPart[0][1].upper(),8); 
+} 
+
+TEST(STDiagramIntervalTest, TestUnion1D)
+{
+    carl::Interval<double> i1(2,4);
+    carl::Interval<double> i2(1,5);
+    carl::Interval<double> i3(1,3);
+    carl::Interval<double> i4(7,8);
+
+    std::vector<Intervals> resPart = STDiagram::unionOfIntervals({{i1}},{{i3}});
+    ASSERT_EQ(resPart.size(), 1);
+    ASSERT_EQ(resPart[0][0].lower(),1);
+    ASSERT_EQ(resPart[0][0].upper(),4);   
+
+    std::vector<Intervals> resComplete = STDiagram::unionOfIntervals({{i1}},{{i2}});
+    ASSERT_EQ(resComplete.size(), 1);
+    ASSERT_EQ(resComplete[0][0].lower(),1);
+    ASSERT_EQ(resComplete[0][0].upper(),5);
+
+    std::vector<Intervals> resEmpty = STDiagram::unionOfIntervals({{i1}},{{i4}});
+    ASSERT_EQ(resEmpty.size(),2);
+    ASSERT_EQ(resEmpty[0][0].lower(), 2);
+    ASSERT_EQ(resEmpty[0][0].upper(), 4);
+    ASSERT_EQ(resEmpty[1][0].lower(), 7);
+    ASSERT_EQ(resEmpty[1][0].upper(), 8);
+}
+
+
 
 /*TEST_F(STDiagramRegionTest, TestPrint)
 {

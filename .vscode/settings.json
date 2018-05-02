@@ -37,7 +37,10 @@
         "*.tpp": "cpp",
         "__bit_reference": "cpp",
         "forward_list": "cpp",
-        "ios": "cpp"
+        "ios": "cpp",
+        "functional": "cpp",
+        "complex": "cpp",
+        "*.ipp": "cpp"
     },
     "C_Cpp.intelliSenseEngine": "Default",
     "C_Cpp.intelliSenseEngineFallback": "Enabled",

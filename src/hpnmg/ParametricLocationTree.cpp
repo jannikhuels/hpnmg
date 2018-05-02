@@ -150,8 +150,8 @@ namespace hpnmg {
         recursivelyPrintRegions(getRootNode(),0);
     }
 
-    void ParametricLocationTree::recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, bool (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension) {
-        if (isCandidate(interval, startNode.getRegion(), dimension)) {
+    void ParametricLocationTree::recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, Region> (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension) {
+        if (isCandidate(interval, startNode.getRegion(), dimension).first) {
             candidates.push_back(startNode);
         }
         for (ParametricLocationTree::Node node : getChildNodes(startNode)) {

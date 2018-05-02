@@ -67,20 +67,27 @@ namespace hpnmg {
         return hsp;
     }
 
+    std::vector<double> STDiagram::makeValidDependencies(std::vector<double> dependencies, int dimension) {
+        auto gdependencies = dependencies;
+        for (int i = gdependencies.size(); i < dimension - 1; i++) {
+            gdependencies.push_back(0);
+        }
+        return gdependencies;
+    }
+
     Event STDiagram::makeValidEvent(const Event &event, const Region &baseRegion) {
         Event e(event);
         if (!(e.getGeneralDependencies().size() == baseRegion.dimension())) { 
-            auto gdependencies = event.getGeneralDependencies();
-            for (int i = gdependencies.size(); i < baseRegion.dimension() - 1; i++) {
-                gdependencies.push_back(0);
-            }
+            auto gdependencies = STDiagram::makeValidDependencies(event.getGeneralDependencies(), baseRegion.dimension());
             e.setGeneralDependencies(gdependencies);                  
         }
         return e;
     }
 
-    void STDiagram::print(const vector<Region> &regionsToPrint, bool cummulative) {
+    void STDiagram::print(const vector<Region> &regionsToPrint, bool cummulative, std::string filename) {
         Plotter<double>& plt = Plotter<double>::getInstance();
+        plt.clear();
+        plt.setFilename(filename);
         plt.rSettings().cummulative = cummulative;
 
         for (Region region : regionsToPrint) {
@@ -90,14 +97,14 @@ namespace hpnmg {
         plt.plot2d();
     }
 
-    bool STDiagram::regionIsCandidateForTime(double time,  const Region &region, int dimension) {
+    std::pair<bool, Region> STDiagram::regionIsCandidateForTime(double time,  const Region &region, int dimension) {
         return STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(time,time), region, dimension);
     }
 
-    bool STDiagram::regionIsCandidateForTimeInterval(const std::pair<double,double> &interval, const Region &region, int dimension) {
+    std::pair<bool, Region> STDiagram::regionIsCandidateForTimeInterval(const std::pair<double,double> &interval, const Region &region, int dimension) {
         std::pair<matrix_t<double>,vector_t<double>> ihspRepresentations = createHalfspacesFromTimeInterval(interval, dimension);
-        std::pair<bool, HPolytope<double>> intersectionPair = region.satisfiesHalfspaces(ihspRepresentations.first, ihspRepresentations.second);
-        return intersectionPair.first;
+        std::pair<bool, Region> intersectionPair = region.satisfiesHalfspaces(ihspRepresentations.first, ihspRepresentations.second);
+        return intersectionPair;
     }
 
     Region STDiagram::createTimeRegion(const Region &region, double time, int dimension) {
@@ -184,12 +191,15 @@ namespace hpnmg {
         return hsp;
     }
 
-    Region STDiagram::intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level) {
+    Region STDiagram::intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate) {
         Region intersectRegion(baseRegion);
         bool createVerticalHalfspace = false;
         double offset;
         double currentLevel = continuousDependencies[continuousDependencies.size()-1];
         continuousDependencies.pop_back();
+
+        continuousDependencies = STDiagram::makeValidDependencies(continuousDependencies, baseRegion.dimension());
+
         double divisor = drift;
 
         if (drift == 0) {
@@ -210,7 +220,7 @@ namespace hpnmg {
 
         if (hasDependency == false) {
             if (drift == 0) {
-                throw IllegalIntersectionLevelException();
+                return Region::Empty();
             }
         }    
 
@@ -218,8 +228,163 @@ namespace hpnmg {
         if (drift < 0)
             fillLevelHsp = -fillLevelHsp;
 
+        if (negate)
+            fillLevelHsp = -fillLevelHsp;
+
         intersectRegion.insert(fillLevelHsp);
         return intersectRegion;
     }
 
+    Intervals STDiagram::createIntervals(const Region &baseInterval)
+    {
+        //Region base = STDiagram::createBaseRegion(baseInterval.dimension(), time);
+        Box<double> boundingBox = Converter<double>::toBox(baseInterval, CONV_MODE::ALTERNATIVE);
+        std::vector<carl::Interval<double>> boundaries = boundingBox.boundaries();
+        /*printf("Number of intervals: %lu\n", boundaries.size());
+        printf("Intervals:\n");
+        for (carl::Interval<double> i : boundaries) {
+            printf("[%f,%f]\n", i.lower(), i.upper());
+        }*/
+        if(boundingBox.dimension() == baseInterval.dimension()) {
+            boundaries.pop_back();
+        }
+        //carl::Interval<double> timeInterval = carl::Interval<double>((double)0,time);
+        //boundaries.push_back(timeInterval);
+        //printf("New boundaries size: %lu\n", boundaries.size());
+        //TODO intersect Region with lower halfspace.
+        return boundaries;
+    }
+
+    std::vector<Intervals> STDiagram::differenceOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2) 
+    {
+        std::vector<Intervals> result;
+        for (Intervals l : i1) {
+            if (i2.size() == 0) {
+                return i1;
+            }
+            for (Intervals r : i2) {
+                if (l.size() != r.size()) {
+                    //TODO THis is an error
+                }
+
+                double size = l.size();
+                Intervals res1;
+                Intervals res2;
+                for (int i = 0; i < size; i++) {
+                    carl::Interval<double> left;
+                    carl::Interval<double> right;
+                    //TODO Fix it. This is a workaround due to a bug in carl library
+                    if(l[i].upper() == r[i].upper()) {
+                        r[i] = carl::Interval<double>(r[i].lower(), r[i].upper()+1);
+                    }
+                    bool twofold = l[i].difference(r[i], left, right);
+                    if (twofold) {
+                        res2.push_back(right);
+                    }
+                    if (!left.isEmpty()) {
+                        res1.push_back(left);
+                    }                    
+                }
+                if (res1.size()>0) {
+                    result.push_back(res1);
+                }                
+                if (res2.size()>0) {
+                    result.push_back(res2);
+                }
+            }             
+        }          
+        return result;
+    }
+
+    std::vector<Intervals> STDiagram::intersectionOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2)
+    {
+        std::vector<Intervals> result;
+        for (Intervals l : i1) {
+            if (i2.size() == 0) {
+                return result;
+            }
+            for (Intervals r : i2) {
+                if (l.size() != r.size()) {
+                    //TODO This is an error
+                }
+
+                double size = l.size();
+                Intervals res;
+                for (int i = 0; i < size; i++) {
+                    carl::Interval<double> intersection;
+
+                    intersection = l[i].intersect(r[i]);
+                    
+                    if (!intersection.isEmpty()) {
+                        res.push_back(intersection);
+                    }                    
+                }
+                if (res.size()>0) {
+                    result.push_back(res);
+                }                
+            } 
+        }    
+        return result;
+    }
+
+    std::vector<Intervals> STDiagram::unionOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2)
+    {
+        std::vector<Intervals> result;
+        if (i1.size() == 0) {
+            return i2;        
+        }
+        for (Intervals l : i1) {
+            if (i2.size() == 0) {
+                return i1;
+            }
+            for (Intervals r : i2) {
+                if (l.size() != r.size()) {
+                    //TODO THis is an error
+                }
+
+                double size = l.size();
+                Intervals res1;
+                Intervals res2;
+                for (int i = 0; i < size; i++) {
+                    carl::Interval<double> left;
+                    carl::Interval<double> right;
+
+                    bool twofold = l[i].unite(r[i], left, right);
+                    if (twofold) {
+                        res2.push_back(right);
+                    }
+                    if (!left.isEmpty()) {
+                        res1.push_back(left);
+                    }                    
+                }
+                if (res1.size()>0) {
+                    result.push_back(res1);
+                }                
+                if (res2.size()>0) {
+                    result.push_back(res2);
+                }
+            } 
+        }    
+        return result;
+    }
+
+    std::vector<Region> STDiagram::boundRegionByIntervals(Region r, std::vector<Intervals> intervals, double time) 
+    {   
+        std::vector<Region> regions;
+        for (Intervals i : intervals) {
+            i.push_back(carl::Interval<double>((double)0,time));
+            Box<double> box(i);
+            Region boxRegion(box.constraints());
+            regions.push_back(r.intersect(boxRegion));
+        }
+        return regions;
+    }
+
+    std::vector<Intervals> STDiagram::intervalsFromRegions(std::vector<Region> regions) {
+        std::vector<Intervals> result;
+        for (Region r : regions) {
+            result.push_back(STDiagram::createIntervals(r));
+        }
+        return result;
+    }
 }
