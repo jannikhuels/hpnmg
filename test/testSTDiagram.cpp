@@ -328,6 +328,9 @@ TEST(STDiagramIntervalTest, TestDifference2D)
     ASSERT_EQ(resPart[0][0].upper(),4);  
     ASSERT_EQ(resPart[0][1].lower(),8);
     ASSERT_EQ(resPart[0][1].upper(),9);   
+
+    std::vector<Intervals> resEmpty = STDiagram::differenceOfIntervals({{i1,i2}},{{i3,i2}});
+    ASSERT_EQ(resEmpty.size(), 0);
 }
 
 TEST(STDiagramIntervalTest, TestIntersection1D) 
@@ -364,6 +367,9 @@ TEST(STDiagramIntervalTest, TestIntersection2D)
     ASSERT_EQ(resPart[0][0].upper(),3);  
     ASSERT_EQ(resPart[0][1].lower(),7);
     ASSERT_EQ(resPart[0][1].upper(),8); 
+
+    std::vector<Intervals> resEmpty = STDiagram::intersectionOfIntervals({{i1,i2}},{{i4,i4}});
+    ASSERT_EQ(resEmpty.size(), 0);
 } 
 
 TEST(STDiagramIntervalTest, TestUnion1D)
@@ -390,6 +396,21 @@ TEST(STDiagramIntervalTest, TestUnion1D)
     ASSERT_EQ(resEmpty[1][0].lower(), 7);
     ASSERT_EQ(resEmpty[1][0].upper(), 8);
 }
+
+/*TEST(STDiagramIntervalTest, TestUnion2D)
+{
+    carl::Interval<double> i1(2,4);
+    carl::Interval<double> i2(1,5);
+    carl::Interval<double> i3(1,3);
+    carl::Interval<double> i4(0,0);
+
+    std::vector<Intervals> resEmpty = STDiagram::unionOfIntervals({{i1,i2}},{{i2,i4}});
+    ASSERT_EQ(resEmpty.size(),2);
+    ASSERT_EQ(resEmpty[0][0].lower(), 2);
+    ASSERT_EQ(resEmpty[0][0].upper(), 4);
+    ASSERT_EQ(resEmpty[1][0].lower(), 7);
+    ASSERT_EQ(resEmpty[1][0].upper(), 8);
+}*/
 
 
 

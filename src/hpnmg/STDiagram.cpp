@@ -67,6 +67,7 @@ namespace hpnmg {
         return hsp;
     }
 
+    // TODO This is wrong - should not be needed
     std::vector<double> STDiagram::makeValidDependencies(std::vector<double> dependencies, int dimension) {
         auto gdependencies = dependencies;
         for (int i = gdependencies.size(); i < dimension - 1; i++) {
@@ -77,7 +78,7 @@ namespace hpnmg {
 
     Event STDiagram::makeValidEvent(const Event &event, const Region &baseRegion) {
         Event e(event);
-        if (!(e.getGeneralDependencies().size() == baseRegion.dimension())) { 
+        if (!(e.getGeneralDependencies().size() == baseRegion.dimension()-1)) { 
             auto gdependencies = STDiagram::makeValidDependencies(event.getGeneralDependencies(), baseRegion.dimension());
             e.setGeneralDependencies(gdependencies);                  
         }
@@ -132,18 +133,18 @@ namespace hpnmg {
         return std::pair<matrix_t<double>,vector_t<double>>(lineMat, lineVec); 
     }
 
-    Region STDiagram::createRegionNoEvent(const Region &baseRegion, const Event &sourceEvent, std::vector<double> leftBounds, std::vector<double> rightBounds) {
-        Region region(baseRegion);
+    Region STDiagram::createRegionNoEvent(const Region &r, const Event &sourceEvent, std::vector<double> leftBounds, std::vector<double> rightBounds) {
+        Region region(r);
 
         /*if (!isValidEvent(sourceEvent, baseRegion)) {
             throw IllegalArgumentException("sourceEvent");
         }*/
 
-        region.insert(createHalfspaceFromEvent(makeValidEvent(sourceEvent, baseRegion),true));
+        region.insert(createHalfspaceFromEvent(makeValidEvent(sourceEvent, r),true));
         if (leftBounds.size() > 0)
-            region.insert(createVerticalHalfspace(leftBounds, true));
+            region.insert(createVerticalHalfspace(makeValidDependencies(leftBounds, r.dimension()), true));
         if (rightBounds.size() > 0)
-            region.insert(createVerticalHalfspace(rightBounds, false));
+            region.insert(createVerticalHalfspace(makeValidDependencies(rightBounds, r.dimension()), false));
             
         return region;
     }
@@ -270,6 +271,7 @@ namespace hpnmg {
                 double size = l.size();
                 Intervals res1;
                 Intervals res2;
+                bool hasEmptyInterval = false;
                 for (int i = 0; i < size; i++) {
                     carl::Interval<double> left;
                     carl::Interval<double> right;
@@ -278,18 +280,22 @@ namespace hpnmg {
                         r[i] = carl::Interval<double>(r[i].lower(), r[i].upper()+1);
                     }
                     bool twofold = l[i].difference(r[i], left, right);
-                    if (twofold) {
+                    if (twofold && !right.isEmpty()) {
                         res2.push_back(right);
                     }
                     if (!left.isEmpty()) {
                         res1.push_back(left);
-                    }                    
+                        continue;
+                    }          
+                    hasEmptyInterval = true;          
                 }
-                if (res1.size()>0) {
-                    result.push_back(res1);
-                }                
-                if (res2.size()>0) {
-                    result.push_back(res2);
+                if (!hasEmptyInterval) {
+                    if (res1.size()>0) {
+                        result.push_back(res1);
+                    }                
+                    if (res2.size()>0) {
+                        result.push_back(res2);
+                    }
                 }
             }             
         }          
@@ -308,6 +314,7 @@ namespace hpnmg {
                     //TODO This is an error
                 }
 
+                bool hasEmptyInterval = false;
                 double size = l.size();
                 Intervals res;
                 for (int i = 0; i < size; i++) {
@@ -317,9 +324,11 @@ namespace hpnmg {
                     
                     if (!intersection.isEmpty()) {
                         res.push_back(intersection);
-                    }                    
+                        continue;
+                    }   
+                    hasEmptyInterval = true;                 
                 }
-                if (res.size()>0) {
+                if (!hasEmptyInterval && res.size()>0) {
                     result.push_back(res);
                 }                
             } 
@@ -348,9 +357,9 @@ namespace hpnmg {
                 for (int i = 0; i < size; i++) {
                     carl::Interval<double> left;
                     carl::Interval<double> right;
-
+                    cout << r[i] << endl;
                     bool twofold = l[i].unite(r[i], left, right);
-                    if (twofold) {
+                    if (twofold && !right.isEmpty()) {
                         res2.push_back(right);
                     }
                     if (!left.isEmpty()) {

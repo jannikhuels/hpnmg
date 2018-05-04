@@ -4,6 +4,7 @@
 #include "ParseHybridPetrinet.h"
 #include "STDiagram.h"
 #include "ParametricLocationTree.h"
+#include <chrono>
 
 using namespace std;
 using namespace hpnmg;
@@ -204,6 +205,23 @@ TEST_F(ModelCheckerTestXML, KomplexNegationFormulaTest) {
     //STDiagram::print(not_regions, false, "not_phi");
 }
 
+class ModelCheckerTestComplexXML : public ::testing::Test {
+protected:
+
+    shared_ptr<hpnmg::ParametricLocationTree> plt;
+
+    ModelCheckerTestComplexXML() {
+        ReadHybridPetrinet reader;
+        //TODO Check impl. Pointer seems to be a problem here. (Memory Leak?)
+        shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("jannik2general.xml");
+        ParseHybridPetrinet parser;
+        int maxTime = 20;
+        shared_ptr<hpnmg::ParametricLocationTree> pltC = parser.parseHybridPetrinet(hybridPetrinet, maxTime);
+        plt = pltC;
+        
+    }
+};
+
 void printIntervals(Intervals intervals) {
     for (carl::Interval<double> i: intervals) {
         printf("[%f,%f] ", i.lower(), i.upper());
@@ -246,39 +264,46 @@ std::vector<Intervals> getIntervals(std::vector<Region> rs, double time, Halfspa
 }
 
 std::vector<Region> until(shared_ptr<hpnmg::ParametricLocationTree> plt, ParametricLocationTree::Node node, double time) {
-    printf("---Model Checking Until---\n");
-    std::pair<bool, Region> res = STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(0,time), node.getRegion(), node.getParametricLocation().getDimension());
+    //printf("---Model Checking Until---\n");
+    std::pair<bool, Region> res = STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(0,time), node.getRegion(), plt->getDimension());
     if (!res.first) {
         return {};
     }
 
     //This should be replaced by parsing given formulas (Given from parameters of the function - we need a parser for this)
-    std::vector<Region> sat1 = {ModelChecker::cfml(node, 0, 3, false)};
-    std::vector<Region> sat2 = ModelChecker::neg({sat1}, node.getRegion());
+    std::vector<Region> sat1 = {ModelChecker::cfml(node, 0, 10, false)};
+    sat1 = ModelChecker::neg({sat1}, node.getRegion());
+    std::vector<Region> sat2 = {ModelChecker::dfml(node,0,0,false)};
 
     Halfspace<double> sourceHalfspace = STDiagram::createHalfspaceFromEvent(STDiagram::makeValidEvent(node.getParametricLocation().getSourceEvent(), node.getRegion()), false);
 
     //printf("Number of regions satisfying phi2: %lu\n", sat2.size());
     std::vector<Intervals> I1 = getIntervals(sat2, time, sourceHalfspace);
-    printf("I1: ");
-    printIntervals(I1);
+    //printf("I1: ");
+    //printIntervals(I1);
     
     //printf("Number of regions satisfying phi1: %lu\n", sat1.size());
     std::vector<Intervals> iCandidates = getIntervals(sat1, time, sourceHalfspace);
-    printf("Candidates: ");
-    printIntervals(iCandidates);
+    //cout << "Number of candidates: " << iCandidates.size() << endl;
+    //printf("Candidates: ");
+    //printIntervals(iCandidates);
+
+    if (iCandidates.size() == 0) {
+        return {};
+    }
 
     std::vector<Region> satPhi1AndPhi2 = ModelChecker::conj(sat1,sat2);
-    //printf("Number of regions satisfying Phi1AndPhi2: %lu\n", satPhi1AndPhi2.size());
+   //printf("Number of regions satisfying Phi1AndPhi2: %lu\n", satPhi1AndPhi2.size());
     std::vector<Intervals> iPhi1AndPhi2 = getIntervals(satPhi1AndPhi2, time);
-    printf("Phi1AndPhi2: ");
-    printIntervals(iPhi1AndPhi2);
+    //printf("Phi1AndPhi2: ");
+    //printIntervals(iPhi1AndPhi2);
 
     std::vector<Region> satNotPhi1 = ModelChecker::neg(sat1, node.getRegion());
     std::vector<Region> satNotPhi2 = ModelChecker::neg(sat2, node.getRegion());
     std::vector<Region> satPhi1AndNotPhi2 = ModelChecker::conj(sat1,satNotPhi2);
 
     std::vector<Region> satFacets = ModelChecker::conj(satPhi1AndNotPhi2, satNotPhi1);
+    //cout << "Number of facets " << satFacets.size() << endl;
     // Remove all facets that are the border to Sat(Phi2)
     std::vector<Region> nonEmpty;
     for (Region r : satFacets) {
@@ -288,28 +313,29 @@ std::vector<Region> until(shared_ptr<hpnmg::ParametricLocationTree> plt, Paramet
             }
         }
     }
-    STDiagram::print(nonEmpty, false, "nonEmpty");
+    //STDiagram::print(nonEmpty, false, "nonEmpty");
     satFacets = nonEmpty;
-    STDiagram::print(satFacets, false, "satFacets");
+    //STDiagram::print(satFacets, false, "satFacets");
     //printf("Number of Facet regions: %lu\n", satFacets.size());
     std::vector<Intervals> iFacets = getIntervals(satFacets, time); 
-    printf("Facets: ");
-    printIntervals(iFacets);
+    //printf("Facets: ");
+    //printIntervals(iFacets);
 
     std::vector<Intervals> hI2 = STDiagram::differenceOfIntervals(iCandidates, iFacets);
-    printf("hI2:");
-    printIntervals(hI2);
+    //printf("hI2:");
+    //printIntervals(hI2);
     std::vector<Intervals> I2 = STDiagram::intersectionOfIntervals(hI2,iPhi1AndPhi2); 
-    printf("I2: ");
-    printIntervals(I2);
+    //printf("I2: ");
+    //printIntervals(I2);
 
-    printIntervals(iCandidates);
+    //printIntervals(iCandidates);
     std::vector<Intervals> rest = STDiagram::differenceOfIntervals(iCandidates, I1);
     rest = STDiagram::differenceOfIntervals(rest, I2);
-    printf("Rest: ");
-    printIntervals(rest);
+    //printf("Rest: ");
+    //printIntervals(rest);
 
     std::vector<Intervals> I3;
+    //cout << "Size of rest " << rest.size() << endl;
     if (rest.size()>0) {
         for (ParametricLocationTree::Node c : plt->getChildNodes(node)) {
             ParametricLocationTree::Node r(c);
@@ -324,34 +350,57 @@ std::vector<Region> until(shared_ptr<hpnmg::ParametricLocationTree> plt, Paramet
             }            
         }
     }
-    printf("I3: ");
+    //printf("I3: ");
+    //printIntervals(I3);
+    cout << "I1" << endl;
+    printIntervals(I1);
+    cout << "I2" << endl;
+    printIntervals(I2);
+    cout << "I3" << endl;
     printIntervals(I3);
-
     std::vector<Intervals> result = STDiagram::unionOfIntervals(I1,I2);
+    cout << "First union finished" << endl;
     result = STDiagram::unionOfIntervals(result, I3);
-    printf("Result of Until Model Checking: ");
-    printIntervals(result);
+    //printf("Result of Until Model Checking: ");
+    //printIntervals(result);
     return STDiagram::boundRegionByIntervals(node.getRegion(), result, time);   
 }
 
-TEST_F(ModelCheckerTestXML, UntilFormulaTest) {
-    plt->updateRegions();
-    std::vector<Region> regions;
-    double time = 4;
-    std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTimeInterval(std::pair<double,double>(0,3));
+TEST_F(ModelCheckerTestComplexXML, UntilFormulaTest) {
 
+    
+    int dim = plt->getDimension();
+
+    cout << "Dimension is " << dim << endl; 
+
+    plt->updateRegions();
+    std::vector<ParametricLocationTree::Node> allRegions = plt->getCandidateLocationsForTimeInterval(std::pair<double,double>(0,20));
+    cout << "Number of Regions is " << allRegions.size() << endl;
+    
+    
+   /* std::vector<Region> regions;
+    double time = 4;
+    std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTime(0);
+    cout << "Start Model Checking." << endl;
+    cout << candidates.size()  << " candidates found" << endl;
+    auto startTime = chrono::high_resolution_clock::now();
     for (ParametricLocationTree::Node candidate : candidates) {
         std::vector<Region> sat = until(plt, candidate, time);
-        regions.insert(regions.end(), sat.begin(), sat.end());
+        if (sat.size() > 0) {
+            regions.insert(regions.end(), sat.begin(), sat.end());
+        }        
     }
+    auto endTime = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> elapsed = endTime - startTime;
     
-    
-    /*for(ParametricLocationTree::Node candidateNode : candidates) {
-                
-    }*/
     
     //TODO Write Tests
+    cout << "Number of regions that satisfy until: " << regions.size() << endl;
+    cout << "It took " << elapsed.count() << "ms" << endl;
 
-    STDiagram::print(regions, false, "until");
-    //STDiagram::print(not_regions, false, "not_phi");
+    std::vector<Intervals> sat =  STDiagram::intervalsFromRegions(regions);
+    printIntervals(sat);
+
+    //STDiagram::print(regions, false, "until");
+    //STDiagram::print(not_regions, false, "not_phi");*/
 }

@@ -45,9 +45,11 @@ namespace hpnmg {
 
         int maxTime;
 
+        int dimension;
+
         Region baseRegion;
 
-        void recursivelySetRegions(Node &startNode);
+        void recursivelySetRegions(Node &startNode, Region &baseRegion);
 
         void recursivelyCollectRegions(const Node &startNode, vector<Region> &regions);
 
@@ -56,6 +58,8 @@ namespace hpnmg {
         std::vector<Event> getSourceEventsFromNodes(const std::vector<Node> &nodes);
 
         void recursivelyPrintRegions(const ParametricLocationTree::Node &startNode, int depth);
+
+        std::vector<int> getDimensionRecursively(const ParametricLocationTree::Node &startNode, int numberOfGeneralTransitions);
 
     public:
 
