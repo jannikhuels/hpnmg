@@ -74,6 +74,45 @@ namespace hpnmg {
         return current;
     }
 
+    void ParametricLocationTree::addNormedDependenciesRecursively(const ParametricLocationTree::Node &startNode,
+                                                                  std::vector<int> genTransOccurings, int dimension) {
+        // inititalize normed vector and fill with 0
+        vector<double> generalDependenciesNormed(dimension);
+        fill(generalDependenciesNormed.begin(), generalDependenciesNormed.end(), 0);
+
+        // get all needed information from parametric location
+        ParametricLocation loc = startNode.getParametricLocation();
+        vector<int> generalTransitionsFired = loc.getGeneralTransitionsFired();
+        Event event = loc.getSourceEvent();
+        double time = event.getTime();
+        vector<double> generalDependenciesOrig = event.getGeneralDependencies();
+
+        // first val in normed dependencies is time
+        generalDependenciesNormed[0] = time;
+
+        // startPosition is initial 1 because 0 is the time
+        int startPositionForTransition = 1;
+        // iterate over all general transitions
+        for (int genTrans = 0; genTrans < genTransOccurings.size(); ++genTrans) {
+            // iterate over all possible firings of genTrans
+            int possibleFirings = genTransOccurings[genTrans];
+            int counter = 0;
+            for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
+                if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
+                    int posNormed = startPositionForTransition + counter;
+                    generalDependenciesNormed[posNormed] = generalDependenciesNormed[realFiring];
+                    ++counter;
+                }
+            }
+            startPositionForTransition += possibleFirings;
+        }
+        assert(startPositionForTransition == dimension);
+        loc.setGeneralDependenciesNormed(generalDependenciesNormed);
+        for (ParametricLocationTree::Node &node : getChildNodes(startNode)) {
+            addNormedDependenciesRecursively(node, genTransOccurings, dimension);
+        }
+    }
+
     //TODO Set Dimension accordingly. This is bad -> the dimension should be equal for the whole tree.
     int ParametricLocationTree::getDimension() { 
         if (this->dimension == 0) {
@@ -87,7 +126,9 @@ namespace hpnmg {
                 this->dimension = getRootNode().getParametricLocation().getDimension();
             } else {
                 this->dimension = dim + 1;
-            }            
+            }
+            // add normed general dependency vector to all parametric locations
+            addNormedDependenciesRecursively(getRootNode(), dimV, dim+1);
         }
         return this->dimension;
     }

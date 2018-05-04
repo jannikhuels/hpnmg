@@ -61,6 +61,8 @@ namespace hpnmg {
 
         std::vector<int> getDimensionRecursively(const ParametricLocationTree::Node &startNode, int numberOfGeneralTransitions);
 
+        void addNormedDependenciesRecursively(const ParametricLocationTree::Node &startNode, std::vector<int> genTransOccurings, int dimension);
+
     public:
 
         ParametricLocationTree();
