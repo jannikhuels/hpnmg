@@ -461,6 +461,9 @@ TEST(STDiagramIntervalTest, TestUnion1D)
     ASSERT_EQ(resEmpty[0][0].upper(), 4);
     ASSERT_EQ(resEmpty[1][0].lower(), 7);
     ASSERT_EQ(resEmpty[1][0].upper(), 8);
+
+    std::vector<Intervals> resSame = STDiagram::unionOfIntervals({{i1}},{{i1}});
+    ASSERT_EQ(resSame.size(),1);
 }
 
 TEST(STDiagramIntervalTest, TestUnion2D) 
