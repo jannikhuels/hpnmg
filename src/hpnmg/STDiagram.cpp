@@ -115,6 +115,12 @@ namespace hpnmg {
         return intersectionPair.second;
     }
 
+    Halfspace<double> STDiagram::createHalfspaceForTime(const double &time, int dimension) {
+        vector_t<double> direction = vector_t<double>::Zero(dimension);
+        direction[dimension-1] = 1;
+        return Halfspace<double>(direction, time);
+    }
+
     std::pair<matrix_t<double>,vector_t<double>> STDiagram::createHalfspacesFromTimeInterval(const std::pair<double, double> &interval, int dimension) { 
         if (interval.first < 0) {
             throw IllegalArgumentException("interval", "Start time < 0.");
@@ -192,6 +198,7 @@ namespace hpnmg {
         return hsp;
     }
 
+    //TODO Check of jannik0general example
     Region STDiagram::intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate) {
         Region intersectRegion(baseRegion);
         bool createVerticalHalfspace = false;
@@ -199,6 +206,7 @@ namespace hpnmg {
         double currentLevel = continuousDependencies[continuousDependencies.size()-1];
         continuousDependencies.pop_back();
 
+        //TODO Check with patricia how these dependencies are created.
         continuousDependencies = STDiagram::makeValidDependencies(continuousDependencies, baseRegion.dimension());
 
         double divisor = drift;
@@ -271,6 +279,27 @@ namespace hpnmg {
         return result;
     }
 
+    //TODO Try to solve that inside union
+    std::vector<Intervals> STDiagram::removeEmptyIntervals(std::vector<Intervals> intervals) 
+    {
+        std::vector<Intervals> res;
+        for(Intervals I : intervals) {
+            bool hasEmpty = false;
+            for (int i = 0; i<I.size();i++) {
+                if (I[i].isEmpty() || I[i].isZero()) {
+                    hasEmpty = true;
+                    break;
+                } 
+            }
+            if (!hasEmpty) {
+                res.push_back(I);
+            }
+        } 
+        return res;
+    }
+    
+    //TODO put intervals into a single class
+    //TODO Check if the empty interval is needed
     std::vector<Intervals> STDiagram::differenceOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2) 
     {
         std::vector<Intervals> result;
@@ -304,7 +333,8 @@ namespace hpnmg {
                 }
                 result.insert(result.end(), res.begin(), res.end());
             }             
-        }          
+        } 
+        result = STDiagram::removeEmptyIntervals(result);         
         return result;
     }
 
@@ -330,7 +360,8 @@ namespace hpnmg {
                 }
                 result.push_back(res);              
             } 
-        }    
+        }  
+        result = STDiagram::removeEmptyIntervals(result);
         return result;
     }
 
@@ -366,18 +397,26 @@ namespace hpnmg {
                 }
                 result.insert(result.end(), res.begin(), res.end());
             } 
-        }    
+        }  
+        result = STDiagram::removeEmptyIntervals(result);  
         return result;
     }
 
-    std::vector<Region> STDiagram::boundRegionByIntervals(Region r, std::vector<Intervals> intervals, double time) 
+    std::vector<Region> STDiagram::boundRegionByIntervals(Region reg, int maxTime, std::vector<Intervals> intervals, Halfspace<double> timeHsp) 
     {   
         std::vector<Region> regions;
-        for (Intervals i : intervals) {
-            i.push_back(carl::Interval<double>((double)0,time));
+        Region r = reg;
+        for (Intervals i : intervals) {        
+            i.push_back(carl::Interval<double>((double)0,(double)maxTime));
             Box<double> box(i);
             Region boxRegion(box.constraints());
-            regions.push_back(r.intersect(boxRegion));
+            for (Halfspace<double> h: box.constraints()) {
+                r.insert(h);
+            }
+            //Region boxRegion(box.constraints());
+            //r.intersect(boxRegion);
+            r.insert(timeHsp);
+            regions.push_back(r);
         }
         return regions;
     }

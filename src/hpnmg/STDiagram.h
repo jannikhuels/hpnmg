@@ -33,6 +33,8 @@ namespace hpnmg {
         // TODO: Do not create a base region but instead try to read it from the PLT.
         static Region createBaseRegion(int dimension, int maxTime);
 
+        static Halfspace<double> createHalfspaceForTime(const double &time, int dimension);
+
         static Region createRegion(const Region &baseRegion, const Event &sourceEvent, const std::vector<Event> &destinationEvents);
 
         static void print(const vector<Region> &regionsToPrint, bool cummulative, std::string filename = "out");
@@ -58,10 +60,12 @@ namespace hpnmg {
 
         static std::vector<Intervals> intersectionOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2);
 
-        static std::vector<Region> boundRegionByIntervals(Region r, std::vector<Intervals> intervals, double time);
+        static std::vector<Region> boundRegionByIntervals(Region r, int maxTime, std::vector<Intervals> intervals, Halfspace<double> timeHsp);
 
         static std::vector<Intervals> unionOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2);
 
         static std::vector<Intervals> intervalsFromRegions(std::vector<Region> regions);
+
+        static std::vector<Intervals> removeEmptyIntervals(std::vector<Intervals> intervals);
     };
 }
