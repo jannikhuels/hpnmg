@@ -90,6 +90,7 @@ namespace hpnmg {
         return Region::Empty();
     }
 
+    //TODO this checks x_p <= u. Should I change this?
     Region ModelChecker::cfml(ParametricLocationTree::Node node, int placeIndex, int value, bool neg)
     {
         Region candidateRegion = node.getRegion();            
