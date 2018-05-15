@@ -8,7 +8,7 @@ using namespace hpnmg;
 TEST(ParseHybridPetrinet, InitialLocation)
 {
     auto reader = new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/example.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("example.xml");
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode().getParametricLocation();
@@ -27,7 +27,7 @@ TEST(ParseHybridPetrinet, InitialLocation)
 TEST(ParseHybridPetrinet, ImmediateTransitions)
 {
     auto reader = new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/exampleImmediate.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("exampleImmediate.xml");
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
@@ -61,7 +61,7 @@ TEST(ParseHybridPetrinet, ImmediateTransitions)
 
 TEST(ParseHybridPetrinet, RateAdaption) {
     auto reader = new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/exampleRateAdaption.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("exampleRateAdaption.xml");
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
@@ -86,7 +86,7 @@ TEST(ParseHybridPetrinet, RateAdaption) {
 
 TEST(ParseHybridPetrinet, BoundarysMainExample) {
     auto reader = new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/example.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("example.xml");
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode().getParametricLocation();
@@ -182,7 +182,7 @@ TEST(ParseHybridPetrinet, BoundarysMainExample) {
 
 TEST(ParseHybridPetrinet, Example2General) {
     auto reader = new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/example2general.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("example2general.xml");
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode().getParametricLocation();
@@ -407,11 +407,11 @@ TEST(ParseHybridPetrinet, Example2General) {
     }
 }
 
-TEST(ParseHybridPetrinet, Example5General) {
+/*TEST(ParseHybridPetrinet, Example5General) {
     auto reader= new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/jannik5general.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("jannik5general.xml");
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto writer = new PLTWriter();
     writer->writePLT(plt, 20);
-}
+}*/

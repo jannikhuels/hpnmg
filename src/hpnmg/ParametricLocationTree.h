@@ -45,17 +45,27 @@ namespace hpnmg {
 
         int maxTime;
 
+        int dimension;
+
         Region baseRegion;
 
-        void recursivelySetRegions(Node &startNode);
+        void recursivelySetRegions(Node &startNode, Region &baseRegion);
 
         void recursivelyCollectRegions(const Node &startNode, vector<Region> &regions);
 
-        void recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, bool (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension);
+        void recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, Region> (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension);
 
         std::vector<Event> getSourceEventsFromNodes(const std::vector<Node> &nodes);
 
+        void recursivelyPrintRegions(const ParametricLocationTree::Node &startNode, int depth);
+
+        std::vector<int> getDimensionRecursively(const ParametricLocationTree::Node &startNode, int numberOfGeneralTransitions);
+
+        void addNormedDependenciesRecursively(const ParametricLocationTree::Node &startNode, std::vector<int> genTransOccurings, int dimension);
+
     public:
+
+        ParametricLocationTree();
 
         ParametricLocationTree(const ParametricLocation &rootLocation, int maxTime);
 
@@ -67,9 +77,13 @@ namespace hpnmg {
 
         int getDimension();
 
+        int getMaxTime();
+
         void updateRegions();
 
         void print(bool cummulative);
+
+        void printText();
 
         std::vector<Node> getCandidateLocationsForTime(double time);
 

@@ -11,7 +11,6 @@ namespace hpnmg {
         Timed = 3,
         Continuous = 4,
         Root = 5,
-        Guard = 6
     };
 
     class Event {
@@ -34,5 +33,7 @@ namespace hpnmg {
 
         double getTime() const;
         void setTime(double time);
+
+        void print() const;
     };
 }

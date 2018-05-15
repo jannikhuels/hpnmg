@@ -35,7 +35,7 @@ TEST(ParametricLocation, ConstructorFiveArgumentsTest) {
 
 TEST(ParametricLocation, ConstructorCustomVectors) {
     ParametricLocation parametricLocation(vector<int>{0, 0}, vector<vector<double>>{{0, 10}}, vector<double>{1}, 1,
-            Event(EventType::Timed, vector<double>{-1}, 0), vector<vector<vector<double>>> {{{7.5}}},
+            Event(EventType::Timed, vector<double>{1}, 0), vector<vector<vector<double>>> {{{7.5}}},
             vector<vector<vector<double>>> {{{10}}});
     ASSERT_EQ(parametricLocation.getSourceEvent().getEventType(), EventType::Timed);
     ASSERT_EQ(parametricLocation.getDimension(), 2);

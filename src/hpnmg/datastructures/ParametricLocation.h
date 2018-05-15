@@ -18,6 +18,12 @@ namespace hpnmg {
         Event sourceEvent;
         double conflictProbability;
         int dimension;
+        std::vector<double> generalDependenciesNormed;
+    public:
+        const vector<double> &getGeneralDependenciesNormed() const;
+
+        void setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed);
+        // vector needed for STD is empty while parsing and set when PLT is computed
 
     public:
 

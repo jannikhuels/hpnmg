@@ -121,4 +121,13 @@ namespace hpnmg {
 
     void ParametricLocation::setGeneralTransitionsFired(std::vector<int> generalTransitionsFired) {
         this->generalTransitionFired = generalTransitionsFired; }
+
+    const vector<double> &ParametricLocation::getGeneralDependenciesNormed() const {
+        return generalDependenciesNormed;
+    }
+
+    void ParametricLocation::setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed) {
+        ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
+        this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
+    }
 }

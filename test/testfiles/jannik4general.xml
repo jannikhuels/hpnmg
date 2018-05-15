@@ -6,7 +6,7 @@
         <discretePlace id="pd2" marking="1"/>
         <discretePlace id="pd3" marking="1"/>
         <discretePlace id="pd4" marking="1"/>
-        <continuousPlace id="pc1" capacity="10" infiniteCapacity="0" level="0"/>
+        <continuousPlace id="pc1" capacity="100" infiniteCapacity="0" level="10"/>
     </places>
     <transitions>
         <generalTransition id="tg0" cdf="normal" priority="0" weight="1.0E0" policy="resume">
@@ -29,11 +29,11 @@
             <parameter name="mu" value="5.0"/>
             <parameter name="sigma" value="3.0"/>
         </generalTransition>
-        <continuousTransition id="tf0" rate="1.0"/>
-        <continuousTransition id="tf1" rate="1.0"/>
-        <continuousTransition id="tf2" rate="1.0"/>
-        <continuousTransition id="tf3" rate="1.0"/>
-        <continuousTransition id="tf4" rate="1.0"/>
+        <continuousTransition id="tf0" rate="5.0"/>
+        <continuousTransition id="tf1" rate="5.0"/>
+        <continuousTransition id="tf2" rate="5.0"/>
+        <continuousTransition id="tf3" rate="5.0"/>
+        <continuousTransition id="tf4" rate="5.0"/>
     </transitions>
     <arcs>
         <discreteArc id="da0" fromNode="pd0" toNode="tg0" weight="1.0E0"/>
