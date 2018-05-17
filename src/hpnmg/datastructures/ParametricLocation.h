@@ -86,5 +86,7 @@ namespace hpnmg {
         void setGeneralTransitionsFired(std::vector<int> generalTransitionsFired);
 
         int getId() const;
+
+        double getLatestEntryTime();
     };
 }

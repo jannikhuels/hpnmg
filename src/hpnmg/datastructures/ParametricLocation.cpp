@@ -125,4 +125,40 @@ namespace hpnmg {
         ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
         this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
     }
+
+    double ParametricLocation::getLatestEntryTime() {
+        double time = sourceEvent.getTime();
+        vector<double> dependencies = sourceEvent.getGeneralDependencies();
+        vector<int> counter = vector<int>(dimension -1);
+        fill(counter.begin(), counter.end(),0);
+        for (int &firedTransition : generalTransitionFired)
+           counter[firedTransition] +=1;
+        while (dependencies.size() > 0) {
+            double value = dependencies.back();
+            dependencies.pop_back();
+
+            int transitionPosition = generalTransitionFired[dependencies.size()];
+            int firingTime = counter[transitionPosition];
+            vector<double> lowerBounds = generalIntervalBoundLeft[transitionPosition][firingTime];
+            vector<double> upperBounds = generalIntervalBoundRight[transitionPosition][firingTime];
+
+            counter[transitionPosition] -=1;
+
+            if (value >= 0) {
+               time += value * lowerBounds[0];
+            } else {
+                time += value * upperBounds[0];
+            }
+
+            for (int i = 1; i <= dependencies.size(); ++i)
+                if (value >= 0) {
+                dependencies[i] += value * lowerBounds[i];
+                } else {
+                dependencies[i] += value * upperBounds[i];
+                }
+        }
+
+        return time;
+    }
+    
 }
