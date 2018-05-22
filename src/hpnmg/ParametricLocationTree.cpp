@@ -239,6 +239,33 @@ namespace hpnmg {
         }
     }
 
+    void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(const Node &startNode, vector<Node> &candidates, std::pair<double, double> interval, int dimension) {
+        // first try: only check if interval.first matches the location (= is in the interval of [earliestEntryTime, latestLeavingTime])
+        if (startNode.getParametricLocation().getEarliestEntryTime() < interval.first) {
+            // startNode's earliest Entry time is before the questioned time
+            // now we want to check if the minimum of all possible childevents latest entry times is bigger than the questioned time.
+            const vector<Node> &childNodes = getChildNodes(startNode);
+            double latestLeavingTime = maxTime; // we need to set minimum (= latestLeavingTime) as high as possible to ensure to get the correct minimum (is maxTime an actual time or maybe the correct value for this? if it doesn't work that way, try numericlimits with max() or infinity())
+            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+                double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
+                if (latestEntryTime < latestLeavingTime) {
+                    latestLeavingTime = latestEntryTime;
+                }
+            }
+            if(latestLeavingTime > interval.first) {
+                // congrats! you found a candidate.
+                candidates.push_back(startNode);
+            }
+        }
+
+
+
+        // is this still correct? (idts)
+        for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+            recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval, dimension);
+        }
+    }
+
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTime(double time) {
         return getCandidateLocationsForTimeInterval(std::pair<double,double>{time,time});
     }
