@@ -87,6 +87,8 @@ namespace hpnmg {
 
         int getId() const;
 
+        double getEarliestEntryTime();
+
         double getLatestEntryTime();
     };
 }
