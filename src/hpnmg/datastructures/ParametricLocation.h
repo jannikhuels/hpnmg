@@ -90,5 +90,7 @@ namespace hpnmg {
         double getEarliestEntryTime();
 
         double getLatestEntryTime();
+
+        double getMinimumTime(std::vector<std::vector<std::vector<double>>> lowerBoundaries, std::vector<std::vector<std::vector<double>>> upperBoundaries);
     };
 }
