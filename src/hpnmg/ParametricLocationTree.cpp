@@ -240,9 +240,8 @@ namespace hpnmg {
     }
 
     void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(const Node &startNode, vector<Node> &candidates, std::pair<double, double> interval, int dimension) {
-        // first try: only check if interval.first matches the location (= is in the interval of [earliestEntryTime, latestLeavingTime])
 
-        if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.first) {
+        if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.second) {
             // startNode's earliest Entry time is before or equal the questioned time
             // (if it isn't, no childnode can be valid as well!)
 
