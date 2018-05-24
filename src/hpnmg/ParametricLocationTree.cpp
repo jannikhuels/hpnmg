@@ -239,7 +239,7 @@ namespace hpnmg {
         }
     }
 
-    void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(const Node &startNode, vector<Node> &candidates, std::pair<double, double> interval, int dimension) {
+    void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(const Node &startNode, vector<Node> &candidates, std::pair<double, double> interval) {
 
         if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.second) {
             // startNode's earliest Entry time is before or equal the questioned time
@@ -264,15 +264,11 @@ namespace hpnmg {
 
             // transferred into the if-block, could be correct now
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
-                recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval, dimension);
+                recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval);
             }
 
             // not even the earliest entry time is before (or equal) t, so the event happens after the questioned time. no child node can be valid.
         }
-
-
-
-
     }
 
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTime(double time) {
@@ -281,7 +277,8 @@ namespace hpnmg {
 
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTimeInterval(std::pair<double,double> interval) {
         vector<ParametricLocationTree::Node> locations;
-        recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
+        // recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
+        recursivelyCollectCandidateLocationsWithPLT(getRootNode(), locations, interval);
         return locations;
     }
 }
