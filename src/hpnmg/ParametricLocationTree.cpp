@@ -246,22 +246,19 @@ namespace hpnmg {
             // startNode's earliest Entry time is before or equal the questioned time
             // (if it isn't, no childnode can be valid as well!)
 
-            // now we want to check if the minimum of all possible childevents latest entry times is bigger than the questioned time.
+            // now we want to check if all (!) possible childevents latest entry times are bigger than t. (yes -> candidate)
             const vector<Node> &childNodes = getChildNodes(startNode);
 
-            // we need to set minimum (= latestLeavingTime) as high as possible to ensure to get the correct minimum
-            // (is maxTime an actual time or maybe the correct value for this? if it doesn't work that way, try numericlimits with max() or infinity())
-            double latestLeavingTime = maxTime;
+            bool valid = true;
 
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
-
-                if (latestEntryTime < latestLeavingTime) {
-                    latestLeavingTime = latestEntryTime;
+                if (latestEntryTime < interval.first) {
+                    valid = false;
                 }
             }
 
-            if(latestLeavingTime >= interval.first) {
+            if(valid) {
                 // congrats! you found a candidate.
                 candidates.push_back(startNode);
             }
