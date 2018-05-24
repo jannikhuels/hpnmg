@@ -241,29 +241,42 @@ namespace hpnmg {
 
     void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(const Node &startNode, vector<Node> &candidates, std::pair<double, double> interval, int dimension) {
         // first try: only check if interval.first matches the location (= is in the interval of [earliestEntryTime, latestLeavingTime])
-        if (startNode.getParametricLocation().getEarliestEntryTime() < interval.first) {
-            // startNode's earliest Entry time is before the questioned time
+
+        if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.first) {
+            // startNode's earliest Entry time is before or equal the questioned time
+            // (if it isn't, no childnode can be valid as well!)
+
             // now we want to check if the minimum of all possible childevents latest entry times is bigger than the questioned time.
             const vector<Node> &childNodes = getChildNodes(startNode);
-            double latestLeavingTime = maxTime; // we need to set minimum (= latestLeavingTime) as high as possible to ensure to get the correct minimum (is maxTime an actual time or maybe the correct value for this? if it doesn't work that way, try numericlimits with max() or infinity())
+
+            // we need to set minimum (= latestLeavingTime) as high as possible to ensure to get the correct minimum
+            // (is maxTime an actual time or maybe the correct value for this? if it doesn't work that way, try numericlimits with max() or infinity())
+            double latestLeavingTime = maxTime;
+
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
+
                 if (latestEntryTime < latestLeavingTime) {
                     latestLeavingTime = latestEntryTime;
                 }
             }
-            if(latestLeavingTime > interval.first) {
+
+            if(latestLeavingTime >= interval.first) {
                 // congrats! you found a candidate.
                 candidates.push_back(startNode);
             }
+
+            // transferred into the if-block, could be correct now
+            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+                recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval, dimension);
+            }
+
+            // not even the earliest entry time is before (or equal) t, so the event happens after the questioned time. no child node can be valid.
         }
 
 
 
-        // is this still correct? (idts)
-        for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
-            recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval, dimension);
-        }
+
     }
 
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTime(double time) {
