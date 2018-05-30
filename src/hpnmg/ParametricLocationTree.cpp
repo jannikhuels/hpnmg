@@ -242,10 +242,10 @@ namespace hpnmg {
     void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(const Node &startNode, vector<Node> &candidates, std::pair<double, double> interval) {
 
         if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.second) {
-            // startNode's earliest Entry time is before or equal the questioned time
+            // startNode's earliest entry time is before or equal the questioned time
             // (if it isn't, no childnode can be valid as well!)
 
-            // now we want to check if all (!) possible childevents latest entry times are bigger than t. (yes -> candidate)
+            // now we want to check if all (!) possible childevents latest entry times are bigger than t.
             const vector<Node> &childNodes = getChildNodes(startNode);
 
             bool valid = true;
@@ -258,16 +258,14 @@ namespace hpnmg {
             }
 
             if(valid) {
-                // congrats! you found a candidate.
                 candidates.push_back(startNode);
             }
 
-            // transferred into the if-block, could be correct now
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
                 recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval);
             }
 
-            // not even the earliest entry time is before (or equal) t, so the event happens after the questioned time. no child node can be valid.
+            // not even the earliest entry time is before (or equal) t, so the event happens after the questioned time. no childnode can be valid.
         }
     }
 
