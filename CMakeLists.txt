@@ -60,15 +60,17 @@ endif()
 # External Libraries
 # -----------------------------------------------------------------
 
+
 add_subdirectory(resources)
 find_package(hypro REQUIRED)
 find_package(carl REQUIRED)
 find_package(XercesC REQUIRED)
-
+find_package(Boost REQUIRED)
 
 # Include files
 # -----------------------------------------------------------------
 
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 include_directories("${PROJECT_BINARY_DIR}/src")
 add_subdirectory(src)
 
@@ -91,4 +93,4 @@ add_subdirectory(examples)
 # -----------------------------------------------------------------
 
 add_executable(main main.cpp)
-target_link_libraries(main hpnmg)
+target_link_libraries(main hpnmg ${Boost_LIBRARIES})
