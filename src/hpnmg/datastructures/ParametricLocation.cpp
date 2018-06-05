@@ -110,6 +110,11 @@ namespace hpnmg {
     void ParametricLocation::setConflictProbability(double conflictProbability) {
         this->conflictProbability = conflictProbability; }
 
+    double ParametricLocation::getAccumulatedProbability() const { return accumulatedProbability; }
+
+    void ParametricLocation::setAccumulatedProbability(double accumulatedProbability) {
+        this->accumulatedProbability = accumulatedProbability; }
+
     int ParametricLocation::getDimension() const { return dimension; }
 
     std::vector<int> ParametricLocation::getGeneralTransitionsFired() const { return generalTransitionFired; }

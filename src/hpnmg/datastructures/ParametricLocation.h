@@ -17,6 +17,7 @@ namespace hpnmg {
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         Event sourceEvent;
         double conflictProbability;
+        double accumulatedProbability;
         int dimension;
         std::vector<double> generalDependenciesNormed;
     public:
@@ -78,6 +79,10 @@ namespace hpnmg {
         double getConflictProbability() const;
 
         void setConflictProbability(double conflictProbability);
+
+        double getAccumulatedProbability() const;
+
+        void setAccumulatedProbability(double accumulatedProbability);
 
         int getDimension() const;
 

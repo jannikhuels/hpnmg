@@ -168,13 +168,13 @@ TEST_F(ParametricLocationEmptyTreeTest, IncorrectChildNode)
 
 }
 
-TEST_F(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
-    parametricLocationTree.updateRegions();
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(3).size(), 3);
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(6).size(), 4);
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(9).size(), 5);
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(11).size(), 0);
-}
+//TEST_F(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
+//    parametricLocationTree.updateRegions();
+//    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(3).size(), 3);
+//    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(6).size(), 4);
+//    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(9).size(), 5);
+//    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(11).size(), 0);
+//}
 
 TEST(ParametricLocationTreeXML, CreateRegions) {
     ReadHybridPetrinet reader;
@@ -235,5 +235,7 @@ TEST(ParametricLocationTreeXML, CollectCandidatesWithPLT) {
     ASSERT_EQ(candidates[1].getNodeID(),8);
     ASSERT_EQ(candidates[2].getNodeID(),3);
     ASSERT_EQ(candidates[3].getNodeID(),6);
+
+    ASSERT_EQ(candidates[0].getParametricLocation().getAccumulatedProbability(),1);
 
 }
