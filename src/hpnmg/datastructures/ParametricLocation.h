@@ -86,5 +86,11 @@ namespace hpnmg {
         void setGeneralTransitionsFired(std::vector<int> generalTransitionsFired);
 
         int getId() const;
+
+        double getEarliestEntryTime();
+
+        double getLatestEntryTime();
+
+        double getMinimumTime(std::vector<std::vector<std::vector<double>>> lowerBoundaries, std::vector<std::vector<std::vector<double>>> upperBoundaries);
     };
 }

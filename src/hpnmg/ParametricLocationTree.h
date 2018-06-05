@@ -55,6 +55,8 @@ namespace hpnmg {
 
         void recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, Region> (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension);
 
+        void recursivelyCollectCandidateLocationsWithPLT(const Node &startNode, vector<Node> &candidates, std::pair<double, double> interval);
+
         std::vector<Event> getSourceEventsFromNodes(const std::vector<Node> &nodes);
 
         void recursivelyPrintRegions(const ParametricLocationTree::Node &startNode, int depth);

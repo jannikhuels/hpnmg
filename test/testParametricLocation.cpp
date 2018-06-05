@@ -44,3 +44,33 @@ TEST(ParametricLocation, ConstructorCustomVectors) {
     ASSERT_EQ(parametricLocation.getDrift().at(0), 1);
 }
 
+TEST(ParametricLocation, EntryTime) {
+    Event event1(EventType::Immediate, vector<double>(2), 8);
+    ParametricLocation parametricLocation1(2, 2, 3, event1, vector<vector<vector<double>>>{{{3}, {7}}},
+                                          vector<vector<vector<double>>>{{{7}, {9}}});
+    parametricLocation1.setGeneralTransitionsFired({0,0});
+    ASSERT_EQ(parametricLocation1.getEarliestEntryTime(),8);
+    ASSERT_EQ(parametricLocation1.getLatestEntryTime(),8);
+
+    Event event2(EventType::Immediate, vector<double>{1,1}, 8);
+    ParametricLocation parametricLocation2(2, 2, 3, event2, vector<vector<vector<double>>>{{{3}, {7}}},
+                                          vector<vector<vector<double>>>{{{7}, {9}}});
+    parametricLocation2.setGeneralTransitionsFired({0,0});
+    ASSERT_EQ(parametricLocation2.getEarliestEntryTime(),18);
+    ASSERT_EQ(parametricLocation2.getLatestEntryTime(),24);
+
+    Event event3(EventType::Immediate, vector<double>{1,5}, 8);
+    ParametricLocation parametricLocation3(2, 2, 3, event3, vector<vector<vector<double>>>{{{3}, {7}}},
+                                           vector<vector<vector<double>>>{{{7}, {9}}});
+    parametricLocation3.setGeneralTransitionsFired({0,0});
+    ASSERT_EQ(parametricLocation3.getEarliestEntryTime(),46); // 8 + 3 + 35
+    ASSERT_EQ(parametricLocation3.getLatestEntryTime(),60); // 8 + 7 + 45
+
+    Event event4(EventType::Immediate, vector<double>{3,-1}, 8);
+    ParametricLocation parametricLocation4(2, 2, 3, event4, vector<vector<vector<double>>>{{{3}, {7}}},
+                                           vector<vector<vector<double>>>{{{7}, {9}}});
+    parametricLocation4.setGeneralTransitionsFired({0,0});
+    ASSERT_EQ(parametricLocation4.getEarliestEntryTime(),8); // 8 + 9 - 9
+    ASSERT_EQ(parametricLocation4.getLatestEntryTime(),22); // 8 + 21 - 7
+}
+
