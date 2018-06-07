@@ -1,6 +1,7 @@
 #pragma once
 
-//#include "ParametricLocationTree.h"
+#include "ParametricLocationTree.h"
+#include "datastructures/ParametricLocation.h"
 #include <math.h>
 #include <iostream>
 extern "C"{
@@ -11,11 +12,8 @@ extern "C"{
   using boost::math::normal; // typedef provides default type is double.
 
 #include <iostream>
-  using std::cout; using std::endl; using std::left; using std::showpoint; using std::noshowpoint;
 #include <iomanip>
-  using std::setw; using std::setprecision;
 #include <limits>
-  using std::numeric_limits;
 
 
 namespace hpnmg {
@@ -25,17 +23,22 @@ namespace hpnmg {
 
     private:
 
-    	static double normalPdf(double x, void* data);
+       	static const int n = 8; // 128; //1024;
+
+   // 	static double normalPdf(double x, void* data);
+
 
     	static double f(double x, void* data);
 
-    	static const int n = 8; // 128; //1024;
+
+       	double calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree);
 
     public:
 
     	ProbabilityCalculator();
 
-        double getProbability();
+        double getProbability(const vector<ParametricLocationTree::Node> &nodes, const ParametricLocationTree &tree);
+
 
     };
 }
