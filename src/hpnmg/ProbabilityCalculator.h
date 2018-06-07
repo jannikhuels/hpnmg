@@ -23,13 +23,9 @@ namespace hpnmg {
 
     private:
 
-       	static const int n = 8; // 128; //1024;
-
-   // 	static double normalPdf(double x, void* data);
-
+       	static const int n = 8;
 
     	static double f(double x, void* data);
-
 
        	double calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree);
 
