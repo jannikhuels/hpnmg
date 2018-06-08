@@ -123,5 +123,6 @@ namespace hpnmg {
 
     void ParametricLocation::setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed) {
         ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
+        this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
     }
 }

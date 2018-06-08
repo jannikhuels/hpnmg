@@ -40,7 +40,9 @@
         "ios": "cpp",
         "functional": "cpp",
         "complex": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "ostream": "cpp",
+        "chrono": "cpp"
     },
     "C_Cpp.intelliSenseEngine": "Default",
     "C_Cpp.intelliSenseEngineFallback": "Enabled",

@@ -115,6 +115,12 @@ namespace hpnmg {
         return intersectionPair.second;
     }
 
+    Halfspace<double> STDiagram::createHalfspaceForTime(const double &time, int dimension) {
+        vector_t<double> direction = vector_t<double>::Zero(dimension);
+        direction[dimension-1] = 1;
+        return Halfspace<double>(direction, time);
+    }
+
     std::pair<matrix_t<double>,vector_t<double>> STDiagram::createHalfspacesFromTimeInterval(const std::pair<double, double> &interval, int dimension) { 
         if (interval.first < 0) {
             throw IllegalArgumentException("interval", "Start time < 0.");
@@ -192,6 +198,7 @@ namespace hpnmg {
         return hsp;
     }
 
+    //TODO Check of jannik0general example
     Region STDiagram::intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate) {
         Region intersectRegion(baseRegion);
         bool createVerticalHalfspace = false;
@@ -199,6 +206,7 @@ namespace hpnmg {
         double currentLevel = continuousDependencies[continuousDependencies.size()-1];
         continuousDependencies.pop_back();
 
+        //TODO Check with patricia how these dependencies are created.
         continuousDependencies = STDiagram::makeValidDependencies(continuousDependencies, baseRegion.dimension());
 
         double divisor = drift;
@@ -256,6 +264,42 @@ namespace hpnmg {
         return boundaries;
     }
 
+    std::vector<Intervals> duplicate(std::vector<Intervals> intervals, carl::Interval<double> res1, carl::Interval<double> res2) {
+        std::vector<Intervals> result;
+        std::vector<Intervals> part1 = intervals;
+        std::vector<Intervals> part2 = intervals;
+        part1[0].push_back(res1);
+        part2[0].push_back(res2);
+        for(int i=1; i<intervals.size();i++) { 
+            part1[i].push_back(res1); 
+            part2[i].push_back(res2);         
+        }
+        result.insert(result.end(), part1.begin(), part1.end());
+        result.insert(result.end(), part2.begin(), part2.end());     
+        return result;
+    }
+
+    //TODO Try to solve that inside union
+    std::vector<Intervals> STDiagram::removeEmptyIntervals(std::vector<Intervals> intervals) 
+    {
+        std::vector<Intervals> res;
+        for(Intervals I : intervals) {
+            bool hasEmpty = false;
+            for (int i = 0; i<I.size();i++) {
+                if (I[i].isEmpty() || I[i].isZero()) {
+                    hasEmpty = true;
+                    break;
+                } 
+            }
+            if (!hasEmpty) {
+                res.push_back(I);
+            }
+        } 
+        return res;
+    }
+    
+    //TODO put intervals into a single class
+    //TODO Check if the empty interval is needed
     std::vector<Intervals> STDiagram::differenceOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2) 
     {
         std::vector<Intervals> result;
@@ -269,9 +313,7 @@ namespace hpnmg {
                 }
 
                 double size = l.size();
-                Intervals res1;
-                Intervals res2;
-                bool hasEmptyInterval = false;
+                std::vector<Intervals> res(1); 
                 for (int i = 0; i < size; i++) {
                     carl::Interval<double> left;
                     carl::Interval<double> right;
@@ -280,25 +322,19 @@ namespace hpnmg {
                         r[i] = carl::Interval<double>(r[i].lower(), r[i].upper()+1);
                     }
                     bool twofold = l[i].difference(r[i], left, right);
-                    if (twofold && !right.isEmpty()) {
-                        res2.push_back(right);
-                    }
-                    if (!left.isEmpty()) {
-                        res1.push_back(left);
-                        continue;
-                    }          
-                    hasEmptyInterval = true;          
+                    if (twofold) {
+                        res = duplicate(res, left, right);                 
+                    } else {
+                        res[0].push_back(left);
+                        for (int i = 1; i < res.size();i++) {
+                            res[i].push_back(left);
+                        }
+                    }                   
                 }
-                if (!hasEmptyInterval) {
-                    if (res1.size()>0) {
-                        result.push_back(res1);
-                    }                
-                    if (res2.size()>0) {
-                        result.push_back(res2);
-                    }
-                }
+                result.insert(result.end(), res.begin(), res.end());
             }             
-        }          
+        } 
+        result = STDiagram::removeEmptyIntervals(result);         
         return result;
     }
 
@@ -314,25 +350,18 @@ namespace hpnmg {
                     //TODO This is an error
                 }
 
-                bool hasEmptyInterval = false;
                 double size = l.size();
                 Intervals res;
                 for (int i = 0; i < size; i++) {
                     carl::Interval<double> intersection;
 
-                    intersection = l[i].intersect(r[i]);
-                    
-                    if (!intersection.isEmpty()) {
-                        res.push_back(intersection);
-                        continue;
-                    }   
-                    hasEmptyInterval = true;                 
+                    intersection = l[i].intersect(r[i]);                    
+                    res.push_back(intersection);                
                 }
-                if (!hasEmptyInterval && res.size()>0) {
-                    result.push_back(res);
-                }                
+                result.push_back(res);              
             } 
-        }    
+        }  
+        result = STDiagram::removeEmptyIntervals(result);
         return result;
     }
 
@@ -352,39 +381,42 @@ namespace hpnmg {
                 }
 
                 double size = l.size();
-                Intervals res1;
-                Intervals res2;
+                std::vector<Intervals> res(1);
                 for (int i = 0; i < size; i++) {
                     carl::Interval<double> left;
                     carl::Interval<double> right;
-                    cout << r[i] << endl;
                     bool twofold = l[i].unite(r[i], left, right);
-                    if (twofold && !right.isEmpty()) {
-                        res2.push_back(right);
-                    }
-                    if (!left.isEmpty()) {
-                        res1.push_back(left);
-                    }                    
+                    if (twofold) {
+                        res = duplicate(res, left, right);
+                    } else {
+                        res[0].push_back(left);
+                        for (int i = 1; i < res.size();i++) {
+                            res[i].push_back(left);
+                        }
+                    }                   
                 }
-                if (res1.size()>0) {
-                    result.push_back(res1);
-                }                
-                if (res2.size()>0) {
-                    result.push_back(res2);
-                }
+                result.insert(result.end(), res.begin(), res.end());
             } 
-        }    
+        }  
+        result = STDiagram::removeEmptyIntervals(result);  
         return result;
     }
 
-    std::vector<Region> STDiagram::boundRegionByIntervals(Region r, std::vector<Intervals> intervals, double time) 
+    std::vector<Region> STDiagram::boundRegionByIntervals(Region reg, int maxTime, std::vector<Intervals> intervals, Halfspace<double> timeHsp) 
     {   
         std::vector<Region> regions;
-        for (Intervals i : intervals) {
-            i.push_back(carl::Interval<double>((double)0,time));
+        Region r = reg;
+        for (Intervals i : intervals) {        
+            i.push_back(carl::Interval<double>((double)0,(double)maxTime));
             Box<double> box(i);
             Region boxRegion(box.constraints());
-            regions.push_back(r.intersect(boxRegion));
+            for (Halfspace<double> h: box.constraints()) {
+                r.insert(h);
+            }
+            //Region boxRegion(box.constraints());
+            //r.intersect(boxRegion);
+            r.insert(timeHsp);
+            regions.push_back(r);
         }
         return regions;
     }
