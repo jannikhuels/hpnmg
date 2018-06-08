@@ -47,6 +47,14 @@ namespace hpnmg {
 
         int dimension;
 
+        vector<pair<string, map<string, float>>> distributions;
+    public:
+        const vector<pair<string, map<string, float>>> &getDistributions() const;
+
+        void setDistributions(const vector<pair<string, map<string, float>>> &distributions);
+
+    private:
+
         Region baseRegion;
 
         void recursivelySetRegions(Node &startNode, Region &baseRegion);
