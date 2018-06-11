@@ -18,15 +18,8 @@ namespace hpnmg {
 
     }
 
-<<<<<<< HEAD
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces, int numberOfGeneralTransitions, const Event &sourceEvent) : ParametricLocation(numberOfDiscretePlaces, numberOfContinuousPlaces, numberOfGeneralTransitions) {
         setSourceEvent(sourceEvent);
-=======
-    ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces,
-                                           int numberOfGeneralTransitions, const Event &sourceEvent)
-            : ParametricLocation(numberOfDiscretePlaces, numberOfContinuousPlaces, numberOfGeneralTransitions) {
-        setSourceEvent(sourceEvent);;
->>>>>>> 60edd4273e9fe169d3be5e2a6e1fe0463114bec6
     }
 
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces,
