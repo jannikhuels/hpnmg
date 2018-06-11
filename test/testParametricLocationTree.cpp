@@ -30,15 +30,11 @@ protected:
 
 class ParametricLocationTreeTest : public ::testing::Test {
 protected:
-    ParametricLocationTree parametricLocationTree;
-
-    ParametricLocationTreeTest() : parametricLocationTree(ParametricLocation(1,1,1, Event(1)), MAX_TIME) {
-
-    }
+    shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree;
 
     virtual void SetUp() {
 
-        ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
+        /*ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
         ParametricLocation childNode = rootNode.getParametricLocation();
 
         ParametricLocationTree::Node detNode = parametricLocationTree.setChildNode(rootNode,
@@ -56,7 +52,13 @@ protected:
         ParametricLocationTree::Node fullNode = parametricLocationTree.setChildNode(detNode, ParametricLocation(1,1,1,
                                                                    Event(EventType::Timed, vector<double>{0}, 7.5)));
         parametricLocationTree.setChildNode(fullNode, ParametricLocation(1,1,1,Event(EventType::Timed,
-            vector<double>{1}, 0), vector<vector<vector<double>>> {{{7.5}}}, vector<vector<vector<double>>> {{{10}}}));
+            vector<double>{1}, 0), vector<vector<vector<double>>> {{{7.5}}}, vector<vector<vector<double>>> {{{10}}}));*/
+        ReadHybridPetrinet reader;
+        //TODO Check impl. of reader. Create singletons!
+        shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
+        ParseHybridPetrinet parser;
+        parametricLocationTree = parser.parseHybridPetrinet(hybridPetrinet, 20);
+        parametricLocationTree->updateRegions();
     }
 
     virtual void TearDown() {
@@ -84,7 +86,7 @@ TEST_F(ParametricLocationTreeTest, InvalidParentNode)
     try {
         ParametricLocation location(1,1,1);
         ParametricLocationTree::Node invalidNode(-1,location);
-        parametricLocationTree.getChildNodes(invalidNode);
+        parametricLocationTree->getChildNodes(invalidNode);
         FAIL() << "This Location is not initialized and an exception should be thrown.";
     } catch(InvalidParentNodeException e) {
         SUCCEED();
@@ -93,15 +95,15 @@ TEST_F(ParametricLocationTreeTest, InvalidParentNode)
 
 TEST_F(ParametricLocationTreeTest, ChildNode)
 {
-    ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
-    vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree.getChildNodes(rootNode);
+    ParametricLocationTree::Node rootNode = parametricLocationTree->getRootNode();
+    vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree->getChildNodes(rootNode);
     vector<ParametricLocationTree::Node> stocChildNodes;
     vector<ParametricLocationTree::Node> detChildNodes;
     for (ParametricLocationTree::Node node: rootChildNodes) {
         if (node.getParametricLocation().getSourceEvent().getEventType() == EventType::General) {
-            stocChildNodes = parametricLocationTree.getChildNodes(node);
+            stocChildNodes = parametricLocationTree->getChildNodes(node);
         } else {
-            detChildNodes = parametricLocationTree.getChildNodes(node);
+            detChildNodes = parametricLocationTree->getChildNodes(node);
         }
     }
 
@@ -112,8 +114,8 @@ TEST_F(ParametricLocationTreeTest, ChildNode)
 
 TEST_F(ParametricLocationTreeTest, RegionTest)
 {
-    parametricLocationTree.updateRegions();
-    ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
+    parametricLocationTree->updateRegions();
+    ParametricLocationTree::Node rootNode = parametricLocationTree->getRootNode();
     ASSERT_EQ(rootNode.getRegion().dimension(), 2);
 
     //parametricLocationTree.print(true);
@@ -126,7 +128,7 @@ TEST_F(ParametricLocationTreeTest, RegionTest)
     point << 1,2;
     ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), false);
 
-    vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree.getChildNodes(rootNode);
+    vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree->getChildNodes(rootNode);
     vector<ParametricLocationTree::Node> stocChildNodes;
     for (ParametricLocationTree::Node node: rootChildNodes) {
         if (node.getParametricLocation().getSourceEvent().getEventType() == EventType::General) {
@@ -169,11 +171,11 @@ TEST_F(ParametricLocationEmptyTreeTest, IncorrectChildNode)
 }
 
 TEST_F(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
-    parametricLocationTree.updateRegions();
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(3).size(), 3);
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(6).size(), 4);
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(9).size(), 5);
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(11).size(), 0);
+    parametricLocationTree->updateRegions();
+    ASSERT_EQ(parametricLocationTree->getCandidateLocationsForTime(3).size(), 3);
+    ASSERT_EQ(parametricLocationTree->getCandidateLocationsForTime(6).size(), 4);
+    ASSERT_EQ(parametricLocationTree->getCandidateLocationsForTime(9).size(), 5);
+    //ASSERT_EQ(parametricLocationTree->getCandidateLocationsForTime(21).size(), 0);
 }
 
 TEST(ParametricLocationTreeXML, CreateRegions) {
