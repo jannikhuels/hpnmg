@@ -34,6 +34,14 @@ namespace hpnmg {
 
         parametriclocationTree = make_shared<ParametricLocationTree>(rootLocation, maxTime);
 
+        // Add distributions to plt
+        vector<pair<string, map<string, float>>> distributions(generalTransitionIDs.size());
+        for(int i=0; i<generalTransitionIDs.size(); ++i) {
+            shared_ptr<GeneralTransition> transition = hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]];
+            distributions[i] = make_pair(transition->getCdf(), transition->getParameter());
+        }
+        parametriclocationTree->setDistributions(distributions);
+
         locationQueue.push_back(parametriclocationTree->getRootNode());
 
         while (!locationQueue.empty()) {

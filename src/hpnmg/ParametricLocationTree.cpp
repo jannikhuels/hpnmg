@@ -248,4 +248,13 @@ namespace hpnmg {
         recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
         return locations;
     }
+
+    const vector<pair<string, map<string, float>>> &hpnmg::ParametricLocationTree::getDistributions() const {
+        return distributions;
+    }
+
+    void
+    hpnmg::ParametricLocationTree::setDistributions(const vector<pair<string, map<string, float>>> &distributions) {
+        ParametricLocationTree::distributions = distributions;
+    }
 }
