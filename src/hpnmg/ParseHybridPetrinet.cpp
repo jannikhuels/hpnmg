@@ -91,6 +91,14 @@ namespace hpnmg {
         rootLocation.setGeneralTransitionsFired({});
         rootLocation.setConflictProbability(1);
 
+        // add bool vector of enabled general transitions
+        vector<bool> gtEnabled(generalTransitionIDs.size());
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
+            shared_ptr<GeneralTransition> gt = hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]];
+            gtEnabled[i] = transitionIsEnabled(rootDiscreteMarking, rootContinuousMarking, gt, hybridPetrinet);
+        }
+        rootLocation.setGeneralTransitionsEnabled(gtEnabled);
+
         return rootLocation;
     }
 
@@ -593,6 +601,14 @@ namespace hpnmg {
         newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(probability);
 
+        // add bool vector of enabled general transitions
+        vector<bool> gtEnabled(generalTransitionIDs.size());
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
+            shared_ptr<GeneralTransition> gt = hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]];
+            gtEnabled[i] = transitionIsEnabled(markings, continuousMarking, gt, hybridPetrinet);
+        }
+        newLocation.setGeneralTransitionsEnabled(gtEnabled);
+
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
@@ -729,6 +745,14 @@ namespace hpnmg {
         newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(probability);
 
+        // add bool vector of enabled general transitions
+        vector<bool> gtEnabled(generalTransitionIDs.size());
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
+            shared_ptr<GeneralTransition> gt = hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]];
+            gtEnabled[i] = transitionIsEnabled(discreteMarking, continuousMarking, gt, hybridPetrinet);
+        }
+        newLocation.setGeneralTransitionsEnabled(gtEnabled);
+
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
@@ -839,6 +863,14 @@ namespace hpnmg {
         newLocation.setGeneralClock(generalClocks);
         newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(1);
+
+        // add bool vector of enabled general transitions
+        vector<bool> gtEnabled(generalTransitionIDs.size());
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
+            shared_ptr<GeneralTransition> gt = hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]];
+            gtEnabled[i] = transitionIsEnabled(discreteMarking, continuousMarking, gt, hybridPetrinet);
+        }
+        newLocation.setGeneralTransitionsEnabled(gtEnabled);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
@@ -1003,6 +1035,14 @@ namespace hpnmg {
         newLocation.setGeneralClock(generalClocks);
         newLocation.setGeneralTransitionsFired(generalTransitionsFired);
         newLocation.setConflictProbability(1);
+
+        // add bool vector of enabled general transitions
+        vector<bool> gtEnabled(generalTransitionIDs.size());
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
+            shared_ptr<GeneralTransition> gt = hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]];
+            gtEnabled[i] = transitionIsEnabled(discreteMarking, continuousMarking, gt, hybridPetrinet);
+        }
+        newLocation.setGeneralTransitionsEnabled(gtEnabled);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
