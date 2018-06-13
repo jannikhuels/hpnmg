@@ -130,4 +130,12 @@ namespace hpnmg {
         ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
         this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
     }
+
+    const vector<bool> &ParametricLocation::getGeneralTransitionsEnabled() const {
+        return generalTransitionsEnabled;
+    }
+
+    void ParametricLocation::setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled) {
+        ParametricLocation::generalTransitionsEnabled = generalTransitionsEnabled;
+    }
 }
