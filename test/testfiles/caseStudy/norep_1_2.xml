@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <continuousPlace id="pc1" capacity="20" infiniteCapacity="0" level="0"/>
+        <discretePlace id="pout1" marking="1"/>
+        <discretePlace id="pout2" marking="0"/>
+        <discretePlace id="pin1" marking="2"/>
+    </places>
+    <transitions>
+        <continuousTransition id="tfout0" rate="0.5"/>
+        <continuousTransition id="tfout1" rate="0.5"/>
+        <deterministicTransition id="tdout1" discTime="12.0" priority="1" weight="1.0E0"/>
+        <deterministicTransition id="tdout2" discTime="12.0" priority="1" weight="1.0E0"/>
+        <generalTransition id="tg1" cdf="normal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <continuousTransition id="tfin1" rate="1"/>
+        <continuousTransition id="tfin2" rate="1"/>
+    </transitions>
+    <arcs>
+        <continuousArc id="acout0" fromNode="pc1" priority="1" share="1.0E0" toNode="tfout0" weight="1.0E0"/>
+        <continuousArc id="acout1" fromNode="pc1" priority="1" share="1.0E0" toNode="tfout1" weight="1.0E0"/>
+        <discreteArc id="adout0" fromNode="pout1" toNode="tdout1" weight="1.0E0"/>
+        <discreteArc id="adout1" fromNode="tdout1" toNode="pout2" weight="1.0E0"/>
+        <discreteArc id="adout2" fromNode="pout2" toNode="tdout2" weight="1.0E0"/>
+        <discreteArc id="adout3" fromNode="tdout2" toNode="pout1" weight="1.0E0"/>
+        <guardArc id="gout" fromNode="pout1" isInhibitor="0" toNode="tfout1" weight="1.0E0"/>
+        <discreteArc id="adin1" fromNode="pin1" toNode="tg1" weight="1.0E0"/>
+        <continuousArc id="acin1" fromNode="tfin1" priority="1" share="1.0E0" toNode="pc1" weight="1.0E0"/>
+        <guardArc id="gin1" fromNode="pin1" isInhibitor="0" toNode="tfin1" weight="1.0E0"/>
+        <continuousArc id="acin2" fromNode="tfin2" priority="1" share="1.0E0" toNode="pc1" weight="1.0E0"/>
+        <guardArc id="gin2" fromNode="pin1" isInhibitor="0" toNode="tfin2" weight="1.0E0"/>
+    </arcs>
+</HPnG>

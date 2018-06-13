@@ -36,7 +36,7 @@ namespace hpnmg {
 
         // Add distributions to plt
         vector<pair<string, map<string, float>>> distributions(generalTransitionIDs.size());
-        for(int i=0; i<generalTransitionIDs.size(); ++i) {
+        for (int i = 0; i < generalTransitionIDs.size(); ++i) {
             shared_ptr<GeneralTransition> transition = hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]];
             distributions[i] = make_pair(transition->getCdf(), transition->getParameter());
         }
@@ -232,8 +232,15 @@ namespace hpnmg {
         }
 
         // step 3: get all minimal time-delta and save minimal maximum
-        // 3.1 get minimal maximumTime
-        double minimalMaximum = maxTime;
+        // 3.1 get minimal maximumTime (maxTime - minimal location time)
+        vector<double> timeGenDep = location.getSourceEvent().getGeneralDependencies();
+        vector<double> locTime(timeGenDep.size() + 1);
+        locTime[0] = location.getSourceEvent().getTime();
+        for (int i = 1; i < locTime.size(); ++i)
+            locTime[i] = timeGenDep[i - 1];
+        double minimalMaximum = maxTime -
+                                getBoundedTime(generalTransitionsFired, location.getGeneralIntervalBoundLeft(),
+                                               location.getGeneralIntervalBoundRight(), locTime);
         for (vector<double> &timeDelta : timeDeltas) {
             double maximalTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundRight,
                                                 generalIntervalBoundLeft, timeDelta);
@@ -510,7 +517,7 @@ namespace hpnmg {
 
             // get boundaries of last value
             int transitionPos = generalTransitionsFired[time.size() - 1];
-            int firingTime = counter[transitionPos];
+            int firingTime = counter[transitionPos] - 1;
             vector<double> boundaries = generalBounds[transitionPos][firingTime];
             vector<double> oppositeBoundaries = oppositeGeneralBounds[transitionPos][firingTime];
             counter[transitionPos] -= 1;
@@ -692,8 +699,8 @@ namespace hpnmg {
 
         double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta[0];
         vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
-        for (int i=1; i<timeDelta.size(); ++i)
-            generalDependecies[i-1] += timeDelta[i];
+        for (int i = 1; i < timeDelta.size(); ++i)
+            generalDependecies[i - 1] += timeDelta[i];
         Event event = Event(EventType::Timed, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
@@ -704,7 +711,7 @@ namespace hpnmg {
         for (int i = 0; i < deterministicClocks.size(); ++i) {
             if (deterministicTransitionIDs[i] == transition->id) {
                 vector<double> initVector{0.0};
-                for (int j=0; j<generalTransitionsFired.size(); ++j) {
+                for (int j = 0; j < generalTransitionsFired.size(); ++j) {
                     initVector.push_back(0.0);
                 }
                 deterministicClocks[i] = initVector;
@@ -819,8 +826,8 @@ namespace hpnmg {
 
         double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta[0];
         vector<double> generalDependecies = parentNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
-        for (int i=1; i<timeDelta.size(); ++i)
-            generalDependecies[i-1] += timeDelta[i];
+        for (int i = 1; i < timeDelta.size(); ++i)
+            generalDependecies[i - 1] += timeDelta[i];
         Event event = Event(EventType::Continuous, generalDependecies, eventTime);
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
@@ -948,7 +955,8 @@ namespace hpnmg {
                 vector<vector<double>> currentBoundRight = generalIntervalBoundRight[i];
                 if (timeDelta != maxTimeVector) {
                     currentBoundRight[currentBoundRight.size() - 1] = generalClocks[i];
-                    for (int j = 0; j < currentBoundRight[currentBoundRight.size() - 1].size() && j < timeDelta.size(); ++j)
+                    for (int j = 0;
+                         j < currentBoundRight[currentBoundRight.size() - 1].size() && j < timeDelta.size(); ++j)
                         currentBoundRight[currentBoundRight.size() - 1][j] += timeDelta[j];
                 }
                 vector<double> vectorLeft = vector<double>(currentBoundLeft[currentBoundLeft.size() - 1].size() + 1);
@@ -1008,7 +1016,7 @@ namespace hpnmg {
         for (int i = 0; i < generalClocks.size(); ++i) {
             if (generalTransitionIDs[i] == transition->id) {
                 vector<double> initVector = {0.0};
-                for (int j=0; j<generalTransitionsFired.size() + 1; ++j)
+                for (int j = 0; j < generalTransitionsFired.size() + 1; ++j)
                     initVector.push_back(0.0);
                 generalClocks[i] = initVector;
                 continue;
@@ -1160,7 +1168,7 @@ namespace hpnmg {
                                         placesToCheck.push_back(
                                                 hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
                                         long plasePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
-                                                        placeToCheck->id) - continuousPlaceIDs.begin();
+                                                             placeToCheck->id) - continuousPlaceIDs.begin();
                                         inputDrift[plasePos] -= rateDiff;
                                         drift[plasePos] -= rateDiff;
                                     }
@@ -1171,7 +1179,7 @@ namespace hpnmg {
                                         placesToCheck.push_back(
                                                 hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
                                         long plasePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
-                                                        placeToCheck->id) - continuousPlaceIDs.begin();
+                                                             placeToCheck->id) - continuousPlaceIDs.begin();
                                         outputDrift[plasePos] -= rateDiff;
                                         drift[plasePos] += rateDiff;
                                     }
@@ -1237,7 +1245,7 @@ namespace hpnmg {
                                         placesToCheck.push_back(
                                                 hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
                                         long plasePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
-                                                        placeToCheck->id) - continuousPlaceIDs.begin();
+                                                             placeToCheck->id) - continuousPlaceIDs.begin();
                                         inputDrift[plasePos] -= rateDiff;
                                         drift[plasePos] -= rateDiff;
                                     }
@@ -1248,7 +1256,7 @@ namespace hpnmg {
                                         placesToCheck.push_back(
                                                 hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
                                         long plasePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
-                                                        placeToCheck->id) - continuousPlaceIDs.begin();
+                                                             placeToCheck->id) - continuousPlaceIDs.begin();
                                         outputDrift[plasePos] -= rateDiff;
                                         drift[plasePos] += rateDiff;
                                     }
