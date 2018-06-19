@@ -8,9 +8,8 @@ extern "C"{
 #include "integration/gauss_legendre.h"
 }
 
-#include <boost/math/distributions/normal.hpp> // for normal_distribution
-  using boost::math::normal; // typedef provides default type is double.
-
+#include <boost/math/distributions.hpp> // for normal_distribution
+#include <string>
 #include <iostream>
 #include <iomanip>
 #include <limits>
@@ -27,13 +26,20 @@ namespace hpnmg {
 
     	static double f(double x, void* data);
 
-       	double calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree);
+       	static double getDensity(pair<string, map<string, float>> distribution, double value);
+
+		static double checkInfinity(double value);
+
+		static double correctValue(double value);
+
+       	double calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint);
+
 
     public:
 
     	ProbabilityCalculator();
 
-        double getProbability(const vector<ParametricLocationTree::Node> &nodes, const ParametricLocationTree &tree);
+        double getProbability(const vector<ParametricLocationTree::Node> &nodes, const ParametricLocationTree &tree, double timepoint);
 
 
     };
