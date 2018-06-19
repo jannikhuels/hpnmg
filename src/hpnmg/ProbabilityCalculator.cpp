@@ -246,8 +246,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 		if (all.integrals.size() > 0){
-			double upper = all.lowerBounds[0][0];
-			double lower = all.upperBounds[0][0];
+			double lower = all.lowerBounds[0][0];
+			double upper = all.upperBounds[0][0];
 
             if (lower > 0.0 && isinf(lower))
                 result =  0.0;
