@@ -4,7 +4,10 @@
         <continuousPlace id="pc1" capacity="20" infiniteCapacity="0" level="0"/>
         <discretePlace id="pout1" marking="1"/>
         <discretePlace id="pout2" marking="0"/>
-        <discretePlace id="pin1" marking="2"/>
+        <discretePlace id="pin1" marking="1"/>
+        <discretePlace id="prep1" marking="0"/>
+        <discretePlace id="pin2" marking="1"/>
+        <discretePlace id="prep2" marking="0"/>
     </places>
     <transitions>
         <continuousTransition id="tfout0" rate="0.5"/>
@@ -15,7 +18,13 @@
             <parameter name="mu" value="5.0"/>
             <parameter name="sigma" value="3.0"/>
         </generalTransition>
+        <deterministicTransition id="trep1" discTime="5.0" priority="1" weight="1.0E0"/>
         <continuousTransition id="tfin1" rate="1"/>
+        <generalTransition id="tg2" cdf="normal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <deterministicTransition id="trep2" discTime="5.0" priority="1" weight="1.0E0"/>
         <continuousTransition id="tfin2" rate="1"/>
     </transitions>
     <arcs>
@@ -26,10 +35,17 @@
         <discreteArc id="adout2" fromNode="pout2" toNode="tdout2" weight="1.0E0"/>
         <discreteArc id="adout3" fromNode="tdout2" toNode="pout1" weight="1.0E0"/>
         <guardArc id="gout" fromNode="pout1" isInhibitor="0" toNode="tfout1" weight="1.0E0"/>
-        <discreteArc id="adin1" fromNode="pin1" toNode="tg1" weight="1.0E0"/>
         <continuousArc id="acin1" fromNode="tfin1" priority="1" share="1.0E0" toNode="pc1" weight="1.0E0"/>
         <guardArc id="gin1" fromNode="pin1" isInhibitor="0" toNode="tfin1" weight="1.0E0"/>
-        <continuousArc id="acin2" fromNode="tfin2" priority="1" share="1.0E0" toNode="pc1" weight="1.0E0"/>
-        <guardArc id="gin2" fromNode="pin1" isInhibitor="0" toNode="tfin2" weight="2.0E0"/>
+        <discreteArc id="adin1" fromNode="pin1" toNode="tg1" weight="1.0E0"/>
+        <discreteArc id="adin1_1" fromNode="tg1" toNode="prep1" weight="1.0E0"/>
+        <discreteArc id="adin1_2" fromNode="prep1" toNode="trep1" weight="1.0E0"/>
+        <discreteArc id="adin1_2" fromNode="trep1" toNode="pin1" weight="1.0E0"/>
+        <continuousArc id="acin2" fromNode="tfin2" priority="1" share="1.0E0" toNode="pc1" weight="2.0E0"/>
+        <guardArc id="gin2" fromNode="pin2" isInhibitor="0" toNode="tfin2" weight="1.0E0"/>
+        <discreteArc id="adin2" fromNode="pin2" toNode="tg2" weight="1.0E0"/>
+        <discreteArc id="adin2_1" fromNode="tg2" toNode="prep2" weight="1.0E0"/>
+        <discreteArc id="adin2_2" fromNode="prep2" toNode="trep2" weight="1.0E0"/>
+        <discreteArc id="adin2_2" fromNode="trep2" toNode="pin2" weight="1.0E0"/>
     </arcs>
 </HPnG>
