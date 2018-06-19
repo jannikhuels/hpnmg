@@ -4,7 +4,6 @@
 namespace hpnmg {
 
     ParametricLocationTree::Node::Node(NODE_ID id, const ParametricLocation &parametricLocation) : id(id), parametricLocation(parametricLocation) {
-        
     }
 
     NODE_ID ParametricLocationTree::Node::getNodeID() const {return id;}
@@ -13,6 +12,10 @@ namespace hpnmg {
 
     void ParametricLocationTree::Node::setRegion(const Region &region) {
         this->region = region;
+    }
+
+    void ParametricLocationTree::Node::setParametricLocation(ParametricLocation parametricLocation) {
+        this->parametricLocation = parametricLocation;
     }
 
     ParametricLocationTree::ParametricLocationTree(const ParametricLocation &rootLocation, int maxTime) : currentId(ROOT_NODE_ID), maxTime(maxTime), baseRegion(STDiagram::createBaseRegion(rootLocation.getDimension(), maxTime)) {
@@ -239,13 +242,50 @@ namespace hpnmg {
         }
     }
 
+    void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability) {
+
+        // nodeProbability is the probability to get here times the probability to be here
+        double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
+        ParametricLocation parametricLocation = startNode.getParametricLocation();
+        parametricLocation.setAccumulatedProbability(nodeProbability);
+        startNode.setParametricLocation(parametricLocation);
+
+        if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.second) {
+            // startNode's earliest entry time is before or equal the questioned time
+            // (if it isn't, no childnode can be valid as well!)
+
+            // now we want to check if all (!) possible childevents latest entry times are bigger than t.
+            const vector<Node> &childNodes = getChildNodes(startNode);
+
+            bool valid = true;
+
+            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+                double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
+                if (latestEntryTime < interval.first) {
+                    valid = false;
+                }
+            }
+
+            if(valid) {
+                candidates.push_back(startNode);
+            }
+
+            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+                recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval, nodeProbability);
+            }
+
+            // not even the earliest entry time is before (or equal) t, so the event happens after the questioned time. no childnode can be valid.
+        }
+    }
+
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTime(double time) {
         return getCandidateLocationsForTimeInterval(std::pair<double,double>{time,time});
     }
 
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTimeInterval(std::pair<double,double> interval) {
         vector<ParametricLocationTree::Node> locations;
-        recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
+        // recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
+        recursivelyCollectCandidateLocationsWithPLT(getRootNode(), locations, interval, 1.0);
         return locations;
     }
 

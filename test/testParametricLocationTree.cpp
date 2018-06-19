@@ -168,13 +168,13 @@ TEST_F(ParametricLocationEmptyTreeTest, IncorrectChildNode)
 
 }
 
-TEST_F(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
-    parametricLocationTree.updateRegions();
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(3).size(), 3);
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(6).size(), 4);
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(9).size(), 5);
-    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(11).size(), 0);
-}
+//TEST_F(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
+//    parametricLocationTree.updateRegions();
+//    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(3).size(), 3);
+//    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(6).size(), 4);
+//    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(9).size(), 5);
+//    ASSERT_EQ(parametricLocationTree.getCandidateLocationsForTime(11).size(), 0);
+//}
 
 TEST(ParametricLocationTreeXML, CreateRegions) {
     ReadHybridPetrinet reader;
@@ -183,7 +183,7 @@ TEST(ParametricLocationTreeXML, CreateRegions) {
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 20);
     plt->updateRegions();
-    
+
     plt->print(false);
 
     ParametricLocationTree::Node rootNode = plt->getRootNode();
@@ -198,4 +198,43 @@ TEST(ParametricLocationTreeXML, CreateRegions) {
     ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), false);
 
     //TODO Extended checks for example.xml
+}
+
+TEST(ParametricLocationTreeXML, CollectCandidatesWithPLT) {
+    ReadHybridPetrinet reader;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 20);
+    plt->updateRegions();
+    plt->print(false);
+
+    vector<ParametricLocationTree::Node> candidates;
+
+    candidates = plt->getCandidateLocationsForTime(3);
+    ASSERT_EQ(candidates.size(),3);
+    ASSERT_EQ(candidates[0].getNodeID(),1);
+    ASSERT_EQ(candidates[1].getNodeID(),2);
+    ASSERT_EQ(candidates[2].getNodeID(),5);
+
+    candidates = plt->getCandidateLocationsForTime(7.5);
+    ASSERT_EQ(candidates.size(),6);
+    ASSERT_EQ(candidates[0].getNodeID(),4);
+    ASSERT_EQ(candidates[1].getNodeID(),8);
+    ASSERT_EQ(candidates[2].getNodeID(),3);
+    ASSERT_EQ(candidates[3].getNodeID(),6);
+    ASSERT_EQ(candidates[4].getNodeID(),7);
+    ASSERT_EQ(candidates[5].getNodeID(),9);
+
+    candidates = plt->getCandidateLocationsForTimeInterval({3.0,7.5});
+    ASSERT_EQ(candidates.size(),9);
+
+    candidates = plt->getCandidateLocationsForTimeInterval({6.0,7.0});
+    ASSERT_EQ(candidates.size(),4);
+    ASSERT_EQ(candidates[0].getNodeID(),4);
+    ASSERT_EQ(candidates[1].getNodeID(),8);
+    ASSERT_EQ(candidates[2].getNodeID(),3);
+    ASSERT_EQ(candidates[3].getNodeID(),6);
+
+    ASSERT_EQ(candidates[0].getParametricLocation().getAccumulatedProbability(),1);
+
 }

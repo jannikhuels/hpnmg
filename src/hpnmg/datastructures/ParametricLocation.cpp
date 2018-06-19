@@ -14,8 +14,8 @@ namespace hpnmg {
                                                                              generalIntervalBoundRight(
                                                                                      numberOfGeneralTransitions),
                                                                              conflictProbability(1),
+                                                                             accumulatedProbability(1),
                                                                              dimension(numberOfGeneralTransitions + 1) {
-
     }
 
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces, int numberOfGeneralTransitions, const Event &sourceEvent) : ParametricLocation(numberOfDiscretePlaces, numberOfContinuousPlaces, numberOfGeneralTransitions) {
@@ -52,7 +52,9 @@ namespace hpnmg {
             deterministicClock(parametricLocation.deterministicClock), generalClock(parametricLocation.generalClock),
             generalIntervalBoundLeft(parametricLocation.generalIntervalBoundLeft),
             generalIntervalBoundRight(parametricLocation.generalIntervalBoundRight),
-            conflictProbability(parametricLocation.conflictProbability), dimension(parametricLocation.dimension),
+            conflictProbability(parametricLocation.conflictProbability),
+            accumulatedProbability(parametricLocation.accumulatedProbability),
+            dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
             generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
             sourceEvent(parametricLocation.sourceEvent) {
@@ -109,6 +111,11 @@ namespace hpnmg {
     void ParametricLocation::setConflictProbability(double conflictProbability) {
         this->conflictProbability = conflictProbability; }
 
+    double ParametricLocation::getAccumulatedProbability() const { return accumulatedProbability; }
+
+    void ParametricLocation::setAccumulatedProbability(double accumulatedProbability) {
+        this->accumulatedProbability = accumulatedProbability; }
+
     int ParametricLocation::getDimension() const { return dimension; }
 
     std::vector<int> ParametricLocation::getGeneralTransitionsFired() const { return generalTransitionFired; }
@@ -125,6 +132,7 @@ namespace hpnmg {
         this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
     }
 
+<<<<<<< HEAD
     const vector<bool> &ParametricLocation::getGeneralTransitionsEnabled() const {
         return generalTransitionsEnabled;
     }
@@ -132,4 +140,57 @@ namespace hpnmg {
     void ParametricLocation::setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled) {
         this->generalTransitionsEnabled = generalTransitionsEnabled;
     }
+=======
+    double ParametricLocation::getEarliestEntryTime() {
+        return getMinimumTime(generalIntervalBoundLeft, generalIntervalBoundRight);
+    }
+
+    double ParametricLocation::getLatestEntryTime() {
+        return getMinimumTime(generalIntervalBoundRight, generalIntervalBoundLeft);
+    }
+
+    /*
+     * To get the maximum time, swap lower and upper boundaries.
+     */
+    double ParametricLocation::getMinimumTime(vector<vector<vector<double>>> lowerBoundaries, vector<vector<vector<double>>> upperBoundaries) {
+        double time = sourceEvent.getTime();
+        vector<double> dependencies = sourceEvent.getGeneralDependencies();
+        vector<int> counter = vector<int>(dimension -1);
+        fill(counter.begin(), counter.end(),0);
+        for (int &firedTransition : generalTransitionFired)
+            counter[firedTransition] +=1;
+
+
+        while (dependencies.size() > 0) {
+            double value = dependencies.back();
+            dependencies.pop_back();
+
+            int transitionPosition = generalTransitionFired[dependencies.size()];
+            int firingTime = counter[transitionPosition];
+            vector<double> lowerBounds = lowerBoundaries[transitionPosition][firingTime - 1];
+            vector<double> upperBounds = upperBoundaries[transitionPosition][firingTime - 1];
+
+            counter[transitionPosition] -= 1;
+
+            if (value >= 0) {
+                time += value * lowerBounds[0];
+            } else {
+                time += value * upperBounds[0];
+            }
+
+            for (int i = 1; i <= dependencies.size(); ++i) {
+                if (value >= 0) {
+                    dependencies[i] += value * lowerBounds[i];
+                } else {
+                    dependencies[i] += value * upperBounds[i];
+                }
+            }
+        }
+
+        return time;
+    }
+
+
+
+>>>>>>> 6348ea84022cb8c5c3fe3d23be4fc3ac0fbfcc2f
 }

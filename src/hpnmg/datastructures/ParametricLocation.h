@@ -25,6 +25,7 @@ namespace hpnmg {
         // enabling status in this loc for all general transitions
         Event sourceEvent;
         double conflictProbability;
+        double accumulatedProbability;
         int dimension;
         std::vector<double> generalDependenciesNormed;
     public:
@@ -87,6 +88,10 @@ namespace hpnmg {
 
         void setConflictProbability(double conflictProbability);
 
+        double getAccumulatedProbability() const;
+
+        void setAccumulatedProbability(double accumulatedProbability);
+
         int getDimension() const;
 
         std::vector<int> getGeneralTransitionsFired() const;
@@ -94,5 +99,11 @@ namespace hpnmg {
         void setGeneralTransitionsFired(std::vector<int> generalTransitionsFired);
 
         int getId() const;
+
+        double getEarliestEntryTime();
+
+        double getLatestEntryTime();
+
+        double getMinimumTime(std::vector<std::vector<std::vector<double>>> lowerBoundaries, std::vector<std::vector<std::vector<double>>> upperBoundaries);
     };
 }
