@@ -18,15 +18,8 @@ namespace hpnmg {
 
     }
 
-<<<<<<< HEAD
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces, int numberOfGeneralTransitions, const Event &sourceEvent) : ParametricLocation(numberOfDiscretePlaces, numberOfContinuousPlaces, numberOfGeneralTransitions) {
         setSourceEvent(sourceEvent);
-=======
-    ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces,
-                                           int numberOfGeneralTransitions, const Event &sourceEvent)
-            : ParametricLocation(numberOfDiscretePlaces, numberOfContinuousPlaces, numberOfGeneralTransitions) {
-        setSourceEvent(sourceEvent);;
->>>>>>> 60edd4273e9fe169d3be5e2a6e1fe0463114bec6
     }
 
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces,
@@ -61,6 +54,7 @@ namespace hpnmg {
             generalIntervalBoundRight(parametricLocation.generalIntervalBoundRight),
             conflictProbability(parametricLocation.conflictProbability), dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
+            generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
             sourceEvent(parametricLocation.sourceEvent) {
 
     }
@@ -136,6 +130,6 @@ namespace hpnmg {
     }
 
     void ParametricLocation::setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled) {
-        ParametricLocation::generalTransitionsEnabled = generalTransitionsEnabled;
+        this->generalTransitionsEnabled = generalTransitionsEnabled;
     }
 }
