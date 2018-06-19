@@ -82,6 +82,8 @@ namespace hpnmg {
         rootLocation.setGeneralClock(generalClocks);
         rootLocation.setGeneralTransitionsFired({});
         rootLocation.setConflictProbability(1);
+        rootLocation.setAccumulatedProbability(1.0);
+
 
         return rootLocation;
     }
@@ -584,6 +586,7 @@ namespace hpnmg {
         newLocation.setGeneralClock(parentNode.getParametricLocation().getGeneralClock());
         newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(probability);
+        newLocation.setAccumulatedProbability(1);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
@@ -720,6 +723,7 @@ namespace hpnmg {
         newLocation.setGeneralClock(generalClocks);
         newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(probability);
+        newLocation.setAccumulatedProbability(1);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
@@ -831,6 +835,7 @@ namespace hpnmg {
         newLocation.setGeneralClock(generalClocks);
         newLocation.setGeneralTransitionsFired(parentNode.getParametricLocation().getGeneralTransitionsFired());
         newLocation.setConflictProbability(1);
+        newLocation.setAccumulatedProbability(1);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
@@ -995,6 +1000,7 @@ namespace hpnmg {
         newLocation.setGeneralClock(generalClocks);
         newLocation.setGeneralTransitionsFired(generalTransitionsFired);
         newLocation.setConflictProbability(1);
+        newLocation.setAccumulatedProbability(1);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }

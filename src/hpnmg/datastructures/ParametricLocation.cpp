@@ -14,14 +14,14 @@ namespace hpnmg {
                                                                              generalIntervalBoundRight(
                                                                                      numberOfGeneralTransitions),
                                                                              conflictProbability(1),
+                                                                             accumulatedProbability(1),
                                                                              dimension(numberOfGeneralTransitions + 1) {
-
     }
 
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces,
                                            int numberOfGeneralTransitions, const Event &sourceEvent)
             : ParametricLocation(numberOfDiscretePlaces, numberOfContinuousPlaces, numberOfGeneralTransitions) {
-        setSourceEvent(sourceEvent);;
+        setSourceEvent(sourceEvent);
     }
 
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces,
@@ -54,7 +54,9 @@ namespace hpnmg {
             deterministicClock(parametricLocation.deterministicClock), generalClock(parametricLocation.generalClock),
             generalIntervalBoundLeft(parametricLocation.generalIntervalBoundLeft),
             generalIntervalBoundRight(parametricLocation.generalIntervalBoundRight),
-            conflictProbability(parametricLocation.conflictProbability), dimension(parametricLocation.dimension),
+            conflictProbability(parametricLocation.conflictProbability),
+            accumulatedProbability(parametricLocation.accumulatedProbability),
+            dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
             sourceEvent(parametricLocation.sourceEvent) {
 

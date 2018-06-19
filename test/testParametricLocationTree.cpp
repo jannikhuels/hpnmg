@@ -183,7 +183,7 @@ TEST(ParametricLocationTreeXML, CreateRegions) {
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 20);
     plt->updateRegions();
-    
+
     plt->print(false);
 
     ParametricLocationTree::Node rootNode = plt->getRootNode();
@@ -206,7 +206,6 @@ TEST(ParametricLocationTreeXML, CollectCandidatesWithPLT) {
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 20);
     plt->updateRegions();
-
     plt->print(false);
 
     vector<ParametricLocationTree::Node> candidates;
