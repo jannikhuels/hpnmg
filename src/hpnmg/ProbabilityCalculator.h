@@ -24,7 +24,7 @@ namespace hpnmg {
 
        	static const int n = 8;
 
-    	static double f(double x, void* data);
+    	static double functionToIntegrate(double x, void* data);
 
        	static double getDensity(pair<string, map<string, float>> distribution, double value);
 
@@ -32,14 +32,14 @@ namespace hpnmg {
 
 		static double correctValue(double value);
 
-       	double calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint);
+       	double calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, map<int, vector<vector<double>>> &thresholds, bool &restricted, int nodeID, int parentID);
 
 
     public:
 
     	ProbabilityCalculator();
 
-        double getProbability(const vector<ParametricLocationTree::Node> &nodes, const ParametricLocationTree &tree, double timepoint);
+        double getProbability(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint);
 
 
     };

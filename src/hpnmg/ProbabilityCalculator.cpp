@@ -11,6 +11,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 	typedef struct {
 		double value;
 		pair<string, map<string, float>> distribution;
+		bool fired = false;
 	} singleDim;
 
 
@@ -20,23 +21,46 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 		vector<singleDim> integrals;
 		vector<vector<double>> lowerBounds;
 		vector<vector<double>> upperBounds;
+        vector<vector<double>> upperBoundThresholds;
+
 	} allDims;
 
 
 
 
-    double ProbabilityCalculator::getProbability(const vector<ParametricLocationTree::Node> &nodes, const ParametricLocationTree &tree, double timepoint){
+    double ProbabilityCalculator::getProbability(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint){
 
         double total = 0.0;
 
-        //TODO multiply with accumulated probability
-        for (int i = 0;i < nodes.size(); i++)
-            total +=  calculateIntervals(nodes[i].getParametricLocation(), tree, timepoint); // * nodes[i].getParametricLocation().getAccumulatedProbability();
+        map<int, int> parents;
+        map<int, vector<vector<double>>> thresholds;
+        bool restricted;
+        int parentID;
 
-        std::cout.precision(17);
-        cout << "nodes size = " << nodes.size() << endl;
-        cout << "total = " << total << ", n = " << n << endl;
-        std::cout.precision(6);
+        for (int i = 0;i < nodes.size(); i++) {
+            cout << "Node: " << nodes[i].getNodeID() << endl;
+
+            parentID = -1.0;
+            if (parents.count(nodes[i].getNodeID()) > 0)
+                parentID = parents.find(nodes[i].getNodeID())->second ;
+
+
+            total += calculateIntervals(nodes[i].getParametricLocation(), tree, timepoint, thresholds, restricted, nodes[i].getNodeID(), parentID) * nodes[i].getParametricLocation().getAccumulatedProbability();
+
+
+            if (restricted) {
+                vector<ParametricLocationTree::Node> children = tree.getChildNodes(nodes[i]);
+                for (int j = 0; j < children.size(); j++){
+                    parents.insert(pair<int, int>(children[j].getNodeID(), nodes[i].getNodeID()));
+                }
+            }
+        }
+
+        if (total > 0.999999999999999)
+            total = 1.0;
+        else if (total < 0.000000000000001)
+            total = 0.0;
+
 
         return total;
 
@@ -45,15 +69,14 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
-	double ProbabilityCalculator::calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint){
+	double ProbabilityCalculator::calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, map<int, vector<vector<double>>> &thresholds, bool &restricted, int nodeID, int parentID){
 
 
 		double result = 0.0;
-
+        restricted = false;
 
 		allDims all;
 		all.current_index = 0;
-		int dimension = location.getDimension();
 
 		const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
 
@@ -63,77 +86,104 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 		vector<int> counter = vector<int>(location.getDimension() - 1);
 		fill(counter.begin(), counter.end(),0);
 
+        vector<vector<double>> newThresholds;
+
 
 		//firings in the past
-		for (int i = 0; i < generalTransitionsFired.size(); i++){
+		// upper interval bound = min (upperBounds, threshold from parent)
+		for (int i = 0; i < generalTransitionsFired.size(); i++) {
 
-			int transitionID = generalTransitionsFired[i];
-			int firing = counter[transitionID];
+            int transitionID = generalTransitionsFired[i];
+            int firing = counter[transitionID];
 
-			singleDim s;
-			s.distribution = distributions[transitionID];
-			all.integrals.push_back(s);
+            singleDim s;
+            s.distribution = distributions[transitionID];
+            s.fired = true;
+            all.integrals.push_back(s);
 
-			all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[transitionID][firing]);
-			all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[transitionID][firing]);
+            all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[transitionID][firing]);
+            all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[transitionID][firing]);
 
 			counter[transitionID] +=1;
 
 		}
-
-
+        if (parentID >= 0) {
+            all.upperBoundThresholds = thresholds.find(parentID)->second;
+            newThresholds = all.upperBoundThresholds;
+        }
 
 
 		//firings in the future (particular next firing per general transition)
-		//lower interval bound = lowerBounds + t - entrance time, having lowerBounds and entrance time (from SourceEvent) as vectors dependent on random variables
+		//lower interval bound = max(lowerBounds + t - entrance time, lower) having lowerBounds and entrance time (from SourceEvent) as vectors dependent on random variables
 		for (int j = 0; j < counter.size(); j++){
 
-			int firing = counter[j];
+            int firing = counter[j];
 
-			singleDim s;
-			s.distribution = distributions[j];
-			all.integrals.push_back(s);
+		    bool enablingTimeGreaterZero = false;
+            for (int l = 0; l < location.getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
+                if (location.getGeneralIntervalBoundLeft()[j][firing][l] > 0)
+                    enablingTimeGreaterZero = true;
+            }
 
-			all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[j][firing]);
-			all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[j][firing]);
+            if (enabledTransitions[j] || enablingTimeGreaterZero) {
 
-			if (enabledTransitions[j] == true){
+                singleDim s;
+                s.distribution = distributions[j];
+                s.fired = false;
+                all.integrals.push_back(s);
 
-				all.lowerBounds[all.integrals.size() - 1][0] += location.getSourceEvent().getTime();
+                all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[j][firing]);
+                all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[j][firing]);
 
-				vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
-				for (int k = 1; k < dependencies.size(); k++)
-					all.lowerBounds[all.integrals.size() - 1][k] += dependencies[k];
+                if (enabledTransitions[j]) {
 
-			}
+                    all.lowerBounds[all.integrals.size() - 1][0] += (timepoint - location.getSourceEvent().getTime());
+
+                    vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
+                    for (int l = 0; l < dependencies.size(); l++)
+                        all.lowerBounds[all.integrals.size() - 1][l + 1] -= dependencies[l];
+
+                    restricted = true;
+                    if (newThresholds.size() > all.integrals.size() - 1)
+                        newThresholds[all.integrals.size() - 1] = all.lowerBounds[all.integrals.size() - 1];
+                    else
+                        newThresholds.push_back( all.lowerBounds[all.integrals.size() - 1]);
+                }
+            }
 		}
+
+        if (restricted || parentID >= 0)
+            thresholds.insert(pair<int, vector<vector<double>>>(nodeID, newThresholds));
 
 
 		if (all.integrals.size() > 0){
 			double lower = all.lowerBounds[0][0];
 			double upper = all.upperBounds[0][0];
 
-            if (lower > 0.0 && isinf(lower))
+            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0)
                 result =  0.0;
-            else if(upper <= 0.0)
-                result =  0.0;
-            else
-                result = correctValue(gauss_legendre(n, f, &all, lower, checkInfinity(upper)));
+            else {
+                if (all.integrals[0].fired && all.upperBoundThresholds.size() > 0 && upper > all.upperBoundThresholds[0][0])
+                    upper =  all.upperBoundThresholds[0][0];
+                result = correctValue(gauss_legendre(n, functionToIntegrate, &all, lower, checkInfinity(upper)));
+            }
+
+
 
 			cout << "integral result: " << result << endl;
 		}
 
 		return result;
-	}
+big	}
 
 
 
-    double ProbabilityCalculator::f(double x, void* data){
+    double ProbabilityCalculator::functionToIntegrate(double x, void* data){
 
-   	    singleDim current;
-           allDims all = *((allDims *)data);
+
+   	    allDims all = *((allDims *)data);
    	    all.integrals[all.current_index].value = correctValue(x);
-
+        singleDim current;
 
    		if (all.current_index  == (all.integrals.size() - 1)){
 
@@ -148,34 +198,69 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
    		} else {
 
-   			all.current_index++;
-   			int index_next = all.current_index;
+            all.current_index++;
+            int index_next = all.current_index;
 
-   			double lower = all.lowerBounds[index_next][0];
-   			double upper = all.upperBounds[index_next][0];
+            double lower = all.lowerBounds[index_next][0];
+            double upper = all.upperBounds[index_next][0];
 
-   			for (int i = 0; i < index_next; i++){
-   				current = all.integrals[i];
+            if (all.upperBoundThresholds.size() > 0) {
 
-   				double lowerFactor = all.lowerBounds[index_next][i+1];
-                   double upperFactor = all.upperBounds[index_next][i+1];
+                double upperThreshold = all.upperBoundThresholds[index_next][0];
 
-   				if (!isnan(lowerFactor))
-                       lower += (correctValue(lowerFactor) * correctValue(current.value));
+                for (int i = 0; i < index_next; i++) {
+                    current = all.integrals[i];
 
-                   if (!isnan(upperFactor))
-   				    upper += (correctValue(upperFactor) * correctValue(current.value));
+                    double lowerFactor = 0.0;
+                    double upperFactor = 0.0;
+                    double upperThresholdFactor = 0.0;
+                    if (all.lowerBounds[index_next].size() > i + 1)
+                        lowerFactor = all.lowerBounds[index_next][i + 1];
+                    if (all.lowerBounds[index_next].size() > i + 1)
+                        upperFactor = all.upperBounds[index_next][i + 1];
+                    if (all.upperBoundThresholds[index_next].size() > i + 1)
+                        upperThresholdFactor = all.upperBoundThresholds[index_next][i + 1];
 
-   			}
+                    if (!isnan(lowerFactor) && lowerFactor != 0.0)
+                        lower += (correctValue(lowerFactor) * correctValue(current.value));
 
+                    if (!isnan(upperFactor) && upperFactor != 0.0)
+                        upper += (correctValue(upperFactor) * correctValue(current.value));
 
-               if (lower > 0.0 && isinf(lower))
-                   return 0.0;
+                    if (!isnan(upperThresholdFactor) && upperThresholdFactor != 0.0)
+                        upperThreshold += (correctValue(upperThresholdFactor) * correctValue(current.value));
 
-               if(upper <= 0.0)
-                   return 0.0;
+                }
 
-   			return gauss_legendre(n, f, &all, lower, checkInfinity(upper));
+                if (all.integrals[all.current_index].fired && upper > upperThreshold)
+                    upper = upperThreshold;
+
+            } else {
+
+                 for (int i = 0; i < index_next; i++) {
+                    current = all.integrals[i];
+
+                    double lowerFactor = 0.0;
+                    double upperFactor = 0.0;
+
+                    if (all.lowerBounds[index_next].size() > i + 1)
+                        lowerFactor = all.lowerBounds[index_next][i + 1];
+                     if (all.lowerBounds[index_next].size() > i + 1)
+                        upperFactor = all.upperBounds[index_next][i + 1];
+
+                    if (!isnan(lowerFactor) && lowerFactor != 0.0)
+                        lower += (correctValue(lowerFactor) * correctValue(current.value));
+
+                    if (!isnan(upperFactor)  && lowerFactor != 0.0)
+                        upper += (correctValue(upperFactor) * correctValue(current.value));
+
+                }
+            }
+
+            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0)
+                return 0.0;
+
+   			return gauss_legendre(n, functionToIntegrate, &all, lower, checkInfinity(upper));
    		}
 
    	}
@@ -194,7 +279,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
    	double ProbabilityCalculator::correctValue(double value){
 
-        if (value <= 0.0)//pow(10, -200))
+        if (value <= 0.0)
            return 0.0;
 
        return value;
