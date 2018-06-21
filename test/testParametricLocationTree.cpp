@@ -238,3 +238,24 @@ TEST(ParametricLocationTreeXML, CollectCandidatesWithPLT) {
     ASSERT_EQ(candidates[0].getParametricLocation().getAccumulatedProbability(),1);
 
 }
+
+TEST(ParametricLocationTreeXML, AccumulatedProbability) {
+    ReadHybridPetrinet reader;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("exampleImmediate.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
+    plt->print(false);
+
+    vector<ParametricLocationTree::Node> candidates;
+    candidates = plt->getCandidateLocationsForTime(0);
+    ASSERT_EQ(candidates.size(),4);
+    ASSERT_EQ(candidates[0].getNodeID(),1);
+    ASSERT_EQ(candidates[1].getNodeID(),2);
+    ASSERT_EQ(candidates[2].getNodeID(),3);
+    ASSERT_EQ(candidates[3].getNodeID(),4);
+
+    ASSERT_EQ(candidates[0].getParametricLocation().getAccumulatedProbability(),1);
+    ASSERT_EQ(candidates[1].getParametricLocation().getAccumulatedProbability(),1);
+    ASSERT_NEAR(candidates[2].getParametricLocation().getAccumulatedProbability(),0.33,0.01);
+    ASSERT_NEAR(candidates[3].getParametricLocation().getAccumulatedProbability(),0.66,0.01);
+}
