@@ -174,7 +174,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 		}
 
 		return result;
-big	}
+	}
 
 
 
@@ -204,7 +204,7 @@ big	}
             double lower = all.lowerBounds[index_next][0];
             double upper = all.upperBounds[index_next][0];
 
-            if (all.upperBoundThresholds.size() > 0) {
+            if (all.upperBoundThresholds.size() > index_next) {
 
                 double upperThreshold = all.upperBoundThresholds[index_next][0];
 
