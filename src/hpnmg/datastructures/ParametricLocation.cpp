@@ -133,6 +133,14 @@ namespace hpnmg {
         this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
     }
 
+    const vector<bool> &ParametricLocation::getGeneralTransitionsEnabled() const {
+        return generalTransitionsEnabled;
+    }
+
+    void ParametricLocation::setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled) {
+        ParametricLocation::generalTransitionsEnabled = generalTransitionsEnabled;
+    }
+
     double ParametricLocation::getEarliestEntryTime() {
         return getMinimumTime(generalIntervalBoundLeft, generalIntervalBoundRight);
     }
@@ -181,7 +189,4 @@ namespace hpnmg {
 
         return time;
     }
-
-
-
 }
