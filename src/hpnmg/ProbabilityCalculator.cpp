@@ -26,7 +26,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 	} allDims;
 
 
-
+//TODO interval boundaries must be also compared to entry time of location -> geometrical solution probabily more appropriate
 
     double ProbabilityCalculator::getProbability(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint){
 
@@ -36,6 +36,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         map<int, vector<vector<double>>> thresholds;
         bool restricted;
         int parentID;
+        double nodeResult;
 
         for (int i = 0;i < nodes.size(); i++) {
             cout << "Node: " << nodes[i].getNodeID() << endl;
@@ -44,9 +45,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             if (parents.count(nodes[i].getNodeID()) > 0)
                 parentID = parents.find(nodes[i].getNodeID())->second ;
 
-
-            total += calculateIntervals(nodes[i].getParametricLocation(), tree, timepoint, thresholds, restricted, nodes[i].getNodeID(), parentID) * nodes[i].getParametricLocation().getAccumulatedProbability();
-
+            nodeResult = calculateIntervals(nodes[i].getParametricLocation(), tree, timepoint, thresholds, restricted, nodes[i].getNodeID(), parentID) * nodes[i].getParametricLocation().getAccumulatedProbability();
+            total += nodeResult;
 
             if (restricted) {
                 vector<ParametricLocationTree::Node> children = tree.getChildNodes(nodes[i]);
@@ -55,11 +55,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 }
             }
         }
-
-        if (total > 0.999999999999999)
-            total = 1.0;
-        else if (total < 0.000000000000001)
-            total = 0.0;
 
 
         return total;
@@ -110,6 +105,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         if (parentID >= 0) {
             all.upperBoundThresholds = thresholds.find(parentID)->second;
             newThresholds = all.upperBoundThresholds;
+            restricted = true;
         }
 
 
@@ -160,12 +156,12 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 			double lower = all.lowerBounds[0][0];
 			double upper = all.upperBounds[0][0];
 
-            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0)
+            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0  || lower >= upper)
                 result =  0.0;
             else {
                 if (all.integrals[0].fired && all.upperBoundThresholds.size() > 0 && upper > all.upperBoundThresholds[0][0])
                     upper =  all.upperBoundThresholds[0][0];
-                result = correctValue(gauss_legendre(n, functionToIntegrate, &all, lower, checkInfinity(upper)));
+                result = gauss_legendre(n, functionToIntegrate, &all, lower, checkInfinity(upper));
             }
 
 
@@ -204,6 +200,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             double lower = all.lowerBounds[index_next][0];
             double upper = all.upperBounds[index_next][0];
 
+            double lowerFactor;
+            double upperFactor;
+            double upperThresholdFactor;
+
             if (all.upperBoundThresholds.size() > index_next) {
 
                 double upperThreshold = all.upperBoundThresholds[index_next][0];
@@ -211,9 +211,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 for (int i = 0; i < index_next; i++) {
                     current = all.integrals[i];
 
-                    double lowerFactor = 0.0;
-                    double upperFactor = 0.0;
-                    double upperThresholdFactor = 0.0;
+                    lowerFactor = 0.0;
+                    upperFactor = 0.0;
+                    upperThresholdFactor = 0.0;
                     if (all.lowerBounds[index_next].size() > i + 1)
                         lowerFactor = all.lowerBounds[index_next][i + 1];
                     if (all.lowerBounds[index_next].size() > i + 1)
@@ -227,6 +227,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     if (!isnan(upperFactor) && upperFactor != 0.0)
                         upper += (correctValue(upperFactor) * correctValue(current.value));
 
+
                     if (!isnan(upperThresholdFactor) && upperThresholdFactor != 0.0)
                         upperThreshold += (correctValue(upperThresholdFactor) * correctValue(current.value));
 
@@ -234,6 +235,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
                 if (all.integrals[all.current_index].fired && upper > upperThreshold)
                     upper = upperThreshold;
+
+
+                if (lower >= upper)
+                    return 0.0;
 
             } else {
 
@@ -257,8 +262,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 }
             }
 
-            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0)
+            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0 )// || lower >= upper)
                 return 0.0;
+
+
 
    			return gauss_legendre(n, functionToIntegrate, &all, lower, checkInfinity(upper));
    		}
@@ -269,8 +276,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
     double ProbabilityCalculator::checkInfinity(double value){
 
-   		if (isinf(value))
-   			return DBL_MAX;
+//   		if (isinf(value))
+//   			return DBL_MAX;
 
    		return value;
    	}
