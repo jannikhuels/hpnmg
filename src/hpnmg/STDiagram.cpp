@@ -428,4 +428,9 @@ namespace hpnmg {
         }
         return result;
     }
+
+    Region STDiagram::createRegionForVertices(std::vector<Point<double>> vertices) {
+        Region r(vertices);
+        return r;
+    }
 }

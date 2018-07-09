@@ -65,6 +65,17 @@ TEST(STDiagramTest, MaxTimeErrorTest)
     }    
 }
 
+TEST(STDiagramTest, RegionFromVerticesTest) {
+    Point<double> p1({0,0});
+    Point<double> p2({5,5});
+    Point<double> p3({20,0});
+    Region region = STDiagram::createRegionForVertices({p1,p2,p3});
+
+    ASSERT_EQ(region.contains(Point<double>({0,0})), true);
+    ASSERT_EQ(region.contains(Point<double>({1,1})), true);
+    ASSERT_EQ(region.contains(Point<double>({21,0})), false);
+}
+
 TEST_F(STDiagramRegionTest, CreateRegionTest)
 {
     Region region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
