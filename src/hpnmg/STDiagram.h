@@ -69,5 +69,7 @@ namespace hpnmg {
         static std::vector<Intervals> intervalsFromRegions(std::vector<Region> regions);
 
         static std::vector<Intervals> removeEmptyIntervals(std::vector<Intervals> intervals);
+
+        static std::vector<std::vector<double>> stochasticConstraints(Region region);
     };
 }

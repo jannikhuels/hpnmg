@@ -536,6 +536,22 @@ TEST(STDiagramIntervalTest, TestUnion3D)
     ASSERT_EQ(dup[3][2].upper(), 11);
 }
 
+TEST(STDiagramConstraintsTest, TestConstraints) {
+    Point<double> p1({0,0});
+    Point<double> p2({5,5});
+    Point<double> p3({20,0});
+    Point<double> p4({20,5});
+    Region region = STDiagram::createRegionForVertices({p1,p2,p3,p4});
+    std::vector<std::vector<double>> constraints = STDiagram::stochasticConstraints(region);
+
+    ASSERT_EQ(constraints.size(),4);
+    ASSERT_EQ(constraints[0].size(), 2);
+    ASSERT_EQ(constraints[0][0], 0);
+    ASSERT_EQ(constraints[0][1], -1);
+    ASSERT_EQ(constraints[2][0], 5);
+    ASSERT_EQ(constraints[2][1], 0);
+}
+
 
 
 /*TEST_F(STDiagramRegionTest, TestPrint)
