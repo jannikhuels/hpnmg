@@ -81,14 +81,13 @@ configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/HPnG.xsd ${PROJECT
 
 # Testing
 # -----------------------------------------------------------------
+enable_testing()
+add_subdirectory(test)
 
 # Examples
 # -----------------------------------------------------------------
 
 add_subdirectory(examples)
-
-enable_testing()
-add_subdirectory(test)
 
 # Executable
 # -----------------------------------------------------------------
