@@ -428,4 +428,24 @@ namespace hpnmg {
         }
         return result;
     }
+
+    Region STDiagram::createRegionForVertices(std::vector<Point<double>> vertices) {
+        Region r(vertices);
+        return r;
+    }
+
+    std::vector<std::vector<double>> STDiagram::stochasticConstraints(Region region) {
+        std::vector<std::vector<double>> res;
+        for (Halfspace<double> h : region.constraints()) {
+            std::vector<double> r;
+            r.push_back(h.offset());
+            Eigen::VectorXd v = h.normal();
+            std::vector<double> coords(v.data(), v.data() + v.rows() * v.cols());
+            if (coords.size()>0) {
+                r.insert(r.end(), coords.begin(), coords.end()-1);
+            }
+            res.push_back(r);
+        }
+        return res;
+    }
 }

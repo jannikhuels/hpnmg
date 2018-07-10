@@ -66,6 +66,8 @@ find_package(hypro REQUIRED)
 find_package(carl REQUIRED)
 find_package(XercesC REQUIRED)
 find_package(Boost REQUIRED)
+find_package(cgal REQUIRED)
+
 
 # Include files
 # -----------------------------------------------------------------
@@ -76,6 +78,7 @@ add_subdirectory(src)
 
 # Copy files needed at runtime
 # -----------------------------------------------------------------
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/HPnG.xsd ${PROJECT_BINARY_DIR}/test)
 configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/HPnG.xsd ${PROJECT_BINARY_DIR})
 
