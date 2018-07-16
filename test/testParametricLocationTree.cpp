@@ -259,3 +259,38 @@ TEST(ParametricLocationTreeXML, AccumulatedProbability) {
     ASSERT_NEAR(candidates[2].getParametricLocation().getAccumulatedProbability(),0.33,0.01);
     ASSERT_NEAR(candidates[3].getParametricLocation().getAccumulatedProbability(),0.66,0.01);
 }
+
+TEST(ParametricLocationTreeXML, updateGeneralBounds) {
+    ReadHybridPetrinet reader;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("exampleSimple.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 11);
+    plt->print(true);
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, 11);
+
+    vector<ParametricLocationTree::Node> candidates;
+    candidates = plt->getCandidateLocationsForTime(7);
+    ASSERT_EQ(candidates.size(),3);
+    ASSERT_EQ(candidates[0].getNodeID(),2);
+    ASSERT_EQ(candidates[1].getNodeID(),3);
+    ASSERT_EQ(candidates[2].getNodeID(),4);
+
+    auto generalBoundsLeft2 = candidates[0].getParametricLocation().getGeneralIntervalBoundLeft();
+    auto generalBoundsLeft3 = candidates[1].getParametricLocation().getGeneralIntervalBoundLeft();
+    auto generalBoundsLeft4 = candidates[2].getParametricLocation().getGeneralIntervalBoundLeft();
+
+    auto generalBoundsRight2 = candidates[0].getParametricLocation().getGeneralIntervalBoundRight();
+    auto generalBoundsRight3 = candidates[1].getParametricLocation().getGeneralIntervalBoundRight();
+    auto generalBoundsRight4 = candidates[2].getParametricLocation().getGeneralIntervalBoundRight();
+
+    EXPECT_EQ(generalBoundsLeft2[0][0][0],0);
+    EXPECT_EQ(generalBoundsRight2[0][0][0],5);
+
+    EXPECT_EQ(generalBoundsLeft3[0][0][0],7);
+    EXPECT_EQ(generalBoundsRight3[0][0][0],11);
+
+    EXPECT_EQ(generalBoundsLeft4[0][0][0],5);
+    EXPECT_EQ(generalBoundsRight4[0][0][0],7);
+
+}
