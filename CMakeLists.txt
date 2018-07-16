@@ -64,7 +64,7 @@ add_subdirectory(resources)
 find_package(hypro REQUIRED)
 find_package(carl REQUIRED)
 find_package(XercesC REQUIRED)
-find_package(cgal REQUIRED)
+find_package(CGAL REQUIRED)
 
 
 # Include files
