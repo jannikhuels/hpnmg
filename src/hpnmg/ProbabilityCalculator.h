@@ -32,7 +32,8 @@ namespace hpnmg {
 
 		static double correctValue(double value);
 
-       	double calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, map<int, vector<vector<double>>> &thresholds, bool &restricted, int nodeID, int parentID);
+//       	double calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, map<int, vector<vector<double>>> &thresholds, bool &restricted, int nodeID, int parentID);
+		double calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID);
 
 
     public:
