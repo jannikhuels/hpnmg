@@ -264,9 +264,21 @@ namespace hpnmg {
                 if (latestEntryTime < interval.first) {
                     valid = false;
                 }
+                //updateNodeByChild(startNode, node);
+                //auto lowerBoundChild = node.getParametricLocation().getEarliestEntryTime(); // wrong! not the earliest entry time is needed
+                auto lowerBoundChild = node.getParametricLocation().getSourceEvent().getTime() + node.getParametricLocation().getSourceEvent().getGeneralDependencies()[0][0][0];
+                if (lowerBoundChild <= startNode.getParametricLocation().getGeneralIntervalBoundLeft()[0][0][0]) {
+                    auto location = startNode.getParametricLocation();
+                    auto bound = location.getGeneralIntervalBoundLeft();
+                    bound[0][0][0] = lowerBoundChild;
+                    location.setGeneralIntervalBoundLeft(bound);
+                    startNode.setParametricLocation(location);
+                }
             }
 
             if(valid) {
+
+                //updateNode(&startNode);
                 candidates.push_back(startNode);
             }
 
@@ -277,6 +289,9 @@ namespace hpnmg {
             // not even the earliest entry time is before (or equal) t, so the event happens after the questioned time. no childnode can be valid.
         }
     }
+
+
+
 
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTime(double time) {
         return getCandidateLocationsForTimeInterval(std::pair<double,double>{time,time});
