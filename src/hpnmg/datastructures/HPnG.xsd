@@ -123,9 +123,33 @@
                                     <xs:attribute name="rate" type="nonNegativeDouble" use="required"></xs:attribute>
                                 </xs:complexType>
                             </xs:element>
-                            <xs:element name="dynamicContinuousTransition" maxOccurs="unbounded">
+                            <xs:element name="dynamicTransition" maxOccurs="unbounded">
                                 <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="continousTransition" maxOccurs="unbounded" minOccurs="1">
+                                            <xs:complexType>
+                                                <xs:attribute name="referenceId" type="xs:token" use="required"></xs:attribute>
+                                                <xs:attribute name="factor" type="xs:integer"></xs:attribute>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="constant" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:attribute name="value" type="xs:double" use="required"></xs:attribute>
+                                                <xs:attribute name="factor" type="xs:integer"></xs:attribute>
+                                                <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
                                     <xs:attribute name="id" type="xs:token" use="required"></xs:attribute>
+                                    <xs:attribute name="function" use="required">
+                                        <xs:simpleType>
+                                            <xs:restriction base="xs:string">
+                                                <xs:enumeration value="max" />
+                                            </xs:restriction>
+                                        </xs:simpleType>
+                                    </xs:attribute>
+                                    <xs:attribute name="factor" type="xs:integer"></xs:attribute>
+                                    <xs:attribute name="parameter" type="xs:integer" use="required"></xs:attribute>
                                 </xs:complexType>
                             </xs:element>
                         </xs:choice>

@@ -31,3 +31,10 @@ TEST(ReadHybridPetrinet, AddArcsToTransition)
     ASSERT_EQ(gTrans->getContinuousOutputArcs().size(), 0);
     ASSERT_EQ(gTrans->getGuardOutputArcs().size(), 0);
 }
+
+TEST(ReadHybridPetrinet, DynamicTransitions)
+{
+    ReadHybridPetrinet reader;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("exampleDynamic.xml");
+    
+}
