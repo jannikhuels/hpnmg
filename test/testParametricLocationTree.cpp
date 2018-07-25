@@ -284,8 +284,8 @@ TEST(ParametricLocationTreeXML, updateGeneralBounds) {
     auto generalBoundsRight3 = candidates[1].getParametricLocation().getGeneralIntervalBoundRight();
     auto generalBoundsRight4 = candidates[2].getParametricLocation().getGeneralIntervalBoundRight();
 
-    EXPECT_EQ(generalBoundsLeft2[0][0][0],0);
-    EXPECT_EQ(generalBoundsRight2[0][0][0],5);
+    EXPECT_EQ(0,generalBoundsLeft2[0][0][0]);
+    EXPECT_EQ(5,generalBoundsRight2[0][0][0]);
 
     EXPECT_EQ(generalBoundsLeft3[0][0][0],7);
     EXPECT_EQ(generalBoundsRight3[0][0][0],11);
