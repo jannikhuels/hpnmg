@@ -17,6 +17,7 @@
 #include "datastructures/places/ContinuousPlace.h"
 #include "datastructures/transitions/DeterministicTransition.h"
 #include "datastructures/transitions/ContinuousTransition.h"
+#include "datastructures/transitions/DynamicTransition.h"
 #include "datastructures/transitions/GeneralTransition.h"
 #include "datastructures/transitions/ImmediateTransition.h"
 

@@ -126,16 +126,16 @@
                             <xs:element name="dynamicTransition" maxOccurs="unbounded">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element name="continousTransition" maxOccurs="unbounded" minOccurs="1">
+                                        <xs:element name="continuousTransition" maxOccurs="unbounded" minOccurs="1">
                                             <xs:complexType>
                                                 <xs:attribute name="referenceId" type="xs:token" use="required"></xs:attribute>
-                                                <xs:attribute name="factor" type="xs:integer"></xs:attribute>
+                                                <xs:attribute name="factor" type="xs:double"></xs:attribute>
                                             </xs:complexType>
                                         </xs:element>
                                         <xs:element name="constant" maxOccurs="1">
                                             <xs:complexType>
                                                 <xs:attribute name="value" type="xs:double" use="required"></xs:attribute>
-                                                <xs:attribute name="factor" type="xs:integer"></xs:attribute>
+                                                <xs:attribute name="factor" type="xs:double"></xs:attribute>
                                                 <xs:attribute name="name" type="xs:string"></xs:attribute>
                                             </xs:complexType>
                                         </xs:element>
@@ -148,8 +148,8 @@
                                             </xs:restriction>
                                         </xs:simpleType>
                                     </xs:attribute>
-                                    <xs:attribute name="factor" type="xs:integer"></xs:attribute>
-                                    <xs:attribute name="parameter" type="xs:integer" use="required"></xs:attribute>
+                                    <xs:attribute name="factor" type="xs:double"></xs:attribute>
+                                    <xs:attribute name="parameter" type="xs:double" use="required"></xs:attribute>
                                 </xs:complexType>
                             </xs:element>
                         </xs:choice>

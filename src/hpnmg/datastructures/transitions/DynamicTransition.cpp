@@ -3,12 +3,17 @@
 using namespace std;
 namespace hpnmg {
     DynamicTransition::DynamicTransition(std::string id,
-                                         int factor,
+                                         double factor,
                                          double constant,
                                          std::vector<ContinuousTransition> transitions,
-                                         std::vector<int> transitionFactors,
-                                         int parameter)
-        : ContinuousTransition(id, 0) // rate is set to 0 right now
+                                         std::vector<double> transitionFactors,
+                                         double parameter)
+        : ContinuousTransition(id, 0), // rate is set to 0 right now
+          factor(factor),
+          constant(constant),
+          transitions(transitions),
+          transitionFactors(transitionFactors),
+          parameter(parameter)
     {}
 
     double DynamicTransition::getRate() { // why is getRate never used?
@@ -18,6 +23,7 @@ namespace hpnmg {
         }
         rate = factor * (rate + constant);
 
+        // maximum function (default right now)
         if (rate >= parameter)  {
             return rate;
         } else {

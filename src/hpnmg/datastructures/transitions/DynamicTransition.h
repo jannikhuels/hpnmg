@@ -7,21 +7,19 @@ namespace hpnmg {
     class DynamicTransition : public ContinuousTransition {
 
     private:
-        int factor;
+        double factor;
         double constant;
         std::vector<ContinuousTransition> transitions;
-        std::vector<int> transitionFactors;
-        int parameter;
-
-
+        std::vector<double> transitionFactors;
+        double parameter;
 
     public:
         DynamicTransition(std::string id,
-                          int factor,
+                          double factor,
                           double constant,
                           std::vector<ContinuousTransition> transitions,
-                          std::vector<int> transitionFactors,
-                          int parameter
+                          std::vector<double> transitionFactors,
+                          double parameter
             );
         double getRate();
     };

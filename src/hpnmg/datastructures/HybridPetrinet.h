@@ -53,6 +53,7 @@ namespace hpnmg {
 
         void addTransition(shared_ptr<DeterministicTransition> &transition);
         void addTransition(shared_ptr<ContinuousTransition> &transition);
+        void addTransition(shared_ptr<DynamicTransition> &transition);
         void addTransition(shared_ptr<GeneralTransition> &transition);
         void addTransition(shared_ptr<ImmediateTransition> &transition);
 
