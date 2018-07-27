@@ -352,7 +352,7 @@ namespace hpnmg {
                         }
                     }
 
-                    double constant;
+                    double constant = 0;
                     vector<shared_ptr<ContinuousTransition>> transitions;
                     vector<double> transitionFactors;
                     DOMNodeList* dependencyNodes = transitionNode->getChildNodes();
@@ -380,11 +380,11 @@ namespace hpnmg {
                                     auto continuousTransitions = hybridPetrinet->getContinuousTransitions();
                                     for (auto continuousTransition : continuousTransitions) {
                                         if (transitionId == continuousTransition.first) {
-                                            transitions[l] = continuousTransition.second;
+                                            transitions.push_back(continuousTransition.second);
                                         }
                                     }
                                 } else if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("factor"))) {
-                                    transitionFactors[l] = strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr);
+                                    transitionFactors.push_back(strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr));
                                 }
                             }
 

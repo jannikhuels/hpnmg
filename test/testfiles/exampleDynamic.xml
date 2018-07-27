@@ -10,8 +10,8 @@
         <continuousTransition id="tf1" rate="1.0"/>
         <continuousTransition id="tf2" rate="2.0"/>
         <dynamicTransition id="td0" function="max" parameter="0">
-            <continousTransition referenceId="tf1" factor="2"></continousTransition>
-            <continousTransition referenceId="tf2"></continousTransition>
+            <continuousTransition referenceId="tf1" factor="2"></continuousTransition>
+            <continuousTransition referenceId="tf2"></continuousTransition>
             <constant value="-1.0" name="A"></constant>
         </dynamicTransition>
     </transitions>

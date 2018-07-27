@@ -8,6 +8,7 @@
 #include "places/Place.h"
 #include "transitions/DeterministicTransition.h"
 #include "transitions/ContinuousTransition.h"
+#include "transitions/DynamicTransition.h"
 #include "transitions/GeneralTransition.h"
 #include "transitions/ImmediateTransition.h"
 #include "transitions/Transition.h"
