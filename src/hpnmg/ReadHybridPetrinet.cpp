@@ -145,6 +145,7 @@ namespace hpnmg {
                         parsePlaces(currentElement);
                     } else if (XMLString::equals(currentElement->getTagName(), XMLString::transcode("transitions"))) {
                         parseTransitions(currentElement);
+                        parseDynamicTransitions(currentElement);
                     }
                 }
             }
@@ -261,59 +262,6 @@ namespace hpnmg {
                     hybridPetrinet->addTransition(transition);
                 }
 
-                // transition is dynamic transition
-                if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("dynamicTransition"))) {
-                    double factor = 1;
-                    double parameter;
-                    for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
-                        DOMNode *attribute = attributes->item(i);
-                        if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
-                            id = XMLString::transcode(attribute->getNodeValue());
-                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("factor"))) {
-                            factor = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
-                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("parameter"))) {
-                            parameter = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
-                        }
-                    }
-
-                    double constant;
-                    //vector<ContinuousTransition> transitions; // actually I need the references to the cTs
-                    vector<string> transitions; // just the ids
-                    vector<double> transitionFactors;
-                    DOMNodeList* dependencyNodes = transitionNode->getChildNodes();
-                    for (XMLSize_t k = 0; k < dependencyNodes->getLength(); ++k) {
-                        DOMNode* dependencyNode = dependencyNodes->item(k);
-                        if (XMLString::equals(dependencyNode->getNodeName(), XMLString::transcode("constant"))) {
-                            DOMNamedNodeMap* dependencyAttributes = dependencyNode->getAttributes();
-                            double factor = 1;
-                            double value;
-                            for(XMLSize_t l=0; l<dependencyAttributes->getLength(); ++l) {
-                                DOMNode* dependencyAttribute = dependencyAttributes->item(l);
-                                if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("factor"))) {
-                                    factor = strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr);
-                                } else if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("value"))) {
-                                    value = strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr);
-                                }
-                            }
-                            constant = factor * value;
-                        } else if (XMLString::equals(dependencyNode->getNodeName(), XMLString::transcode("continuousTransition"))) {
-                            DOMNamedNodeMap* dependencyAttributes = dependencyNode->getAttributes();
-                            for(XMLSize_t l=0; l<dependencyAttributes->getLength(); ++l) {
-                                DOMNode* dependencyAttribute = dependencyAttributes->item(l);
-                                if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("referenceId"))) {
-                                    transitions[l] = strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr);
-                                } else if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("factor"))) {
-                                    transitionFactors[l] = strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr);
-                                }
-                            }
-
-                        }
-                    }
-
-                    auto transition = make_shared<DynamicTransition>(id, factor, constant, transitions, transitionFactors, parameter);
-                    hybridPetrinet->addTransition(transition);
-                }
-
                 // transition is general transition
                 if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("generalTransition"))) {
                     unsigned long priority;
@@ -373,6 +321,77 @@ namespace hpnmg {
                         }
                     }
                     auto transition = make_shared<ImmediateTransition>(id, priority, weight);
+                    hybridPetrinet->addTransition(transition);
+                }
+            }
+        }
+    }
+
+    void ReadHybridPetrinet::parseDynamicTransitions(DOMElement *transistionsNode) {
+        DOMNodeList *transitionNodes = transistionsNode->getChildNodes();
+
+        for (XMLSize_t j = 0; j < transitionNodes->getLength(); ++j) {
+            DOMNode *transitionNode = transitionNodes->item(j);
+
+            if (transitionNode->getNodeType() && transitionNode->getNodeType() == DOMNode::ELEMENT_NODE) {
+                DOMNamedNodeMap *attributes = transitionNode->getAttributes();
+                string id;
+
+                // transition is dynamic transition
+                if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("dynamicTransition"))) {
+                    double factor = 1;
+                    double parameter;
+                    for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
+                        DOMNode *attribute = attributes->item(i);
+                        if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
+                            id = XMLString::transcode(attribute->getNodeValue());
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("factor"))) {
+                            factor = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("parameter"))) {
+                            parameter = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        }
+                    }
+
+                    double constant;
+                    vector<shared_ptr<ContinuousTransition>> transitions;
+                    vector<double> transitionFactors;
+                    DOMNodeList* dependencyNodes = transitionNode->getChildNodes();
+                    for (XMLSize_t k = 0; k < dependencyNodes->getLength(); ++k) {
+                        DOMNode* dependencyNode = dependencyNodes->item(k);
+                        if (XMLString::equals(dependencyNode->getNodeName(), XMLString::transcode("constant"))) {
+                            DOMNamedNodeMap* dependencyAttributes = dependencyNode->getAttributes();
+                            double factor = 1;
+                            double value;
+                            for(XMLSize_t l=0; l<dependencyAttributes->getLength(); ++l) {
+                                DOMNode* dependencyAttribute = dependencyAttributes->item(l);
+                                if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("factor"))) {
+                                    factor = strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr);
+                                } else if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("value"))) {
+                                    value = strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr);
+                                }
+                            }
+                            constant = factor * value;
+                        } else if (XMLString::equals(dependencyNode->getNodeName(), XMLString::transcode("continuousTransition"))) {
+                            DOMNamedNodeMap* dependencyAttributes = dependencyNode->getAttributes();
+                            for(XMLSize_t l=0; l<dependencyAttributes->getLength(); ++l) {
+                                DOMNode* dependencyAttribute = dependencyAttributes->item(l);
+                                if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("referenceId"))) {
+                                    string transitionId = XMLString::transcode(dependencyAttribute->getNodeValue());
+                                    auto continuousTransitions = hybridPetrinet->getContinuousTransitions();
+                                    for (auto continuousTransition : continuousTransitions) {
+                                        if (transitionId == continuousTransition.first) {
+                                            transitions[l] = continuousTransition.second;
+                                        }
+                                    }
+                                } else if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("factor"))) {
+                                    transitionFactors[l] = strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr);
+                                }
+                            }
+
+                        }
+                    }
+
+                    auto transition = make_shared<DynamicTransition>(id, factor, constant, transitions, transitionFactors, parameter);
                     hybridPetrinet->addTransition(transition);
                 }
             }

@@ -9,7 +9,7 @@ namespace hpnmg {
     private:
         double factor;
         double constant;
-        std::vector<ContinuousTransition> transitions;
+        std::vector<shared_ptr<ContinuousTransition>> transitions;
         std::vector<double> transitionFactors;
         double parameter;
 
@@ -17,7 +17,7 @@ namespace hpnmg {
         DynamicTransition(std::string id,
                           double factor,
                           double constant,
-                          std::vector<ContinuousTransition> transitions,
+                          std::vector<shared_ptr<ContinuousTransition>> transitions,
                           std::vector<double> transitionFactors,
                           double parameter
             );

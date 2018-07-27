@@ -5,7 +5,7 @@ namespace hpnmg {
     DynamicTransition::DynamicTransition(std::string id,
                                          double factor,
                                          double constant,
-                                         std::vector<ContinuousTransition> transitions,
+                                         std::vector<shared_ptr<ContinuousTransition>> transitions,
                                          std::vector<double> transitionFactors,
                                          double parameter)
         : ContinuousTransition(id, 0), // rate is set to 0 right now
@@ -19,7 +19,7 @@ namespace hpnmg {
     double DynamicTransition::getRate() { // why is getRate never used?
         double rate;
         for (int i=0;  i < transitionFactors.size(); i++) {
-            rate =+ transitionFactors[i] * transitions[i].getRate();
+            rate =+ transitionFactors[i] * transitions[i]->getRate();
         }
         rate = factor * (rate + constant);
 
