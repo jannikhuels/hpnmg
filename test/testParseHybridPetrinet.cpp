@@ -407,6 +407,19 @@ TEST(ParseHybridPetrinet, Example2General) {
     }
 }
 
+TEST(ParseHybridPetrinet, DynamicTransitions)
+{
+    ReadHybridPetrinet reader;
+    ParseHybridPetrinet parser;
+    PLTWriter writer;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("exampleDynamic.xml");
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
+    writer.writePLT(plt,20);
+
+    shared_ptr<ContinuousTransition> transition = hybridPetrinet->getContinuousTransitions()["td0"];//getTransitionById("td0");
+    EXPECT_EQ(2,transition->currentRate);
+}
+
 /*TEST(ParseHybridPetrinet, Example5General) {
     auto reader= new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("jannik5general.xml");

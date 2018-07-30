@@ -7,7 +7,7 @@
     </places>
     <transitions>
         <continuousTransition id="tf0" rate="2.0"/>
-        <continuousTransition id="tf1" rate="1.0"/>
+        <continuousTransition id="tf1" rate="2.0"/>
         <continuousTransition id="tf2" rate="2.0"/>
         <dynamicTransition id="td0" function="max" parameter="0">
             <continuousTransition referenceId="tf1" factor="2"></continuousTransition>

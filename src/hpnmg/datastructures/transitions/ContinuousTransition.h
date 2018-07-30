@@ -7,9 +7,9 @@ namespace hpnmg {
 
     private:
         double rate;
-        double currentRate;
 
     public:
+        double currentRate;
         ContinuousTransition(std::string id, double rate);
         double getRate();
         void setCurrentRate(double newRate);
