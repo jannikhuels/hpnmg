@@ -39,6 +39,11 @@ namespace hpnmg {
     std::vector<Region> Triangulation::create(const ParametricLocationTree::Node &node) {
 
         Region r = node.getRegion();
+        return create(r);
+    }
+
+    std::vector<Region> Triangulation::create(const Region &r) {
+
         DT dt(r.dimension());
         std::vector<DT::Point> points = regionToDTPoints(r);
         dt.insert(points.begin(), points.end());
@@ -47,7 +52,7 @@ namespace hpnmg {
         typedef DT::Finite_full_cell_iterator Finite_full_cell_iterator;
         int i = 0;
         for(Finite_full_cell_iterator cit = dt.finite_full_cells_begin();
-             cit != dt.finite_full_cells_end(); ++cit )
+            cit != dt.finite_full_cells_end(); ++cit )
         {
             std::vector<DT::Point> points;
             for (auto vi = cit->vertices_begin(); vi != cit->vertices_end(); ++vi) {

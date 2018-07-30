@@ -13,6 +13,7 @@ namespace hpnmg {
     class Triangulation {
     public:
         static std::vector<Region> create(const ParametricLocationTree::Node &node);
+        static std::vector<Region> create(const Region &r);
     };
 }
 
