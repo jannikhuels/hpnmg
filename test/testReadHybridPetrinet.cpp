@@ -36,5 +36,6 @@ TEST(ReadHybridPetrinet, DynamicTransitions)
 {
     ReadHybridPetrinet reader;
     shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("exampleDynamic.xml");
-    
+    EXPECT_EQ(4, hybridPetrinet->num_transitions());
+    EXPECT_EQ(3, hybridPetrinet->num_places());
 }

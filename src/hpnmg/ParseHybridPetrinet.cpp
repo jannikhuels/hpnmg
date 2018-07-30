@@ -1172,7 +1172,7 @@ namespace hpnmg {
         map<string, double> outputDriftNeeded;
         map<string, double> inputDriftNeeded;
         for (auto transition : hybridPetrinet->getContinuousTransitions())
-            transitionRate[transition.first] = transition.second->getRate();
+            transitionRate[transition.first] = transition.second->getRate(); // todo: rate is set here
         while (!placesToCheck.empty()) {
             shared_ptr<ContinuousPlace> place = placesToCheck[0];
             long pos =
@@ -1237,7 +1237,8 @@ namespace hpnmg {
                                     outputDriftNeeded[transition->id] = rateDiff;
                                 else
                                     outputDriftNeeded[transition->id] += rateDiff;
-                                transitionRate[transition->id] = newRate;
+                                transitionRate[transition->id] = newRate; // todo: rate is set here
+                                transition->setCurrentRate(newRate);
                                 for (auto arcItem : transition->getContinuousOutputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;
                                     if (place->id != placeToCheck->id) {
@@ -1314,7 +1315,8 @@ namespace hpnmg {
                                     inputDriftNeeded[transition->id] = rateDiff;
                                 else
                                     inputDriftNeeded[transition->id] += rateDiff;
-                                transitionRate[transition->id] = newRate;
+                                transitionRate[transition->id] = newRate; // todo: rate is set here
+                                transition->setCurrentRate(newRate);
                                 for (auto arcItem : transition->getContinuousOutputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;
                                     if (place->id != placeToCheck->id) {
