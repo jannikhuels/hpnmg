@@ -11,9 +11,16 @@ typedef CGAL::Triangulation<CGAL::Epick_d< CGAL::Dynamic_dimension_tag>> DT;
 namespace hpnmg {
 
     class Triangulation {
+
+    private:
+        std::vector<Region> t;
+        std::vector<Region> t_split;
     public:
-        static std::vector<Region> create(const ParametricLocationTree::Node &node);
-        static std::vector<Region> create(const Region &r);
+        Triangulation(const ParametricLocationTree::Node &node);
+        Triangulation(const Region &node);
+
+        std::vector<Region> getObjects();
+        std::vector<Region> getSplitVertical();
     };
 }
 

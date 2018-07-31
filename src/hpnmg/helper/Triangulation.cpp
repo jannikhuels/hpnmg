@@ -36,13 +36,11 @@ namespace hpnmg {
         return STDiagram::createRegionForVertices(points);
     }
 
-    std::vector<Region> Triangulation::create(const ParametricLocationTree::Node &node) {
+    Triangulation::Triangulation(const ParametricLocationTree::Node &node) : Triangulation(node.getRegion()) {
 
-        Region r = node.getRegion();
-        return create(r);
     }
 
-    std::vector<Region> Triangulation::create(const Region &r) {
+    Triangulation::Triangulation(const Region &r) {
 
         DT dt(r.dimension());
         std::vector<DT::Point> points = regionToDTPoints(r);
@@ -62,7 +60,19 @@ namespace hpnmg {
             Region tr = dTPointsToRegion(points);
             regions.push_back(tr);
         }
-        return regions;
+        this->t = regions;
+    }
+
+    std::vector<Region> Triangulation::getObjects() {
+        return this->t;
+    }
+
+    std::vector<Region> Triangulation::getSplitVertical() {
+        if (this->t_split.size() > 0) {
+            return this->t_split;
+        }
+
+
     }
 }
 
