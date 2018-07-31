@@ -10,6 +10,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 	typedef struct {
 		double value;
+		double transformedValue;
 		pair<string, map<string, float>> distribution;
 		bool fired = false;
 	} singleDim;
@@ -21,46 +22,61 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 		vector<singleDim> integrals;
 		vector<vector<double>> lowerBounds;
 		vector<vector<double>> upperBounds;
-//        vector<vector<double>> upperBoundThresholds;
-
+        int evaluations;
 	} allDims;
 
 
-//TODO interval boundaries must be also compared to entry time of location -> geometrical solution probably more appropriate
 
-//TODO code clean
+    double ProbabilityCalculator::getProbabilityGauss(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int evaluations){
 
-//TODO checkInfinity() and/or updateValue() redundant
+        double placeholder;
+        return getProbability(nodes, tree,  timepoint, 0, 0, evaluations, placeholder);
 
-    double ProbabilityCalculator::getProbability(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint){
+    }
+
+
+
+    double ProbabilityCalculator::getProbabilityMonteCarloPlain(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int functioncalls, double &totalerror){
+
+        return getProbability(nodes, tree,  timepoint, 1, functioncalls, 0, totalerror);
+    }
+
+
+
+    double ProbabilityCalculator::getProbabilityMonteCarloMiser(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int functioncalls, double &totalerror){
+
+        return getProbability(nodes, tree,  timepoint, 2, functioncalls, 0, totalerror);
+    }
+
+
+
+    double ProbabilityCalculator::getProbabilityMonteCarloVegas(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int functioncalls, double &totalerror){
+
+        return getProbability(nodes, tree,  timepoint, 3, functioncalls, 0, totalerror);
+    }
+
+
+
+    double ProbabilityCalculator::getProbability(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, char algorithm, int functioncalls, int evaluations, double &totalerror){
 
         double total = 0.0;
-
-//        map<int, int> parents;
-//        map<int, vector<vector<double>>> thresholds;
-//        bool restricted;
-//        int parentID;
-        double nodeResult;
+        double error = 0.0;
+        totalerror = 0.0;
+        double nodeResult = 0.0;
 
         for (int i = 0;i < nodes.size(); i++) {
             cout << "Node: " << nodes[i].getNodeID() << endl;
 
-//            parentID = -1.0;
-//            if (parents.count(nodes[i].getNodeID()) > 0)
-//                parentID = parents.find(nodes[i].getNodeID())->second;
+            if (algorithm == 0)
+                //Gauss Legendre
+                nodeResult = calculateIntervalsGauss(nodes[i].getParametricLocation(), tree, timepoint, nodes[i].getNodeID(), evaluations) * nodes[i].getParametricLocation().getAccumulatedProbability();
+            else
+                //Monte Carlo Plain
+                nodeResult = calculateIntervalsMonteCarlo(nodes[i].getParametricLocation(), tree, timepoint, nodes[i].getNodeID(), algorithm, functioncalls, error) * nodes[i].getParametricLocation().getAccumulatedProbability();
 
-//            nodeResult = calculateIntervals(nodes[i].getParametricLocation(), tree, timepoint, thresholds, restricted, nodes[i].getNodeID(), parentID) * nodes[i].getParametricLocation().getAccumulatedProbability();
-            nodeResult = calculateIntervals(nodes[i].getParametricLocation(), tree, timepoint, nodes[i].getNodeID()) * nodes[i].getParametricLocation().getAccumulatedProbability();
             total += nodeResult;
-
-//            if (restricted) {
-//                vector<ParametricLocationTree::Node> children = tree.getChildNodes(nodes[i]);
-//                for (int j = 0; j < children.size(); j++){
-//                    parents.insert(pair<int, int>(children[j].getNodeID(), nodes[i].getNodeID()));
-//                }
-//            }
+            totalerror += error;
         }
-
 
         return total;
 
@@ -68,12 +84,11 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
-
-	double ProbabilityCalculator::calculateIntervals(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID){
+	double ProbabilityCalculator::calculateIntervalsGauss(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID, int evaluations){
 
 
 		double result = 0.0;
-//        restricted = false;
+
 
 		allDims all;
 		all.current_index = 0;
@@ -86,11 +101,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 		vector<int> counter = vector<int>(location.getDimension() - 1);
 		fill(counter.begin(), counter.end(),0);
 
-//        vector<vector<double>> newThresholds;
 
 
 		//firings in the past
-		// upper interval bound = min (upperBounds, threshold from parent)
 		for (int i = 0; i < generalTransitionsFired.size(); i++) {
 
             int transitionID = generalTransitionsFired[i];
@@ -107,15 +120,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 			counter[transitionID] +=1;
 
 		}
-//        if (parentID >= 0) {
-//            all.upperBoundThresholds = thresholds.find(parentID)->second;
-//            newThresholds = all.upperBoundThresholds;
-//            restricted = true;
-//        }
 
 
 		//firings in the future (particular next firing per general transition)
-		//lower interval bound = max(lowerBounds + t - entrance time, lower) having lowerBounds and entrance time (from SourceEvent) as vectors dependent on random variables
 		for (int j = 0; j < counter.size(); j++){
 
             int firing = counter[j];
@@ -143,35 +150,22 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
                     for (int l = 0; l < dependencies.size(); l++)
                         all.lowerBounds[all.integrals.size() - 1][l + 1] -= dependencies[l];
-
-//                    restricted = true;
-//                    if (newThresholds.size() > all.integrals.size() - 1)
-//                        newThresholds[all.integrals.size() - 1] = all.lowerBounds[all.integrals.size() - 1];
-//                    else
-//                        newThresholds.push_back( all.lowerBounds[all.integrals.size() - 1]);
                 }
             }
 		}
 
-//        if (restricted || parentID >= 0)
-//            thresholds.insert(pair<int, vector<vector<double>>>(nodeID, newThresholds));
-
-
 		if (all.integrals.size() > 0){
+		    all.evaluations = evaluations;
 			double lower = all.lowerBounds[0][0];
 			double upper = all.upperBounds[0][0];
 
             if ((lower > 0.0 && isinf(lower)) || upper <= 0.0  || lower >= upper)
                 result =  0.0;
-            else {
-//                if (all.integrals[0].fired && all.upperBoundThresholds.size() > 0 && upper > all.upperBoundThresholds[0][0])
-//                    upper =  all.upperBoundThresholds[0][0];
-                result = gauss_legendre(n, functionToIntegrate, &all, lower, checkInfinity(upper));
-            }
+            else
+                result = gauss_legendre(64, functionToIntegrateGauss, &all, lower, upper);
 
 
-
-			cout << "integral result: " << result << endl;
+			cout << "Gauss integral result: " << result << endl;
 		}
 
 		return result;
@@ -179,123 +173,262 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
-    double ProbabilityCalculator::functionToIntegrate(double x, void* data){
+    double ProbabilityCalculator::functionToIntegrateGauss(double x, void* data){
+
 
 
    	    allDims all = *((allDims *)data);
-   	    all.integrals[all.current_index].value = correctValue(x);
-        singleDim current;
+        int n = all.evaluations;
+   	    all.integrals[all.current_index].value = x;
 
-   		if (all.current_index  == (all.integrals.size() - 1)){
+        if (all.current_index  == (all.integrals.size() - 1)) {
 
-   			double result = 1.0;
+            singleDim current;
+            double result = 1.0;
 
-   			for (int i = 0; i < all.integrals.size(); i++){
-   				current = all.integrals[i];
-   				result *= getDensity(current.distribution, current.value);
-   			}
+            for (int i = 0; i < all.integrals.size(); i++) {
+                current = all.integrals[i];
+                result *= getDensity(current.distribution, current.value);
+            }
 
-   			return result;
+            return result;
 
    		} else {
 
             all.current_index++;
             int index_next = all.current_index;
 
+
+            singleDim currentDependency;
             double lower = all.lowerBounds[index_next][0];
             double upper = all.upperBounds[index_next][0];
-
             double lowerFactor;
             double upperFactor;
-//            double upperThresholdFactor;
-//
-//            if (all.upperBoundThresholds.size() > index_next) {
-//
-//                double upperThreshold = all.upperBoundThresholds[index_next][0];
-//
-//                for (int i = 0; i < index_next; i++) {
-//                    current = all.integrals[i];
-//
-//                    lowerFactor = 0.0;
-//                    upperFactor = 0.0;
-//                    upperThresholdFactor = 0.0;
-//                    if (all.lowerBounds[index_next].size() > i + 1)
-//                        lowerFactor = all.lowerBounds[index_next][i + 1];
-//                    if (all.lowerBounds[index_next].size() > i + 1)
-//                        upperFactor = all.upperBounds[index_next][i + 1];
-//                    if (all.upperBoundThresholds[index_next].size() > i + 1)
-//                        upperThresholdFactor = all.upperBoundThresholds[index_next][i + 1];
-//
-//                    if (!isnan(lowerFactor) && lowerFactor != 0.0)
-//                        lower += (correctValue(lowerFactor) * correctValue(current.value));
-//
-//                    if (!isnan(upperFactor) && upperFactor != 0.0)
-//                        upper += (correctValue(upperFactor) * correctValue(current.value));
-//
-//
-//                    if (!isnan(upperThresholdFactor) && upperThresholdFactor != 0.0)
-//                        upperThreshold += (correctValue(upperThresholdFactor) * correctValue(current.value));
-//
-//                }
-//
-//                if (all.integrals[all.current_index].fired && upper > upperThreshold)
-//                    upper = upperThreshold;
-//
-//
-//                if (lower >= upper)
-//                    return 0.0;
-//
-//            } else {
 
-                 for (int i = 0; i < index_next; i++) {
-                    current = all.integrals[i];
+             for (int i = 0; i < index_next; i++) {
+                 currentDependency = all.integrals[i];
 
-                    double lowerFactor = 0.0;
-                    double upperFactor = 0.0;
+                lowerFactor = 0.0;
+                upperFactor = 0.0;
 
-                    if (all.lowerBounds[index_next].size() > i + 1)
-                        lowerFactor = all.lowerBounds[index_next][i + 1];
-                     if (all.lowerBounds[index_next].size() > i + 1)
-                        upperFactor = all.upperBounds[index_next][i + 1];
+                if (all.lowerBounds[index_next].size() > i + 1)
+                    lowerFactor = all.lowerBounds[index_next][i + 1];
+                 if (all.lowerBounds[index_next].size() > i + 1)
+                    upperFactor = all.upperBounds[index_next][i + 1];
 
-                    if (!isnan(lowerFactor) && lowerFactor != 0.0)
-                        lower += (correctValue(lowerFactor) * correctValue(current.value));
+                if (!isnan(lowerFactor) && lowerFactor != 0.0)
+                    lower += (lowerFactor * currentDependency.value);
 
-                    if (!isnan(upperFactor)  && lowerFactor != 0.0)
-                        upper += (correctValue(upperFactor) * correctValue(current.value));
+                if (!isnan(upperFactor)  && lowerFactor != 0.0)
+                    upper += (upperFactor * currentDependency.value);
 
-                }
-//            }
+            }
 
-            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0 )// || lower >= upper)
+            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0 )
                 return 0.0;
 
 
 
-   			return gauss_legendre(n, functionToIntegrate, &all, lower, checkInfinity(upper));
+   			return gauss_legendre(n, functionToIntegrateGauss, &all, lower, upper);
    		}
 
    	}
 
 
 
-    double ProbabilityCalculator::checkInfinity(double value){
+    double ProbabilityCalculator::calculateIntervalsMonteCarlo(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error){
 
-//   		if (isinf(value))
-//   			return DBL_MAX;
 
-   		return value;
+   		double result = 0.0;
+
+   		allDims all;
+   		all.current_index = 0;
+
+   		const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
+
+   		vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
+   		vector<bool> enabledTransitions = location.getGeneralTransitionsEnabled();
+
+   		vector<int> counter = vector<int>(location.getDimension() - 1);
+   		fill(counter.begin(), counter.end(),0);
+
+
+
+   		//firings in the past
+   		for (int i = 0; i < generalTransitionsFired.size(); i++) {
+
+               int transitionID = generalTransitionsFired[i];
+               int firing = counter[transitionID];
+
+               singleDim s;
+               s.distribution = distributions[transitionID];
+               s.fired = true;
+               all.integrals.push_back(s);
+
+               all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[transitionID][firing]);
+               all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[transitionID][firing]);
+
+   			counter[transitionID] +=1;
+
+   		}
+
+
+   		//firings in the future (particular next firing per general transition)
+   		for (int j = 0; j < counter.size(); j++){
+
+               int firing = counter[j];
+
+   		    bool enablingTimeGreaterZero = false;
+               for (int l = 0; l < location.getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
+                   if (location.getGeneralIntervalBoundLeft()[j][firing][l] > 0)
+                       enablingTimeGreaterZero = true;
+               }
+
+               if (enabledTransitions[j] || enablingTimeGreaterZero) {
+
+                   singleDim s;
+                   s.distribution = distributions[j];
+                   s.fired = false;
+                   all.integrals.push_back(s);
+
+                   all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[j][firing]);
+                   all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[j][firing]);
+
+                   if (enabledTransitions[j]) {
+
+                       all.lowerBounds[all.integrals.size() - 1][0] += (timepoint - location.getSourceEvent().getTime());
+
+                       vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
+                       for (int l = 0; l < dependencies.size(); l++)
+                           all.lowerBounds[all.integrals.size() - 1][l + 1] -= dependencies[l];
+                   }
+               }
+   		}
+
+
+
+   		const int dim = all.integrals.size();
+
+
+   		if (dim > 0){
+
+
+            double* xl = new double[dim];
+            double* xu = new double[dim];
+
+
+            for (int i = 0;i < dim; i++){
+                xl[i] = -1.0;
+                xu[i] = 1.0;
+            }
+
+            size_t dimension = static_cast<size_t>(dim);
+
+            const gsl_rng_type *T;
+            gsl_rng *r;
+
+            gsl_monte_function G = { &transformedFunctionToIntegrateMonteCarlo, dimension, &all };
+
+            size_t calls = static_cast<size_t>(functioncalls);
+
+            gsl_rng_env_setup ();
+
+            T = gsl_rng_default;
+            r = gsl_rng_alloc (T);
+
+
+            if (algorithm == 1){
+
+              gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension);
+              gsl_monte_plain_integrate (&G, xl, xu, dimension, calls, r, s, &result, &error);
+              gsl_monte_plain_free (s);
+
+                cout << "Plain Monte Carlo integral result: " << result << ", " << "error estimate: " << error << endl;
+
+            } else if (algorithm == 2){
+
+              gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension);
+              gsl_monte_miser_integrate (&G, xl, xu, dimension, calls, r, s, &result, &error);
+              gsl_monte_miser_free (s);
+              cout << "Monte Carlo MISER integral result: " << result << ", " << "error estimate: " << error << endl;
+
+            } else if (algorithm == 3){
+
+              gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension);
+              gsl_monte_vegas_integrate (&G, xl, xu, dimension, calls, r, s, &result, &error);
+              gsl_monte_vegas_free (s);
+
+              cout << "Monte Carlo VEGAS final integral result: " << result << ", " << "error estimate: " << error << endl;
+            }
+
+            gsl_rng_free (r);
+
+
+            delete[] xl;
+            delete[] xu;
+
+   		}
+
+   		return result;
    	}
 
 
 
-   	double ProbabilityCalculator::correctValue(double value){
+    double ProbabilityCalculator::transformedFunctionToIntegrateMonteCarlo(double *k, size_t dim, void* params){
 
-        if (value <= 0.0)
-           return 0.0;
 
-       return value;
-    }
+
+   	    allDims all = *((allDims *)params);
+        double result = 1.0;
+
+        singleDim current;
+        singleDim currentDependency;
+        double lower;
+        double upper;
+        double lowerFactor;
+        double upperFactor;
+
+        double* transformedValues = new double[dim];
+
+
+
+        for (int i = 0; i < dim; i++){
+
+            current = all.integrals[i];
+            lower = all.lowerBounds[i][0];
+            upper = all.upperBounds[i][0];
+
+
+            for (int j = 0; j < i; j++) {
+                currentDependency = all.integrals[j];
+
+                lowerFactor = 0.0;
+                upperFactor = 0.0;
+
+                if (all.lowerBounds[i].size() > j + 1)
+                    lowerFactor = all.lowerBounds[i][j + 1];
+                if (all.lowerBounds[i].size() > j + 1)
+                    upperFactor = all.upperBounds[i][j + 1];
+
+                if (!isnan(lowerFactor) && lowerFactor != 0.0)
+                    lower += (lowerFactor * transformedValues[j]);
+
+               if (!isnan(upperFactor)  && lowerFactor != 0.0)
+                    upper += (upperFactor * transformedValues[j]);
+
+           }
+
+
+            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0 )
+                return 0.0;
+
+            transformedValues[i] = 0.5 * (upper + lower) + k[i] * 0.5 * (upper - lower);
+            result *= getDensity(current.distribution, transformedValues[i]) * 0.5 *(lower - upper);
+        }
+
+        return result;
+
+   	}
 
 
 
