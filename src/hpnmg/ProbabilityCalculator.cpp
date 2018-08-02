@@ -354,11 +354,27 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             } else if (algorithm == 3){
 
-              gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension);
-              gsl_monte_vegas_integrate (&G, xl, xu, dimension, calls, r, s, &result, &error);
-              gsl_monte_vegas_free (s);
+                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension);
 
-              cout << "Monte Carlo VEGAS final integral result: " << result << ", " << "error estimate: " << error << endl;
+                //vegas warm-up
+                gsl_monte_vegas_integrate (&G, xl, xu, dimension, calls/50, r, s, &result, &error);
+
+                for (int j = 0; j < 10; j++) {
+                    gsl_monte_vegas_integrate(&G, xl, xu, dimension, calls/5, r, s, &result, &error);
+
+                    if ((fabs (gsl_monte_vegas_chisq (s) - 1.0) <= 0.5) || (error == 0.0))
+                        break;
+                }
+                gsl_monte_vegas_free (s);
+
+                if (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5 && error > 0.0){
+                    cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
+                    gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension);
+                    gsl_monte_miser_integrate (&G, xl, xu, dimension, calls, r, z, &result, &error);
+                    gsl_monte_miser_free (z);
+                    cout << "Monte Carlo MISER integral result: " << result << ", " << "error estimate: " << error << endl;
+                } else
+                    cout << "Monte Carlo VEGAS final integral result: " << result << ", " << "error estimate: " << error << endl;
             }
 
             gsl_rng_free (r);
