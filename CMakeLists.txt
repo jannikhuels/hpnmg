@@ -66,9 +66,8 @@ find_package(hypro REQUIRED)
 find_package(carl REQUIRED)
 find_package(XercesC REQUIRED)
 find_package(Boost REQUIRED)
-find_package(cgal REQUIRED)
 find_package(GSL REQUIRED)
-
+find_package(CGAL REQUIRED)
 
 if ( CGAL_FOUND )
 
@@ -95,6 +94,7 @@ else()
     message(STATUS "NOTICE: This program requires the CGAL library, and will not be compiled.")
 
 endif()
+
 
 
 
