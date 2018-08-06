@@ -56,6 +56,7 @@ namespace hpnmg {
             accumulatedProbability(parametricLocation.accumulatedProbability),
             dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
+            generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
             sourceEvent(parametricLocation.sourceEvent) {
 
     }
@@ -131,12 +132,13 @@ namespace hpnmg {
         this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
     }
 
+
     const vector<bool> &ParametricLocation::getGeneralTransitionsEnabled() const {
         return generalTransitionsEnabled;
     }
 
     void ParametricLocation::setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled) {
-        ParametricLocation::generalTransitionsEnabled = generalTransitionsEnabled;
+        this->generalTransitionsEnabled = generalTransitionsEnabled;
     }
 
     double ParametricLocation::getEarliestEntryTime() {
@@ -187,4 +189,5 @@ namespace hpnmg {
 
         return time;
     }
+
 }
