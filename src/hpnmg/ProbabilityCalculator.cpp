@@ -12,7 +12,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 		double value;
 		double transformedValue;
 		pair<string, map<string, float>> distribution;
-		bool fired = false;
 	} singleDim;
 
 
@@ -111,7 +110,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             singleDim s;
             s.distribution = distributions[transitionID];
-            s.fired = true;
             all.integrals.push_back(s);
 
             all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[transitionID][firing]);
@@ -122,37 +120,36 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 		}
 
 
-		//firings in the future (particular next firing per general transition)
-		for (int j = 0; j < counter.size(); j++){
-
-            int firing = counter[j];
-
-		    bool enablingTimeGreaterZero = false;
-            for (int l = 0; l < location.getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
-                if (location.getGeneralIntervalBoundLeft()[j][firing][l] > 0)
-                    enablingTimeGreaterZero = true;
-            }
-
-            if (enabledTransitions[j] || enablingTimeGreaterZero) {
-
-                singleDim s;
-                s.distribution = distributions[j];
-                s.fired = false;
-                all.integrals.push_back(s);
-
-                all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[j][firing]);
-                all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[j][firing]);
-
-                if (enabledTransitions[j]) {
-
-                    all.lowerBounds[all.integrals.size() - 1][0] += (timepoint - location.getSourceEvent().getTime());
-
-                    vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
-                    for (int l = 0; l < dependencies.size(); l++)
-                        all.lowerBounds[all.integrals.size() - 1][l + 1] -= dependencies[l];
-                }
-            }
-		}
+//		//firings in the future (particular next firing per general transition)
+//		for (int j = 0; j < counter.size(); j++){
+//
+//            int firing = counter[j];
+//
+//		    bool enablingTimeGreaterZero = false;
+//            for (int l = 0; l < location.getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
+//                if (location.getGeneralIntervalBoundLeft()[j][firing][l] > 0)
+//                    enablingTimeGreaterZero = true;
+//            }
+//
+//            if (enabledTransitions[j] || enablingTimeGreaterZero) {
+//
+//                singleDim s;
+//                s.distribution = distributions[j];
+//                all.integrals.push_back(s);
+//
+//                all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[j][firing]);
+//                all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[j][firing]);
+//
+//                if (enabledTransitions[j]) {
+//
+//                    all.lowerBounds[all.integrals.size() - 1][0] += (timepoint - location.getSourceEvent().getTime());
+//
+//                    vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
+//                    for (int l = 0; l < dependencies.size(); l++)
+//                        all.lowerBounds[all.integrals.size() - 1][l + 1] -= dependencies[l];
+//                }
+//            }
+//		}
 
 		if (all.integrals.size() > 0){
 		    all.evaluations = evaluations;
@@ -262,7 +259,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
                singleDim s;
                s.distribution = distributions[transitionID];
-               s.fired = true;
                all.integrals.push_back(s);
 
                all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[transitionID][firing]);
@@ -273,37 +269,36 @@ ProbabilityCalculator::ProbabilityCalculator(){}
    		}
 
 
-   		//firings in the future (particular next firing per general transition)
-   		for (int j = 0; j < counter.size(); j++){
-
-               int firing = counter[j];
-
-   		    bool enablingTimeGreaterZero = false;
-               for (int l = 0; l < location.getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
-                   if (location.getGeneralIntervalBoundLeft()[j][firing][l] > 0)
-                       enablingTimeGreaterZero = true;
-               }
-
-               if (enabledTransitions[j] || enablingTimeGreaterZero) {
-
-                   singleDim s;
-                   s.distribution = distributions[j];
-                   s.fired = false;
-                   all.integrals.push_back(s);
-
-                   all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[j][firing]);
-                   all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[j][firing]);
-
-                   if (enabledTransitions[j]) {
-
-                       all.lowerBounds[all.integrals.size() - 1][0] += (timepoint - location.getSourceEvent().getTime());
-
-                       vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
-                       for (int l = 0; l < dependencies.size(); l++)
-                           all.lowerBounds[all.integrals.size() - 1][l + 1] -= dependencies[l];
-                   }
-               }
-   		}
+//   		//firings in the future (particular next firing per general transition)
+//   		for (int j = 0; j < counter.size(); j++){
+//
+//               int firing = counter[j];
+//
+//   		    bool enablingTimeGreaterZero = false;
+//               for (int l = 0; l < location.getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
+//                   if (location.getGeneralIntervalBoundLeft()[j][firing][l] > 0)
+//                       enablingTimeGreaterZero = true;
+//               }
+//
+//               if (enabledTransitions[j] || enablingTimeGreaterZero) {
+//
+//                   singleDim s;
+//                   s.distribution = distributions[j];
+//                   all.integrals.push_back(s);
+//
+//                   all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[j][firing]);
+//                   all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[j][firing]);
+//
+//                   if (enabledTransitions[j]) {
+//
+//                       all.lowerBounds[all.integrals.size() - 1][0] += (timepoint - location.getSourceEvent().getTime());
+//
+//                       vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
+//                       for (int l = 0; l < dependencies.size(); l++)
+//                           all.lowerBounds[all.integrals.size() - 1][l + 1] -= dependencies[l];
+//                   }
+//               }
+//   		}
 
 
 

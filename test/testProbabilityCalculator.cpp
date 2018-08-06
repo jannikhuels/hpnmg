@@ -22,7 +22,8 @@ TEST(ProbabilityCalculator, example2generalsimple){
 
    //ASSERT_EQ (nodes.size(), 9);
 
-   double result = calculator->ProbabilityCalculator::getProbability(nodes, *plt0, 5.0);
+   double error;
+   double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 5.0, 50000, error);
 
    //ASSERT_EQ (result, 1.0);
 
