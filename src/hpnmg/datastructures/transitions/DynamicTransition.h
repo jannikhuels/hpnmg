@@ -22,5 +22,10 @@ namespace hpnmg {
                           double parameter
             );
         double getRate();
+        double getFactor();
+        double getConstant();
+        std::vector<shared_ptr<ContinuousTransition>> getTransitions();
+        std::vector<double> getTransitionFactors();
+        double getParameter();
     };
 }

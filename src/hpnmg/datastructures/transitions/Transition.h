@@ -20,6 +20,7 @@ namespace hpnmg {
 
     public:
         string id;
+        virtual string getId(); // virtual method for dynamic cast... (todo)
 
         Transition(string &id);
 

@@ -16,10 +16,10 @@ namespace hpnmg {
           parameter(parameter)
     {}
 
-    double DynamicTransition::getRate() { // why is getRate never used?
-        double rate;
-        for (int i=0;  i < transitionFactors.size(); i++) {
-            rate =+ transitionFactors[i] * transitions[i]->getRate();
+    double DynamicTransition::getRate() {
+        double rate = 0;
+        for (int i=0;  i < transitions.size(); i++) {
+            rate += transitionFactors[i] * transitions[i]->getRate();
         }
         rate = factor * (rate + constant);
 
@@ -30,5 +30,25 @@ namespace hpnmg {
             return parameter;
         }
 
+    }
+
+    double DynamicTransition::getFactor() {
+        return factor;
+    }
+
+    double DynamicTransition::getConstant() {
+        return constant;
+    }
+
+    std::vector<shared_ptr<ContinuousTransition>> DynamicTransition::getTransitions() {
+        return transitions;
+    }
+
+    std::vector<double> DynamicTransition::getTransitionFactors() {
+        return transitionFactors;
+    }
+
+    double DynamicTransition::getParameter() {
+        return parameter;
     }
 }

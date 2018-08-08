@@ -383,6 +383,7 @@ namespace hpnmg {
                                             transitions.push_back(continuousTransition.second);
                                         }
                                     }
+                                    if (dependencyAttributes->getLength()<2) { transitionFactors.push_back(1); }
                                 } else if (XMLString::equals(dependencyAttribute->getNodeName(), XMLString::transcode("factor"))) {
                                     transitionFactors.push_back(strtof(XMLString::transcode(dependencyAttribute->getNodeValue()), nullptr));
                                 }

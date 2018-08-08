@@ -19,4 +19,8 @@ namespace hpnmg {
     const map<string, shared_ptr<DiscreteArc>> Transition::getDiscreteOutputArcs() const { return discreteOutputArcs; }
     const map<string, shared_ptr<ContinuousArc>> Transition::getContinuousOutputArcs() const { return continuousOutputArcs; }
     const map<string, shared_ptr<GuardArc>> Transition::getGuardOutputArcs() const { return guardOutputArcs; }
+
+    string Transition::getId() {
+        return id;
+    }
 }

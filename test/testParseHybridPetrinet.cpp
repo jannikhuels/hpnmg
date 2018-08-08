@@ -416,8 +416,11 @@ TEST(ParseHybridPetrinet, DynamicTransitions)
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
     writer.writePLT(plt,20);
 
-    shared_ptr<ContinuousTransition> transition = hybridPetrinet->getContinuousTransitions()["td0"];//getTransitionById("td0");
+    shared_ptr<ContinuousTransition> transition = hybridPetrinet->getContinuousTransitions()["td0"];
     EXPECT_EQ(2,transition->currentRate);
+    EXPECT_EQ(5,transition->getRate());
+
+
 }
 
 /*TEST(ParseHybridPetrinet, Example5General) {
