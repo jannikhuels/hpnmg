@@ -25,11 +25,11 @@ namespace hpnmg {
 
         static std::vector<vector_t<double>> hspVectorsFromBounds(std::vector<double> bounds);
 
-        static std::vector<vector_t<double>> directionVectorsFromHspVectors(std::vector<vector_t<double>> hspVectors);
 
-        static vector_t<double> vectorFromBound(double bound, int boundIndex, int dimension);
 
     public:
+        static std::vector<vector_t<double>> directionVectorsFromHspVectors(std::vector<vector_t<double>> hspVectors);
+
         // TODO: Do not create a base region but instead try to read it from the PLT.
         static Region createBaseRegion(int dimension, int maxTime);
 
@@ -70,6 +70,8 @@ namespace hpnmg {
 
         static std::vector<Intervals> removeEmptyIntervals(std::vector<Intervals> intervals);
 
-        static std::vector<std::vector<double>> stochasticConstraints(Region region);
+        static vector_t<double> vectorFromBound(double bound, int boundIndex, int dimension);
+
+        static std::pair<std::vector<std::vector<double>>,std::vector<std::vector<double>>> generalIntervalBounds(Region region);
     };
 }
