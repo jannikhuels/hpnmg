@@ -291,11 +291,12 @@ TEST(ParametricLocationTreeXML, Normed) {
     // Integration Intervals
     ParametricLocation t = candidates[0].getParametricLocation();
     ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals().size(), 1);
-    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].first.size(), 2);
-    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].first[0], 3);
-    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].first[1], 0);
-    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.size(), 2);
-    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second[0], 10);
-    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second[1], 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].first, 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.first.size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.first[0], 3);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.first[1], 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.second.size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.second[0], 10);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.second[1], 0);
 }
 

@@ -18,7 +18,7 @@ namespace hpnmg {
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
 
-        std::vector<std::pair<std::vector<double>, std::vector<double>>> integrationIntervals;
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals;
         std::vector<double> generalDependenciesNormed;
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;
@@ -109,7 +109,7 @@ namespace hpnmg {
 
         double getMinimumTime(std::vector<std::vector<std::vector<double>>> lowerBoundaries, std::vector<std::vector<std::vector<double>>> upperBoundaries);
 
-        std::vector<std::pair<std::vector<double>, std::vector<double>>> getIntegrationIntervals();
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getIntegrationIntervals();
 
         void setIntegrationIntervals(std::vector<std::vector<double>> time, int value);
 

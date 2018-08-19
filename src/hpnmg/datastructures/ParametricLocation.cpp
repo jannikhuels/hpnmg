@@ -208,7 +208,7 @@ namespace hpnmg {
 
         vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();
 
-        std::vector<std::pair<std::vector<double>, std::vector<double>>> result;
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result;
 
         vector<int> counter = vector<int>(this->dimension - 1);
         fill(counter.begin(), counter.end(),0);
@@ -217,14 +217,14 @@ namespace hpnmg {
 
         for (int j = 0; j < generalTransitionsFired.size(); j++) {
             int index = generalTransitionsFired[j];
-            result.push_back(std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[index][counter[index]], this->dimension), makeNormed(rightBoundaries[index][counter[index]], this->dimension)));
+            result.push_back({index, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[index][counter[index]], this->dimension), makeNormed(rightBoundaries[index][counter[index]], this->dimension))});
             counter[index] += 1;
         }
 
         for (int j = 0; j < leftBoundaries.size(); j++) {
             if (leftBoundaries[j].size() > counter[j]) {
                 for (int i = counter[j]; i < leftBoundaries[j].size(); i++) {
-                    result.push_back(std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][i], this->dimension), makeNormed(rightBoundaries[j][i], this->dimension)));
+                    result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][i], this->dimension), makeNormed(rightBoundaries[j][i], this->dimension))});
                 }
             }
         }
@@ -236,10 +236,10 @@ namespace hpnmg {
         // Update the Boundaries
         for (int i = 0; i < newBoundaries.size(); i++) {
             if (newBoundaries[i].first.size()>0) {
-                result[i].first = newBoundaries[i].first;
+                result[i].second.first = newBoundaries[i].first;
             }
             if (newBoundaries[i].second.size()>0) {
-                result[i].second = newBoundaries[i].second;
+                result[i].second.second = newBoundaries[i].second;
             }
         }
 
@@ -247,7 +247,7 @@ namespace hpnmg {
 
     }
 
-    std::vector<std::pair<std::vector<double>, std::vector<double>>> ParametricLocation::getIntegrationIntervals() {
+    std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getIntegrationIntervals() {
         return this->integrationIntervals;
     }
 
