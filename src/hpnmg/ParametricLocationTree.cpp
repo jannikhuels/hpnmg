@@ -14,7 +14,7 @@ namespace hpnmg {
         this->region = region;
     }
 
-    void ParametricLocationTree::Node::setParametricLocation(ParametricLocation parametricLocation) {
+    void ParametricLocationTree::Node::setParametricLocation(const ParametricLocation &parametricLocation) {
         this->parametricLocation = parametricLocation;
     }
 
@@ -77,7 +77,7 @@ namespace hpnmg {
         return current;
     }
 
-    void ParametricLocationTree::addNormedDependenciesRecursively(const ParametricLocationTree::Node &startNode,
+    void ParametricLocationTree::addNormedDependenciesRecursively(ParametricLocationTree::Node &startNode,
                                                                   std::vector<int> genTransOccurings, int dimension) {
         // inititalize normed vector and fill with 0
         vector<double> generalDependenciesNormed(dimension);
@@ -85,6 +85,8 @@ namespace hpnmg {
 
         // get all needed information from parametric location
         ParametricLocation loc = startNode.getParametricLocation();
+        loc.setGeneralDependenciesNormed({9,9,9});
+        startNode.setParametricLocation(loc);
         vector<int> generalTransitionsFired = loc.getGeneralTransitionsFired();
         Event event = loc.getSourceEvent();
         double time = event.getTime();
@@ -103,7 +105,7 @@ namespace hpnmg {
             for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
                 if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
                     int posNormed = startPositionForTransition + counter;
-                    generalDependenciesNormed[posNormed] = generalDependenciesNormed[realFiring];
+                    generalDependenciesNormed[posNormed] = generalDependenciesOrig[realFiring];
                     ++counter;
                 }
             }
@@ -111,9 +113,16 @@ namespace hpnmg {
         }
         assert(startPositionForTransition == dimension);
         loc.setGeneralDependenciesNormed(generalDependenciesNormed);
-        for (ParametricLocationTree::Node &node : getChildNodes(startNode)) {
-            addNormedDependenciesRecursively(node, genTransOccurings, dimension);
+        startNode.setParametricLocation(loc);
+
+        std::pair <std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator, std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator> ret;
+        ret = parametricLocations.equal_range(startNode.getNodeID());
+        for (std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator it=ret.first; it!=ret.second; ++it) {
+            addNormedDependenciesRecursively(it->second, genTransOccurings, dimension);
         }
+        /*for (ParametricLocationTree::Node &node : getChildNodes(startNode)) {
+            addNormedDependenciesRecursively(node, genTransOccurings, dimension);
+        }*/
     }
 
     //TODO Set Dimension accordingly. This is bad -> the dimension should be equal for the whole tree.
@@ -131,7 +140,9 @@ namespace hpnmg {
                 this->dimension = dim + 1;
             }
             // add normed general dependency vector to all parametric locations
-            addNormedDependenciesRecursively(getRootNode(), dimV, dim+1);
+            std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator root;
+            root = parametricLocations.find(ROOT_NODE_INDEX);
+            addNormedDependenciesRecursively(root->second, dimV, dim+1);
         }
         return this->dimension;
     }
@@ -248,7 +259,7 @@ namespace hpnmg {
         double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
         ParametricLocation parametricLocation = startNode.getParametricLocation();
         parametricLocation.setAccumulatedProbability(nodeProbability);
-        startNode.setParametricLocation(parametricLocation);
+
 
         if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.second) {
             // startNode's earliest entry time is before or equal the questioned time
@@ -267,6 +278,7 @@ namespace hpnmg {
             }
 
             if(valid) {
+                startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
             }
 

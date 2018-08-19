@@ -261,3 +261,28 @@ TEST(ParametricLocationTreeXML, AccumulatedProbability) {
     ASSERT_NEAR(candidates[2].getParametricLocation().getAccumulatedProbability(),0.33,0.01);
     ASSERT_NEAR(candidates[3].getParametricLocation().getAccumulatedProbability(),0.66,0.01);
 }
+
+TEST(ParametricLocationTreeXML, Normed) {
+    ReadHybridPetrinet reader;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 10);
+    int dim = plt->getDimension();
+    ASSERT_EQ(dim, 2);
+
+    ParametricLocationTree::Node r = plt->getRootNode();
+
+    vector<ParametricLocationTree::Node> candidates;
+    candidates = plt->getCandidateLocationsForTime(3);
+
+    ASSERT_EQ(candidates.size(), 3);
+    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed()[1], 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed()[1], 1);
+    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[1], 2);
+}

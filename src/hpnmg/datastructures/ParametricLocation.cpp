@@ -57,7 +57,9 @@ namespace hpnmg {
             dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
             generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
-            sourceEvent(parametricLocation.sourceEvent) {
+            sourceEvent(parametricLocation.sourceEvent),
+            generalDependenciesNormed(parametricLocation.generalDependenciesNormed)
+    {
 
     }
 
@@ -123,13 +125,15 @@ namespace hpnmg {
     void ParametricLocation::setGeneralTransitionsFired(std::vector<int> generalTransitionsFired) {
         this->generalTransitionFired = generalTransitionsFired; }
 
-    const vector<double> &ParametricLocation::getGeneralDependenciesNormed() const {
-        return generalDependenciesNormed;
+    vector<double> ParametricLocation::getGeneralDependenciesNormed() {
+        //return this->sourceEvent.getGeneralDependenciesNormed();
+        return this->generalDependenciesNormed;
     }
 
     void ParametricLocation::setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed) {
-        ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
-        this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
+        //ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
+        //this->sourceEvent.setGeneralDependenciesNormed(generalDependenciesNormed);
+        this->generalDependenciesNormed = generalDependenciesNormed;
     }
 
 
@@ -188,6 +192,25 @@ namespace hpnmg {
         }
 
         return time;
+    }
+
+    std::vector<std::pair<std::vector<double>, std::vector<double>>> ParametricLocation::getIntegrationIntervals() {
+
+        std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
+        std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
+
+        vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();
+
+        std::vector<std::pair<std::vector<double>, std::vector<double>>> result;
+
+        for (int j = 0; j < generalTransitionsFired.size(); j++) {
+            int index = generalTransitionsFired[j];
+            for (int i = 0; i < leftBoundaries[index].size(); i++) {
+                result.push_back(std::pair<std::vector<double>, std::vector<double>>(leftBoundaries[index][i], rightBoundaries[index][i]));
+            }
+        }
+
+        return result;
     }
 
 }
