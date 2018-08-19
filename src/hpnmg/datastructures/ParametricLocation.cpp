@@ -58,7 +58,8 @@ namespace hpnmg {
             generalTransitionFired(parametricLocation.generalTransitionFired),
             generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
             sourceEvent(parametricLocation.sourceEvent),
-            generalDependenciesNormed(parametricLocation.generalDependenciesNormed)
+            generalDependenciesNormed(parametricLocation.generalDependenciesNormed),
+            integrationIntervals(parametricLocation.integrationIntervals)
     {
 
     }
@@ -194,8 +195,14 @@ namespace hpnmg {
         return time;
     }
 
-    std::vector<std::pair<std::vector<double>, std::vector<double>>> ParametricLocation::getIntegrationIntervals() {
+    std::vector<double> makeNormed(std::vector<double> in, int dimension) {
+        for (int i = in.size(); i < dimension; i++) {
+            in.push_back(0);
+        }
+        return in;
+    }
 
+    void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, int value) {
         std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
         std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
 
@@ -203,14 +210,45 @@ namespace hpnmg {
 
         std::vector<std::pair<std::vector<double>, std::vector<double>>> result;
 
+        vector<int> counter = vector<int>(this->dimension - 1);
+        fill(counter.begin(), counter.end(),0);
+
+        // Collect the Normed Boundaries.
+
         for (int j = 0; j < generalTransitionsFired.size(); j++) {
             int index = generalTransitionsFired[j];
-            for (int i = 0; i < leftBoundaries[index].size(); i++) {
-                result.push_back(std::pair<std::vector<double>, std::vector<double>>(leftBoundaries[index][i], rightBoundaries[index][i]));
+            result.push_back(std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[index][counter[index]], this->dimension), makeNormed(rightBoundaries[index][counter[index]], this->dimension)));
+            counter[index] += 1;
+        }
+
+        for (int j = 0; j < leftBoundaries.size(); j++) {
+            if (leftBoundaries[j].size() > counter[j]) {
+                for (int i = counter[j]; i < leftBoundaries[j].size(); i++) {
+                    result.push_back(std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][i], this->dimension), makeNormed(rightBoundaries[j][i], this->dimension)));
+                }
             }
         }
 
-        return result;
+        // Get the new Boundaries given a specific time
+        std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries = Computation::solveEquations(time, value);
+        newBoundaries = Computation::replaceValues(newBoundaries);
+
+        // Update the Boundaries
+        for (int i = 0; i < newBoundaries.size(); i++) {
+            if (newBoundaries[i].first.size()>0) {
+                result[i].first = newBoundaries[i].first;
+            }
+            if (newBoundaries[i].second.size()>0) {
+                result[i].second = newBoundaries[i].second;
+            }
+        }
+
+        this->integrationIntervals = result;
+
+    }
+
+    std::vector<std::pair<std::vector<double>, std::vector<double>>> ParametricLocation::getIntegrationIntervals() {
+        return this->integrationIntervals;
     }
 
 }

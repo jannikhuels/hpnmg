@@ -49,8 +49,11 @@ namespace hpnmg {
     }
 
     std::vector<std::pair<std::vector<double>, std::vector<double>>> Computation::solveEquations(std::vector<std::vector<double>> time, int value) {
-        assert(time.size() > 0);
-        assert(time[0].size() > 0);
+        std::vector<std::pair<std::vector<double>, std::vector<double>>> res;
+
+        if (time.size() == 0) {
+            return res;
+        }
 
         int size = time[0].size();
 
@@ -59,7 +62,6 @@ namespace hpnmg {
         std::fill(t.begin(), t.end(), 0);
         t[0] = value;
 
-        std::vector<std::pair<std::vector<double>, std::vector<double>>> res;
         for (int i = size - 1; i > 0; i--) {
             std::pair<std::vector<double>, std::vector<double>> p({},{});
             for (std::vector<double> v : time) {

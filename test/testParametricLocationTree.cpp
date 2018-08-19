@@ -275,6 +275,8 @@ TEST(ParametricLocationTreeXML, Normed) {
     vector<ParametricLocationTree::Node> candidates;
     candidates = plt->getCandidateLocationsForTime(3);
 
+
+    // GeneralDependencies
     ASSERT_EQ(candidates.size(), 3);
     ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
     ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
@@ -285,4 +287,15 @@ TEST(ParametricLocationTreeXML, Normed) {
     ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
     ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
     ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[1], 2);
+
+    // Integration Intervals
+    ParametricLocation t = candidates[0].getParametricLocation();
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals().size(), 1);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].first.size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].first[0], 3);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].first[1], 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second[0], 10);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second[1], 0);
 }
+

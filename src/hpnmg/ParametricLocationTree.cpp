@@ -125,7 +125,8 @@ namespace hpnmg {
         }*/
     }
 
-    //TODO Set Dimension accordingly. This is bad -> the dimension should be equal for the whole tree.
+    //TODO Set Dimension accordingly. This is bad -> the dimension should be equal for the whole tree. And Normed Dependencies it should be
+    // set every time tree is computed.
     int ParametricLocationTree::getDimension() { 
         if (this->dimension == 0) {
             int numberOfGeneralTransitions = getRootNode().getParametricLocation().getGeneralClock().size();
@@ -254,7 +255,7 @@ namespace hpnmg {
     }
 
     void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability) {
-
+        this->getDimension();
         // nodeProbability is the probability to get here times the probability to be here
         double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
         ParametricLocation parametricLocation = startNode.getParametricLocation();
@@ -270,14 +271,20 @@ namespace hpnmg {
 
             bool valid = true;
 
+            std::vector<std::vector<double>> childEntryTimes;
+
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
                 if (latestEntryTime < interval.first) {
                     valid = false;
+                    break;
                 }
+                childEntryTimes.push_back(node.getParametricLocation().getGeneralDependenciesNormed());
             }
 
             if(valid) {
+
+                parametricLocation.setIntegrationIntervals(childEntryTimes, interval.first);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
             }

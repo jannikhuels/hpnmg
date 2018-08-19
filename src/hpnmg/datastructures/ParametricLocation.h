@@ -2,6 +2,7 @@
 
 #include "Event.h"
 #include "Region.h"
+#include "helper/Computation.h"
 
 namespace hpnmg {
     class ParametricLocation {
@@ -110,6 +111,7 @@ namespace hpnmg {
 
         std::vector<std::pair<std::vector<double>, std::vector<double>>> getIntegrationIntervals();
 
-        void setIntegrationIntervals(std::vector<std::pair<std::vector<double>, std::vector<double>>> in);
+        void setIntegrationIntervals(std::vector<std::vector<double>> time, int value);
+
     };
 }

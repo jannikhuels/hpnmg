@@ -2,7 +2,6 @@
 #define HPNMG_COMPUTATION_H
 
 #include <vector>
-#include "ParametricLocationTree.h"
 
 namespace hpnmg {
     class Computation {
