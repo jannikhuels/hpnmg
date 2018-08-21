@@ -1171,8 +1171,6 @@ namespace hpnmg {
         //map<string, double> transitionRate;
         map<string, double> outputDriftNeeded;
         map<string, double> inputDriftNeeded;
-        // for (auto transition : hybridPetrinet->getContinuousTransitions())
-           // transitionRate[transition.first] = transition.second->getRate(); // todo: rate is set here
         while (!placesToCheck.empty()) {
             shared_ptr<ContinuousPlace> place = placesToCheck[0];
             long pos =
@@ -1219,7 +1217,7 @@ namespace hpnmg {
                     for (tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>> transItem : prioTransitions) {
                         shared_ptr<ContinuousTransition> transition = get<0>(transItem);
                         shared_ptr<ContinuousArc> arc = get<1>(transItem);
-                        sumOutRate += arc->weight * transition->getRate(); //sumOutRate += arc->weight * transitionRate[transition->id];
+                        sumOutRate += arc->weight * transition->getRate();
                         sumShare += arc->getShare();
                     }
 
@@ -1231,13 +1229,13 @@ namespace hpnmg {
                             shared_ptr<ContinuousTransition> transition = get<0>(transItem);
                             shared_ptr<ContinuousArc> arc = get<1>(transItem);
                             double newRate = leftOutputRate * arc->getShare() / sumShare;
-                            if (transition->getRate() != newRate) { //if (transitionRate[transition->id] != newRate) {
-                                double rateDiff = transition->getRate() - newRate; //double rateDiff = transitionRate[transition->id] - newRate;
+                            if (transition->getRate() != newRate) {
+                                double rateDiff = transition->getRate() - newRate;
                                 if (outputDriftNeeded.find(transition->id) == outputDriftNeeded.end())
                                     outputDriftNeeded[transition->id] = rateDiff;
                                 else
                                     outputDriftNeeded[transition->id] += rateDiff;
-                                transition->setCurrentRate(newRate); //transitionRate[transition->id] = newRate; // todo: rate is set here
+                                transition->setCurrentRate(newRate);
                                 for (auto arcItem : transition->getContinuousOutputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;
                                     if (place->id != placeToCheck->id) {
@@ -1296,7 +1294,7 @@ namespace hpnmg {
                     for (tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>> transItem : prioTransitions) {
                         shared_ptr<ContinuousTransition> transition = get<0>(transItem);
                         shared_ptr<ContinuousArc> arc = get<1>(transItem);
-                        sumInRate += arc->weight * transition->getRate(); // sumInRate += arc->weight * transitionRate[transition->id];
+                        sumInRate += arc->weight * transition->getRate();
                         sumShare += arc->getShare();
                     }
 
@@ -1308,13 +1306,13 @@ namespace hpnmg {
                             shared_ptr<ContinuousTransition> transition = get<0>(transItem);
                             shared_ptr<ContinuousArc> arc = get<1>(transItem);
                             double newRate = leftInputRate * arc->getShare() / sumShare;
-                            if (transition->getRate() != newRate) { //if (transitionRate[transition->id] != newRate) {
-                                double rateDiff = transition->getRate() - newRate; // double rateDiff = transitionRate[transition->id] - newRate;
+                            if (transition->getRate() != newRate) {
+                                double rateDiff = transition->getRate() - newRate;
                                 if (inputDriftNeeded.find(transition->id) == inputDriftNeeded.end())
                                     inputDriftNeeded[transition->id] = rateDiff;
                                 else
                                     inputDriftNeeded[transition->id] += rateDiff;
-                                transition->setCurrentRate(newRate); // transitionRate[transition->id] = newRate; // todo: rate is set here
+                                transition->setCurrentRate(newRate);
                                 for (auto arcItem : transition->getContinuousOutputArcs()) {
                                     shared_ptr<Place> placeToCheck = arcItem.second->place;
                                     if (place->id != placeToCheck->id) {
