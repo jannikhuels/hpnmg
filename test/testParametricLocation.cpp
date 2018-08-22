@@ -72,5 +72,10 @@ TEST(ParametricLocation, EntryTime) {
     parametricLocation4.setGeneralTransitionsFired({0,0});
     ASSERT_EQ(parametricLocation4.getEarliestEntryTime(),8); // 8 + 9 - 9
     ASSERT_EQ(parametricLocation4.getLatestEntryTime(),22); // 8 + 21 - 7
+    
+    Event event5(EventType::Timed, vector<double>{0,0,2},7);
+    ParametricLocation parametricLocation5(2,2,3,event5,vector<vector<vector<double>>>{{{2},{4,0,-1}},{{3,1}}},vector<vector<vector<double>>>{{{3},{5,0,1}},{{4,1}}});
+    parametricLocation5.setGeneralTransitionsFired({0,1,0});
+    EXPECT_EQ(1, parametricLocation5.getEarliestEntryTime());
 }
 
