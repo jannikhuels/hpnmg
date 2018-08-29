@@ -10,7 +10,7 @@
 using namespace hpnmg;
 using namespace std;
 
-/*TEST(ProbabilityCalculator, example){
+TEST(ProbabilityCalculator, example){
 
    auto reader= new ReadHybridPetrinet();
    auto parser = new ParseHybridPetrinet();
@@ -27,7 +27,7 @@ using namespace std;
 
    //ASSERT_EQ (result, 1.0);
 
-}*/
+}
 
 TEST(ProbabilityCalculator, example2generalsimple){
 
