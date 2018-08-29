@@ -13,14 +13,18 @@ namespace hpnmg {
                 break;
             }
         }
-        if (k < 1 || diffK == 0.0)
-            return {};
-        std::vector<double> unequationCut;
+        std::vector<double> unequationCut(minSize);
+
+        if (k < 1 || diffK == 0.0) {
+            std::fill(unequationCut.begin(), unequationCut.end(), 0);
+            return unequationCut;
+        }
+
         for (int i = 0; i < minSize; ++i) {
             if (i < k) {
-                unequationCut.push_back((time1[i] - time2[i]) / diffK);
+                unequationCut[i] = (time1[i] - time2[i]) / diffK;
             } else {
-                unequationCut.push_back(0);
+                unequationCut[i] = 0;
             }
         }
 
@@ -100,7 +104,15 @@ namespace hpnmg {
             return res1;
         }
 
-        if (s2 == 0 && res.first.size() > 0) {
+        if (s2 == 0 && res.second.size() > 0) {
+            return res2;
+        }
+
+        if (s1 == i && res.first.size() > 0) {
+            return res1;
+        }
+
+        if (s2 == i && res.second.size() > 0) {
             return res2;
         }
 
@@ -119,12 +131,12 @@ namespace hpnmg {
             int s1 = solved(in[i].first, i+1);
             int s2 = solved(in[i].second, i+1);
 
-            if (s1 != 0) {
+            if (s1 != 0 && s1 != i+1) {
                 allSolved = false;
                 in[i].first = getSolve(in[i].first, in[s1-1], s1, i+1);
             }
 
-            if (s2 != 0) {
+            if (s2 != 0 && s2 != i+1) {
                 allSolved = false;
                 in[i].second = getSolve(in[i].second, in[s2-1], s2, i+1);
             }
@@ -136,6 +148,9 @@ namespace hpnmg {
     }
 
     std::vector<double> Computation::replace(std::vector<double> func, std::vector<double> repl, int index) {
+        if (repl.size() != func.size()) {
+            return func;
+        }
         int factor = func[index];
         func[index] = 0;
         for (int i = 0; i < func.size(); i++) {

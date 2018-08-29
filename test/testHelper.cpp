@@ -125,3 +125,19 @@ TEST(ComputationTest, ReplaceValuesTest) {
     ASSERT_EQ(replaced[1].second[1], 0);
     ASSERT_EQ(replaced[1].second[2], 0);
 }
+
+TEST(ComputationTest, SolveResultZero) {
+    std::vector<std::pair<std::vector<double>, std::vector<double>>> res = Computation::solveEquations({{10,1,-1}}, 5);
+    std::vector<std::pair<std::vector<double>, std::vector<double>>> replaced = Computation::replaceValues(res);
+    ASSERT_EQ(replaced.size(),2);
+    ASSERT_EQ(replaced[0].first.size(), 3);
+    ASSERT_EQ(replaced[0].first[0], 0);
+    ASSERT_EQ(replaced[0].first[1], 1);
+    ASSERT_EQ(replaced[0].first[2], 0);
+    ASSERT_EQ(replaced[0].second.size(), 0);
+    ASSERT_EQ(replaced[1].first.size(), 0);
+    ASSERT_EQ(replaced[1].second.size(), 3);
+    ASSERT_EQ(replaced[1].second[0], 5);
+    ASSERT_EQ(replaced[1].second[1], 1);
+    ASSERT_EQ(replaced[1].second[2], 0);
+}

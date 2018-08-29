@@ -85,8 +85,6 @@ namespace hpnmg {
 
         // get all needed information from parametric location
         ParametricLocation loc = startNode.getParametricLocation();
-        loc.setGeneralDependenciesNormed({9,9,9});
-        startNode.setParametricLocation(loc);
         vector<int> generalTransitionsFired = loc.getGeneralTransitionsFired();
         Event event = loc.getSourceEvent();
         double time = event.getTime();
@@ -255,7 +253,6 @@ namespace hpnmg {
     }
 
     void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability) {
-        this->getDimension();
         // nodeProbability is the probability to get here times the probability to be here
         double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
         ParametricLocation parametricLocation = startNode.getParametricLocation();
@@ -271,7 +268,7 @@ namespace hpnmg {
 
             bool valid = true;
 
-            std::vector<std::vector<double>> childEntryTimes;
+            std::vector<std::vector<double>> entryTimes;
 
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
@@ -279,12 +276,12 @@ namespace hpnmg {
                     valid = false;
                     break;
                 }
-                childEntryTimes.push_back(node.getParametricLocation().getGeneralDependenciesNormed());
+                entryTimes.push_back(node.getParametricLocation().getGeneralDependenciesNormed());
             }
 
             if(valid) {
 
-                parametricLocation.setIntegrationIntervals(childEntryTimes, interval.first);
+                parametricLocation.setIntegrationIntervals(entryTimes, interval.first);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
             }
@@ -302,6 +299,7 @@ namespace hpnmg {
     }
 
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTimeInterval(std::pair<double,double> interval) {
+        this->getDimension();
         vector<ParametricLocationTree::Node> locations;
         // recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
         recursivelyCollectCandidateLocationsWithPLT(getRootNode(), locations, interval, 1.0);

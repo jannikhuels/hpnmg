@@ -221,25 +221,49 @@ namespace hpnmg {
             counter[index] += 1;
         }
 
-        for (int j = 0; j < leftBoundaries.size(); j++) {
-            if (leftBoundaries[j].size() > counter[j]) {
-                for (int i = counter[j]; i < leftBoundaries[j].size(); i++) {
-                    result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][i], this->dimension), makeNormed(rightBoundaries[j][i], this->dimension))});
-                }
+        for (int j = 0; j < counter.size(); j++) {
+            int firing = counter[j];
+            bool enablingTimeGreaterZero = false;
+            for (int l = 0; l < this->getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
+                if (this->getGeneralIntervalBoundLeft()[j][firing][l] > 0)
+                    enablingTimeGreaterZero = true;
+            }
+
+            if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
+
+                result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], this->dimension), makeNormed(rightBoundaries[j][firing], this->dimension))});
+
             }
         }
 
-        // Get the new Boundaries given a specific time
+        // Get the new Boundaries determined by the child events given a specific time
         std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries = Computation::solveEquations(time, value);
         newBoundaries = Computation::replaceValues(newBoundaries);
 
         // Update the Boundaries
         for (int i = 0; i < newBoundaries.size(); i++) {
-            if (newBoundaries[i].first.size()>0) {
+            if (newBoundaries[i].first.size()>i && newBoundaries[i].first[i+1] == 0) {
                 result[i].second.first = newBoundaries[i].first;
             }
-            if (newBoundaries[i].second.size()>0) {
+            if (newBoundaries[i].second.size()>i && newBoundaries[i].second[i+1] == 0) {
                 result[i].second.second = newBoundaries[i].second;
+            }
+        }
+
+        // Check if source events influences the bounds
+        std::vector<double> startEvent = this->generalDependenciesNormed;
+        std::vector<double> t(this->dimension);
+        std::fill(t.begin(), t.end(), 0);
+        t[0] = value;
+        for (int i = 1; i < startEvent.size(); i++) {
+            std::vector<double> d = Computation::computeUnequationCut(t, startEvent, i);
+            if(d.size() > 0 && d[i] == 0) {
+                if (startEvent[i] < 0) {
+                    result[i-1].second.first = d;
+                }
+                if (startEvent[i] > 0) {
+                    result[i-1].second.second = d;
+                }
             }
         }
 
@@ -247,7 +271,7 @@ namespace hpnmg {
 
     }
 
-    std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getIntegrationIntervals() {
+    std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getIntegrationIntervals() const{
         return this->integrationIntervals;
     }
 

@@ -64,7 +64,12 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         double nodeResult = 0.0;
 
         for (int i = 0;i < nodes.size(); i++) {
+            cout << "----" << endl;
             cout << "Node: " << nodes[i].getNodeID() << endl;
+
+            cout << "Left " << nodes[i].getParametricLocation().getGeneralIntervalBoundLeft() << endl;
+            cout << "Right " << nodes[i].getParametricLocation().getGeneralIntervalBoundRight() << endl;
+            cout << "Normed " << nodes[i].getParametricLocation().getGeneralDependenciesNormed() << endl;
 
             if (algorithm == 0)
                 //Gauss Legendre
@@ -91,65 +96,19 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 		allDims all;
 		all.current_index = 0;
+        const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
 
-		const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
-
-		vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
-		vector<bool> enabledTransitions = location.getGeneralTransitionsEnabled();
-
-		vector<int> counter = vector<int>(location.getDimension() - 1);
-		fill(counter.begin(), counter.end(),0);
-
-
-
-		//firings in the past
-		for (int i = 0; i < generalTransitionsFired.size(); i++) {
-
-            int transitionID = generalTransitionsFired[i];
-            int firing = counter[transitionID];
-
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
+		for (int i = 0; i < integrationIntervals.size(); i++) {
             singleDim s;
-            s.distribution = distributions[transitionID];
+            s.distribution = distributions[integrationIntervals[i].first];
             all.integrals.push_back(s);
+            all.lowerBounds.push_back(integrationIntervals[i].second.first);
+            all.upperBounds.push_back(integrationIntervals[i].second.second);
 
-            all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[transitionID][firing]);
-            all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[transitionID][firing]);
-
-			counter[transitionID] +=1;
-
+            cout << "Left bound:" << integrationIntervals[i].second.first << endl;
+            cout << "Right bound:" << integrationIntervals[i].second.second << endl;
 		}
-
-
-//		//firings in the future (particular next firing per general transition)
-//		for (int j = 0; j < counter.size(); j++){
-//
-//            int firing = counter[j];
-//
-//		    bool enablingTimeGreaterZero = false;
-//            for (int l = 0; l < location.getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
-//                if (location.getGeneralIntervalBoundLeft()[j][firing][l] > 0)
-//                    enablingTimeGreaterZero = true;
-//            }
-//
-//            if (enabledTransitions[j] || enablingTimeGreaterZero) {
-//
-//                singleDim s;
-//                s.distribution = distributions[j];
-//                all.integrals.push_back(s);
-//
-//                all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[j][firing]);
-//                all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[j][firing]);
-//
-//                if (enabledTransitions[j]) {
-//
-//                    all.lowerBounds[all.integrals.size() - 1][0] += (timepoint - location.getSourceEvent().getTime());
-//
-//                    vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
-//                    for (int l = 0; l < dependencies.size(); l++)
-//                        all.lowerBounds[all.integrals.size() - 1][l + 1] -= dependencies[l];
-//                }
-//            }
-//		}
 
 		if (all.integrals.size() > 0){
 		    all.evaluations = evaluations;
@@ -163,6 +122,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 			cout << "Gauss integral result: " << result << endl;
+            cout << "----" << endl;
 		}
 
 		return result;
@@ -171,8 +131,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
     double ProbabilityCalculator::functionToIntegrateGauss(double x, void* data){
-
-
 
    	    allDims all = *((allDims *)data);
         int n = all.evaluations;
@@ -236,69 +194,24 @@ ProbabilityCalculator::ProbabilityCalculator(){}
     double ProbabilityCalculator::calculateIntervalsMonteCarlo(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error){
 
 
-   		double result = 0.0;
-
-   		allDims all;
-   		all.current_index = 0;
-
-   		const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
-
-   		vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
-   		vector<bool> enabledTransitions = location.getGeneralTransitionsEnabled();
-
-   		vector<int> counter = vector<int>(location.getDimension() - 1);
-   		fill(counter.begin(), counter.end(),0);
+        double result = 0.0;
 
 
+        allDims all;
+        all.current_index = 0;
+        const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
 
-   		//firings in the past
-   		for (int i = 0; i < generalTransitionsFired.size(); i++) {
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
+        for (int i = 0; i < integrationIntervals.size(); i++) {
+            singleDim s;
+            s.distribution = distributions[integrationIntervals[i].first];
+            all.integrals.push_back(s);
+            all.lowerBounds.push_back(integrationIntervals[i].second.first);
+            all.upperBounds.push_back(integrationIntervals[i].second.second);
 
-               int transitionID = generalTransitionsFired[i];
-               int firing = counter[transitionID];
-
-               singleDim s;
-               s.distribution = distributions[transitionID];
-               all.integrals.push_back(s);
-
-               all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[transitionID][firing]);
-               all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[transitionID][firing]);
-
-   			counter[transitionID] +=1;
-
-   		}
-
-
-//   		//firings in the future (particular next firing per general transition)
-//   		for (int j = 0; j < counter.size(); j++){
-//
-//               int firing = counter[j];
-//
-//   		    bool enablingTimeGreaterZero = false;
-//               for (int l = 0; l < location.getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
-//                   if (location.getGeneralIntervalBoundLeft()[j][firing][l] > 0)
-//                       enablingTimeGreaterZero = true;
-//               }
-//
-//               if (enabledTransitions[j] || enablingTimeGreaterZero) {
-//
-//                   singleDim s;
-//                   s.distribution = distributions[j];
-//                   all.integrals.push_back(s);
-//
-//                   all.lowerBounds.push_back(location.getGeneralIntervalBoundLeft()[j][firing]);
-//                   all.upperBounds.push_back(location.getGeneralIntervalBoundRight()[j][firing]);
-//
-//                   if (enabledTransitions[j]) {
-//
-//                       all.lowerBounds[all.integrals.size() - 1][0] += (timepoint - location.getSourceEvent().getTime());
-//
-//                       vector<double> dependencies = location.getSourceEvent().getGeneralDependencies();
-//                       for (int l = 0; l < dependencies.size(); l++)
-//                           all.lowerBounds[all.integrals.size() - 1][l + 1] -= dependencies[l];
-//                   }
-//               }
-//   		}
+            cout << "Left bound:" << integrationIntervals[i].second.first << endl;
+            cout << "Right bound:" << integrationIntervals[i].second.second << endl;
+        }
 
 
 

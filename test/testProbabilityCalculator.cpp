@@ -10,15 +10,35 @@
 using namespace hpnmg;
 using namespace std;
 
+/*TEST(ProbabilityCalculator, example){
+
+   auto reader= new ReadHybridPetrinet();
+   auto parser = new ParseHybridPetrinet();
+   auto hybridPetrinet0 = reader->readHybridPetrinet("example.xml");
+   auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
+
+   auto calculator = new ProbabilityCalculator();
+   vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(3.0);
+
+   //ASSERT_EQ (nodes.size(), 9);
+
+   double error;
+   double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 5.0, 50000, error);
+
+   //ASSERT_EQ (result, 1.0);
+
+}*/
+
 TEST(ProbabilityCalculator, example2generalsimple){
 
    auto reader= new ReadHybridPetrinet();
    auto parser = new ParseHybridPetrinet();
-   auto hybridPetrinet0 = reader->readHybridPetrinet("example2generalsimple.xml");
+   auto hybridPetrinet0 = reader->readHybridPetrinet("example2general.xml");
    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
 
    auto calculator = new ProbabilityCalculator();
-   vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(5.0);
+   //vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(5.0);
+   vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(3.0);
 
    //ASSERT_EQ (nodes.size(), 9);
 
