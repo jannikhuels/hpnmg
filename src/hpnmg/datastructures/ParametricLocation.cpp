@@ -57,7 +57,10 @@ namespace hpnmg {
             dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
             generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
-            sourceEvent(parametricLocation.sourceEvent) {
+            sourceEvent(parametricLocation.sourceEvent),
+            generalDependenciesNormed(parametricLocation.generalDependenciesNormed),
+            integrationIntervals(parametricLocation.integrationIntervals)
+    {
 
     }
 
@@ -123,13 +126,15 @@ namespace hpnmg {
     void ParametricLocation::setGeneralTransitionsFired(std::vector<int> generalTransitionsFired) {
         this->generalTransitionFired = generalTransitionsFired; }
 
-    const vector<double> &ParametricLocation::getGeneralDependenciesNormed() const {
-        return generalDependenciesNormed;
+    vector<double> ParametricLocation::getGeneralDependenciesNormed() {
+        //return this->sourceEvent.getGeneralDependenciesNormed();
+        return this->generalDependenciesNormed;
     }
 
     void ParametricLocation::setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed) {
-        ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
-        this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
+        //ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
+        //this->sourceEvent.setGeneralDependenciesNormed(generalDependenciesNormed);
+        this->generalDependenciesNormed = generalDependenciesNormed;
     }
 
 
@@ -188,6 +193,86 @@ namespace hpnmg {
         }
 
         return time;
+    }
+
+    std::vector<double> makeNormed(std::vector<double> in, int dimension) {
+        for (int i = in.size(); i < dimension; i++) {
+            in.push_back(0);
+        }
+        return in;
+    }
+
+    void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, int value) {
+        std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
+        std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
+
+        vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();
+
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result;
+
+        vector<int> counter = vector<int>(this->dimension - 1);
+        fill(counter.begin(), counter.end(),0);
+
+        // Collect the Normed Boundaries.
+
+        for (int j = 0; j < generalTransitionsFired.size(); j++) {
+            int index = generalTransitionsFired[j];
+            result.push_back({index, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[index][counter[index]], this->dimension), makeNormed(rightBoundaries[index][counter[index]], this->dimension))});
+            counter[index] += 1;
+        }
+
+        for (int j = 0; j < counter.size(); j++) {
+            int firing = counter[j];
+            bool enablingTimeGreaterZero = false;
+            for (int l = 0; l < this->getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
+                if (this->getGeneralIntervalBoundLeft()[j][firing][l] > 0)
+                    enablingTimeGreaterZero = true;
+            }
+
+            if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
+
+                result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], this->dimension), makeNormed(rightBoundaries[j][firing], this->dimension))});
+
+            }
+        }
+
+        // Get the new Boundaries determined by the child events given a specific time
+        std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries = Computation::solveEquations(time, value);
+        newBoundaries = Computation::replaceValues(newBoundaries);
+
+        // Update the Boundaries
+        for (int i = 0; i < newBoundaries.size(); i++) {
+            if (newBoundaries[i].first.size()>i && newBoundaries[i].first[i+1] == 0) {
+                result[i].second.first = newBoundaries[i].first;
+            }
+            if (newBoundaries[i].second.size()>i && newBoundaries[i].second[i+1] == 0) {
+                result[i].second.second = newBoundaries[i].second;
+            }
+        }
+
+        // Check if source events influences the bounds
+        std::vector<double> startEvent = this->generalDependenciesNormed;
+        std::vector<double> t(this->dimension);
+        std::fill(t.begin(), t.end(), 0);
+        t[0] = value;
+        for (int i = 1; i < startEvent.size(); i++) {
+            std::vector<double> d = Computation::computeUnequationCut(t, startEvent, i);
+            if(d.size() > 0 && d[i] == 0) {
+                if (startEvent[i] < 0) {
+                    result[i-1].second.first = d;
+                }
+                if (startEvent[i] > 0) {
+                    result[i-1].second.second = d;
+                }
+            }
+        }
+
+        this->integrationIntervals = result;
+
+    }
+
+    std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getIntegrationIntervals() const{
+        return this->integrationIntervals;
     }
 
 }

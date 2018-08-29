@@ -28,44 +28,6 @@ protected:
     }
 };
 
-class ParametricLocationTreeTest : public ::testing::Test {
-protected:
-    shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree;
-
-    virtual void SetUp() {
-
-        /*ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
-        ParametricLocation childNode = rootNode.getParametricLocation();
-
-        ParametricLocationTree::Node detNode = parametricLocationTree.setChildNode(rootNode,
-                                      ParametricLocation(1,1,1,Event(EventType::Timed, vector<double>{0}, 5)));
-        ParametricLocationTree::Node stocNode = parametricLocationTree.setChildNode(rootNode,
-                                      ParametricLocation(1,1,1,Event(EventType::General, vector<double>{1}, 0)));
-        ParametricLocationTree::Node emptyNode = parametricLocationTree.setChildNode(stocNode,
-                                      ParametricLocation(1,1,1,Event(EventType::General, vector<double>{2}, 0)));
-        parametricLocationTree.setChildNode(stocNode, ParametricLocation(1,1,1,Event(EventType::Timed,
-            vector<double>{0}, 5), vector<vector<vector<double>>> {{{0}}}, vector<vector<vector<double>>> {{{2.5}}}));
-        parametricLocationTree.setChildNode(emptyNode, ParametricLocation(1,1,1,Event(EventType::Timed,
-            vector<double>{0}, 5), vector<vector<vector<double>>> {{{2.5}}}, vector<vector<vector<double>>> {{{5}}}));
-        parametricLocationTree.setChildNode(detNode, ParametricLocation(1,1,1,Event(EventType::General,
-            vector<double>{1}, 0), vector<vector<vector<double>>> {{{5}}}, vector<vector<vector<double>>> {{{7.5}}}));
-        ParametricLocationTree::Node fullNode = parametricLocationTree.setChildNode(detNode, ParametricLocation(1,1,1,
-                                                                   Event(EventType::Timed, vector<double>{0}, 7.5)));
-        parametricLocationTree.setChildNode(fullNode, ParametricLocation(1,1,1,Event(EventType::Timed,
-            vector<double>{1}, 0), vector<vector<vector<double>>> {{{7.5}}}, vector<vector<vector<double>>> {{{10}}}));*/
-        ReadHybridPetrinet reader;
-        //TODO Check impl. of reader. Create singletons!
-        shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
-        ParseHybridPetrinet parser;
-        parametricLocationTree = parser.parseHybridPetrinet(hybridPetrinet, 20);
-        parametricLocationTree->updateRegions();
-    }
-
-    virtual void TearDown() {
-
-    }
-};
-
 TEST_F(ParametricLocationEmptyTreeTest, RootNodeTest)
 {
     ParametricLocationTree::Node rootNode = parametricLocationTree.getRootNode();
@@ -81,8 +43,15 @@ TEST_F(ParametricLocationEmptyTreeTest, NoChildNodes)
     ASSERT_EQ(childNodes.size(), 0);
 }
 
-TEST_F(ParametricLocationTreeTest, InvalidParentNode)
+TEST(ParametricLocationTreeTest, InvalidParentNode)
 {
+    ReadHybridPetrinet reader;
+    //TODO Check impl. of reader. Create singletons!
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree = parser.parseHybridPetrinet(hybridPetrinet, 20);
+    parametricLocationTree->updateRegions();
+
     try {
         ParametricLocation location(1,1,1);
         ParametricLocationTree::Node invalidNode(-1,location);
@@ -93,8 +62,15 @@ TEST_F(ParametricLocationTreeTest, InvalidParentNode)
     }
 }
 
-TEST_F(ParametricLocationTreeTest, ChildNode)
+TEST(ParametricLocationTreeTest, ChildNode)
 {
+    ReadHybridPetrinet reader;
+    //TODO Check impl. of reader. Create singletons!
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree = parser.parseHybridPetrinet(hybridPetrinet, 20);
+    parametricLocationTree->updateRegions();
+
     ParametricLocationTree::Node rootNode = parametricLocationTree->getRootNode();
     vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree->getChildNodes(rootNode);
     vector<ParametricLocationTree::Node> stocChildNodes;
@@ -112,8 +88,15 @@ TEST_F(ParametricLocationTreeTest, ChildNode)
     ASSERT_EQ(detChildNodes.size(), 2);
 }
 
-TEST_F(ParametricLocationTreeTest, RegionTest)
+TEST(ParametricLocationTreeTest, RegionTest)
 {
+    ReadHybridPetrinet reader;
+    //TODO Check impl. of reader. Create singletons!
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree = parser.parseHybridPetrinet(hybridPetrinet, 20);
+    parametricLocationTree->updateRegions();
+
     parametricLocationTree->updateRegions();
     ParametricLocationTree::Node rootNode = parametricLocationTree->getRootNode();
     ASSERT_EQ(rootNode.getRegion().dimension(), 2);
@@ -170,8 +153,14 @@ TEST_F(ParametricLocationEmptyTreeTest, IncorrectChildNode)
 
 }
 
-TEST_F(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
+TEST(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
+    ReadHybridPetrinet reader;
+    //TODO Check impl. of reader. Create singletons!
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree = parser.parseHybridPetrinet(hybridPetrinet, 20);
     parametricLocationTree->updateRegions();
+
     ASSERT_EQ(parametricLocationTree->getCandidateLocationsForTime(3).size(), 3);
     ASSERT_EQ(parametricLocationTree->getCandidateLocationsForTime(6).size(), 4);
     ASSERT_EQ(parametricLocationTree->getCandidateLocationsForTime(9).size(), 5);
@@ -261,3 +250,50 @@ TEST(ParametricLocationTreeXML, AccumulatedProbability) {
     ASSERT_NEAR(candidates[2].getParametricLocation().getAccumulatedProbability(),0.33,0.01);
     ASSERT_NEAR(candidates[3].getParametricLocation().getAccumulatedProbability(),0.66,0.01);
 }
+
+TEST(ParametricLocationTreeXML, Normed) {
+    ReadHybridPetrinet reader;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 10);
+    int dim = plt->getDimension();
+    ASSERT_EQ(dim, 2);
+
+    ParametricLocationTree::Node r = plt->getRootNode();
+
+    vector<ParametricLocationTree::Node> candidates;
+    candidates = plt->getCandidateLocationsForTime(3);
+
+
+    // GeneralDependencies
+    ASSERT_EQ(candidates.size(), 3);
+    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed()[1], 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed()[1], 1);
+    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[1], 2);
+
+    // Integration Intervals
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals().size(), 1);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].first, 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.first.size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.first[0], 3);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.first[1], 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.second.size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.second[0], 10);
+    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals()[0].second.second[1], 0);
+
+    ASSERT_EQ(candidates[1].getParametricLocation().getIntegrationIntervals().size(), 1);
+    ASSERT_EQ(candidates[1].getParametricLocation().getIntegrationIntervals()[0].first, 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getIntegrationIntervals()[0].second.first.size(), 2);
+    ASSERT_EQ(candidates[1].getParametricLocation().getIntegrationIntervals()[0].second.first[0], 1.5);
+    ASSERT_EQ(candidates[1].getParametricLocation().getIntegrationIntervals()[0].second.first[1], 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getIntegrationIntervals()[0].second.second.size(), 2);
+    ASSERT_EQ(candidates[1].getParametricLocation().getIntegrationIntervals()[0].second.second[0], 3);
+    ASSERT_EQ(candidates[1].getParametricLocation().getIntegrationIntervals()[0].second.second[1], 0);
+}
+

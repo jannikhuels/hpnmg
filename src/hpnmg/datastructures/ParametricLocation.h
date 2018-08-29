@@ -2,6 +2,7 @@
 
 #include "Event.h"
 #include "Region.h"
+#include "helper/Computation.h"
 
 namespace hpnmg {
     class ParametricLocation {
@@ -16,6 +17,9 @@ namespace hpnmg {
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
+
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals;
+        std::vector<double> generalDependenciesNormed;
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;
 
@@ -27,9 +31,8 @@ namespace hpnmg {
         double conflictProbability;
         double accumulatedProbability;
         int dimension;
-        std::vector<double> generalDependenciesNormed;
     public:
-        const vector<double> &getGeneralDependenciesNormed() const;
+        vector<double> getGeneralDependenciesNormed();
 
         void setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed);
         // vector needed for STD is empty while parsing and set when PLT is computed
@@ -105,5 +108,10 @@ namespace hpnmg {
         double getLatestEntryTime();
 
         double getMinimumTime(std::vector<std::vector<std::vector<double>>> lowerBoundaries, std::vector<std::vector<std::vector<double>>> upperBoundaries);
+
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getIntegrationIntervals() const;
+
+        void setIntegrationIntervals(std::vector<std::vector<double>> time, int value);
+
     };
 }
