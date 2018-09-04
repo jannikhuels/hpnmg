@@ -82,6 +82,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             totalerror += error;
         }
 
+        cout << "TOTAL " << total << endl;
+        cout << "----" << endl;
+        cout << "----" << endl;
+
         return total;
 
     }
@@ -292,7 +296,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             delete[] xu;
 
    		}
-
+        cout << "----" << endl;
    		return result;
    	}
 
@@ -347,7 +351,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 return 0.0;
 
             transformedValues[i] = 0.5 * (upper + lower) + k[i] * 0.5 * (upper - lower);
-            result *= getDensity(current.distribution, transformedValues[i]) * 0.5 *(lower - upper);
+            result *= getDensity(current.distribution, transformedValues[i]) * 0.5 *(upper - lower);
         }
 
         return result;
