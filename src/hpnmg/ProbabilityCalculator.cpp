@@ -66,9 +66,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         for (int i = 0;i < nodes.size(); i++) {
             cout << "----" << endl;
             cout << "Node: " << nodes[i].getNodeID() << endl;
-
-            cout << "Left " << nodes[i].getParametricLocation().getGeneralIntervalBoundLeft() << endl;
-            cout << "Right " << nodes[i].getParametricLocation().getGeneralIntervalBoundRight() << endl;
             cout << "Normed " << nodes[i].getParametricLocation().getGeneralDependenciesNormed() << endl;
 
             if (algorithm == 0)
