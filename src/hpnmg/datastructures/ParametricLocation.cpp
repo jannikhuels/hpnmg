@@ -56,7 +56,11 @@ namespace hpnmg {
             accumulatedProbability(parametricLocation.accumulatedProbability),
             dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
-            sourceEvent(parametricLocation.sourceEvent) {
+            generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
+            sourceEvent(parametricLocation.sourceEvent),
+            generalDependenciesNormed(parametricLocation.generalDependenciesNormed),
+            integrationIntervals(parametricLocation.integrationIntervals)
+    {
 
     }
 
@@ -122,21 +126,24 @@ namespace hpnmg {
     void ParametricLocation::setGeneralTransitionsFired(std::vector<int> generalTransitionsFired) {
         this->generalTransitionFired = generalTransitionsFired; }
 
-    const vector<double> &ParametricLocation::getGeneralDependenciesNormed() const {
-        return generalDependenciesNormed;
+    vector<double> ParametricLocation::getGeneralDependenciesNormed() {
+        //return this->sourceEvent.getGeneralDependenciesNormed();
+        return this->generalDependenciesNormed;
     }
 
     void ParametricLocation::setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed) {
-        ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
-        this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
+        //ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
+        //this->sourceEvent.setGeneralDependenciesNormed(generalDependenciesNormed);
+        this->generalDependenciesNormed = generalDependenciesNormed;
     }
+
 
     const vector<bool> &ParametricLocation::getGeneralTransitionsEnabled() const {
         return generalTransitionsEnabled;
     }
 
     void ParametricLocation::setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled) {
-        ParametricLocation::generalTransitionsEnabled = generalTransitionsEnabled;
+        this->generalTransitionsEnabled = generalTransitionsEnabled;
     }
 
     double ParametricLocation::getEarliestEntryTime() {
@@ -178,13 +185,134 @@ namespace hpnmg {
 
             for (int i = 1; i <= dependencies.size(); ++i) {
                 if (value >= 0) {
-                    dependencies[i] += value * lowerBounds[i];
+                    dependencies[i-1] += value * lowerBounds[i];
                 } else {
-                    dependencies[i] += value * upperBounds[i];
+                    dependencies[i-1] += value * upperBounds[i];
                 }
             }
         }
 
         return time;
     }
+
+    std::vector<double> makeNormed(std::vector<double> in, std::vector<int> gtf, int dimension) {
+        std::vector<double> result(dimension);
+        fill(result.begin(), result.end(), 0);
+
+        for (int i = 0; i < in.size(); i++) {
+            result[i] = in[i];
+        }
+
+        for (int i = 0; i < gtf.size(); i++) {
+            int index = gtf[i] + 1;
+            if (in.size() > i+1) {
+                result[index] = in[i+1];
+                if (index != i+1) {
+                    result[i+1] = 0;
+                }
+
+            }
+        }
+
+        return result;
+    }
+
+    bool equalVectors(std::vector<double> first, std::vector<double> second) {
+        if (first.size() != second.size())
+            return false;
+        for (int i = 0; i < first.size(); i++) {
+            if (first[i] != second[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, int value, std::vector<int> occurings) {
+        std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
+        std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
+
+        vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();
+
+        int size = 0;
+        for (int i : occurings) {
+            size += i;
+        }
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result(size);
+
+        vector<int> counter = vector<int>(this->dimension - 1);
+        fill(counter.begin(), counter.end(),0);
+
+        vector<double> bound(this->dimension);
+        fill(bound.begin(), bound.end(), 0);
+        bound[0] = value;
+
+        // Collect the Normed Boundaries.
+        int startPositionForTransition = 0;
+        for (int genTrans = 0; genTrans < occurings.size(); ++genTrans) {
+            // iterate over all possible firings of genTrans
+            for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
+                if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
+                    rightBoundaries[genTrans][counter[genTrans]] = bound;
+                    //result.push_back({genTrans, { makeNormed(leftBoundaries[genTrans][counter[genTrans]], this->dimension), makeNormed(rightBoundaries[genTrans][counter[genTrans]], this->dimension) } });
+                    result[genTrans + counter[genTrans]] = {genTrans, { makeNormed(leftBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, this->dimension), makeNormed(rightBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, this->dimension) } };
+                    counter[genTrans]++;
+                }
+            }
+        }
+
+        for (int j = 0; j < counter.size(); j++) {
+            int firing = counter[j];
+            bool enablingTimeGreaterZero = false;
+            for (int l = 0; l < this->getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
+                if (this->getGeneralIntervalBoundLeft()[j][firing][l] > 0)
+                    enablingTimeGreaterZero = true;
+            }
+
+            if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
+                leftBoundaries[j][firing] = bound;
+                //result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], this->dimension), makeNormed(rightBoundaries[j][firing], this->dimension))});
+                result[j + firing] = {j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], generalTransitionsFired, this->dimension), makeNormed(rightBoundaries[j][firing], generalTransitionsFired, this->dimension))};
+            }
+        }
+
+        // Get the new Boundaries determined by the child events given a specific time
+        std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries = Computation::solveEquations(time, value);
+        newBoundaries = Computation::replaceValues(newBoundaries);
+
+        // Update the Boundaries
+        for (int i = 0; i < newBoundaries.size(); i++) {
+            if (newBoundaries[i].first.size()>i && newBoundaries[i].first[i+1] == 0 && !equalVectors(result[i].second.first, bound)) {
+                result[i].second.first = newBoundaries[i].first;
+            }
+            if (newBoundaries[i].second.size()>i && newBoundaries[i].second[i+1] == 0 && !equalVectors(result[i].second.second, bound)) {
+                result[i].second.second = newBoundaries[i].second;
+            }
+        }
+
+        // Check if source events influences the bounds
+        std::vector<double> startEvent = this->generalDependenciesNormed;
+        std::vector<double> t(this->dimension);
+        std::fill(t.begin(), t.end(), 0);
+        t[0] = value;
+        for (int i = 1; i < startEvent.size(); i++) {
+            std::vector<double> d = Computation::computeUnequationCut(t, startEvent, i);
+            if(d.size() > 0 && d[i] == 0) {
+                if (startEvent[i] < 0) {
+                    result[i-1].second.first = d;
+                }
+                if (startEvent[i] > 0) {
+                    result[i-1].second.second = d;
+                }
+            }
+        }
+
+        this->integrationIntervals = result;
+
+    }
+
+    std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getIntegrationIntervals() const{
+        return this->integrationIntervals;
+    }
+
 }

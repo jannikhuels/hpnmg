@@ -60,35 +60,39 @@ endif()
 # External Libraries
 # -----------------------------------------------------------------
 
+
 add_subdirectory(resources)
 find_package(hypro REQUIRED)
 find_package(carl REQUIRED)
 find_package(XercesC REQUIRED)
+find_package(Boost REQUIRED)
+find_package(GSL REQUIRED)
 find_package(CGAL REQUIRED)
 
-if (CGAL_FOUND)
 
-	include( ${CGAL_USE_FILE} )
+if ( CGAL_FOUND )
 
-	include( CGAL_CreateSingleSourceCGALProgram )
+  include( ${CGAL_USE_FILE} )
 
-	find_package(Eigen3)
-	if (EIGEN3_FOUND)
-		include( ${EIGEN3_USE_FILE} )
+  include( CGAL_CreateSingleSourceCGALProgram )
 
-		include_directories (BEFORE “../../include”)
+  find_package(Eigen3)
+  if (EIGEN3_FOUND)
+    include( ${EIGEN3_USE_FILE} )
 
-		#create_single_source_cgal_program( Epick_d.cpp )
+    include_directories (BEFORE "../../include")
 
-	else()
+    create_single_source_cgal_program( "Epick_d.cpp" )
 
-		message(STATUS “NOTICE: This program requires the Eigen3 library, and will not be compiled.“)
+  else()
 
-	endif()
+    message(STATUS "NOTICE: This program requires the Eigen3 library, and will not be compiled.")
+
+  endif()
 
 else()
 
-	message(STATUS “NOTICE: This program requires the CGAL library, and will not be compiled.“)
+    message(STATUS "NOTICE: This program requires the CGAL library, and will not be compiled.")
 
 endif()
 
@@ -96,8 +100,12 @@ endif()
 # Include files
 # -----------------------------------------------------------------
 
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 include_directories("${PROJECT_BINARY_DIR}/src")
+include_directories(${GSL_INCLUDE_DIR})
+
 add_subdirectory(src)
+
 
 # Copy files needed at runtime
 # -----------------------------------------------------------------
@@ -119,4 +127,4 @@ add_subdirectory(examples)
 # -----------------------------------------------------------------
 
 add_executable(main main.cpp)
-target_link_libraries(main hpnmg)
+target_link_libraries(main hpnmg ${Boost_LIBRARIES} GSL::gsl GSL::gslcblas)
