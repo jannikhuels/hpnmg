@@ -47,7 +47,7 @@ TEST(ProbabilityCalculator, example2generalsimple){
 
    double error;
    double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 3.0, 50000, error);
-   //double result = calculator->ProbabilityCalculator::getProbabilityGauss(nodes, *plt0, 3.0, 128);
+    //double result = calculator->ProbabilityCalculator::getProbabilityGauss(nodes, *plt0, 3.0, 128);
 
    //ASSERT_EQ (result, 1.0);
 

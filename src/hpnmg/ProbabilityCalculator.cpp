@@ -194,16 +194,52 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
     double ProbabilityCalculator::calculateIntervalsMonteCarlo(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error){
 
-
         double result = 0.0;
-
 
         allDims all;
         all.current_index = 0;
         const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
+
+        vector<int> counter = vector<int>(location.getDimension() - 1);
+        fill(counter.begin(), counter.end(),0);
+
+        vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
+
+        //firings in the past
+        for (int i = 0; i < generalTransitionsFired.size(); i++) {
+
+            int transitionID = generalTransitionsFired[i];
+            int firing = counter[transitionID];
+
+            singleDim s;
+            s.distribution = distributions[integrationIntervals[transitionID].first];
+            all.integrals.push_back(s);
+
+            double u = integrationIntervals[transitionID + firing].second.first[transitionID + firing+1];
+            integrationIntervals[transitionID + firing].second.first[transitionID + firing+1] = integrationIntervals[transitionID + firing].second.first[i+1];
+            integrationIntervals[transitionID + firing].second.first[i+1] = u;
+
+            double t = integrationIntervals[transitionID + firing].second.second[transitionID + firing+1];
+            integrationIntervals[transitionID + firing].second.second[transitionID + firing +1] = integrationIntervals[transitionID + firing].second.second[i+1];
+            integrationIntervals[transitionID + firing].second.second[i+1] = t;
+
+            all.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
+            all.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
+
+            integrationIntervals[transitionID + firing].first = -1;
+
+            counter[transitionID] +=1;
+            cout << "Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
+            cout << "Right bound:" << integrationIntervals[transitionID + firing].second.second << endl;
+
+        }
+
         for (int i = 0; i < integrationIntervals.size(); i++) {
+            if (integrationIntervals[i].first == -1) {
+                continue;
+            }
             singleDim s;
             s.distribution = distributions[integrationIntervals[i].first];
             all.integrals.push_back(s);
@@ -213,8 +249,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             cout << "Left bound:" << integrationIntervals[i].second.first << endl;
             cout << "Right bound:" << integrationIntervals[i].second.second << endl;
         }
-
-
 
    		const int dim = all.integrals.size();
 
