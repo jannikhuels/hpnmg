@@ -54,7 +54,7 @@ TEST(ProbabilityCalculator, valuetools){
 
    auto reader= new ReadHybridPetrinet();
    auto parser = new ParseHybridPetrinet();
-   auto hybridPetrinet0 = reader->readHybridPetrinet("valuetools.xml");
+   auto hybridPetrinet0 = reader->readHybridPetrinet("battery_simple.xml");
    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
    //auto writer = new PLTWriter();
    //writer->writePLT(plt0, 10);
