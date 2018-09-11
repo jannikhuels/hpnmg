@@ -432,6 +432,10 @@ TEST(ParseHybridPetrinet, DynamicTransitions2)
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
     writer.writePLT(plt,20);
 
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet2 = reader.readHybridPetrinet("battery_simple.xml");
+    shared_ptr<hpnmg::ParametricLocationTree> plt2 = parser.parseHybridPetrinet(hybridPetrinet, 18);
+    writer.writePLT(plt2,20);
+
 
 }
 
