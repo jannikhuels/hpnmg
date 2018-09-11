@@ -50,7 +50,7 @@
         <!-- transition td0: charge to no charge -->
         <deterministicTransition id="td0" discTime="10.0" priority="1" weight="1.0E0"/>
         <!-- transition ti0: not empty to empty -->
-        <immediateTransition id="ti0" priority="1" weight="1.0E0"/>
+        <deterministicTransition id="ti0" discTime="4" priority="1" weight="1.0E0"/>
         <!-- transition ti1: empty to not empty -->
         <immediateTransition id="ti1" priority="1" weight="1.0E0"/>
         <!-- demand d0 -->
@@ -94,8 +94,8 @@
         <guardArc fromNode="pd_d0" id="ga_d0" isInhibitor="0" toNode="tf_d0" weight="1.0E0"/> <!-- guard arc that enables demand d0 -->
         <guardArc fromNode="pd_d1" id="ga_d1" isInhibitor="0" toNode="tf_d1" weight="1.0E0"/> <!-- guard arc that enables demand d1 -->
         <guardArc fromNode="pd_d2" id="ga_d2" isInhibitor="0" toNode="tf_d2" weight="1.0E0"/> <!-- guard arc that enables demand d2 -->
-        <guardArc fromNode="pd_d0" id="ga_d11" isInhibitor="0" toNode="tg_d10" weight="1.0E0"/> <!-- guard arc that enables demand d1 -->
-        <guardArc fromNode="pd_d1" id="ga_d21" isInhibitor="0" toNode="tg_d20" weight="1.0E0"/> <!-- guard arc that enables demand d2 -->
+        <guardArc fromNode="pd_d0" id="ga_d11" isInhibitor="0" toNode="td_d10" weight="1.0E0"/> <!-- guard arc that enables demand d1 -->
+        <guardArc fromNode="pd_d1" id="ga_d21" isInhibitor="0" toNode="td_d20" weight="1.0E0"/> <!-- guard arc that enables demand d2 -->
         <!-- discrete arcs: demand deactivation -->
         <discreteArc id="da_d00" fromNode="pd_d0" toNode="td_d00" weight="1.0E0"/>
         <discreteArc id="da_d10" fromNode="pd_d1" toNode="td_d00" weight="1.0E0"/>

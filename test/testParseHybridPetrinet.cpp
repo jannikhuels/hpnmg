@@ -423,6 +423,20 @@ TEST(ParseHybridPetrinet, DynamicTransitions)
 
 }
 
+TEST(ParseHybridPetrinet, DynamicTransitions2)
+{
+    ReadHybridPetrinet reader;
+    ParseHybridPetrinet parser;
+    PLTWriter writer;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("battery.xml");
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
+    writer.writePLT(plt,20);
+
+
+}
+
+
+
 /*TEST(ParseHybridPetrinet, Example5General) {
     auto reader= new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("jannik5general.xml");

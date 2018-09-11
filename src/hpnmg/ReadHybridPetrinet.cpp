@@ -430,7 +430,7 @@ namespace hpnmg {
                                                                XMLString::transcode("fromNode"));
                             } else if (nodeType == "transition") {
                                 transitionId = nodeId;
-                            } else throw (std::runtime_error("Arc for unknown node."));
+                            } else throw (std::runtime_error("Discrete arc for unknown node."));
                         }
                     }
                     shared_ptr<DiscreteArc> arc = make_shared<DiscreteArc>(id, weight, place);
@@ -461,7 +461,7 @@ namespace hpnmg {
                                                                XMLString::transcode("fromNode"));
                             } else if (nodeType == "transition") {
                                 transitionId = nodeId;
-                            } else throw (std::runtime_error("Arc for unknown node."));
+                            } else throw (std::runtime_error("Cont. arc for unknown node."));
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("priority"))) {
                             priority = strtoul(XMLString::transcode(attribute->getNodeValue()), nullptr, 0);
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("share"))) {
@@ -495,7 +495,7 @@ namespace hpnmg {
                                                                XMLString::transcode("fromNode"));
                             } else if (nodeType == "transition") {
                                 transitionId = nodeId;
-                            } else throw (std::runtime_error("Arc for unknown node."));
+                            } else throw (std::runtime_error("Guard arc for unknown node."));
                         } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("isInhibitor"))) {
                             isInhibitor = !XMLString::equals(attribute->getNodeValue(), XMLString::transcode("0"));
                         }
