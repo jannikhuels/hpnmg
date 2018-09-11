@@ -86,7 +86,7 @@
         <discreteArc id="da6" fromNode="pd3" toNode="ti1" weight="1.0E0"/>
         <discreteArc id="da7" fromNode="ti1" toNode="pd2" weight="1.0E0"/>
         <!-- guard arcs: battery -->
-        <guardArc fromNode="pd0" id="ga0" isInhibitor="0" toNode="td0" weight="1.0E0"/> <!-- guard arc that enables battery charging -->
+        <guardArc fromNode="pd0" id="ga0" isInhibitor="0" toNode="tdy0" weight="1.0E0"/> <!-- guard arc that enables battery charging -->
         <guardArc fromNode="pc0" id="ga1" isInhibitor="1" toNode="ti0" weight="0.0E0"/> <!-- guard arc: battery = 0  -->
         <guardArc fromNode="pd0" id="ga2" isInhibitor="0" toNode="ti1" weight="0.0E0"/> <!-- guard arc: battery > 0  -->
         <guardArc fromNode="pd3" id="ga3" isInhibitor="0" toNode="tdy2" weight="1.0E0"/> <!-- guard arc that enables costs (battery empty) -->
