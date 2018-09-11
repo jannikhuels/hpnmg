@@ -93,6 +93,9 @@ namespace hpnmg {
         // first val in normed dependencies is time
         generalDependenciesNormed[0] = time;
 
+        vector<int> counter = vector<int>(this->dimension - 1);
+        fill(counter.begin(), counter.end(),0);
+
         // startPosition is initial 1 because 0 is the time
         int startPositionForTransition = 1;
         // iterate over all general transitions
@@ -252,7 +255,7 @@ namespace hpnmg {
         }
     }
 
-    void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability) {
+    void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability, std::vector<int> occurings) {
         // nodeProbability is the probability to get here times the probability to be here
         double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
         ParametricLocation parametricLocation = startNode.getParametricLocation();
@@ -281,13 +284,13 @@ namespace hpnmg {
 
             if(valid) {
 
-                parametricLocation.setIntegrationIntervals(entryTimes, interval.first);
+                parametricLocation.setIntegrationIntervals(entryTimes, interval.first, occurings);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
             }
 
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
-                recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval, nodeProbability);
+                recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval, nodeProbability, occurings);
             }
 
             // not even the earliest entry time is before (or equal) t, so the event happens after the questioned time. no childnode can be valid.
@@ -300,9 +303,13 @@ namespace hpnmg {
 
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTimeInterval(std::pair<double,double> interval) {
         this->getDimension();
+
+        int numberOfGeneralTransitions = getRootNode().getParametricLocation().getGeneralClock().size();
+        std::vector<int> dimV = getDimensionRecursively(getRootNode(), numberOfGeneralTransitions);
+
         vector<ParametricLocationTree::Node> locations;
         // recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
-        recursivelyCollectCandidateLocationsWithPLT(getRootNode(), locations, interval, 1.0);
+        recursivelyCollectCandidateLocationsWithPLT(getRootNode(), locations, interval, 1.0, dimV);
         return locations;
     }
 

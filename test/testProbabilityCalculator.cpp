@@ -6,6 +6,7 @@
 #include <ProbabilityCalculator.h>
 #include "ParametricLocationTree.h"
 #include "gtest/gtest.h"
+#include "PLTWriter.h"
 
 using namespace hpnmg;
 using namespace std;
@@ -36,16 +37,17 @@ TEST(ProbabilityCalculator, example2generalsimple){
    auto parser = new ParseHybridPetrinet();
    auto hybridPetrinet0 = reader->readHybridPetrinet("example2general.xml");
    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
+   //auto writer = new PLTWriter();
+   //writer->writePLT(plt0, 10);
 
    auto calculator = new ProbabilityCalculator();
-   //vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(5.0);
    vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(3.0);
 
    //ASSERT_EQ (nodes.size(), 9);
 
    double error;
-   //double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 3.0, 50000, error);
-   double result = calculator->ProbabilityCalculator::getProbabilityGauss(nodes, *plt0, 3.0, 128);
+   double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 3.0, 50000, error);
+   //double result = calculator->ProbabilityCalculator::getProbabilityGauss(nodes, *plt0, 3.0, 128);
 
    //ASSERT_EQ (result, 1.0);
 
