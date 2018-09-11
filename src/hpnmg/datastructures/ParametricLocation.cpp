@@ -195,14 +195,25 @@ namespace hpnmg {
         return time;
     }
 
-    std::vector<double> makeNormed(std::vector<double> in, int index, int dimension) {
-        if (in.size() == dimension)
-            return in;
+    std::vector<double> makeNormed(std::vector<double> in, std::vector<int> gtf, int dimension) {
         std::vector<double> result(dimension);
         fill(result.begin(), result.end(), 0);
+
         for (int i = 0; i < in.size(); i++) {
             result[i] = in[i];
         }
+
+        for (int i = 0; i < gtf.size(); i++) {
+            int index = gtf[i] + 1;
+            if (in.size() > i+1) {
+                result[index] = in[i+1];
+                if (index != i+1) {
+                    result[i+1] = 0;
+                }
+
+            }
+        }
+
         return result;
     }
 
@@ -244,7 +255,7 @@ namespace hpnmg {
                 if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
                     rightBoundaries[genTrans][counter[genTrans]] = bound;
                     //result.push_back({genTrans, { makeNormed(leftBoundaries[genTrans][counter[genTrans]], this->dimension), makeNormed(rightBoundaries[genTrans][counter[genTrans]], this->dimension) } });
-                    result[genTrans + counter[genTrans]] = {genTrans, { makeNormed(leftBoundaries[genTrans][counter[genTrans]], genTrans, this->dimension), makeNormed(rightBoundaries[genTrans][counter[genTrans]], genTrans, this->dimension) } };
+                    result[genTrans + counter[genTrans]] = {genTrans, { makeNormed(leftBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, this->dimension), makeNormed(rightBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, this->dimension) } };
                     counter[genTrans]++;
                 }
             }
@@ -261,7 +272,7 @@ namespace hpnmg {
             if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
                 leftBoundaries[j][firing] = bound;
                 //result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], this->dimension), makeNormed(rightBoundaries[j][firing], this->dimension))});
-                result[j + firing] = {j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], j, this->dimension), makeNormed(rightBoundaries[j][firing], j, this->dimension))};
+                result[j + firing] = {j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], generalTransitionsFired, this->dimension), makeNormed(rightBoundaries[j][firing], generalTransitionsFired, this->dimension))};
             }
         }
 
