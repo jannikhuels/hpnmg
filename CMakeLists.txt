@@ -82,7 +82,7 @@ if ( CGAL_FOUND )
 
     include_directories (BEFORE "../../include")
 
-    create_single_source_cgal_program( "Epick_d.cpp" )
+    #create_single_source_cgal_program( "Epick_d.cpp" )
 
   else()
 
