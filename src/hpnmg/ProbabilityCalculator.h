@@ -35,7 +35,7 @@ namespace hpnmg {
 
 		double calculateIntervalsGauss(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID, int evaluations);
 
-        double calculateIntervalsMonteCarlo(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error);
+        double calculateIntervalsMonteCarlo(const ParametricLocation &location, ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error);
 
         double getProbability(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, char algorithm, int functioncalls, int evaluations, double &totalerror);
 
