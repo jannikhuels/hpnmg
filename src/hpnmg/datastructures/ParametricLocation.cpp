@@ -234,11 +234,11 @@ namespace hpnmg {
 
         vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();
 
-        int size = 0;
+        /*int size = 0;
         for (int i : occurings) {
             size += i;
-        }
-        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result(size);
+        }*/
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result(this->dimension - 1);
 
         vector<int> counter = vector<int>(this->dimension - 1);
         fill(counter.begin(), counter.end(),0);
@@ -253,8 +253,10 @@ namespace hpnmg {
             // iterate over all possible firings of genTrans
             for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
                 if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
-                    rightBoundaries[genTrans][counter[genTrans]] = bound;
-                    //result.push_back({genTrans, { makeNormed(leftBoundaries[genTrans][counter[genTrans]], this->dimension), makeNormed(rightBoundaries[genTrans][counter[genTrans]], this->dimension) } });
+                    std::vector<double> normedRight = makeNormed(rightBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, this->dimension);
+                    if (Computation::isSmaller(bound, normedRight, value)) {
+                        rightBoundaries[genTrans][counter[genTrans]] = bound;
+                    }
                     result[genTrans + counter[genTrans]] = {genTrans, { makeNormed(leftBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, this->dimension), makeNormed(rightBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, this->dimension) } };
                     counter[genTrans]++;
                 }
@@ -270,7 +272,10 @@ namespace hpnmg {
             }
 
             if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
-                leftBoundaries[j][firing] = bound;
+                std::vector<double> normedLeft = makeNormed(leftBoundaries[j][firing], generalTransitionsFired, this->dimension);
+                if (Computation::isGreater(bound, normedLeft, value)) {
+                    leftBoundaries[j][firing] = bound;
+                }
                 //result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], this->dimension), makeNormed(rightBoundaries[j][firing], this->dimension))});
                 result[j + firing] = {j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], generalTransitionsFired, this->dimension), makeNormed(rightBoundaries[j][firing], generalTransitionsFired, this->dimension))};
             }
@@ -292,7 +297,7 @@ namespace hpnmg {
 
         // Check if source events influences the bounds
         std::vector<double> startEvent = this->generalDependenciesNormed;
-        std::vector<double> t(this->dimension);
+        std::vector<double> t(this->dimension+1);
         std::fill(t.begin(), t.end(), 0);
         t[0] = value;
         for (int i = 1; i < startEvent.size(); i++) {
