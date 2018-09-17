@@ -260,6 +260,7 @@ namespace hpnmg {
         double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
         ParametricLocation parametricLocation = startNode.getParametricLocation();
         parametricLocation.setAccumulatedProbability(nodeProbability);
+        int dimension = this->getDimension();
 
 
         if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.second) {
@@ -284,7 +285,7 @@ namespace hpnmg {
 
             if(valid) {
 
-                parametricLocation.setIntegrationIntervals(entryTimes, interval.first, occurings);
+                parametricLocation.setIntegrationIntervals(entryTimes, interval.first, occurings, dimension);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
             }

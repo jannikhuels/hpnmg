@@ -45,6 +45,12 @@ TEST(ComputationTest, TestUnequationCut) {
     ASSERT_EQ(res[0], -1);
     ASSERT_EQ(res[1], 0);
     ASSERT_EQ(res[2], -0.5);
+
+    res = Computation::computeUnequationCut({4,0,0}, {3,1,0}, 1);
+    ASSERT_EQ(res.size(), 3);
+    ASSERT_EQ(res[0], 1);
+    ASSERT_EQ(res[1], 0);
+    ASSERT_EQ(res[2], 0);
 }
 
 TEST(ComputationTest, TestSolveEquations) {

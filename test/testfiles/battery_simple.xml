@@ -2,24 +2,24 @@
 <HPnG>
     <places>
         <!-- charge battery -->
-        <discretePlace id="pd0" marking="0"/>
+        <discretePlace id="pd0" marking="1"/>
         <!-- no charge -->
-        <discretePlace id="pd1" marking="1"/>
+        <discretePlace id="pd1" marking="0"/>
         <!-- battery -->
-        <continuousPlace id="pc0" capacity="3" infiniteCapacity="0" level="0"/>
+        <continuousPlace id="pc0" capacity="15" infiniteCapacity="0" level="10"/>
     </places>
     <transitions>
         <!-- charge battery -->
-        <continuousTransition id="tdy0" rate="7.0"/>
+        <continuousTransition id="tdy0" rate="5.0"/>
         <!-- discharge battery -->
-        <continuousTransition id="tdy1" rate="7.0"/>
+        <continuousTransition id="tdy1" rate="5.0"/>
         <!-- transition tg0: no charge to charge -->
-        <generalTransition id="tg0" cdf="normal" priority="0" weight="1.0E0" policy="resume">
+        <generalTransition id="tg0" cdf="foldednormal" priority="0" weight="1.0E0" policy="resume">
             <parameter name="mu" value="5.0"/>
             <parameter name="sigma" value="3.0"/>
         </generalTransition>
         <!-- transition td0: charge to no charge -->
-        <deterministicTransition id="td0" discTime="10.0" priority="1" weight="1.0E0"/>
+        <deterministicTransition id="td0" discTime="3.0" priority="1" weight="1.0E0"/>
     </transitions>
     <arcs>
         <!-- continuous arcs -->

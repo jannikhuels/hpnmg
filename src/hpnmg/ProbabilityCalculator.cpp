@@ -251,6 +251,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             int transitionID = generalTransitionsFired[i];
             int firing = counter[transitionID];
 
+            if (integrationIntervals[transitionID + firing].second.first.size() == 0 || integrationIntervals[transitionID + firing].second.second.size() == 0) {
+                continue;
+            }
+
             singleDim s;
             s.distribution = distributions[integrationIntervals[transitionID].first];
             all.integrals.push_back(s);
@@ -276,6 +280,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         for (int i = 0; i < integrationIntervals.size(); i++) {
             if (integrationIntervals[i].first == -1) {
+                continue;
+            }
+            if (integrationIntervals[i].second.first.size() == 0 || integrationIntervals[i].second.second.size() == 0) {
                 continue;
             }
             singleDim s;
