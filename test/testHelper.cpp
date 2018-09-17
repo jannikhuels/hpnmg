@@ -141,3 +141,22 @@ TEST(ComputationTest, SolveResultZero) {
     ASSERT_EQ(replaced[1].second[1], 1);
     ASSERT_EQ(replaced[1].second[2], 0);
 }
+
+TEST(ComputationTest, isSmaller) {
+    std::vector<double> f1 = {0, 1};
+    std::vector<double> f2 = {8, 0};
+
+    bool result = Computation::isSmaller(f1, f2, 4);
+    ASSERT_EQ(result, true);
+
+    f1 = {3};
+    f2 = {4};
+    result = Computation::isSmaller(f1, f2, 4);
+    ASSERT_EQ(result, true);
+
+    result = Computation::isSmaller(f2, f1, 4);
+    ASSERT_EQ(result, false);
+
+    result = Computation::isGreater(f2, f1, 4);
+    ASSERT_EQ(result, true);
+}

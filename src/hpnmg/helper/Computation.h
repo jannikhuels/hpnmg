@@ -50,6 +50,21 @@ namespace hpnmg {
         // Return: {6, 1, 0}
         static std::vector<double> replace(std::vector<double> func, std::vector<double> repl, int index);
 
+        // Verifies if first equation < second equation
+        //
+        // Example:
+        // Linear function: s1 = s1, s1 = 8, t=4, index = 0
+        // Input: func: {0,1}, rep: {8,0}, t: 4, i: 0
+        // Return: true
+        static bool isSmaller(std::vector<double> f1, std::vector<double> f2, int time);
+
+        // Verifies if first equation > second equation
+        //
+        // Example:
+        // Linear function: s1 = s1, s1 = 8, t=4, index = 0
+        // Input: func: {0,1}, rep: {8,0}, t: 4, i: 0
+        // Return: false
+        static bool isGreater(std::vector<double> f1, std::vector<double> f2, int time);
     };
 }
 

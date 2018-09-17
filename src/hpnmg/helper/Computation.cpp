@@ -158,4 +158,38 @@ namespace hpnmg {
         }
         return func;
     }
+
+    bool Computation::isSmaller(std::vector<double> f1, std::vector<double> f2, int time) {
+        std::vector<double> t(f1.size());
+        std::fill(t.begin(), t.end(), 0);
+        t[0] = time;
+
+        std::vector<double> t_f1 = Computation::computeUnequationCut(t, f1);
+        std::vector<double> t_f2 = Computation::computeUnequationCut(t, f2);
+
+        f1 = t_f1[0] != 0 ? t_f1 : f1;
+        f2 = t_f2[0] != 0 ? t_f2 : f2;
+
+        // TODO This implementation is incomplete, needs to be revisited
+        //std::vector<double> result = Computation::computeUnequationCut(f1, f2);
+
+        return f1[0] < f2[0];
+    }
+
+    bool Computation::isGreater(std::vector<double> f1, std::vector<double> f2, int time) {
+        std::vector<double> t(f1.size());
+        std::fill(t.begin(), t.end(), 0);
+        t[0] = time;
+
+        std::vector<double> t_f1 = Computation::computeUnequationCut(t, f1);
+        std::vector<double> t_f2 = Computation::computeUnequationCut(t, f2);
+
+        f1 = t_f1[0] != 0 ? t_f1 : f1;
+        f2 = t_f2[0] != 0 ? t_f2 : f2;
+
+        // TODO This implementation is incomplete, needs to be revisited
+        //std::vector<double> result = Computation::computeUnequationCut(f1, f2);
+
+        return f1[0] > f2[0];
+    }
 }
