@@ -22,6 +22,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 		vector<vector<double>> lowerBounds;
 		vector<vector<double>> upperBounds;
         int evaluations;
+        double maxTime;
 	} allDims;
 
 
@@ -234,13 +235,15 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
-    double ProbabilityCalculator::calculateIntervalsMonteCarlo(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error){
+    double ProbabilityCalculator::calculateIntervalsMonteCarlo(const ParametricLocation &location, ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error){
 
         double result = 0.0;
 
         allDims all;
         all.current_index = 0;
         const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
+        all.maxTime = tree.getMaxTime();
+        cout << "max time"<<  all.maxTime  << endl;
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
 
@@ -390,7 +393,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
    	    allDims all = *((allDims *)params);
+   	    double currentResult;
+   	    double currentResultWithJacobian;
         double result = 1.0;
+        double jacobianFactor;
 
         singleDim current;
         singleDim currentDependency;
@@ -398,6 +404,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         double upper;
         double lowerFactor;
         double upperFactor;
+        double halfLower;
+        double halfUpper;
+
 
         double* transformedValues = new double[dim];
 
@@ -433,8 +442,22 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             if ((lower > 0.0 && isinf(lower)) || upper <= 0.0 )
                 return 0.0;
 
-            transformedValues[i] = 0.5 * (upper + lower) + k[i] * 0.5 * (upper - lower);
-            result *= getDensity(current.distribution, transformedValues[i]) * 0.5 *(upper - lower);
+
+//            if (upper >= all.maxTime)
+//                upper = 10000;
+
+            halfLower = 0.5 * lower;
+            halfUpper = 0.5 * upper;
+
+            transformedValues[i] = halfUpper + halfLower + k[i] * (halfUpper - halfLower);
+            currentResult = getDensity(current.distribution, transformedValues[i]);
+
+            if (currentResult == 0.0)
+                return 0.0;
+
+            jacobianFactor = (halfUpper - halfLower);
+            currentResultWithJacobian = currentResult * jacobianFactor;
+            result *= currentResultWithJacobian;
         }
 
         return result;
