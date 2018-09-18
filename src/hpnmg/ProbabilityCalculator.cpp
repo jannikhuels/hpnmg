@@ -75,6 +75,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 //Monte Carlo Plain
                 nodeResult = calculateIntervalsMonteCarlo(nodes[i].getParametricLocation(), tree, timepoint, nodes[i].getNodeID(), algorithm, functioncalls, error) * nodes[i].getParametricLocation().getAccumulatedProbability();
 
+            cout << "NodeResult " << nodeResult << endl;
             total += nodeResult;
             totalerror += error;
         }
@@ -99,6 +100,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
+        vector<short> includedInterval(integrationIntervals.size());
+        fill(includedInterval.begin(), includedInterval.end(),0);
+
 
         vector<int> counter = vector<int>(location.getDimension() - 1);
         fill(counter.begin(), counter.end(),0);
@@ -126,7 +130,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             all.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
             all.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
 
-            integrationIntervals[transitionID + firing].first = -1;
+            includedInterval[transitionID + firing] = 1;
 
             counter[transitionID] +=1;
             cout << "Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
@@ -135,7 +139,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         }
 
         for (int i = 0; i < integrationIntervals.size(); i++) {
-            if (integrationIntervals[i].first == -1) {
+            if (includedInterval[i] == 1) {
                 continue;
             }
             singleDim s;
@@ -242,6 +246,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         vector<int> counter = vector<int>(location.getDimension() - 1);
         fill(counter.begin(), counter.end(),0);
+        vector<short> includedInterval(integrationIntervals.size());
+        fill(includedInterval.begin(), includedInterval.end(),0);
 
         vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
 
@@ -270,7 +276,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             all.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
             all.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
 
-            integrationIntervals[transitionID + firing].first = -1;
+            includedInterval[transitionID + firing] = 1;
 
             counter[transitionID] +=1;
             cout << "Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
@@ -279,14 +285,15 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         }
 
         for (int i = 0; i < integrationIntervals.size(); i++) {
-            if (integrationIntervals[i].first == -1) {
+            if (includedInterval[i] == 1) {
                 continue;
             }
             if (integrationIntervals[i].second.first.size() == 0 || integrationIntervals[i].second.second.size() == 0) {
                 continue;
             }
             singleDim s;
-            s.distribution = distributions[integrationIntervals[i].first];
+            //s.distribution = distributions[integrationIntervals[i].first];
+            s.distribution = distributions[0];
             all.integrals.push_back(s);
             all.lowerBounds.push_back(integrationIntervals[i].second.first);
             all.upperBounds.push_back(integrationIntervals[i].second.second);
