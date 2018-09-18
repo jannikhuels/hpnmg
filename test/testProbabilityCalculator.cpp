@@ -11,7 +11,7 @@
 using namespace hpnmg;
 using namespace std;
 
-/*TEST(ProbabilityCalculator, example){
+TEST(ProbabilityCalculator, example){
 
    auto reader= new ReadHybridPetrinet();
    auto parser = new ParseHybridPetrinet();
@@ -85,7 +85,7 @@ TEST(ProbabilityCalculator, valuetools_v2){
     double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 6.0, 50000, error);
 
     ASSERT_EQ ((((double)(result - error) <= 1) && (1 <= (double)(result + error))), true);
-}*/
+}
 
 TEST(ProbabilityCalculator, valuetools_v3){
 
