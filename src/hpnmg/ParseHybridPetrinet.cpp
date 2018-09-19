@@ -311,6 +311,31 @@ namespace hpnmg {
         }
         timeDeltas = allowedTimeDeltas;
 
+        // Step 3.4: Check for all time delta td if another time delta is smaller
+        // Therefore, for every tdi in timeDeltas we check if max(ti -td) < 0
+        // If max(ti - td) < 0 the timeDelta is too high
+        vector<vector<double>> allowedTimeDeltas2;
+        for (vector<double> timeDelta : timeDeltas) {
+            bool valid = true;
+            for (vector<double> timeDelta_i : timeDeltas) {
+                vector<double> newLocTime;
+                for (int i = 0; i < timeDelta.size() || i < timeDelta_i.size(); ++i) {
+                    if (i >= timeDelta.size())
+                        newLocTime.push_back(timeDelta_i[i]);
+                    else if (i >= locTime.size())
+                        newLocTime.push_back(-timeDelta[i]);
+                    else
+                        newLocTime.push_back(timeDelta_i[i] - timeDelta[i]);
+                }
+                if (0 > getBoundedTime(generalTransitionsFired, location.getGeneralIntervalBoundRight(),
+                                       location.getGeneralIntervalBoundLeft(), newLocTime))
+                    valid = false;
+            }
+            if (valid)
+                allowedTimeDeltas2.push_back(timeDelta);
+        }
+        timeDeltas = allowedTimeDeltas2;
+
         // step 4: add parametric locations for every general transition
         for (auto transitionItem : generalTransitions) {
             shared_ptr<GeneralTransition> transition = transitionItem.second;
