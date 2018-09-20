@@ -76,10 +76,14 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 //Monte Carlo Plain
                 nodeResult = calculateIntervalsMonteCarlo(nodes[i].getParametricLocation(), tree, timepoint, nodes[i].getNodeID(), algorithm, functioncalls, error) * nodes[i].getParametricLocation().getAccumulatedProbability();
 
+            cout << "----" << endl;
+            cout << "Node: " << nodeResult << " +- " << error << endl;
+
             total += nodeResult;
             totalerror += error;
         }
 
+        cout << "----" << endl;
         cout << "Total: " << total << " +- " << totalerror << endl;
         cout << "----" << endl;
         cout << "----" << endl;
@@ -90,14 +94,32 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
-	double ProbabilityCalculator::calculateIntervalsGauss(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID, int evaluations){
+	double ProbabilityCalculator::calculateIntervalsGauss(const ParametricLocation &location, ParametricLocationTree &tree, double timepoint, int nodeID, int evaluations){
 
 
         double result = 0.0;
 
+        double resultAll = 0.0;
+        double resultPlus = 0.0;
+        double resultMinus = 0.0;
+
+        double errorAll = 0.0;
+        double errorPlus = 0.0;
+        double errorMinus = 0.0;
+
+
         allDims all;
+        allDims allPlus;
+        allDims allMinus;
+
         all.current_index = 0;
+        allPlus.current_index = 0;
+        allMinus.current_index = 0;
+
         const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
+
+        double maxTime = tree.getMaxTime();
+        cout << "Max time: "<<  maxTime  << endl;
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
 
@@ -109,64 +131,153 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         //firings in the past
         for (int i = 0; i < generalTransitionsFired.size(); i++) {
 
-            int transitionID = generalTransitionsFired[i];
-            int firing = counter[transitionID];
+           int transitionID = generalTransitionsFired[i];
+           int firing = counter[transitionID];
 
-            singleDim s;
-            s.distribution = distributions[integrationIntervals[transitionID].first];
-            all.integrals.push_back(s);
+           if (integrationIntervals[transitionID + firing].second.first.size() == 0 || integrationIntervals[transitionID + firing].second.second.size() == 0) {
+               continue;
+           }
 
-            double u = integrationIntervals[transitionID + firing].second.first[transitionID + firing+1];
-            integrationIntervals[transitionID + firing].second.first[transitionID + firing+1] = integrationIntervals[transitionID + firing].second.first[i+1];
-            integrationIntervals[transitionID + firing].second.first[i+1] = u;
+           singleDim sAll;
+           sAll.distribution = distributions[integrationIntervals[transitionID].first];
+           all.integrals.push_back(sAll);
+           singleDim sPlus;
+           sPlus.distribution = sAll.distribution;
+           allPlus.integrals.push_back(sPlus);
+           singleDim sMinus;
+           sMinus.distribution = sAll.distribution;
+           allMinus.integrals.push_back(sMinus);
 
-            double t = integrationIntervals[transitionID + firing].second.second[transitionID + firing+1];
-            integrationIntervals[transitionID + firing].second.second[transitionID + firing +1] = integrationIntervals[transitionID + firing].second.second[i+1];
-            integrationIntervals[transitionID + firing].second.second[i+1] = t;
+           double u = integrationIntervals[transitionID + firing].second.first[transitionID + firing+1];
+           integrationIntervals[transitionID + firing].second.first[transitionID + firing+1] = integrationIntervals[transitionID + firing].second.first[i+1];
+           integrationIntervals[transitionID + firing].second.first[i+1] = u;
 
-            all.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
-            all.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
+           double t = integrationIntervals[transitionID + firing].second.second[transitionID + firing+1];
+           integrationIntervals[transitionID + firing].second.second[transitionID + firing +1] = integrationIntervals[transitionID + firing].second.second[i+1];
+           integrationIntervals[transitionID + firing].second.second[i+1] = t;
 
-            integrationIntervals[transitionID + firing].first = -1;
+           all.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
+           all.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
+           allPlus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
+           allPlus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
+           allMinus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
+           allMinus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
 
-            counter[transitionID] +=1;
-            cout << "Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
-            cout << "Right bound:" << integrationIntervals[transitionID + firing].second.second << endl;
+           integrationIntervals[transitionID + firing].first = -1;
+
+           counter[transitionID] +=1;
+
+           cout << "Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
+           cout << "Right bound:" << integrationIntervals[transitionID + firing].second.second << endl;
 
         }
 
+
+
+        //future firings
         for (int i = 0; i < integrationIntervals.size(); i++) {
-            if (integrationIntervals[i].first == -1) {
-                continue;
-            }
-            singleDim s;
-            s.distribution = distributions[integrationIntervals[i].first];
-            all.integrals.push_back(s);
-            all.lowerBounds.push_back(integrationIntervals[i].second.first);
-            all.upperBounds.push_back(integrationIntervals[i].second.second);
+           if (integrationIntervals[i].first == -1) {
+               continue;
+           }
+           if (integrationIntervals[i].second.first.size() == 0 || integrationIntervals[i].second.second.size() == 0) {
+               continue;
+           }
+           singleDim sAll;
+           sAll.distribution = distributions[integrationIntervals[i].first];
+           all.integrals.push_back(sAll);
+           singleDim sPlus;
+           sPlus.distribution = sAll.distribution;
+           allPlus.integrals.push_back(sPlus);
+           singleDim sMinus;
+           sMinus.distribution = sAll.distribution;
+           allMinus.integrals.push_back(sMinus);
 
-            cout << "Left bound:" << integrationIntervals[i].second.first << endl;
-            cout << "Right bound:" << integrationIntervals[i].second.second << endl;
+
+           all.lowerBounds.push_back(integrationIntervals[i].second.first);
+           all.upperBounds.push_back(integrationIntervals[i].second.second);
+           allPlus.lowerBounds.push_back(integrationIntervals[i].second.first);
+           allPlus.upperBounds.push_back(integrationIntervals[i].second.second);
+           allMinus.lowerBounds.push_back(integrationIntervals[i].second.first);
+           allMinus.upperBounds.push_back(integrationIntervals[i].second.second);
+
+           int last = allPlus.upperBounds.size() - 1;
+
+           if  (integrationIntervals[i].second.second[0] >= maxTime){
+               fill(allPlus.lowerBounds[last].begin(), allPlus.lowerBounds[last].end(),0.0);
+
+               pair<string, map<string, float>> uniform;
+               uniform.first = "uniform";
+               std::map<string, float> params;
+               params["a"] = 0.0;
+               params["b"] = maxTime;
+               uniform.second = params;
+               allPlus.integrals[last].distribution = uniform;
+
+               fill(allMinus.lowerBounds[last].begin(), allMinus.lowerBounds[last].end(),0.0);
+           }
+
+           cout << "Left bound:" << integrationIntervals[i].second.first << endl;
+           cout << "Right bound:" << integrationIntervals[i].second.second << endl;
         }
+
+
+
 
 
 		if (all.integrals.size() > 0){
+
+
 		    all.evaluations = evaluations;
 			double lower = all.lowerBounds[0][0];
 			double upper = all.upperBounds[0][0];
 
             if ((lower > 0.0 && isinf(lower)) || upper <= 0.0  || lower >= upper)
-                result =  0.0;
+                resultAll =  0.0;
             else
-                result = gauss_legendre(64, functionToIntegrateGauss, &all, lower, upper);
+                resultAll = gauss_legendre(64, functionToIntegrateGauss, &all, lower, upper);
 
 
-			cout << "Gauss integral result: " << result << endl;
-            cout << "----" << endl;
-		}
 
-		return result;
+            allPlus.evaluations = evaluations;
+            lower = allPlus.lowerBounds[0][0];
+            upper = allPlus.upperBounds[0][0];
+
+            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0  || lower >= upper)
+                resultPlus =  0.0;
+            else
+                resultPlus = gauss_legendre(64, functionToIntegrateGauss, &allPlus, lower, upper);
+
+
+
+            allMinus.evaluations = evaluations;
+            lower = allMinus.lowerBounds[0][0];
+            upper = allMinus.upperBounds[0][0];
+
+            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0  || lower >= upper)
+                resultMinus =  0.0;
+            else
+                resultMinus = gauss_legendre(64, functionToIntegrateGauss, &allMinus, lower, upper);
+
+        }
+
+
+        if (resultPlus > 1.0) {
+            resultPlus = 1.0;
+        }
+        if (resultMinus > 1.0) {
+            resultMinus = 1.0;
+        }
+
+
+        result = resultAll;
+        if ((resultPlus - resultMinus) > 0) {
+            result += (resultPlus - resultMinus);
+        }
+
+        return result;
 	}
+
+
 
 
 
@@ -182,8 +293,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             double result = 1.0;
 
             for (int i = 0; i < all.integrals.size(); i++) {
+
                 current = all.integrals[i];
                 result *= getDensity(current.distribution, current.value);
+
             }
 
             return result;
@@ -223,7 +336,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 return 0.0;
 
 
-
    			return gauss_legendre(n, functionToIntegrateGauss, &all, lower, upper);
    		}
 
@@ -231,15 +343,33 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
+
+
     double ProbabilityCalculator::calculateIntervalsMonteCarlo(const ParametricLocation &location, ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error){
 
         double result = 0.0;
 
+        double resultAll = 0.0;
+        double resultPlus = 0.0;
+        double resultMinus = 0.0;
+
+        double errorAll = 0.0;
+        double errorPlus = 0.0;
+        double errorMinus = 0.0;
+
+
         allDims all;
+        allDims allPlus;
+        allDims allMinus;
+
         all.current_index = 0;
+        allPlus.current_index = 0;
+        allMinus.current_index = 0;
+
         const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
-        all.maxTime = tree.getMaxTime();
-        cout << "max time"<<  all.maxTime  << endl;
+
+        double maxTime = tree.getMaxTime();
+        cout << "Max time: "<<  maxTime  << endl;
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
 
@@ -258,9 +388,17 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 continue;
             }
 
-            singleDim s;
-            s.distribution = distributions[integrationIntervals[transitionID].first];
-            all.integrals.push_back(s);
+
+
+            singleDim sAll;
+            sAll.distribution = distributions[integrationIntervals[transitionID].first];
+            all.integrals.push_back(sAll);
+            singleDim sPlus;
+            sPlus.distribution = sAll.distribution;
+            allPlus.integrals.push_back(sPlus);
+            singleDim sMinus;
+            sMinus.distribution = sAll.distribution;
+            allMinus.integrals.push_back(sMinus);
 
             double u = integrationIntervals[transitionID + firing].second.first[transitionID + firing+1];
             integrationIntervals[transitionID + firing].second.first[transitionID + firing+1] = integrationIntervals[transitionID + firing].second.first[i+1];
@@ -272,15 +410,23 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             all.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
             all.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
+            allPlus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
+            allPlus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
+            allMinus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
+            allMinus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
 
             integrationIntervals[transitionID + firing].first = -1;
 
             counter[transitionID] +=1;
+
             cout << "Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
             cout << "Right bound:" << integrationIntervals[transitionID + firing].second.second << endl;
 
         }
 
+
+
+        //future firings
         for (int i = 0; i < integrationIntervals.size(); i++) {
             if (integrationIntervals[i].first == -1) {
                 continue;
@@ -288,18 +434,45 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             if (integrationIntervals[i].second.first.size() == 0 || integrationIntervals[i].second.second.size() == 0) {
                 continue;
             }
-            singleDim s;
-            s.distribution = distributions[integrationIntervals[i].first];
-            all.integrals.push_back(s);
+            singleDim sAll;
+            sAll.distribution = distributions[integrationIntervals[i].first];
+            all.integrals.push_back(sAll);
+            singleDim sPlus;
+            sPlus.distribution = sAll.distribution;
+            allPlus.integrals.push_back(sPlus);
+            singleDim sMinus;
+            sMinus.distribution = sAll.distribution;
+            allMinus.integrals.push_back(sMinus);
+
+
             all.lowerBounds.push_back(integrationIntervals[i].second.first);
             all.upperBounds.push_back(integrationIntervals[i].second.second);
+            allPlus.lowerBounds.push_back(integrationIntervals[i].second.first);
+            allPlus.upperBounds.push_back(integrationIntervals[i].second.second);
+            allMinus.lowerBounds.push_back(integrationIntervals[i].second.first);
+            allMinus.upperBounds.push_back(integrationIntervals[i].second.second);
+
+            int last = allPlus.upperBounds.size() - 1;
+
+            if  (integrationIntervals[i].second.second[0] >= maxTime){
+                fill(allPlus.lowerBounds[last].begin(), allPlus.lowerBounds[last].end(),0.0);
+                fill(allPlus.upperBounds[last].begin(), allPlus.upperBounds[last].end(),numeric_limits<double>::infinity());
+                fill(allMinus.lowerBounds[last].begin(), allMinus.lowerBounds[last].end(),0.0);
+            }
 
             cout << "Left bound:" << integrationIntervals[i].second.first << endl;
             cout << "Right bound:" << integrationIntervals[i].second.second << endl;
         }
 
+
+
+
+
+
    		const int dim = all.integrals.size();
 
+
+        //Integration
 
    		if (dim > 0){
 
@@ -315,69 +488,201 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             size_t dimension = static_cast<size_t>(dim);
 
-            const gsl_rng_type *T;
-            gsl_rng *r;
 
             gsl_monte_function G = { &transformedFunctionToIntegrateMonteCarlo, dimension, &all };
+            gsl_monte_function GPlus = { &transformedFunctionToIntegrateMonteCarlo, dimension, &allPlus };
+            gsl_monte_function GMinus = { &transformedFunctionToIntegrateMonteCarlo, dimension, &allMinus };
 
             size_t calls = static_cast<size_t>(functioncalls);
 
+            const gsl_rng_type *T;
+            gsl_rng *r;
+
+
+
+            //All
             gsl_rng_env_setup ();
 
             T = gsl_rng_default;
             r = gsl_rng_alloc (T);
 
-
             if (algorithm == 1){
 
               gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension);
-              gsl_monte_plain_integrate (&G, xl, xu, dimension, calls, r, s, &result, &error);
+              gsl_monte_plain_integrate (&G, xl, xu, dimension, calls, r, s, &resultAll, &errorAll);
               gsl_monte_plain_free (s);
 
-                cout << "Plain Monte Carlo integral result: " << result << ", " << "error estimate: " << error << endl;
+              //cout << "Plain Monte Carlo integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
 
             } else if (algorithm == 2){
 
               gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension);
-              gsl_monte_miser_integrate (&G, xl, xu, dimension, calls, r, s, &result, &error);
+              gsl_monte_miser_integrate (&G, xl, xu, dimension, calls, r, s, &resultAll, &error);
               gsl_monte_miser_free (s);
-              cout << "Monte Carlo MISER integral result: " << result << ", " << "error estimate: " << error << endl;
+              //cout << "Monte Carlo MISER integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
 
             } else if (algorithm == 3){
 
                 gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension);
 
                 //vegas warm-up
-                gsl_monte_vegas_integrate (&G, xl, xu, dimension, calls/50, r, s, &result, &error);
+                gsl_monte_vegas_integrate (&G, xl, xu, dimension, calls/50, r, s, &resultAll, &errorAll);
 
                 for (int j = 0; j < 10; j++) {
-                    gsl_monte_vegas_integrate(&G, xl, xu, dimension, calls/5, r, s, &result, &error);
+                    gsl_monte_vegas_integrate(&G, xl, xu, dimension, calls/5, r, s, &resultAll, &errorAll);
 
                     if ((fabs (gsl_monte_vegas_chisq (s) - 1.0) <= 0.5) || (error == 0.0))
                         break;
                 }
                 gsl_monte_vegas_free (s);
 
-                if (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5 && error > 0.0){
-                    cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
+                if (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5 && errorAll > 0.0){
+                    //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
                     gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension);
-                    gsl_monte_miser_integrate (&G, xl, xu, dimension, calls, r, z, &result, &error);
+                    gsl_monte_miser_integrate (&G, xl, xu, dimension, calls, r, z, &resultAll, &errorAll);
                     gsl_monte_miser_free (z);
-                    cout << "Monte Carlo MISER integral result: " << result << ", " << "error estimate: " << error << endl;
-                } else
-                    cout << "Monte Carlo VEGAS final integral result: " << result << ", " << "error estimate: " << error << endl;
+                    //cout << "Monte Carlo MISER integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
+                } //else
+                    //cout << "Monte Carlo VEGAS final integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
             }
 
             gsl_rng_free (r);
+
+
+
+
+
+
+
+            //AllPlus: Correction for Infinity
+            gsl_rng_env_setup ();
+
+            T = gsl_rng_default;
+            r = gsl_rng_alloc (T);
+
+            if (algorithm == 1){
+
+              gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension);
+              gsl_monte_plain_integrate (&GPlus, xl, xu, dimension, calls, r, s, &resultPlus, &errorPlus);
+              gsl_monte_plain_free (s);
+
+              //cout << "Plain Monte Carlo integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
+
+            } else if (algorithm == 2){
+
+              gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension);
+              gsl_monte_miser_integrate (&GPlus, xl, xu, dimension, calls, r, s, &resultPlus, &error);
+              gsl_monte_miser_free (s);
+              //cout << "Monte Carlo MISER integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
+
+            } else if (algorithm == 3){
+
+                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension);
+
+                //vegas warm-up
+                gsl_monte_vegas_integrate (&GPlus, xl, xu, dimension, calls/50, r, s, &resultPlus, &errorPlus);
+
+                for (int j = 0; j < 10; j++) {
+                    gsl_monte_vegas_integrate(&GPlus, xl, xu, dimension, calls/5, r, s, &resultPlus, &errorPlus);
+
+                    if ((fabs (gsl_monte_vegas_chisq (s) - 1.0) <= 0.5) || (errorPlus == 0.0))
+                        break;
+                }
+                gsl_monte_vegas_free (s);
+
+                if (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5 && errorPlus > 0.0){
+                    //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
+                    gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension);
+                    gsl_monte_miser_integrate (&GPlus, xl, xu, dimension, calls, r, z, &resultPlus, &errorPlus);
+                    gsl_monte_miser_free (z);
+                    cout << "Monte Carlo MISER integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
+                } //else
+                    //cout << "Monte Carlo VEGAS final integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
+            }
+
+            gsl_rng_free (r);
+
+
+
+
+
+            //AllMinus: Correction for Infinity
+            gsl_rng_env_setup ();
+
+            T = gsl_rng_default;
+            r = gsl_rng_alloc (T);
+
+            if (algorithm == 1){
+
+              gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension);
+              gsl_monte_plain_integrate (&GMinus, xl, xu, dimension, calls, r, s, &resultMinus, &errorMinus);
+              gsl_monte_plain_free (s);
+
+              //cout << "Plain Monte Carlo integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
+
+            } else if (algorithm == 2){
+
+              gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension);
+              gsl_monte_miser_integrate (&GMinus, xl, xu, dimension, calls, r, s, &resultMinus, &error);
+              gsl_monte_miser_free (s);
+              //cout << "Monte Carlo MISER integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
+
+            } else if (algorithm == 3){
+
+                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension);
+
+                //vegas warm-up
+                gsl_monte_vegas_integrate (&GMinus, xl, xu, dimension, calls/50, r, s, &resultMinus, &errorMinus);
+
+                for (int j = 0; j < 10; j++) {
+                    gsl_monte_vegas_integrate(&GMinus, xl, xu, dimension, calls/5, r, s, &resultMinus, &errorMinus);
+
+                    if ((fabs (gsl_monte_vegas_chisq (s) - 1.0) <= 0.5) || (errorMinus == 0.0))
+                        break;
+                }
+                gsl_monte_vegas_free (s);
+
+                if (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5 && errorMinus > 0.0){
+                    //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
+                    gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension);
+                    gsl_monte_miser_integrate (&GMinus, xl, xu, dimension, calls, r, z, &resultMinus, &errorMinus);
+                    gsl_monte_miser_free (z);
+                    //cout << "Monte Carlo MISER integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
+                } //else
+                    //cout << "Monte Carlo VEGAS final integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
+            }
+
+            gsl_rng_free (r);
+
+
 
 
             delete[] xl;
             delete[] xu;
 
    		}
-        cout << "----" << endl;
+
+        if (resultPlus > 1.0) {
+            errorPlus -= (resultPlus - 1.0);
+            resultPlus = 1.0;
+        }
+        if (resultMinus > 1.0) {
+            errorMinus -= (resultMinus - 1.0);
+            resultMinus = 1.0;
+        }
+
+
+        result = resultAll;
+        error = errorAll;
+
+        if ((resultPlus - resultMinus) > 0) {
+            result += (resultPlus - resultMinus);
+            error += (errorPlus + errorMinus);
+        }
+
    		return result;
    	}
+
 
 
 
@@ -407,55 +712,61 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         for (int i = 0; i < dim; i++){
 
+
+
             current = all.integrals[i];
             lower = all.lowerBounds[i][0];
             upper = all.upperBounds[i][0];
 
 
-            for (int j = 0; j < i; j++) {
-                currentDependency = all.integrals[j];
-
-                lowerFactor = 0.0;
-                upperFactor = 0.0;
-
-                if (all.lowerBounds[i].size() > j + 1)
-                    lowerFactor = all.lowerBounds[i][j + 1];
-                if (all.lowerBounds[i].size() > j + 1)
-                    upperFactor = all.upperBounds[i][j + 1];
-
-                if (!isnan(lowerFactor) && lowerFactor != 0.0)
-                    lower += (lowerFactor * transformedValues[j]);
-
-               if (!isnan(upperFactor)  && lowerFactor != 0.0)
-                    upper += (upperFactor * transformedValues[j]);
-
-           }
+            if (!isinf(upper)) {
 
 
-            if ((lower > 0.0 && isinf(lower)) || upper <= 0.0 )
-                return 0.0;
+                for (int j = 0; j < i; j++) {
+                    currentDependency = all.integrals[j];
+
+                    lowerFactor = 0.0;
+                    upperFactor = 0.0;
+
+                    if (all.lowerBounds[i].size() > j + 1)
+                        lowerFactor = all.lowerBounds[i][j + 1];
+                    if (all.lowerBounds[i].size() > j + 1)
+                        upperFactor = all.upperBounds[i][j + 1];
+
+                    if (!isnan(lowerFactor) && lowerFactor != 0.0)
+                        lower += (lowerFactor * transformedValues[j]);
+
+                    if (!isnan(upperFactor) && lowerFactor != 0.0)
+                        upper += (upperFactor * transformedValues[j]);
+
+                }
 
 
-//            if (upper >= all.maxTime)
-//                upper = 10000;
+                if ((lower > 0.0 && isinf(lower)) || upper <= 0.0)
+                    return 0.0;
 
-            halfLower = 0.5 * lower;
-            halfUpper = 0.5 * upper;
 
-            transformedValues[i] = halfUpper + halfLower + k[i] * (halfUpper - halfLower);
-            currentResult = getDensity(current.distribution, transformedValues[i]);
+                halfLower = 0.5 * lower;
+                halfUpper = 0.5 * upper;
 
-            if (currentResult == 0.0)
-                return 0.0;
+                transformedValues[i] = halfUpper + halfLower + k[i] * (halfUpper - halfLower);
+                currentResult = getDensity(current.distribution, transformedValues[i]);
 
-            jacobianFactor = (halfUpper - halfLower);
-            currentResultWithJacobian = currentResult * jacobianFactor;
-            result *= currentResultWithJacobian;
+                if (currentResult == 0.0)
+                    return 0.0;
+
+                jacobianFactor = (halfUpper - halfLower);
+                currentResultWithJacobian = currentResult * jacobianFactor;
+                result *= currentResultWithJacobian;
+
+            } else //Infinity case
+                result *=  0.5;
+
         }
-
         return result;
 
    	}
+
 
 
 

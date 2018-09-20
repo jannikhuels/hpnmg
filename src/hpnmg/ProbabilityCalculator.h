@@ -33,7 +33,7 @@ namespace hpnmg {
 
        	static double getDensity(pair<string, map<string, float>> distribution, double value);
 
-		double calculateIntervalsGauss(const ParametricLocation &location, const ParametricLocationTree &tree, double timepoint, int nodeID, int evaluations);
+		double calculateIntervalsGauss(const ParametricLocation &location, ParametricLocationTree &tree, double timepoint, int nodeID, int evaluations);
 
         double calculateIntervalsMonteCarlo(const ParametricLocation &location, ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error);
 
