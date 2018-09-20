@@ -93,8 +93,8 @@ namespace hpnmg {
         // first val in normed dependencies is time
         generalDependenciesNormed[0] = time;
 
-        vector<int> counter = vector<int>(this->dimension - 1);
-        fill(counter.begin(), counter.end(),0);
+        //vector<int> counter = vector<int>(this->dimension - 1);
+        //fill(counter.begin(), counter.end(),0);
 
         // startPosition is initial 1 because 0 is the time
         int startPositionForTransition = 1;
@@ -285,7 +285,7 @@ namespace hpnmg {
 
             if(valid) {
 
-                parametricLocation.setIntegrationIntervals(entryTimes, interval.first, occurings, dimension);
+                parametricLocation.setIntegrationIntervals(entryTimes, interval.first, occurings, dimension, this->maxTime);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
             }

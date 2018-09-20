@@ -10,9 +10,16 @@
     </places>
     <transitions>
         <!-- charge battery -->
-        <continuousTransition id="tdy0" rate="5.0"/>
+        <continuousTransition id="tf_p0" rate="5.0"/>
+        <dynamicTransition id="tdy0" function="max" factor="-1" parameter="0">
+            <continuousTransition referenceId="tf_p0"></continuousTransition>
+            <constant value="0.0" factor="1" name="Pa"></constant>
+        </dynamicTransition>
         <!-- discharge battery -->
-        <continuousTransition id="tdy1" rate="5.0"/>
+        <dynamicTransition id="tdy1" function="max" parameter="0">
+            <continuousTransition referenceId="tf_p0"></continuousTransition>
+            <constant value="0.0" factor="1" name="Pa"></constant>
+        </dynamicTransition>
         <!-- transition tg0: no charge to charge -->
         <generalTransition id="tg0" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
             <parameter name="a" value="0.0"/>

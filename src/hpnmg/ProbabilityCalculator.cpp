@@ -77,7 +77,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 nodeResult = calculateIntervalsMonteCarlo(nodes[i].getParametricLocation(), tree, timepoint, nodes[i].getNodeID(), algorithm, functioncalls, error) * nodes[i].getParametricLocation().getAccumulatedProbability();
 
             cout << "----" << endl;
-            cout << "Node: " << nodeResult << " +- " << error << endl;
+            cout << "Node Result: " << nodeResult << " +- " << error << endl;
 
             total += nodeResult;
             totalerror += error;
@@ -122,6 +122,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         cout << "Max time: "<<  maxTime  << endl;
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
+        vector<short> includedInterval(integrationIntervals.size());
+        fill(includedInterval.begin(), includedInterval.end(),0);
+
 
         vector<int> counter = vector<int>(location.getDimension() - 1);
         fill(counter.begin(), counter.end(),0);
@@ -156,12 +159,15 @@ ProbabilityCalculator::ProbabilityCalculator(){}
            integrationIntervals[transitionID + firing].second.second[transitionID + firing +1] = integrationIntervals[transitionID + firing].second.second[i+1];
            integrationIntervals[transitionID + firing].second.second[i+1] = t;
 
+
            all.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
            all.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
            allPlus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
            allPlus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
            allMinus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
            allMinus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
+
+           includedInterval[transitionID + firing] = 1;
 
            integrationIntervals[transitionID + firing].first = -1;
 
@@ -176,12 +182,19 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         //future firings
         for (int i = 0; i < integrationIntervals.size(); i++) {
+
            if (integrationIntervals[i].first == -1) {
                continue;
            }
            if (integrationIntervals[i].second.first.size() == 0 || integrationIntervals[i].second.second.size() == 0) {
                continue;
            }
+
+            if (includedInterval[i] == 1) {
+                continue;
+            }
+
+
            singleDim sAll;
            sAll.distribution = distributions[integrationIntervals[i].first];
            all.integrals.push_back(sAll);
@@ -215,6 +228,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
                fill(allMinus.lowerBounds[last].begin(), allMinus.lowerBounds[last].end(),0.0);
            }
+
 
            cout << "Left bound:" << integrationIntervals[i].second.first << endl;
            cout << "Right bound:" << integrationIntervals[i].second.second << endl;
@@ -375,6 +389,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         vector<int> counter = vector<int>(location.getDimension() - 1);
         fill(counter.begin(), counter.end(),0);
+        vector<short> includedInterval(integrationIntervals.size());
+        fill(includedInterval.begin(), includedInterval.end(),0);
 
         vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
 
@@ -415,7 +431,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             allMinus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
             allMinus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
 
-            integrationIntervals[transitionID + firing].first = -1;
+            includedInterval[transitionID + firing] = 1;
 
             counter[transitionID] +=1;
 
@@ -428,14 +444,16 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         //future firings
         for (int i = 0; i < integrationIntervals.size(); i++) {
-            if (integrationIntervals[i].first == -1) {
+            if (includedInterval[i] == 1) {
                 continue;
             }
             if (integrationIntervals[i].second.first.size() == 0 || integrationIntervals[i].second.second.size() == 0) {
                 continue;
             }
+
             singleDim sAll;
-            sAll.distribution = distributions[integrationIntervals[i].first];
+            //sAll.distribution = distributions[integrationIntervals[i].first];
+            sAll.distribution = distributions[0];
             all.integrals.push_back(sAll);
             singleDim sPlus;
             sPlus.distribution = sAll.distribution;
@@ -443,6 +461,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             singleDim sMinus;
             sMinus.distribution = sAll.distribution;
             allMinus.integrals.push_back(sMinus);
+
 
 
             all.lowerBounds.push_back(integrationIntervals[i].second.first);

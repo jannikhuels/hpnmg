@@ -228,7 +228,7 @@ namespace hpnmg {
         return true;
     }
 
-    void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, int value, std::vector<int> occurings, int dimension) {
+    void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, int value, std::vector<int> occurings, int dimension, int maxTime) {
         std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
         std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
 
@@ -239,6 +239,9 @@ namespace hpnmg {
             size += i;
         }*/
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result(dimension - 1);
+        for (int i = 0; i < result.size(); i++) {
+            result[i].first = -1;
+        }
 
         vector<int> counter = vector<int>(dimension - 1);
         fill(counter.begin(), counter.end(),0);
@@ -246,6 +249,8 @@ namespace hpnmg {
         vector<double> bound(dimension);
         fill(bound.begin(), bound.end(), 0);
         vector<double> zero = bound;
+        vector<double> mTime = bound;
+        mTime[0] = maxTime;
         bound[0] = value;
 
         // Collect the Normed Boundaries.
@@ -264,21 +269,30 @@ namespace hpnmg {
             }
         }
 
-        for (int j = 0; j < counter.size() && j < this->getGeneralIntervalBoundLeft().size(); j++) {
+        for (int j = 0; j < counter.size(); j++) {
             int firing = counter[j];
-            bool enablingTimeGreaterZero = false;
-            for (int l = 0; l < this->getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
-                if (this->getGeneralIntervalBoundLeft()[j][firing][l] > 0)
-                    enablingTimeGreaterZero = true;
-            }
-
-            if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
-                std::vector<double> normedLeft = makeNormed(leftBoundaries[j][firing], generalTransitionsFired, dimension);
-                if (Computation::isGreater(bound, normedLeft, value)) {
-                    leftBoundaries[j][firing] = bound;
+            if (j < this->getGeneralIntervalBoundLeft().size()) {
+                bool enablingTimeGreaterZero = false;
+                for (int l = 0; l < this->getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
+                    if (this->getGeneralIntervalBoundLeft()[j][firing][l] > 0)
+                        enablingTimeGreaterZero = true;
                 }
-                //result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], this->dimension), makeNormed(rightBoundaries[j][firing], this->dimension))});
-                result[j + firing] = {j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], generalTransitionsFired, dimension), makeNormed(rightBoundaries[j][firing], generalTransitionsFired, dimension))};
+
+                if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
+                    /*std::vector<double> normedLeft = makeNormed(leftBoundaries[j][firing], generalTransitionsFired,
+                                                                dimension);
+                    if (Computation::isGreater(bound, normedLeft, value)) {
+                        leftBoundaries[j][firing] = bound;
+                    }*/
+                    //result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], this->dimension), makeNormed(rightBoundaries[j][firing], this->dimension))});
+                    result[j + firing] = {j, std::pair<std::vector<double>, std::vector<double>>(
+                            makeNormed(leftBoundaries[j][firing], generalTransitionsFired, dimension),
+                            makeNormed(rightBoundaries[j][firing], generalTransitionsFired, dimension))};
+                }
+            } else {
+                if(result[j+firing].first == -1) {
+                    result[j + firing] = {j, std::pair<std::vector<double>, std::vector<double>>(zero, mTime)};
+                }
             }
         }
 
@@ -287,7 +301,7 @@ namespace hpnmg {
         newBoundaries = Computation::replaceValues(newBoundaries);
 
         // Update the Boundaries
-        for (int i = 0; i < newBoundaries.size(); i++) {
+        for (int i = 0; i < newBoundaries.size() && i < result.size(); i++) {
             if (newBoundaries[i].first.size()>i && newBoundaries[i].first[i+1] == 0 && Computation::isGreater(newBoundaries[i].first, zero, value)) {
                 result[i].second.first = newBoundaries[i].first;
             }
@@ -303,8 +317,8 @@ namespace hpnmg {
         t[0] = value;
         for (int i = 1; i < startEvent.size(); i++) {
             std::vector<double> d = Computation::computeUnequationCut(t, startEvent, i);
-            if(d.size() > 0 && d[i] == 0 && Computation::isGreater(d, zero, value)) {
-                if (startEvent[i] < 0) {
+            if(d.size() > 0 && d[i] == 0) {
+                if (startEvent[i] < 0 && Computation::isGreater(d, zero, value)) {
                     result[i-1].second.first = d;
                 }
                 if (startEvent[i] > 0) {
