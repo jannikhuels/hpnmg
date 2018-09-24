@@ -276,7 +276,7 @@ namespace hpnmg {
 
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
-                if (latestEntryTime < interval.first) {
+                if (latestEntryTime <= interval.first) {
                     valid = false;
                     break;
                 }
