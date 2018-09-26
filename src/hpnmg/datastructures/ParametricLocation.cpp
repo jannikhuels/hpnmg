@@ -147,19 +147,21 @@ namespace hpnmg {
     }
 
     double ParametricLocation::getEarliestEntryTime() {
-        return getMinimumTime(generalIntervalBoundLeft, generalIntervalBoundRight);
+        double time = sourceEvent.getTime();
+        vector<double> dependencies = sourceEvent.getGeneralDependencies();
+        return getMinimumTime(generalIntervalBoundLeft, generalIntervalBoundRight, time, dependencies);
     }
 
     double ParametricLocation::getLatestEntryTime() {
-        return getMinimumTime(generalIntervalBoundRight, generalIntervalBoundLeft);
+        double time = sourceEvent.getTime();
+        vector<double> dependencies = sourceEvent.getGeneralDependencies();
+        return getMinimumTime(generalIntervalBoundRight, generalIntervalBoundLeft, time, dependencies);
     }
 
     /*
      * To get the maximum time, swap lower and upper boundaries.
      */
-    double ParametricLocation::getMinimumTime(vector<vector<vector<double>>> lowerBoundaries, vector<vector<vector<double>>> upperBoundaries) {
-        double time = sourceEvent.getTime();
-        vector<double> dependencies = sourceEvent.getGeneralDependencies();
+    double ParametricLocation::getMinimumTime(vector<vector<vector<double>>> lowerBoundaries, vector<vector<vector<double>>> upperBoundaries, double time, vector<double> dependencies) {
         vector<int> counter = vector<int>(dimension -1);
         fill(counter.begin(), counter.end(),0);
         for (int &firedTransition : generalTransitionFired)
@@ -193,6 +195,26 @@ namespace hpnmg {
         }
 
         return time;
+    }
+
+    std::pair<std::vector<double>, std::vector<double>> ParametricLocation::compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index) {
+
+        std::vector<double> leftBound = boundaries[index].second.first;
+        std::vector<double> rightBound = boundaries[index].second.second;
+
+        if (value.first.size() > index) {
+            double leftNew = Computation::getTime(boundaries, value.first, 1);
+            double leftOld = Computation::getTime(boundaries, boundaries[index].second.first, 1);
+            leftBound = leftNew > leftOld ? value.first : boundaries[index].second.first;
+        }
+
+        if (value.second.size() > index) {
+            double rightNew = Computation::getTime(boundaries, value.second, 2);
+            double rightOld = Computation::getTime(boundaries, boundaries[index].second.second, 2);
+            rightBound = rightNew < rightOld ? value.second : boundaries[index].second.second;
+        }
+
+        return {leftBound, rightBound};
     }
 
     std::vector<double> makeNormed(std::vector<double> in, std::vector<int> gtf, int dimension) {
@@ -302,12 +324,15 @@ namespace hpnmg {
 
         // Update the Boundaries
         for (int i = 0; i < newBoundaries.size() && i < result.size(); i++) {
-            if (newBoundaries[i].first.size()>i && newBoundaries[i].first[i+1] == 0 && Computation::isGreater(newBoundaries[i].first, zero, value)) {
+            std::pair<std::vector<double>, std::vector<double>> bound = this->compare(result, newBoundaries[i], i);
+            result[i].second.first = bound.first;
+            result[i].second.second = bound.second;
+            /*if (newBoundaries[i].first.size()>i && newBoundaries[i].first[i+1] == 0 && Computation::isGreater(newBoundaries[i].first, zero, value) && Computation::isGreater(newBoundaries[i].first, result[i].second.first, value)) {
                 result[i].second.first = newBoundaries[i].first;
             }
             if (newBoundaries[i].second.size()>i && newBoundaries[i].second[i+1] == 0) {
                 result[i].second.second = newBoundaries[i].second;
-            }
+            }*/
         }
 
         // Check if source events influences the bounds
@@ -316,13 +341,17 @@ namespace hpnmg {
         std::fill(t.begin(), t.end(), 0);
         t[0] = value;
         for (int i = 1; i < startEvent.size(); i++) {
-            std::vector<double> d = Computation::computeUnequationCut(t, startEvent, i);
+            std::vector<double> d = Computation::computeUnequationCut(startEvent, t, i);
             if(d.size() > 0 && d[i] == 0) {
-                if (startEvent[i] < 0 && Computation::isGreater(d, zero, value)) {
-                    result[i-1].second.first = d;
+                if (startEvent[i] < 0) {
+                    std::pair<std::vector<double>, std::vector<double>> bound = this->compare(result, { d, {} }, i-1);
+                    result[i-1].second.first = bound.first;
+                    result[i-1].second.second = bound.second;
                 }
                 if (startEvent[i] > 0) {
-                    result[i-1].second.second = d;
+                    std::pair<std::vector<double>, std::vector<double>> bound = this->compare(result, { {}, d }, i-1);
+                    result[i-1].second.first = bound.first;
+                    result[i-1].second.second = bound.second;
                 }
             }
         }
