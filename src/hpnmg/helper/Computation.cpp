@@ -192,4 +192,31 @@ namespace hpnmg {
 
         return f1[0] > f2[0];
     }
+
+    double Computation::getTime(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::vector<double> dependencies, int mode) {
+        while (dependencies.size() > 1) {
+            double value = dependencies.back();
+            dependencies.pop_back();
+            int index = dependencies.size() - 1;
+
+            std::vector<double> lowerBounds;
+            std::vector<double> upperBounds;
+            if (mode == 1) {
+                lowerBounds = boundaries[index].second.first;
+                upperBounds = boundaries[index].second.second;
+            } else {
+                lowerBounds = boundaries[index].second.second;
+                upperBounds = boundaries[index].second.first;
+            }
+
+            for (int i = 0; i <= dependencies.size()-1; ++i) {
+                if (value >= 0) {
+                    dependencies[i] += value * lowerBounds[i];
+                } else {
+                    dependencies[i] += value * upperBounds[i];
+                }
+            }
+        }
+        return dependencies[0];
+    }
 }
