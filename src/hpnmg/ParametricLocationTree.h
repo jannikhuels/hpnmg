@@ -96,6 +96,8 @@ namespace hpnmg {
 
         void printText();
 
+        int numberOfLocations();
+
         std::vector<Node> getCandidateLocationsForTime(double time);
 
         std::vector<Node> getCandidateLocationsForTimeInterval(std::pair<double,double> interval);  

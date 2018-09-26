@@ -322,4 +322,8 @@ namespace hpnmg {
     hpnmg::ParametricLocationTree::setDistributions(const vector<pair<string, map<string, float>>> &distributions) {
         ParametricLocationTree::distributions = distributions;
     }
+
+    int hpnmg::ParametricLocationTree::numberOfLocations() {
+        return this->parametricLocations.size();
+    }
 }
