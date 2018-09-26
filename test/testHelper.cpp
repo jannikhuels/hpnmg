@@ -166,3 +166,8 @@ TEST(ComputationTest, isSmaller) {
     result = Computation::isGreater(f2, f1, 4);
     ASSERT_EQ(result, true);
 }
+
+TEST(ComputationTest, getMinimiumTime) {
+    double t = Computation::getTime({{1,{{1,0,0},{2,0,0}}},{1,{{1,1,0},{2,1,0}}}}, {3,1,2}, 1);
+    ASSERT_EQ(8,t);
+}
