@@ -20,13 +20,13 @@ int main (int argc, char *argv[])
     auto parser = new ParseHybridPetrinet();
     auto writer = new PLTWriter();
 
-    clock_t begin0 = clock();
-    auto hybridPetrinet0 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/battery_simple_v3.xml");
-    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 20);
-    clock_t end0 = clock();
-    double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
+    clock_t begin = clock();
+    auto hybridPetrinet = reader->readHybridPetrinet("../test/testfiles/caseStudy/norep_1_0.xml");
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     cout << elapsed_secs << " seconds" << endl;
-    cout << getNodes(plt0, plt0->getRootNode()) + 1 << " locations" << endl;
-    writer->writePLT(plt0, 20);
+    cout << getNodes(plt, plt->getRootNode()) + 1 << " locations" << endl;
+    writer->writePLT(plt, 20);
 
 }

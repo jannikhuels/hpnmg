@@ -76,7 +76,7 @@ namespace hpnmg {
     };
 
     bool ReadHybridPetrinet::validateSchema(const string &filepath) {
-        string schemaFilePath = "HPnG.xsd"; // todo: we need c++ 17
+        string schemaFilePath = "HPnG.xsd";
         XercesDOMParser domParser;
         if (domParser.loadGrammar(schemaFilePath.c_str(), Grammar::SchemaGrammarType) == NULL) {
             throw ("Couldn't load schema");
