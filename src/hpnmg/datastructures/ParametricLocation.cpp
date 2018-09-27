@@ -281,10 +281,10 @@ namespace hpnmg {
             // iterate over all possible firings of genTrans
             for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
                 if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
-                    std::vector<double> normedRight = makeNormed(rightBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, dimension);
+                    /*std::vector<double> normedRight = makeNormed(rightBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, dimension);
                     if (Computation::isSmaller(bound, normedRight, value)) {
                         rightBoundaries[genTrans][counter[genTrans]] = bound;
-                    }
+                    }*/
                     result[genTrans + counter[genTrans]] = {genTrans, { makeNormed(leftBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, dimension), makeNormed(rightBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, dimension) } };
                     counter[genTrans]++;
                 }
