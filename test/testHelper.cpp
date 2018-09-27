@@ -38,6 +38,56 @@ TEST(ComputationTest, TestUnequationCut) {
     ASSERT_EQ(res[1], 1);
     ASSERT_EQ(res[2], 0);
 
+    res = Computation::computeUnequationCut({2,3},{1,1});
+    EXPECT_EQ(2, res.size());
+    EXPECT_EQ(-0.5,res[0]);
+    EXPECT_EQ(0,res[1]);
+
+    res = Computation::computeUnequationCut({2,3},{1,1},1);
+    EXPECT_EQ(2, res.size());
+    EXPECT_EQ(-0.5,res[0]);
+    EXPECT_EQ(0,res[1]);
+
+    res = Computation::computeUnequationCut({2,3,1},{1,1,2});
+    EXPECT_EQ(3, res.size());
+    EXPECT_EQ(1,res[0]);
+    EXPECT_EQ(2,res[1]);
+    EXPECT_EQ(0,res[2]);
+
+    res = Computation::computeUnequationCut({2,3,1},{1,1,2},1);
+    EXPECT_EQ(3, res.size());
+    EXPECT_EQ(-0.5,res[0]);
+    EXPECT_EQ(0,res[1]);
+    EXPECT_EQ(0.5,res[2]);
+
+    res = Computation::computeUnequationCut({2,3,1},{1,1,2},2);
+    EXPECT_EQ(3, res.size());
+    EXPECT_EQ(1,res[0]);
+    EXPECT_EQ(2,res[1]);
+    EXPECT_EQ(0,res[2]);
+
+
+    res = Computation::computeUnequationCut({1,2,1,0},{3,1,3,1},1);
+    EXPECT_EQ(4, res.size());
+    EXPECT_EQ(2,res[0]);
+    EXPECT_EQ(0,res[1]);
+    EXPECT_EQ(2,res[2]);
+    EXPECT_EQ(1,res[3]);
+
+    res = Computation::computeUnequationCut({1,2,1,0},{3,1,3,1},2);
+    EXPECT_EQ(4, res.size());
+    EXPECT_EQ(-1,res[0]);
+    EXPECT_EQ(0.5,res[1]);
+    EXPECT_EQ(0,res[2]);
+    EXPECT_EQ(-0.5,res[3]);
+
+    res = Computation::computeUnequationCut({1,2,1,0},{3,1,3,1},3);
+    EXPECT_EQ(4, res.size());
+    EXPECT_EQ(-2,res[0]);
+    EXPECT_EQ(1,res[1]);
+    EXPECT_EQ(-2,res[2]);
+    EXPECT_EQ(0,res[3]);
+
     //TODO Add tests here
     res = Computation::computeUnequationCut({2,1,2},{0,-1,1},1);
 
@@ -85,6 +135,22 @@ TEST(ComputationTest, TestSolveEquations) {
     ASSERT_EQ(res[1].second[0], 8);
     ASSERT_EQ(res[1].second[1], 0);
     ASSERT_EQ(res[1].second[2], 0);
+
+    res = Computation::solveEquations({{0,-2,2},{20,-2,-2}}, 4);
+    EXPECT_EQ(res.size(), 2);
+    EXPECT_EQ(res[0].first.size(), 0);
+    EXPECT_EQ(res[0].second.size(), 3);
+    EXPECT_EQ(res[0].second[0], 8); // und -2
+    EXPECT_EQ(res[0].second[1], 0);
+    EXPECT_EQ(res[0].second[2], -1); // und 1
+    EXPECT_EQ(res[1].first.size(), 3);
+    EXPECT_EQ(res[1].first[0], 2);
+    EXPECT_EQ(res[1].first[1], 1);
+    EXPECT_EQ(res[1].first[2], 0);
+    EXPECT_EQ(res[1].second.size(), 3);
+    EXPECT_EQ(res[1].second[0], 8);
+    EXPECT_EQ(res[1].second[1], -1);
+    EXPECT_EQ(res[1].second[2], 0);
 
     res = Computation::solveEquations({{0,1,0}, {0,0,1}, {5,0,0}}, 4);
     ASSERT_EQ(res.size(), 2);

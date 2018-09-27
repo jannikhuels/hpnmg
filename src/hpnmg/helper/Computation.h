@@ -8,6 +8,7 @@ namespace hpnmg {
     public:
 
         // Computes the comparison of 2 linear functions
+        // always solves for the last variable
         //
         // Example:
         // Linear functions: f1 = 2 + 1 * s1 + 2 * s2, f2 = -1 * s1 + s2
