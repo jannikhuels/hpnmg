@@ -30,6 +30,8 @@ using namespace std;
 
 TEST(ProbabilityCalculator, example2generalsimple){
 
+    cout << "Starting example2general\n";
+
    auto reader= new ReadHybridPetrinet();
    auto parser = new ParseHybridPetrinet();
    auto hybridPetrinet0 = reader->readHybridPetrinet("example2general.xml");

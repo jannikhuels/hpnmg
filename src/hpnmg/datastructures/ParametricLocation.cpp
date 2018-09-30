@@ -319,20 +319,24 @@ namespace hpnmg {
         }
 
         // Get the new Boundaries determined by the child events given a specific time
-        std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries = Computation::solveEquations(time, value);
-        newBoundaries = Computation::replaceValues(newBoundaries);
+        std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> candidateBoundaries =
+                Computation::solveEquations(time, value); // vector of boundaries (other than before)
+        //std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries;
+        //newBoundaries = Computation::replaceValues(boundaries);
 
-        // Update the Boundaries
-        for (int i = 0; i < newBoundaries.size() && i < result.size(); i++) {
-            std::pair<std::vector<double>, std::vector<double>> bound = this->compare(result, newBoundaries[i], i);
-            result[i].second.first = bound.first;
-            result[i].second.second = bound.second;
-            /*if (newBoundaries[i].first.size()>i && newBoundaries[i].first[i+1] == 0 && Computation::isGreater(newBoundaries[i].first, zero, value) && Computation::isGreater(newBoundaries[i].first, result[i].second.first, value)) {
-                result[i].second.first = newBoundaries[i].first;
+        for (std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries : candidateBoundaries) {
+            // Update the Boundaries
+            for (int i = 0; i < newBoundaries.size() && i < result.size(); i++) {
+                std::pair<std::vector<double>, std::vector<double>> bound = this->compare(result, newBoundaries[i], i);
+                result[i].second.first = bound.first;
+                result[i].second.second = bound.second;
+                /*if (newBoundaries[i].first.size()>i && newBoundaries[i].first[i+1] == 0 && Computation::isGreater(newBoundaries[i].first, zero, value) && Computation::isGreater(newBoundaries[i].first, result[i].second.first, value)) {
+                    result[i].second.first = newBoundaries[i].first;
+                }
+                if (newBoundaries[i].second.size()>i && newBoundaries[i].second[i+1] == 0) {
+                    result[i].second.second = newBoundaries[i].second;
+                }*/
             }
-            if (newBoundaries[i].second.size()>i && newBoundaries[i].second[i+1] == 0) {
-                result[i].second.second = newBoundaries[i].second;
-            }*/
         }
 
         // Check if source events influences the bounds

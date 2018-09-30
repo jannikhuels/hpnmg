@@ -52,12 +52,18 @@ namespace hpnmg {
         return res;
     }
 
-    std::vector<std::pair<std::vector<double>, std::vector<double>>> Computation::solveEquations(std::vector<std::vector<double>> time, int value) {
-        std::vector<std::pair<std::vector<double>, std::vector<double>>> res;
+    std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> Computation::solveEquations(std::vector<std::vector<double>> time, int value) {
 
         if (time.size() == 0) {
-            return res;
+            std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> results(time.size());
+            return results;
         }
+
+        //std::vector<std::pair<std::vector<double>, std::vector<double>>> result(time[0].size()-1);
+        std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> results(time.size(),
+                                                                                              std::vector<std::pair<std::vector<double>, std::vector<double>>>(time[0].size()-1));
+
+
 
         int size = time[0].size();
 
@@ -67,21 +73,24 @@ namespace hpnmg {
         t[0] = value;
 
         for (int i = size - 1; i > 0; i--) {
-            std::pair<std::vector<double>, std::vector<double>> p({},{});
-            for (std::vector<double> v : time) {
+            for (int j = 0; j< time.size(); j++){
+                auto v = time[j];
+                //std::pair<std::vector<double>, std::vector<double>> p({},{});
                 if (v[i] > 0) {
                     // lower bound
-                    p.first = Computation::computeUnequationCut(t, v, i);
+                    results[j][i-1].first = Computation::computeUnequationCut(t, v, i);
+                    //p.first = Computation::computeUnequationCut(t, v, i);
 
                 } else if (v[i] < 0) {
                     // upper bound
-                    p.second = Computation::computeUnequationCut(t,v,i);
+                    //p.second = Computation::computeUnequationCut(t,v,i);
+                    results[j][i-1].second = Computation::computeUnequationCut(t, v, i);
                 }
             }
-            res.insert(res.begin(), p);
         }
-        return res;
+        return results;
     }
+
 
     int solved(std::vector<double> func, int pos) {
         int size = func.size();
@@ -219,4 +228,6 @@ namespace hpnmg {
         }
         return dependencies[0];
     }
+
+
 }
