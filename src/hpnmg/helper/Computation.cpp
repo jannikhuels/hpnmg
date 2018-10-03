@@ -34,11 +34,11 @@ namespace hpnmg {
 
     std::vector<double> Computation::computeUnequationCut(std::vector<double> time1, std::vector<double> time2, int index) {
         // Swap the variables
-        int v1 = time1[index];
+        double v1 = time1[index];
         time1[index] = time1[time1.size()-1];
         time1[time1.size()-1] = v1;
 
-        int v2 = time2[index];
+        double v2 = time2[index];
         time2[index] = time2[time2.size()-1];
         time2[time2.size()-1] = v2;
 

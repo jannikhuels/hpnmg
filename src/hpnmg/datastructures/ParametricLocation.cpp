@@ -330,7 +330,7 @@ namespace hpnmg {
          * Check if source events influences the bounds
          */
         std::vector<double> startEvent = this->getSourceEvent().getTimeVector(dimension);
-        std::vector<double> t(dimension+1);
+        std::vector<double> t(dimension);
         std::fill(t.begin(), t.end(), 0);
         t[0] = value;
         for (int i = 1; i < startEvent.size(); i++) {
