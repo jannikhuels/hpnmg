@@ -316,7 +316,10 @@ namespace hpnmg {
             }
 
             if(valid) {
-
+                cout << startNode.getNodeID() << endl;
+                if (startNode.getNodeID() == 133) {
+                    cout << "now" << endl;
+                }
                 parametricLocation.setIntegrationIntervals(entryTimes, interval.first, occurings, dimension, this->maxTime);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);

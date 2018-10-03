@@ -119,8 +119,8 @@ TEST(ProbabilityCalculator, valuetools_1){
 
     cout << endl << "=========" << endl;
     //cout << "Computing startet for td=" << t[i] << endl;
-    //shared_ptr<DeterministicTransition> dt = dynamic_pointer_cast<DeterministicTransition>(hybridPetrinet0->getTransitionById("td0"));
-    //dt->setDiscTime(t[i]);
+    shared_ptr<DeterministicTransition> dt = dynamic_pointer_cast<DeterministicTransition>(hybridPetrinet0->getTransitionById("td0"));
+    dt->setDiscTime(6);
     auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
     auto calculator = new ProbabilityCalculator();
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();

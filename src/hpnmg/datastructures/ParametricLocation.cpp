@@ -271,7 +271,7 @@ namespace hpnmg {
          */
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result;
 
-        vector<int> counter = vector<int>(dimension - 1);
+        vector<int> counter = vector<int>(occurings.size());
         fill(counter.begin(), counter.end(),0);
 
         vector<double> bound(dimension);
@@ -281,7 +281,7 @@ namespace hpnmg {
         mTime[0] = maxTime;
 
         /*
-         * First create all intervals for a RV that has already fired.
+         * First create all intervals for a RV that have already fired.
          */
         for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
             int transitionId = generalTransitionsFired[realFiring];
@@ -292,24 +292,27 @@ namespace hpnmg {
         /*
          * Create all intervals for GTs that are currently enabled.
          */
-        for (int j = 0; j < counter.size(); j++) {
-            int firing = counter[j];
-            if (j < this->getGeneralIntervalBoundLeft().size()) {
-                bool enablingTimeGreaterZero = false;
-                for (int l = 0; l < this->getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
-                    if (this->getGeneralIntervalBoundLeft()[j][firing][l] > 0)
-                        enablingTimeGreaterZero = true;
+        for (int j = 0; j < occurings.size(); j++) {
+            for (int i = counter[j]; i < occurings[j]; i++) {
+                int firing = i;
+                if (j < this->getGeneralIntervalBoundLeft().size() && firing < this->getGeneralIntervalBoundLeft()[j].size()) {
+                    bool enablingTimeGreaterZero = false;
+                    for (int l = 0; l < this->getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
+                        if (this->getGeneralIntervalBoundLeft()[j][firing][l] > 0)
+                            enablingTimeGreaterZero = true;
+                    }
+                    if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
+                        result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(
+                                fillVector(leftBoundaries[j][firing], dimension),
+                                fillVector(rightBoundaries[j][firing], dimension))});
+                        continue;
+                    }
                 }
-
-                if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
-                    result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(
-                            fillVector(leftBoundaries[j][firing], dimension),
-                            fillVector(rightBoundaries[j][firing], dimension))});
-                }
-            } else {
                 result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(zero, mTime)});
             }
         }
+
+        assert(result.size() == dimension-1);
 
         /*
          * Get the new Boundaries determined by the child events given a specific time and set them accordingly
