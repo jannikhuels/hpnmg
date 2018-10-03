@@ -202,16 +202,26 @@ namespace hpnmg {
         std::vector<double> leftBound = boundaries[index].second.first;
         std::vector<double> rightBound = boundaries[index].second.second;
 
+        double leftOld = Computation::getTime(boundaries, boundaries[index].second.first, 1);
+        double leftNew = leftOld;
+        double rightOld = Computation::getTime(boundaries, boundaries[index].second.second, 2);;
+        double rightNew = rightOld;
+
+
         if (value.first.size() > index) {
-            double leftNew = Computation::getTime(boundaries, value.first, 1);
-            double leftOld = Computation::getTime(boundaries, boundaries[index].second.first, 1);
-            leftBound = leftNew > leftOld ? value.first : boundaries[index].second.first;
+            leftNew = Computation::getTime(boundaries, value.first, 1);
         }
 
         if (value.second.size() > index) {
-            double rightNew = Computation::getTime(boundaries, value.second, 2);
-            double rightOld = Computation::getTime(boundaries, boundaries[index].second.second, 2);
-            rightBound = rightNew < rightOld ? value.second : boundaries[index].second.second;
+            rightNew = Computation::getTime(boundaries, value.second, 2);
+        }
+
+        if (leftNew > leftOld && leftNew <= rightNew) {
+            leftBound = value.first;
+        }
+
+        if (rightNew < rightOld && rightNew >= leftNew) {
+            rightBound = value.second;
         }
 
         return {leftBound, rightBound};

@@ -12,13 +12,14 @@
 using namespace hpnmg;
 using namespace std;
 
-TEST(ProbabilityCalculator, valuetools_1){
+TEST(Valuetools, valuetools_1){
 
     auto reader= new ReadHybridPetrinet();
     auto parser = new ParseHybridPetrinet();
     auto hybridPetrinet0 = reader->readHybridPetrinet("valuetools_1.xml");
 
-    double detTime[] = {11,10,9,8,7,6,5,4,3,2,1};
+    //double detTime[] = {11,10,9,8,7,6,5,4,3,2,1};
+    double detTime[]= {6};
     for (double time : detTime) {
 
 
