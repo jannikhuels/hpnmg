@@ -34,6 +34,8 @@ namespace hpnmg {
         double getTime() const;
         void setTime(double time);
 
+        std::vector<double> getTimeVector(int dimension);
+
         void print() const;
     };
 }

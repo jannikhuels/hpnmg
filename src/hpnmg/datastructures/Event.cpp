@@ -33,4 +33,17 @@ namespace hpnmg {
 
     double Event::getTime() const{return time;}
     void Event::setTime(double time){this->time = time;}
+
+    std::vector<double> Event::getTimeVector(int dimension) {
+        std::vector<double> timeVector(dimension);
+        timeVector[0] = this->time;
+        for (int i = 1; i < dimension; i++) {
+            if (i <= this->generalDependencies.size()) {
+                timeVector[i] = this->generalDependencies[i-1];
+            } else {
+                timeVector[i] = 0;
+            }
+        }
+        return timeVector;
+    }
 }

@@ -12,7 +12,7 @@
 using namespace hpnmg;
 using namespace std;
 
- TEST(ProbabilityCalculator, example){
+TEST(ProbabilityCalculator, example){
 
    auto reader= new ReadHybridPetrinet();
    auto parser = new ParseHybridPetrinet();
@@ -28,7 +28,7 @@ using namespace std;
 
 }
 
-TEST(ProbabilityCalculator, example2generalsimple){
+TEST(ProbabilityCalculator, example2general){
 
     cout << "Starting example2general\n";
 
@@ -36,8 +36,8 @@ TEST(ProbabilityCalculator, example2generalsimple){
    auto parser = new ParseHybridPetrinet();
    auto hybridPetrinet0 = reader->readHybridPetrinet("example2general.xml");
    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
-   //auto writer = new PLTWriter();
-   //writer->writePLT(plt0, 10);
+   auto writer = new PLTWriter();
+   writer->writePLT(plt0, 10);
 
    auto calculator = new ProbabilityCalculator();
    vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(3.0);
@@ -111,7 +111,7 @@ TEST(ProbabilityCalculator, valuetools_v3){
 
 }
 
-TEST(ProbabilityCalculator, valuetools_v4){
+TEST(ProbabilityCalculator, valuetools_1){
 
     auto reader= new ReadHybridPetrinet();
     auto parser = new ParseHybridPetrinet();

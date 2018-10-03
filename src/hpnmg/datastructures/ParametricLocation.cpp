@@ -217,7 +217,7 @@ namespace hpnmg {
         return {leftBound, rightBound};
     }
 
-    std::vector<double> makeNormed(std::vector<double> in, std::vector<int> gtf, int dimension) {
+    /*std::vector<double> makeNormed(std::vector<double> in, std::vector<int> gtf, int dimension) {
         std::vector<double> result(dimension);
         fill(result.begin(), result.end(), 0);
 
@@ -237,6 +237,13 @@ namespace hpnmg {
         }
 
         return result;
+    }*/
+
+    std::vector<double> fillVector(std::vector<double> in, int dimension) {
+        for(int i = in.size(); i < dimension; i++) {
+            in.push_back(0);
+        }
+        return in;
     }
 
     bool equalVectors(std::vector<double> first, std::vector<double> second) {
@@ -250,20 +257,19 @@ namespace hpnmg {
         return true;
     }
 
+    /*
+     * Create the integration intervals for this location, ordered by the firings, i.e. starting with the first firing.
+     */
     void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, int value, std::vector<int> occurings, int dimension, int maxTime) {
         std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
         std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
 
         vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();
 
-        /*int size = 0;
-        for (int i : occurings) {
-            size += i;
-        }*/
-        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result(dimension - 1);
-        for (int i = 0; i < result.size(); i++) {
-            result[i].first = -1;
-        }
+        /*
+         * Initialization of the result vector.
+         */
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result;
 
         vector<int> counter = vector<int>(dimension - 1);
         fill(counter.begin(), counter.end(),0);
@@ -273,24 +279,19 @@ namespace hpnmg {
         vector<double> zero = bound;
         vector<double> mTime = bound;
         mTime[0] = maxTime;
-        bound[0] = value;
 
-        // Collect the Normed Boundaries.
-        int startPositionForTransition = 0;
-        for (int genTrans = 0; genTrans < occurings.size(); ++genTrans) {
-            // iterate over all possible firings of genTrans
-            for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
-                if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
-                    /*std::vector<double> normedRight = makeNormed(rightBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, dimension);
-                    if (Computation::isSmaller(bound, normedRight, value)) {
-                        rightBoundaries[genTrans][counter[genTrans]] = bound;
-                    }*/
-                    result[genTrans + counter[genTrans]] = {genTrans, { makeNormed(leftBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, dimension), makeNormed(rightBoundaries[genTrans][counter[genTrans]], generalTransitionsFired, dimension) } };
-                    counter[genTrans]++;
-                }
-            }
+        /*
+         * First create all intervals for a RV that has already fired.
+         */
+        for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
+            int transitionId = generalTransitionsFired[realFiring];
+            result.push_back({transitionId, { fillVector(leftBoundaries[transitionId][counter[transitionId]], dimension), fillVector(rightBoundaries[transitionId][counter[transitionId]], dimension) } });
+            counter[transitionId]++;
         }
 
+        /*
+         * Create all intervals for GTs that are currently enabled.
+         */
         for (int j = 0; j < counter.size(); j++) {
             int firing = counter[j];
             if (j < this->getGeneralIntervalBoundLeft().size()) {
@@ -301,28 +302,20 @@ namespace hpnmg {
                 }
 
                 if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
-                    /*std::vector<double> normedLeft = makeNormed(leftBoundaries[j][firing], generalTransitionsFired,
-                                                                dimension);
-                    if (Computation::isGreater(bound, normedLeft, value)) {
-                        leftBoundaries[j][firing] = bound;
-                    }*/
-                    //result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(makeNormed(leftBoundaries[j][firing], this->dimension), makeNormed(rightBoundaries[j][firing], this->dimension))});
-                    result[j + firing] = {j, std::pair<std::vector<double>, std::vector<double>>(
-                            makeNormed(leftBoundaries[j][firing], generalTransitionsFired, dimension),
-                            makeNormed(rightBoundaries[j][firing], generalTransitionsFired, dimension))};
+                    result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(
+                            fillVector(leftBoundaries[j][firing], dimension),
+                            fillVector(rightBoundaries[j][firing], dimension))});
                 }
             } else {
-                if(result[j+firing].first == -1) {
-                    result[j + firing] = {j, std::pair<std::vector<double>, std::vector<double>>(zero, mTime)};
-                }
+                result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(zero, mTime)});
             }
         }
 
-        // Get the new Boundaries determined by the child events given a specific time
+        /*
+         * Get the new Boundaries determined by the child events given a specific time and set them accordingly
+         */
         std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> candidateBoundaries =
-                Computation::solveEquations(time, value); // vector of boundaries (other than before)
-        //std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries;
-        //newBoundaries = Computation::replaceValues(boundaries);
+                Computation::solveEquations(time, value);
 
         for (std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries : candidateBoundaries) {
             // Update the Boundaries
@@ -330,17 +323,13 @@ namespace hpnmg {
                 std::pair<std::vector<double>, std::vector<double>> bound = this->compare(result, newBoundaries[i], i);
                 result[i].second.first = bound.first;
                 result[i].second.second = bound.second;
-                /*if (newBoundaries[i].first.size()>i && newBoundaries[i].first[i+1] == 0 && Computation::isGreater(newBoundaries[i].first, zero, value) && Computation::isGreater(newBoundaries[i].first, result[i].second.first, value)) {
-                    result[i].second.first = newBoundaries[i].first;
-                }
-                if (newBoundaries[i].second.size()>i && newBoundaries[i].second[i+1] == 0) {
-                    result[i].second.second = newBoundaries[i].second;
-                }*/
             }
         }
 
-        // Check if source events influences the bounds
-        std::vector<double> startEvent = this->generalDependenciesNormed;
+        /*
+         * Check if source events influences the bounds
+         */
+        std::vector<double> startEvent = this->getSourceEvent().getTimeVector(dimension);
         std::vector<double> t(dimension+1);
         std::fill(t.begin(), t.end(), 0);
         t[0] = value;
@@ -357,6 +346,19 @@ namespace hpnmg {
                     result[i-1].second.first = bound.first;
                     result[i-1].second.second = bound.second;
                 }
+            }
+        }
+
+        for (int i = 0; i < result.size()-1; i++) {
+            if(result[i+1].second.first[i+1] != 0) {
+                std::vector<double> c = Computation::computeUnequationCut(result[i+1].second.first, result[i+1].second.second, i+1);
+                std::pair<std::vector<double>, std::vector<double>> b = this->compare(result, { {}, c }, i);
+                result[i].second.second = b.second;
+            }
+            if(result[i+1].second.second[i+1] != 0) {
+                std::vector<double> c = Computation::computeUnequationCut(result[i+1].second.second, result[i+1].second.first, i+1);
+                std::pair<std::vector<double>, std::vector<double>> b = this->compare(result, { c, {} }, i);
+                result[i].second.first = b.first;
             }
         }
 

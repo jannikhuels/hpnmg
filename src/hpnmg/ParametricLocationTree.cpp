@@ -270,6 +270,20 @@ namespace hpnmg {
             // now we want to check if all (!) possible childevents latest entry times are bigger than t.
             const vector<Node> &childNodes = getChildNodes(startNode);
 
+            /*
+             * Check how many General Events are fired and sort them by id
+             */
+            std::vector<double> parentGeneralDependencies = startNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+            std::vector<int> idsOfNextGeneralTransitions;
+            for (ParametricLocationTree::Node node : childNodes) {
+                std::vector<int> generalTransitionsFired = node.getParametricLocation().getGeneralTransitionsFired();
+                if (generalTransitionsFired.size() > parentGeneralDependencies.size()) {
+                    idsOfNextGeneralTransitions.push_back(generalTransitionsFired[parentGeneralDependencies.size()]);
+                }
+            }
+            std::sort(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end());
+            idsOfNextGeneralTransitions.erase(std::unique(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end()), idsOfNextGeneralTransitions.end());
+
             bool valid = true;
 
             std::vector<std::vector<double>> entryTimes;
@@ -280,7 +294,25 @@ namespace hpnmg {
                     valid = false;
                     break;
                 }
-                entryTimes.push_back(node.getParametricLocation().getGeneralDependenciesNormed());
+
+                /*
+                 * Collect the entryTimes of the child node. Beware that we need to ensure that the ordering of each RV of a child location needs to be in accordance to its parent location.
+                 */
+                std::vector<double> entryTime(dimension);
+                fill(entryTime.begin(), entryTime.end(), 0);
+                entryTime[0] = node.getParametricLocation().getSourceEvent().getTime();
+
+                std::vector<double> childGeneralDependencies = node.getParametricLocation().getSourceEvent().getGeneralDependencies();
+                std::vector<int> childGeneralTransitionsFired = node.getParametricLocation().getGeneralTransitionsFired();
+                for (int i = 1; i <= parentGeneralDependencies.size(); i++) {
+                    entryTime[i] = childGeneralDependencies[i-1];
+                }
+                if (childGeneralDependencies.size() > parentGeneralDependencies.size()) {
+                    int id = childGeneralTransitionsFired[parentGeneralDependencies.size()];
+                    int pos = std::find(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end(), id) - idsOfNextGeneralTransitions.begin();
+                    entryTime[parentGeneralDependencies.size() + pos + 1] = childGeneralDependencies[parentGeneralDependencies.size()];
+                }
+                entryTimes.push_back(entryTime);
             }
 
             if(valid) {
