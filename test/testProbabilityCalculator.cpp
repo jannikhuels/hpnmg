@@ -138,6 +138,8 @@ TEST(ProbabilityCalculator, valuetools_1){
     cout << "The probability is: " << result << endl;
     cout << "It took " << duration << "ms." << endl;
 
+   ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
+
     //auto writer = new PLTWriter();
     //writer->writePLT(plt0, 10);
 
