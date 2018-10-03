@@ -355,10 +355,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
    	}
 
-
-
-
-
     double ProbabilityCalculator::calculateIntervalsMonteCarlo(const ParametricLocation &location, ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error){
 
         double result = 0.0;
@@ -386,6 +382,37 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         cout << "Max time: "<<  maxTime  << endl;
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
+        vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
+        int dimension = location.getDimension();
+
+        cout << "GTF: " << generalTransitionsFired << endl;
+
+        for (int i = 0; i < integrationIntervals.size(); i++) {
+            singleDim sAll;
+            //sAll.distribution = distributions[integrationIntervals[i].first];
+            sAll.distribution = distributions[0];
+            all.integrals.push_back(sAll);
+            singleDim sPlus;
+            sPlus.distribution = sAll.distribution;
+            allPlus.integrals.push_back(sPlus);
+            singleDim sMinus;
+            sMinus.distribution = sAll.distribution;
+            allMinus.integrals.push_back(sMinus);
+
+
+
+            all.lowerBounds.push_back(integrationIntervals[i].second.first);
+            all.upperBounds.push_back(integrationIntervals[i].second.second);
+            allPlus.lowerBounds.push_back(integrationIntervals[i].second.first);
+            allPlus.upperBounds.push_back(integrationIntervals[i].second.second);
+            allMinus.lowerBounds.push_back(integrationIntervals[i].second.first);
+            allMinus.upperBounds.push_back(integrationIntervals[i].second.second);
+
+            cout << "TransitionID:" << integrationIntervals[i].first << " Left bound:" << integrationIntervals[i].second.first << endl;
+            cout << "TransitionID:" << integrationIntervals[i].first << " Right bound:" << integrationIntervals[i].second.second << endl;
+        }
+
+        /*std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
 
         vector<int> counter = vector<int>(location.getDimension() - 1);
         fill(counter.begin(), counter.end(),0);
@@ -404,7 +431,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 continue;
             }
 
-
+            cout << "Before switching: TransitionID[" << transitionID << "] Firing[" << firing << "] Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
+            cout << "Before switching: TransitionID[" << transitionID << "] Firing[" << firing << "] Right bound:" << integrationIntervals[transitionID + firing].second.second << endl;
 
             singleDim sAll;
             sAll.distribution = distributions[integrationIntervals[transitionID].first];
@@ -435,8 +463,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             counter[transitionID] +=1;
 
-            cout << "Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
-            cout << "Right bound:" << integrationIntervals[transitionID + firing].second.second << endl;
+            cout << "After switching: TransitionID[" << transitionID << "] Firing[" << firing << "] Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
+            cout << "After switching: TransitionID[" << transitionID << "] Firing[" << firing << "] Right bound:" << integrationIntervals[transitionID + firing].second.second << endl;
 
         }
 
@@ -479,9 +507,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 fill(allMinus.lowerBounds[last].begin(), allMinus.lowerBounds[last].end(),0.0);
             }
 
-            cout << "Left bound:" << integrationIntervals[i].second.first << endl;
-            cout << "Right bound:" << integrationIntervals[i].second.second << endl;
-        }
+            cout << "TransitionID[" << i << "] Left bound:" << integrationIntervals[i].second.first << endl;
+            cout << "TransitionID[" << i << "] Right bound:" << integrationIntervals[i].second.second << endl;
+        }*/
 
 
 
