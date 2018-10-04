@@ -69,7 +69,9 @@ namespace hpnmg {
 
         // Returns if a given transition is enabled
         bool transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,
-                                 shared_ptr<Transition> transition, shared_ptr<HybridPetrinet> hybridPetrinet);
+                                 shared_ptr<Transition> transition, shared_ptr<HybridPetrinet> hybridPetrinet,
+                                 vector<vector<vector<double>>> lowerBounds, vector<vector<vector<double>>>
+                                 upperBounds, vector<int> generalTransitionsFired);
 
         void addLocationForImmediateEvent(shared_ptr<ImmediateTransition> transition,
                                           ParametricLocationTree::Node parentNode, float probability,
@@ -89,6 +91,8 @@ namespace hpnmg {
                                          shared_ptr<HybridPetrinet> hybridPetrinet);
 
         vector<double> getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking,
-                                shared_ptr<HybridPetrinet> hybridPetrinet);
+                                shared_ptr<HybridPetrinet> hybridPetrinet,
+                                vector<vector<vector<double>>> lowerBounds,
+                                vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired);
     };
 }
