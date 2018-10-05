@@ -52,7 +52,11 @@
         <deterministicTransition id="tdl01" discTime="5.0" priority="1" weight="1.0E0"/>
         <deterministicTransition id="tdl12" discTime="6.0" priority="1" weight="1.0E0"/>
         <deterministicTransition id="tdl21" discTime="5.0" priority="1" weight="1.0E0"/>
-        <deterministicTransition id="tdl10" discTime="4.0" priority="1" weight="1.0E0"/>
+        <!--<deterministicTransition id="tdl10" discTime="4.0" priority="1" weight="1.0E0"/>-->
+        <generalTransition id="tdl10" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0.0"/>
+            <parameter name="b" value="10.0"/>
+        </generalTransition>
 
         <!-- transition ti0: not empty to empty -->
         <immediateTransition id="ti0" priority="1" weight="1.0E0"/>

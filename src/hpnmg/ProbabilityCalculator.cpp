@@ -386,6 +386,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         int dimension = location.getDimension();
 
         cout << "GTF: " << generalTransitionsFired << endl;
+        cout << "Accumulated Probability: " << location.getAccumulatedProbability() << endl << endl;
 
         for (int i = 0; i < integrationIntervals.size(); i++) {
             singleDim sAll;
