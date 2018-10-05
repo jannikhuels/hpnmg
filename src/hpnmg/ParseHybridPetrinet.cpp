@@ -672,7 +672,7 @@ namespace hpnmg {
                 vector<double> level = continousMarking[pos];
                 if (arc->getIsInhibitor()) {
                     double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
-                    if (minLevel > arc->weight)
+                    if (minLevel <= arc->weight)
                         return false;
                 } else {
                     double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
