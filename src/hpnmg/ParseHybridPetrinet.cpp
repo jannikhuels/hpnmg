@@ -106,6 +106,36 @@ namespace hpnmg {
         return rootLocation;
     }
 
+    bool isEqualTimeDelta(vector<double> first, vector<double> second) {
+        if (first.size() != second.size()) {
+            return false;
+        }
+        for (int i = 0; i < first.size(); i++) {
+            if (first[i] != second[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> ParseHybridPetrinet::sortByEqualTimeDelta(std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> deterministicTransitions) {
+        std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> equalTimeDeltaTransitions;
+        for (pair<shared_ptr<DeterministicTransition>, vector<double>> dt : deterministicTransitions) {
+            bool newTimeDelta = true;
+            for (int i = 0; i < equalTimeDeltaTransitions.size(); i++) {
+                if (isEqualTimeDelta(dt.second, equalTimeDeltaTransitions[i][0].second)) {
+                    equalTimeDeltaTransitions[i].push_back(dt);
+                    newTimeDelta = false;
+                    break;
+                }
+            }
+            if(newTimeDelta) {
+                equalTimeDeltaTransitions.push_back({ dt });
+            }
+        }
+        return equalTimeDeltaTransitions;
+    }
+
     void ParseHybridPetrinet::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet,
                                           double maxTime) {
         int nodeMax = 5000;
@@ -419,14 +449,19 @@ namespace hpnmg {
                 nextDeterministicTransitions.push_back(make_pair(transition, timeDelta)); // NOLINT
             }
         }
-        double sumWeight = 0;
-        for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : nextDeterministicTransitions)
-            sumWeight += transitionItem.first->getWeight();
-        for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : nextDeterministicTransitions) {
-            double probability = transitionItem.first->getWeight() / sumWeight;
-            addLocationForDeterministicEvent(transitionItem.first, probability, transitionItem.second, timeDeltas,
-                                             node, hybridPetrinet);
+        // Only resolve conflicts for next Deterministic events with equal time delta
+        std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> ordereredNextDeterministicTransitions = this->sortByEqualTimeDelta(nextDeterministicTransitions);
+        for (std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> equalNextTransitions : ordereredNextDeterministicTransitions) {
+            double sumWeight = 0;
+            for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : equalNextTransitions)
+                sumWeight += transitionItem.first->getWeight();
+            for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : equalNextTransitions) {
+                double probability = transitionItem.first->getWeight() / sumWeight;
+                addLocationForDeterministicEvent(transitionItem.first, probability, transitionItem.second, timeDeltas,
+                                                 node, hybridPetrinet);
+            }
         }
+
         // add new considered
         for (vector<double> timeDelta : newConsidered)
             if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) == alreadyConsidered.end())

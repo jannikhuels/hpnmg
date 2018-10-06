@@ -14,6 +14,8 @@ namespace hpnmg {
         vector<string> generalTransitionIDs;
         vector<ParametricLocationTree::Node> locationQueue;
 
+        std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> sortByEqualTimeDelta(std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> deterministicTransitions);
+
     public:
         //TODO Check to make it a singleton
         //TODO Change public / private accessor
