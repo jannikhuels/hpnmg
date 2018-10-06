@@ -18,8 +18,8 @@ TEST(Valuetools, valuetools_1){
     auto parser = new ParseHybridPetrinet();
     auto hybridPetrinet0 = reader->readHybridPetrinet("valuetools_1.xml");
 
-    //double detTime[] = {11,10,9,8,7,6,5,4,3,2,1};
-    double detTime[]= {5};
+    double detTime[] = {11,10,9,8,7,6,5,4,3,2,1};
+    //double detTime[]= {5};
     for (double time : detTime) {
 
 
