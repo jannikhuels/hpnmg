@@ -111,7 +111,8 @@ namespace hpnmg {
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getIntegrationIntervals() const;
 
-        void setIntegrationIntervals(std::vector<std::vector<double>> time, int value, std::vector<int> occurings, int dimension, int maxTime);
+        void setIntegrationIntervals(std::vector<std::vector<double>> time, double value, std::vector<int> occurings,
+                                     int dimension, int maxTime);
 
         std::pair<std::vector<double>, std::vector<double>> compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index);
 

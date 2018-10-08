@@ -52,7 +52,8 @@ namespace hpnmg {
         return res;
     }
 
-    std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> Computation::solveEquations(std::vector<std::vector<double>> time, int value) {
+    std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> Computation::solveEquations
+            (std::vector<std::vector<double>> time, double value) {
 
         if (time.size() == 0) {
             std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> results(time.size());

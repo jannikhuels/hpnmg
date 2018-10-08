@@ -270,7 +270,8 @@ namespace hpnmg {
     /*
      * Create the integration intervals for this location, ordered by the firings, i.e. starting with the first firing.
      */
-    void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, int value, std::vector<int> occurings, int dimension, int maxTime) {
+    void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, double value,
+                                                     std::vector<int> occurings, int dimension, int maxTime) {
         std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
         std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
 

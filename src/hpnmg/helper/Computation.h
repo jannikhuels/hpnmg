@@ -33,7 +33,8 @@ namespace hpnmg {
         // Linear functions: f1 = -2 * s1 + 2 * s2, f2 = 20 - 2 * s2
         // Input: times: {[0, -2, 2], [20, 0, -2]}, value 4
         // Return: {<{},{-2,0,1}>, <{2,1,0},{8,0,0}>}
-        static std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> solveEquations(std::vector<std::vector<double>> time, int value);
+        static std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> solveEquations
+                (std::vector<std::vector<double>> time, double value);
         
         // Replace values with their corresponding solution
         //
