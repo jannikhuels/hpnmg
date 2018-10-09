@@ -16,10 +16,10 @@ TEST(Valuetools, valuetools_1){
 
     auto reader= new ReadHybridPetrinet();
     auto parser = new ParseHybridPetrinet();
-    auto hybridPetrinet0 = reader->readHybridPetrinet("valuetools_1.xml");
+    auto hybridPetrinet0 = reader->readHybridPetrinet("valuetools_1_1.xml");
 
-    double detTime[] = {11,10,9,8,7,6,5,4,3,2,1};
-    //double detTime[]= {5};
+    //double detTime[] = {11,10,9,8,7,6,5,4,3,2,1};
+    double detTime[]= {11};
     for (double time : detTime) {
 
 
@@ -29,15 +29,18 @@ TEST(Valuetools, valuetools_1){
         dt->setDiscTime(time);
         auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
         auto calculator = new ProbabilityCalculator();
+        auto writer = new PLTWriter();
+        writer->writePLT(plt0,10);
 
         std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-        vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(7.0);
+        vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(2.0);
         cout << "Number of Dimensions d=" << plt0->getDimension() << endl;
         cout << "Total number of locations n=" << plt0->numberOfLocations() << endl;
         cout << "Number of candidates c=" << nodes.size() << endl;
 
         double error;
-        double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 7.0, 50000, error);
+        double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 2.0, 50000,
+                                                                                         error);
         std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 
 

@@ -409,8 +409,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             allMinus.lowerBounds.push_back(integrationIntervals[i].second.first);
             allMinus.upperBounds.push_back(integrationIntervals[i].second.second);
 
-            cout << "TransitionID:" << integrationIntervals[i].first << " Left bound:" << integrationIntervals[i].second.first << endl;
-            cout << "TransitionID:" << integrationIntervals[i].first << " Right bound:" << integrationIntervals[i].second.second << endl;
+            cout << "TransitionID:" << integrationIntervals[i].first << " in [ " << integrationIntervals[i].second
+                    .first << " ; " << integrationIntervals[i].second.second << " ] " << endl;
         }
 
         /*std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
