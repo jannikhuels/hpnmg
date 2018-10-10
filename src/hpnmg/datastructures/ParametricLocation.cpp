@@ -363,16 +363,20 @@ namespace hpnmg {
             }
         }
 
-        for (int i = 0; i < result.size()-1; i++) {
-            if(result[i+1].second.first[i+1] != 0) {
-                std::vector<double> c = Computation::computeUnequationCut(result[i+1].second.first, result[i+1].second.second, i+1);
-                std::pair<std::vector<double>, std::vector<double>> b = this->compare(result, { {}, c }, i);
-                result[i].second.second = b.second;
-            }
-            if(result[i+1].second.second[i+1] != 0) {
-                std::vector<double> c = Computation::computeUnequationCut(result[i+1].second.second, result[i+1].second.first, i+1);
-                std::pair<std::vector<double>, std::vector<double>> b = this->compare(result, { c, {} }, i);
-                result[i].second.first = b.first;
+        for (int i = 0; i < result.size()-1; i++) { // ith RV
+            for (int j=i; j>=0; j--) { // iterating over all earlier RVs
+                if (result[i + 1].second.first[j + 1] != 0) { // is the i+1th RV dependent of j (i, i-1, ...)?
+                    std::vector<double> c = Computation::computeUnequationCut(result[i + 1].second.first,
+                                                                              result[i + 1].second.second, j + 1);
+                    std::pair<std::vector<double>, std::vector<double>> b = this->compare(result, {{}, c}, j);
+                    result[j].second.second = b.second;
+                }
+                if (result[i + 1].second.second[j + 1] != 0) {
+                    std::vector<double> c = Computation::computeUnequationCut(result[i + 1].second.first,
+                                                                              result[i + 1].second.second, j + 1);
+                    std::pair<std::vector<double>, std::vector<double>> b = this->compare(result, {c, {}}, j);
+                    result[j].second.first = b.first;
+                }
             }
         }
 
