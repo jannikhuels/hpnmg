@@ -67,7 +67,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         for (int i = 0;i < nodes.size(); i++) {
             cout << "----" << endl;
             cout << "Node: " << nodes[i].getNodeID() << endl;
-            cout << "Normed " << nodes[i].getParametricLocation().getGeneralDependenciesNormed() << endl;
+            cout << "Normed: " << nodes[i].getParametricLocation().getGeneralDependenciesNormed() << " - ";
 
             if (algorithm == 0)
                 //Gauss Legendre
@@ -77,7 +77,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 nodeResult = calculateIntervalsMonteCarlo(nodes[i].getParametricLocation(), tree, timepoint, nodes[i].getNodeID(), algorithm, functioncalls, error) * nodes[i].getParametricLocation().getAccumulatedProbability();
 
             cout << "----" << endl;
-            cout << "Node Result: " << nodeResult << " +- " << error << endl;
+            cout << "Node Result: p=" << nodeResult << " +- " << error << endl;
 
             total += nodeResult;
             totalerror += error;
@@ -379,13 +379,13 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         const vector<pair<string, map<string, float>>> distributions = tree.getDistributions();
 
         double maxTime = tree.getMaxTime();
-        cout << "Max time: "<<  maxTime  << endl;
+        cout << "Max time: "<<  maxTime << " - ";
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
         vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
         int dimension = location.getDimension();
 
-        cout << "GTF: " << generalTransitionsFired << endl;
+        cout << "GTF: " << generalTransitionsFired << " - ";
         cout << "Accumulated Probability: " << location.getAccumulatedProbability() << endl << endl;
 
         for (int i = 0; i < integrationIntervals.size(); i++) {
