@@ -706,12 +706,14 @@ namespace hpnmg {
                            continuousPlaceIDs.begin();
                 vector<double> level = continousMarking[pos];
                 if (arc->getIsInhibitor()) {
-                    double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
-                    if (minLevel <= arc->weight)
+                    //double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
+                    double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
+                    if (maxLevel >= arc->weight)
                         return false;
                 } else {
-                    double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
-                    if (maxLevel > arc->weight)
+                    //double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
+                    double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
+                    if (minLevel < arc->weight)
                         return false;
                 }
             }
