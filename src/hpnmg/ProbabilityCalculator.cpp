@@ -206,6 +206,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
            allMinus.integrals.push_back(sMinus);
 
 
+
+
            all.lowerBounds.push_back(integrationIntervals[i].second.first);
            all.upperBounds.push_back(integrationIntervals[i].second.second);
            allPlus.lowerBounds.push_back(integrationIntervals[i].second.first);
@@ -341,7 +343,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 if (!isnan(lowerFactor) && lowerFactor != 0.0)
                     lower += (lowerFactor * currentDependency.value);
 
-                if (!isnan(upperFactor)  && lowerFactor != 0.0)
+                if (!isnan(upperFactor)  && upperFactor != 0.0)
                     upper += (upperFactor * currentDependency.value);
 
             }
@@ -534,12 +536,20 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 xu[i] = 1.0;
             }
 
-            size_t dimension = static_cast<size_t>(dim);
+
+            if (dim >1 ) {
+                cout << "xl" << 0 << ":" << xl[0] << endl;
+                cout << "xu" << 0 << ":" << xu[0] << endl;
+                cout << "xl" << 1 << ":" << xl[1] << endl;
+                cout << "xu" << 1 << ":" << xu[1] << endl;
+            }
+
+            size_t dimension1 = static_cast<size_t>(dim);
 
 
-            gsl_monte_function G = { &transformedFunctionToIntegrateMonteCarlo, dimension, &all };
-            gsl_monte_function GPlus = { &transformedFunctionToIntegrateMonteCarlo, dimension, &allPlus };
-            gsl_monte_function GMinus = { &transformedFunctionToIntegrateMonteCarlo, dimension, &allMinus };
+            gsl_monte_function G = { &transformedFunctionToIntegrateMonteCarlo, dimension1, &all };
+            gsl_monte_function GPlus = { &transformedFunctionToIntegrateMonteCarlo, dimension1, &allPlus };
+            gsl_monte_function GMinus = { &transformedFunctionToIntegrateMonteCarlo, dimension1, &allMinus };
 
             size_t calls = static_cast<size_t>(functioncalls);
 
@@ -556,28 +566,28 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             if (algorithm == 1){
 
-              gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension);
-              gsl_monte_plain_integrate (&G, xl, xu, dimension, calls, r, s, &resultAll, &errorAll);
+              gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension1);
+              gsl_monte_plain_integrate (&G, xl, xu, dimension1, calls, r, s, &resultAll, &errorAll);
               gsl_monte_plain_free (s);
 
               //cout << "Plain Monte Carlo integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
 
             } else if (algorithm == 2){
 
-              gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension);
-              gsl_monte_miser_integrate (&G, xl, xu, dimension, calls, r, s, &resultAll, &error);
+              gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension1);
+              gsl_monte_miser_integrate (&G, xl, xu, dimension1, calls, r, s, &resultAll, &error);
               gsl_monte_miser_free (s);
               //cout << "Monte Carlo MISER integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
 
             } else if (algorithm == 3){
 
-                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension);
+                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension1);
 
                 //vegas warm-up
-                gsl_monte_vegas_integrate (&G, xl, xu, dimension, calls/50, r, s, &resultAll, &errorAll);
+                gsl_monte_vegas_integrate (&G, xl, xu, dimension1, calls/50, r, s, &resultAll, &errorAll);
 
                 for (int j = 0; j < 10; j++) {
-                    gsl_monte_vegas_integrate(&G, xl, xu, dimension, calls/5, r, s, &resultAll, &errorAll);
+                    gsl_monte_vegas_integrate(&G, xl, xu, dimension1, calls/5, r, s, &resultAll, &errorAll);
 
                     if ((fabs (gsl_monte_vegas_chisq (s) - 1.0) <= 0.5) || (error == 0.0))
                         break;
@@ -586,8 +596,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
                 if (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5 && errorAll > 0.0){
                     //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
-                    gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension);
-                    gsl_monte_miser_integrate (&G, xl, xu, dimension, calls, r, z, &resultAll, &errorAll);
+                    gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension1);
+                    gsl_monte_miser_integrate (&G, xl, xu, dimension1, calls, r, z, &resultAll, &errorAll);
                     gsl_monte_miser_free (z);
                     //cout << "Monte Carlo MISER integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
                 } //else
@@ -610,28 +620,28 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             if (algorithm == 1){
 
-              gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension);
-              gsl_monte_plain_integrate (&GPlus, xl, xu, dimension, calls, r, s, &resultPlus, &errorPlus);
+              gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension1);
+              gsl_monte_plain_integrate (&GPlus, xl, xu, dimension1, calls, r, s, &resultPlus, &errorPlus);
               gsl_monte_plain_free (s);
 
               //cout << "Plain Monte Carlo integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
 
             } else if (algorithm == 2){
 
-              gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension);
-              gsl_monte_miser_integrate (&GPlus, xl, xu, dimension, calls, r, s, &resultPlus, &error);
+              gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension1);
+              gsl_monte_miser_integrate (&GPlus, xl, xu, dimension1, calls, r, s, &resultPlus, &error);
               gsl_monte_miser_free (s);
               //cout << "Monte Carlo MISER integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
 
             } else if (algorithm == 3){
 
-                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension);
+                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension1);
 
                 //vegas warm-up
-                gsl_monte_vegas_integrate (&GPlus, xl, xu, dimension, calls/50, r, s, &resultPlus, &errorPlus);
+                gsl_monte_vegas_integrate (&GPlus, xl, xu, dimension1, calls/50, r, s, &resultPlus, &errorPlus);
 
                 for (int j = 0; j < 10; j++) {
-                    gsl_monte_vegas_integrate(&GPlus, xl, xu, dimension, calls/5, r, s, &resultPlus, &errorPlus);
+                    gsl_monte_vegas_integrate(&GPlus, xl, xu, dimension1, calls/5, r, s, &resultPlus, &errorPlus);
 
                     if ((fabs (gsl_monte_vegas_chisq (s) - 1.0) <= 0.5) || (errorPlus == 0.0))
                         break;
@@ -640,8 +650,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
                 if (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5 && errorPlus > 0.0){
                     //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
-                    gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension);
-                    gsl_monte_miser_integrate (&GPlus, xl, xu, dimension, calls, r, z, &resultPlus, &errorPlus);
+                    gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension1);
+                    gsl_monte_miser_integrate (&GPlus, xl, xu, dimension1, calls, r, z, &resultPlus, &errorPlus);
                     gsl_monte_miser_free (z);
                     cout << "Monte Carlo MISER integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
                 } //else
@@ -662,28 +672,28 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             if (algorithm == 1){
 
-              gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension);
-              gsl_monte_plain_integrate (&GMinus, xl, xu, dimension, calls, r, s, &resultMinus, &errorMinus);
+              gsl_monte_plain_state *s = gsl_monte_plain_alloc (dimension1);
+              gsl_monte_plain_integrate (&GMinus, xl, xu, dimension1, calls, r, s, &resultMinus, &errorMinus);
               gsl_monte_plain_free (s);
 
               //cout << "Plain Monte Carlo integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
 
             } else if (algorithm == 2){
 
-              gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension);
-              gsl_monte_miser_integrate (&GMinus, xl, xu, dimension, calls, r, s, &resultMinus, &error);
+              gsl_monte_miser_state *s = gsl_monte_miser_alloc (dimension1);
+              gsl_monte_miser_integrate (&GMinus, xl, xu, dimension1, calls, r, s, &resultMinus, &error);
               gsl_monte_miser_free (s);
               //cout << "Monte Carlo MISER integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
 
             } else if (algorithm == 3){
 
-                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension);
+                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (dimension1);
 
                 //vegas warm-up
-                gsl_monte_vegas_integrate (&GMinus, xl, xu, dimension, calls/50, r, s, &resultMinus, &errorMinus);
+                gsl_monte_vegas_integrate (&GMinus, xl, xu, dimension1, calls/50, r, s, &resultMinus, &errorMinus);
 
                 for (int j = 0; j < 10; j++) {
-                    gsl_monte_vegas_integrate(&GMinus, xl, xu, dimension, calls/5, r, s, &resultMinus, &errorMinus);
+                    gsl_monte_vegas_integrate(&GMinus, xl, xu, dimension1, calls/5, r, s, &resultMinus, &errorMinus);
 
                     if ((fabs (gsl_monte_vegas_chisq (s) - 1.0) <= 0.5) || (errorMinus == 0.0))
                         break;
@@ -692,8 +702,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
                 if (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5 && errorMinus > 0.0){
                     //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
-                    gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension);
-                    gsl_monte_miser_integrate (&GMinus, xl, xu, dimension, calls, r, z, &resultMinus, &errorMinus);
+                    gsl_monte_miser_state *z = gsl_monte_miser_alloc (dimension1);
+                    gsl_monte_miser_integrate (&GMinus, xl, xu, dimension1, calls, r, z, &resultMinus, &errorMinus);
                     gsl_monte_miser_free (z);
                     //cout << "Monte Carlo MISER integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
                 } //else
@@ -784,7 +794,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     if (!isnan(lowerFactor) && lowerFactor != 0.0)
                         lower += (lowerFactor * transformedValues[j]);
 
-                    if (!isnan(upperFactor) && lowerFactor != 0.0)
+                    if (!isnan(upperFactor) && upperFactor != 0.0)
                         upper += (upperFactor * transformedValues[j]);
 
                 }
