@@ -18,8 +18,10 @@ namespace hpnmg {
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
 
-        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals;
+        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
         std::vector<double> generalDependenciesNormed;
+        void scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound, double boundValue, double splitValue, int boundIndex, int splitIndex, bool parent);
+        bool validBound(int index, int boundIndex, std::vector<double> newBound, bool upper);
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;
 
@@ -109,7 +111,7 @@ namespace hpnmg {
 
         double getMinimumTime(vector<vector<vector<double>>> lowerBoundaries, vector<vector<vector<double>>> upperBoundaries, double time, vector<double> dependencies);
 
-        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getIntegrationIntervals() const;
+        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> getIntegrationIntervals() const;
 
         void setIntegrationIntervals(std::vector<std::vector<double>> time, double value, std::vector<int> occurings,
                                      int dimension, int maxTime);

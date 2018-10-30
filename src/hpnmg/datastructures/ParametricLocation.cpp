@@ -199,8 +199,8 @@ namespace hpnmg {
 
     std::pair<std::vector<double>, std::vector<double>> ParametricLocation::compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index) {
 
-        std::vector<double> leftBound = boundaries[index].second.first;
-        std::vector<double> rightBound = boundaries[index].second.second;
+        std::vector<double> leftBound;
+        std::vector<double> rightBound;
 
         double leftOld = Computation::getTime(boundaries, boundaries[index].second.first, 1);
         double leftNew = leftOld;
@@ -216,11 +216,11 @@ namespace hpnmg {
             rightNew = Computation::getTime(boundaries, value.second, 2);
         }
 
-        if (leftNew > leftOld && leftNew <= rightNew) {
+        if (leftNew > leftOld && leftNew <= rightOld) {
             leftBound = value.first;
         }
 
-        if (rightNew < rightOld && rightNew >= leftNew) {
+        if (rightNew < rightOld && rightNew >= leftOld) {
             rightBound = value.second;
         }
 
@@ -265,6 +265,87 @@ namespace hpnmg {
             }
         }
         return true;
+    }
+
+    int getDependencyIndex(std::vector<double> in1, std::vector<double> in2) {
+        assert(in1.size() == in2.size());
+        for (int i = in1.size() - 1; i >= 0; i--) {
+            if ((in1[i] != 0 || in2[i] != 0) && (in1[i] != in2[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    bool ParametricLocation::validBound(int index, int boundIndex, std::vector<double> newBound, bool upper) {
+        std::vector<double> leftBound;
+        std::vector<double> rightBound;
+
+        double leftOld = Computation::getTime(this->integrationIntervals[index], this->integrationIntervals[index][boundIndex].second.first, 1);
+        double leftNew = leftOld;
+        double rightOld = Computation::getTime(this->integrationIntervals[index], this->integrationIntervals[index][boundIndex].second.second, 2);
+        double rightNew = rightOld;
+
+
+        if (newBound.size() > boundIndex && !upper) {
+            leftNew = Computation::getTime(this->integrationIntervals[index], newBound, 1);
+        } else if (newBound.size() > boundIndex ) {
+            rightNew = Computation::getTime(this->integrationIntervals[index], newBound, 2);
+        }
+
+        if (!upper && (leftNew > leftOld && leftNew <= rightOld)) {
+            return true;
+        }
+
+        if (upper && (rightNew < rightOld && rightNew >= leftOld)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    void ParametricLocation::scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound, double boundValue, double splitValue, int boundIndex, int splitIndex, bool parent) {
+        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> newIntegrationIntervals = this->integrationIntervals;
+
+        //bool validTimeBoundUpper = this->validBound(index, boundIndex, newBound, true);
+        //bool validTimeBoundLower = this->validBound(index, boundIndex, newBound, false);
+        bool validSplitBoundLower = false;
+        bool validSplitBoundUpper = false;
+        if (splitIndex >= 0) {
+            validSplitBoundUpper = this->validBound(index, splitIndex, splitBound, true);
+            validSplitBoundLower = this->validBound(index, splitIndex, splitBound, false);
+            if ((validSplitBoundLower || validSplitBoundUpper)) {
+                if (parent) {
+                    if ((boundValue > 0 && splitValue > 0) || (boundValue < 0 && splitValue < 0)) {
+                        newIntegrationIntervals[index][splitIndex].second.first = splitBound;
+                        this->integrationIntervals[index][splitIndex].second.second = splitBound;
+                    } else {
+                        this->integrationIntervals[index][splitIndex].second.first = splitBound;
+                        newIntegrationIntervals[index][splitIndex].second.second = splitBound;
+                    }
+                } else {
+                    if ((boundValue > 0 && splitValue > 0) || (boundValue < 0 && splitValue < 0)) {
+                        newIntegrationIntervals[index][splitIndex].second.second = splitBound;
+                        this->integrationIntervals[index][splitIndex].second.first = splitBound;
+                    } else {
+                        this->integrationIntervals[index][splitIndex].second.second = splitBound;
+                        newIntegrationIntervals[index][splitIndex].second.first = splitBound;
+                    }
+
+                }
+            }
+        }
+
+        if (boundValue > 0) {
+            this->integrationIntervals[index][boundIndex].second.second = newBound;
+        } else {
+            this->integrationIntervals[index][boundIndex].second.first = newBound;
+        }
+
+
+        if (splitIndex >= 0 && (validSplitBoundLower || validSplitBoundUpper)) {
+            this->integrationIntervals.push_back(newIntegrationIntervals[index]);
+        }
     }
 
     /*
@@ -325,66 +406,116 @@ namespace hpnmg {
 
         assert(result.size() == dimension-1);
 
-        /*
-         * Get the new Boundaries determined by the child events given a specific time and set them accordingly
-         */
-        std::vector<std::vector<std::pair<std::vector<double>, std::vector<double>>>> candidateBoundaries =
-                Computation::solveEquations(time, value);
+        this->integrationIntervals.push_back(result);
 
-        for (std::vector<std::pair<std::vector<double>, std::vector<double>>> newBoundaries : candidateBoundaries) {
-            // Update the Boundaries
-            for (int i = 0; i < newBoundaries.size() && i < result.size(); i++) {
-                std::pair<std::vector<double>, std::vector<double>> bound = this->compare(result, newBoundaries[i], i);
-                result[i].second.first = bound.first;
-                result[i].second.second = bound.second;
-            }
-        }
+        //std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
+        //integerationIntervals.push_back(result);
 
-        /*
-         * Check if source events influences the bounds
+        /**
+         * CheckTime Vector
          */
-        std::vector<double> startEvent = this->getSourceEvent().getTimeVector(dimension);
         std::vector<double> t(dimension);
         std::fill(t.begin(), t.end(), 0);
         t[0] = value;
-        for (int i = 1; i < startEvent.size(); i++) {
-            std::vector<double> d = Computation::computeUnequationCut(startEvent, t, i);
-            if(d.size() > 0 && d[i] == 0) {
-                if (startEvent[i] < 0) {
-                    std::pair<std::vector<double>, std::vector<double>> bound = this->compare(result, { d, {} }, i-1);
-                    result[i-1].second.first = bound.first;
-                    result[i-1].second.second = bound.second;
+
+        /**
+         * Check if source events influences the bounds
+         */
+        std::vector<double> startEvent = this->getSourceEvent().getTimeVector(dimension);
+        int k = getDependencyIndex(startEvent, t);
+        if (k > 0) {
+            std::vector<double> newBound = Computation::computeUnequationCut(startEvent, t, k);
+            std::vector<double> valueToReplace;
+            double boundValue = startEvent[k] - t[k];
+            if(boundValue > 0) {
+                valueToReplace = result[k-1].second.second;
+            } else {
+                valueToReplace = result[k-1].second.first;
+            }
+            int n = getDependencyIndex(newBound, valueToReplace);
+            std::vector<double> splitBound;
+            double splitValue = 0;
+            if (n > 0) {
+                if (boundValue > 0) {
+                    splitValue = newBound[n] - result[n-1].second.second[n];
+                    splitBound = Computation::computeUnequationCut(newBound, result[k-1].second.second, n);
+                } else {
+                    splitValue = result[n-1].second.first[n] - newBound[n];
+                    splitBound = Computation::computeUnequationCut(result[k-1].second.first, newBound);
                 }
-                if (startEvent[i] > 0) {
-                    std::pair<std::vector<double>, std::vector<double>> bound = this->compare(result, { {}, d }, i-1);
-                    result[i-1].second.first = bound.first;
-                    result[i-1].second.second = bound.second;
-                }
+                this->scheduleIntegrationIntervals(0, newBound, splitBound, boundValue, splitValue, k-1, n-1, true);
+
+            }
+            else if (n==0) {
+                this->scheduleIntegrationIntervals(0, newBound, splitBound, boundValue, 0, k-1, -1, true);
             }
         }
 
-        for (int i = 0; i < result.size()-1; i++) { // ith RV
-            for (int j=i; j>=0; j--) { // iterating over all earlier RVs
-                if (result[i + 1].second.first[j + 1] != 0) { // is the i+1th RV dependent of j (i, i-1, ...)?
-                    std::vector<double> c = Computation::computeUnequationCut(result[i + 1].second.first,
-                                                                              result[i + 1].second.second, j + 1);
-                    std::pair<std::vector<double>, std::vector<double>> b = this->compare(result, {{}, c}, j);
-                    result[j].second.second = b.second;
-                }
-                if (result[i + 1].second.second[j + 1] != 0) {
-                    std::vector<double> c = Computation::computeUnequationCut(result[i + 1].second.first,
-                                                                              result[i + 1].second.second, j + 1);
-                    std::pair<std::vector<double>, std::vector<double>> b = this->compare(result, {c, {}}, j);
-                    result[j].second.first = b.first;
-                }
-            }
-        }
+        /**
+         * Child Events
+         */
+         if (time.size() > 0) {
+             std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> copyOfIntegrationIntervals = this->integrationIntervals;
+             for (vector<double> childEntryTime : time) {
+                for (int i = 0; i < copyOfIntegrationIntervals.size(); i++) {
+                    int k = getDependencyIndex(childEntryTime, t);
+                    if (k > 0) {
+                        std::vector<double> newBound = Computation::computeUnequationCut(t, childEntryTime, k);
+                        std::vector<double> valueToReplace;
+                        double boundValue = t[k] - childEntryTime[k];
+                        if(boundValue < 0) {
+                            valueToReplace = copyOfIntegrationIntervals[i][k-1].second.first;
+                        } else {
+                            valueToReplace = copyOfIntegrationIntervals[i][k-1].second.second;
+                        }
+                        int n = getDependencyIndex(newBound, valueToReplace);
+                        std::vector<double> splitBound;
+                        double splitValue = 0;
+                        if (n > 0) {
+                            if (boundValue > 0) {
+                                splitValue = newBound[n] - copyOfIntegrationIntervals[i][k-1].second.second[n];
+                                splitBound = Computation::computeUnequationCut(newBound, copyOfIntegrationIntervals[i][k-1].second.second, n);
+                            } else {
+                                splitValue = copyOfIntegrationIntervals[i][k-1].second.first[n] - newBound[n];
+                                splitBound = Computation::computeUnequationCut(copyOfIntegrationIntervals[i][k-1].second.first, newBound, n);
+                            }
+                            this->scheduleIntegrationIntervals(i, newBound, splitBound, boundValue, splitValue, k-1, n-1, false);
 
-        this->integrationIntervals = result;
+                        } else if (n==0) {
+                            this->scheduleIntegrationIntervals(i, newBound, splitBound, boundValue, 0, k-1, -1, false);
+                        }
+                    }
+                }
+             }
+         }
 
+         /**
+          * Ensure that the intervals are valid
+          */
+        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> newIntervals;
+          for (int intervalIndex = 0; intervalIndex < this->integrationIntervals.size(); intervalIndex++) {
+              for (int n = this->integrationIntervals[intervalIndex].size() - 1; n >= 0; n--) {
+                  std::vector<double> lowerBound = this->integrationIntervals[intervalIndex][n].second.first;
+                  std::vector<double> upperBound = this->integrationIntervals[intervalIndex][n].second.second;
+                  int index = getDependencyIndex(lowerBound, upperBound);
+                  if (index > 0) {
+                      std::vector<double> newBound = Computation::computeUnequationCut(lowerBound, upperBound, index);
+                      double boundValue = lowerBound[index] - upperBound[index];
+                      if (boundValue > 0) {
+                          if(this->validBound(intervalIndex, index-1, newBound, true)) {
+                              this->integrationIntervals[intervalIndex][index-1].second.second = newBound;
+                          }
+                      } else {
+                          if(this->validBound(intervalIndex, index-1, newBound, false)) {
+                              this->integrationIntervals[intervalIndex][index-1].second.first = newBound;
+                          }
+                      }
+                  }
+              }
+          }
     }
 
-    std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getIntegrationIntervals() const{
+    std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> ParametricLocation::getIntegrationIntervals() const{
         return this->integrationIntervals;
     }
 
