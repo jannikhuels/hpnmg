@@ -69,6 +69,10 @@ namespace hpnmg {
         static bool isGreater(std::vector<double> f1, std::vector<double> f2, int time);
 
         static double getTime(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::vector<double> dependencies, int mode);
+
+        static bool isValidBound(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound);
+
+        static int getDependencyIndex(std::vector<double> in1, std::vector<double> in2);
     };
 }
 

@@ -230,5 +230,51 @@ namespace hpnmg {
         return dependencies[0];
     }
 
+    int Computation::getDependencyIndex(std::vector<double> in1, std::vector<double> in2) {
+        assert(in1.size() == in2.size());
+        for (int i = in1.size() - 1; i >= 0; i--) {
+            if ((in1[i] != 0 || in2[i] != 0) && (in1[i] != in2[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    bool Computation::isValidBound(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound)
+    {
+        std::vector<double> lowerBound = boundaries[boundIndex].second.first;
+        int lowerDependencyIndex = Computation::getDependencyIndex(lowerBound, newBound);
+
+        bool plausibleLeftBound;
+        if (lowerDependencyIndex <= 0) {
+            if (lowerDependencyIndex == -1) {
+                return true;
+            }
+            plausibleLeftBound = lowerBound[0] <= newBound[0];
+        } else {
+            std::vector<double> newBoundToTest = Computation::computeUnequationCut(lowerBound, newBound, lowerDependencyIndex);
+            plausibleLeftBound = Computation::isValidBound(boundaries, lowerDependencyIndex-1, newBoundToTest);
+        }
+
+
+        std::vector<double> upperBound = boundaries[boundIndex].second.second;
+        int upperDependencyIndex = Computation::getDependencyIndex(upperBound, newBound);
+
+        bool plausibleRightBound;
+        if (upperDependencyIndex <= 0) {
+            if (upperDependencyIndex == -1) {
+                return true;
+            }
+            plausibleRightBound = newBound[0] <= upperBound[0];
+        } else {
+            std::vector<double> newBoundToTest = Computation::computeUnequationCut(newBound, upperBound, upperDependencyIndex);
+            plausibleRightBound = Computation::isValidBound(boundaries, upperDependencyIndex - 1, newBoundToTest);
+        }
+
+        return plausibleLeftBound && plausibleRightBound;
+    }
+
+
+
 
 }

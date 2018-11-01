@@ -267,16 +267,6 @@ namespace hpnmg {
         return true;
     }
 
-    int getDependencyIndex(std::vector<double> in1, std::vector<double> in2) {
-        assert(in1.size() == in2.size());
-        for (int i = in1.size() - 1; i >= 0; i--) {
-            if ((in1[i] != 0 || in2[i] != 0) && (in1[i] != in2[i])) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
     bool ParametricLocation::validBound(int index, int boundIndex, std::vector<double> newBound, bool upper) {
         std::vector<double> leftBound;
         std::vector<double> rightBound;
@@ -309,12 +299,10 @@ namespace hpnmg {
 
         //bool validTimeBoundUpper = this->validBound(index, boundIndex, newBound, true);
         //bool validTimeBoundLower = this->validBound(index, boundIndex, newBound, false);
-        bool validSplitBoundLower = false;
-        bool validSplitBoundUpper = false;
+        bool validSplitBound = false;
         if (splitIndex >= 0) {
-            validSplitBoundUpper = this->validBound(index, splitIndex, splitBound, true);
-            validSplitBoundLower = this->validBound(index, splitIndex, splitBound, false);
-            if ((validSplitBoundLower || validSplitBoundUpper)) {
+            validSplitBound = Computation::isValidBound(this->integrationIntervals[index], splitIndex, splitBound);
+            if (validSplitBound) {
                 if (parent) {
                     if ((boundValue > 0 && splitValue > 0) || (boundValue < 0 && splitValue < 0)) {
                         newIntegrationIntervals[index][splitIndex].second.first = splitBound;
@@ -343,7 +331,7 @@ namespace hpnmg {
         }
 
 
-        if (splitIndex >= 0 && (validSplitBoundLower || validSplitBoundUpper)) {
+        if (splitIndex >= 0 && validSplitBound) {
             this->integrationIntervals.push_back(newIntegrationIntervals[index]);
         }
     }
@@ -422,7 +410,7 @@ namespace hpnmg {
          * Check if source events influences the bounds
          */
         std::vector<double> startEvent = this->getSourceEvent().getTimeVector(dimension);
-        int k = getDependencyIndex(startEvent, t);
+        int k = Computation::getDependencyIndex(startEvent, t);
         if (k > 0) {
             std::vector<double> newBound = Computation::computeUnequationCut(startEvent, t, k);
             std::vector<double> valueToReplace;
@@ -432,7 +420,7 @@ namespace hpnmg {
             } else {
                 valueToReplace = result[k-1].second.first;
             }
-            int n = getDependencyIndex(newBound, valueToReplace);
+            int n = Computation::getDependencyIndex(newBound, valueToReplace);
             std::vector<double> splitBound;
             double splitValue = 0;
             if (n > 0) {
@@ -458,7 +446,7 @@ namespace hpnmg {
              std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> copyOfIntegrationIntervals = this->integrationIntervals;
              for (vector<double> childEntryTime : time) {
                 for (int i = 0; i < copyOfIntegrationIntervals.size(); i++) {
-                    int k = getDependencyIndex(childEntryTime, t);
+                    int k = Computation::getDependencyIndex(childEntryTime, t);
                     if (k > 0) {
                         std::vector<double> newBound = Computation::computeUnequationCut(t, childEntryTime, k);
                         std::vector<double> valueToReplace;
@@ -468,7 +456,7 @@ namespace hpnmg {
                         } else {
                             valueToReplace = copyOfIntegrationIntervals[i][k-1].second.second;
                         }
-                        int n = getDependencyIndex(newBound, valueToReplace);
+                        int n = Computation::getDependencyIndex(newBound, valueToReplace);
                         std::vector<double> splitBound;
                         double splitValue = 0;
                         if (n > 0) {
@@ -497,7 +485,7 @@ namespace hpnmg {
               for (int n = this->integrationIntervals[intervalIndex].size() - 1; n >= 0; n--) {
                   std::vector<double> lowerBound = this->integrationIntervals[intervalIndex][n].second.first;
                   std::vector<double> upperBound = this->integrationIntervals[intervalIndex][n].second.second;
-                  int index = getDependencyIndex(lowerBound, upperBound);
+                  int index = Computation::getDependencyIndex(lowerBound, upperBound);
                   if (index > 0) {
                       std::vector<double> newBound = Computation::computeUnequationCut(lowerBound, upperBound, index);
                       double boundValue = lowerBound[index] - upperBound[index];

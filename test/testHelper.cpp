@@ -276,3 +276,14 @@ TEST(ComputationTest, getMinimiumTime) {
     double t = Computation::getTime({{1,{{1,0,0},{2,0,0}}},{1,{{1,1,0},{2,1,0}}}}, {3,1,2}, 1);
     ASSERT_EQ(8,t);
 }
+
+TEST(ComputationTest, isValidBound) {
+    ASSERT_EQ(true, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 1, {2,-2,0}));
+    ASSERT_EQ(false, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 1, {6,-2,0}));
+    ASSERT_EQ(false, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 1, {8,0,0}));
+    ASSERT_EQ(true, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 2, {4.5,0,0}));
+    ASSERT_EQ(false, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 2, {10,0,0}));
+    ASSERT_EQ(false, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 0, {11,0,0}));
+    ASSERT_EQ(true, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 0, {6,0,0}));
+    ASSERT_EQ(true, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 0, {10,0,0}));
+}
