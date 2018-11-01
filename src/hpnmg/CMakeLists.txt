@@ -12,7 +12,7 @@ set_target_properties( ${PROJECT_NAME} PROPERTIES
 	ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(hpnmg hypro)
-target_link_libraries(hpnmg xerces-c)
-target_link_libraries(hpnmg CGAL)
-target_link_libraries(hpnmg GSL::gsl GSL::gslcblas)
+target_link_libraries(hpnmg ${hypro_LIBRARIES})
+target_link_libraries(hpnmg ${XercesC_LIBRARIES})
+target_link_libraries(hpnmg ${CGAL_LIBRARIES})
+target_link_libraries(hpnmg ${GSL_LIBRARIES})

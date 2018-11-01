@@ -127,4 +127,4 @@ add_subdirectory(examples)
 # -----------------------------------------------------------------
 
 add_executable(main main.cpp)
-target_link_libraries(main hpnmg ${Boost_LIBRARIES} GSL::gsl GSL::gslcblas)
+target_link_libraries(main hpnmg ${Boost_LIBRARIES} ${GSL_LIBRARIES})
