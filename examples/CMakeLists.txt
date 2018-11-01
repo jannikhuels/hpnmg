@@ -12,7 +12,7 @@ foreach(EXAMPLE_FILE ${EXAMPLES_SRC_FILES})
 
 	target_link_libraries(${EXAMPLE_NAME}
 			${PROJECT_NAME}
-			${XercesC_LIBRARY}
+			${XercesC_LIBRARIES}
 			)
 
 endforeach()
