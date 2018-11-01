@@ -15,8 +15,17 @@ namespace hpnmg {
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft;
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
+        std::vector<bool> generalTransitionsEnabled;
+    public:
+        const vector<bool> &getGeneralTransitionsEnabled() const;
+
+        void setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled);
+
+    private:
+        // enabling status in this loc for all general transitions
         Event sourceEvent;
         double conflictProbability;
+        double accumulatedProbability;
         int dimension;
         std::vector<double> generalDependenciesNormed;
     public:
@@ -78,6 +87,10 @@ namespace hpnmg {
         double getConflictProbability() const;
 
         void setConflictProbability(double conflictProbability);
+
+        double getAccumulatedProbability() const;
+
+        void setAccumulatedProbability(double accumulatedProbability);
 
         int getDimension() const;
 

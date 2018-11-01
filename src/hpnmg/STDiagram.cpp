@@ -428,4 +428,50 @@ namespace hpnmg {
         }
         return result;
     }
+
+    Region STDiagram::createRegionForVertices(std::vector<Point<double>> vertices) {
+        Region r(vertices);
+        return r;
+    }
+
+    std::vector<double> dependencies(int dimension, Halfspace<double> hsp) {
+        std::vector<double> dep = std::vector<double>(hsp.dimension()-1);
+        dep[0] = hsp.offset();
+        for (int i = 0; i < hsp.dimension()-1;i++) {
+
+        }
+    }
+
+    void dimensionConstraints(int dimension, Region r) {
+        //std::pair<std::vector<double>,std::vector<double>>
+        std::vector<Halfspace<double>> hspV = r.constraints();
+        Halfspace<double> lower = hspV[dimension+1];
+        Halfspace<double> upper = hspV[dimension];
+        //cout << endl << dependencies();
+        cout << endl << upper;
+        cout << " ---- " << endl;
+    }
+
+    std::pair<std::vector<std::vector<double>>,std::vector<std::vector<double>>> STDiagram::generalIntervalBounds(Region region) {
+        std::vector<std::vector<double>> leftBounds;
+        std::vector<std::vector<double>> rightBounds;
+        int dimension = region.dimension();
+        for (int d = 0; d < dimension-1; d++) {
+            std::vector<Point<double>> points;
+            for (int c = 0; c < dimension-1; c++) {
+                vector_t<double> dir = vector_t<double>::Zero(dimension);
+                dir[d] = -1;
+                EvaluationResult<double> low = region.evaluate(dir);
+                dir[d] = 1;
+                EvaluationResult<double> up = region.evaluate(dir);
+                points.push_back(Point<double>(low.optimumValue));
+                points.push_back(Point<double>(up.optimumValue));
+            }
+
+            Region r = STDiagram::createRegionForVertices(points);
+            dimensionConstraints(d, r);
+        }
+
+        return std::pair<std::vector<std::vector<double>>,std::vector<std::vector<double>>>(leftBounds, rightBounds);
+    }
 }

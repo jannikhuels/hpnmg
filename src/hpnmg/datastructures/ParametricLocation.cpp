@@ -14,8 +14,8 @@ namespace hpnmg {
                                                                              generalIntervalBoundRight(
                                                                                      numberOfGeneralTransitions),
                                                                              conflictProbability(1),
+                                                                             accumulatedProbability(1),
                                                                              dimension(numberOfGeneralTransitions + 1) {
-
     }
 
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces, int numberOfGeneralTransitions, const Event &sourceEvent) : ParametricLocation(numberOfDiscretePlaces, numberOfContinuousPlaces, numberOfGeneralTransitions) {
@@ -52,7 +52,9 @@ namespace hpnmg {
             deterministicClock(parametricLocation.deterministicClock), generalClock(parametricLocation.generalClock),
             generalIntervalBoundLeft(parametricLocation.generalIntervalBoundLeft),
             generalIntervalBoundRight(parametricLocation.generalIntervalBoundRight),
-            conflictProbability(parametricLocation.conflictProbability), dimension(parametricLocation.dimension),
+            conflictProbability(parametricLocation.conflictProbability),
+            accumulatedProbability(parametricLocation.accumulatedProbability),
+            dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
             sourceEvent(parametricLocation.sourceEvent) {
 
@@ -108,6 +110,11 @@ namespace hpnmg {
     void ParametricLocation::setConflictProbability(double conflictProbability) {
         this->conflictProbability = conflictProbability; }
 
+    double ParametricLocation::getAccumulatedProbability() const { return accumulatedProbability; }
+
+    void ParametricLocation::setAccumulatedProbability(double accumulatedProbability) {
+        this->accumulatedProbability = accumulatedProbability; }
+
     int ParametricLocation::getDimension() const { return dimension; }
 
     std::vector<int> ParametricLocation::getGeneralTransitionsFired() const { return generalTransitionFired; }
@@ -122,6 +129,14 @@ namespace hpnmg {
     void ParametricLocation::setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed) {
         ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
         this->sourceEvent.setGeneralDependencies(generalDependenciesNormed);
+    }
+
+    const vector<bool> &ParametricLocation::getGeneralTransitionsEnabled() const {
+        return generalTransitionsEnabled;
+    }
+
+    void ParametricLocation::setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled) {
+        ParametricLocation::generalTransitionsEnabled = generalTransitionsEnabled;
     }
 
     double ParametricLocation::getEarliestEntryTime() {
@@ -172,7 +187,4 @@ namespace hpnmg {
 
         return time;
     }
-
-
-
 }
