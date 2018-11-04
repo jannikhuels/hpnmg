@@ -8,14 +8,20 @@ Almost all dependencies can be installed via `apt`. Only [CArL](https://smtrat.g
 [Hypro](https://hypro.github.io/hypro/html/) need to be compiled manually. However, they register themselves with CMake
 upon compilation so that no steps other than compiling them need to be taken.
 
-##### A note on CArL and HyPro releases
-As of October 2018, HyPro's latest release is 17.10 whereas CArl's is 18.10. Since the former compiles with C++14 and
-the latter with C++17, you need to pick an older CArl release. For example, 17.10 works just fine.
+##### A note on CArL and HyPro versions
+Not all versions of CArl and HyPro work with each other or with HPnmG. Unfortunately, it is not always so clear which
+*do*. Symptoms of bad versions include:
+- HyPro refusing to compile because of C++17 features in CArl. CArl offers a C++14 branch: `master14`
+- HPnmG or targets thereof refusing to compile because of changed include paths, classes or signatures in HyPro
+- Some targets of HPnmG refusing to *link* because of undefined symbols from `libgmp` in `libhypro.so`
+
+As of now (2018-11-04), you should be able to use [this revision](https://github.com/smtrat/carl/commit/ace90eb5daad)
+for CArl and [this one](https://github.com/hypro/hypro/commit/9a19fa931ade) for HyPro.
 
 #### Dependencies
 1. These are needed for both CArl and HyPro
    ```
-   # gmpxx the Gnu Multiprecision library C++ interface
+   # gmp and gmpxx, the Gnu Multiprecision library and its C++ interface
    $ sudo apt install libgmp-dev
 
    # Boost
@@ -44,9 +50,9 @@ the latter with C++17, you need to pick an older CArl release. For example, 17.1
    ```
 
 #### CArl
-Download a [release](https://github.com/smtrat/carl/releases), for example 17.10 and prepare to build it.
+Download [CArl](https://github.com/smtrat/carl) and pick a [version](#a-note-on-carl-and-hypro-versions)
 ```
-$ cd the-extracted-release-folder
+$ git clone https://github.com/smtrat/carl && cd carl && git checkout <XYZ>
 $ mkdir build && cd build && cmake ..
 ```
 If your dependencies are installed correctly, the output of the latter
@@ -60,9 +66,9 @@ command should include lines similar to these:
 Build carl with `make lib_carl`. This may take a minute.
 
 #### HyPro
-Download a [release](https://github.com/hypro/hypro/releases), for example 17.10 and prepare to build it.
+Download [HyPro](https://github.com/hypro/hypro) and pick a [version](#a-note-on-carl-and-hypro-versions)
 ```
-$ cd the-extracted-release-folder
+$ git clone https://github.com/hypro/hypro && cd hypro && git checkout <XYZ>
 $ mkdir build && cd build && cmake ..
 ```
 If your dependencies are installed correctly and if CArl registered itself correctly with CMake, the output of the
