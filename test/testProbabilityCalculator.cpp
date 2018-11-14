@@ -23,7 +23,8 @@ TEST(ProbabilityCalculator, example){
    vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(3.0);
 
    double error;
-   double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 3.0, 50000, error);
+   double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 3.0, 50000, error);
+
    ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
 
 }
@@ -44,8 +45,9 @@ TEST(ProbabilityCalculator, example2general){
 
    //ASSERT_EQ (nodes.size(), 9);
 
-   double error;
-   double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 3.0, 50000, error);
+   double error=0.0;
+ //  double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 3.0, 50000, error);
+   double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingGauss(nodes, *plt0, 3.0, 128);
 
    ASSERT_EQ (((result - error <= 1) && (1 <= result+error)), true);
 }
@@ -65,7 +67,7 @@ TEST(ProbabilityCalculator, valuetools){
    //ASSERT_EQ (nodes.size(), 9);
 
    double error;
-   double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 4.0, 50000, error);
+   double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 4.0, 50000, error);
 
    ASSERT_EQ (((result - error <= 1) && (1 <= result+error)), true);
 }
@@ -85,7 +87,7 @@ TEST(ProbabilityCalculator, valuetools_v2){
     //ASSERT_EQ (nodes.size(), 9);
 
     double error;
-    double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 6.0, 50000, error);
+    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 6.0, 50000, error);
 
     ASSERT_EQ ((((double)(result - error) <= 1) && (1 <= (double)(result + error))), true);
 }
@@ -105,7 +107,7 @@ TEST(ProbabilityCalculator, valuetools_v3){
     //ASSERT_EQ (nodes.size(), 9);
 
     double error;
-    double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 7.0, 50000, error);
+    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 7.0, 50000, error);
 
     ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
 
@@ -130,7 +132,7 @@ TEST(ProbabilityCalculator, valuetools_1){
     cout << "Number of candidates c=" << nodes.size() << endl;
 
     double error;
-    double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(nodes, *plt0, 7.0, 50000, error);
+    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 7.0, 50000, error);
     std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 
 
