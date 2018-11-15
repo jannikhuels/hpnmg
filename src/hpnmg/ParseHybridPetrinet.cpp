@@ -146,14 +146,14 @@ namespace hpnmg {
 
         // step 1: Immediate Transition have highest priority, so we consider them first
         vector<shared_ptr<ImmediateTransition>> enabledImmediateTransition;
-        unsigned long highestPriority = ULONG_MAX;
+        unsigned long highestPriority = -1.0;
         for (auto &immediateTransition : immediateTransitions) {
             shared_ptr<ImmediateTransition> transition = immediateTransition.second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location
                     .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
-                if (transition->getPriority() < highestPriority) {
+                if (transition->getPriority() > highestPriority) {
                     highestPriority = transition->getPriority();
-                    // priority is higher (number is smaller), so we don't consider transitions with lower priority
+                    // priority is higher (number is greater), so we don't consider transitions with lower priority
                     enabledImmediateTransition.clear();
                     enabledImmediateTransition.push_back(transition);
                 } else if (transition->getPriority() == highestPriority) {
