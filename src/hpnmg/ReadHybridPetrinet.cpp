@@ -98,8 +98,6 @@ namespace hpnmg {
     }
 
     shared_ptr<HybridPetrinet> ReadHybridPetrinet::readHybridPetrinet(const std::string &filepath) {
-        if (!validateSchema(filepath))
-            throw (runtime_error("Invalid XML Schema"));
 
         hybridPetrinet = make_shared<HybridPetrinet>();
 
@@ -118,6 +116,9 @@ namespace hpnmg {
             else if (errno == ENAMETOOLONG)
                 throw (std::runtime_error("File can not be read."));
         }
+
+        if (!validateSchema(filepath))
+            throw (runtime_error("Invalid XML Schema"));
 
         // Configure DOM parser.
         xmlParser->setValidationScheme(XercesDOMParser::Val_Never);
