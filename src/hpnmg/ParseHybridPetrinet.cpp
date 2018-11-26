@@ -146,7 +146,7 @@ namespace hpnmg {
 
         // step 1: Immediate Transition have highest priority, so we consider them first
         vector<shared_ptr<ImmediateTransition>> enabledImmediateTransition;
-        unsigned long highestPriority = -1.0;
+        double highestPriority = -1.0;
         for (auto &immediateTransition : immediateTransitions) {
             shared_ptr<ImmediateTransition> transition = immediateTransition.second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location
@@ -423,10 +423,22 @@ namespace hpnmg {
         // get enabled deterministic transitions (we ignore priority)
         vector<vector<double>> newConsidered; // todo: we should order them by time Delta
         vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> nextDeterministicTransitions;
+
+        highestPriority = -1.0;
+        for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
+            shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
+            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location.getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
+                if (transition->getPriority() > highestPriority)
+                     highestPriority = transition->getPriority();
+                }
+            }
+
         for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
             shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
             if (!transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location
                     .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired()))
+                continue;
+            if (transition->getPriority() < highestPriority)
                 continue;
             vector<double> clock = location.getDeterministicClock()[pos];
             vector<double> timeDelta;
@@ -450,8 +462,8 @@ namespace hpnmg {
             }
         }
         // Only resolve conflicts for next Deterministic events with equal time delta
-        std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> ordereredNextDeterministicTransitions = this->sortByEqualTimeDelta(nextDeterministicTransitions);
-        for (std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> equalNextTransitions : ordereredNextDeterministicTransitions) {
+        std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> orderedNextDeterministicTransitions = this->sortByEqualTimeDelta(nextDeterministicTransitions);
+        for (std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> equalNextTransitions : orderedNextDeterministicTransitions) {
             double sumWeight = 0;
             for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : equalNextTransitions)
                 sumWeight += transitionItem.first->getWeight();
