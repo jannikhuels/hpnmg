@@ -420,28 +420,7 @@ namespace hpnmg {
         }
 
         // Order II: firing of deterministic transition
-        // get enabled deterministic transitions (we ignore priority)
-
-
-
-//        double highestPriority = -1.0;
-//                for (auto &immediateTransition : immediateTransitions) {
-//                    shared_ptr<ImmediateTransition> transition = immediateTransition.second;
-//                    if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location
-//                            .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
-//                        if (transition->getPriority() > highestPriority) {
-//                            highestPriority = transition->getPriority();
-//                            // priority is higher (number is greater), so we don't consider transitions with lower priority
-//                            enabledImmediateTransition.clear();
-//                            enabledImmediateTransition.push_back(transition);
-//                        } else if (transition->getPriority() == highestPriority) {
-//                            enabledImmediateTransition.push_back(transition);
-//                        }
-//                    }
-//                }
-//
-
-
+        // get enabled deterministic transitions
         vector<vector<double>> newConsidered; // todo: we should order them by time Delta
         vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> nextDeterministicTransitions;
 
