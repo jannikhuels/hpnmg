@@ -1,6 +1,5 @@
 #include "ReadHybridPetrinet.h"
 
-
 using namespace xercesc;
 using namespace std;
 namespace hpnmg {
@@ -81,7 +80,7 @@ namespace hpnmg {
         if (domParser.loadGrammar(schemaFilePath.c_str(), Grammar::SchemaGrammarType) == NULL) {
             throw ("Couldn't load schema");
         }
-            
+
 
         ParserErrorHandler parserErrorHandler;
 
@@ -98,8 +97,6 @@ namespace hpnmg {
     }
 
     shared_ptr<HybridPetrinet> ReadHybridPetrinet::readHybridPetrinet(const std::string &filepath) {
-        if (!validateSchema(filepath))
-            throw (runtime_error("Invalid XML Schema"));
 
         hybridPetrinet = make_shared<HybridPetrinet>();
 
@@ -118,6 +115,9 @@ namespace hpnmg {
             else if (errno == ENAMETOOLONG)
                 throw (std::runtime_error("File can not be read."));
         }
+
+        if (!validateSchema(filepath))
+            throw (runtime_error("Invalid XML Schema"));
 
         // Configure DOM parser.
         xmlParser->setValidationScheme(XercesDOMParser::Val_Never);
