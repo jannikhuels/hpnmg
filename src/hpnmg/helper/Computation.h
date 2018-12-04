@@ -70,9 +70,28 @@ namespace hpnmg {
 
         static double getTime(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::vector<double> dependencies, int mode);
 
-        static bool isValidBound(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound);
+        // Verifies if a given bound is valid (i.e. it reduces to a equation that is valid) and if it should be set (i.e. it is >= than the former lower bound and <= than the former upper bound)
+        //
+        // Return: {valid, shouldBeSet}
+        static std::pair<bool, bool> isValidBound(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound, bool upper = false);
+
+        static std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> setBound(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound, bool upper = false);
+
+        static std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> setBoundNoSplit(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound, bool upper = false);
+
+        static std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> repairIntervals(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> intervals, int maxIndex = -1);
+
+        static std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> repairInterval(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>, int maxIndex=-1);
+
+        static bool isUpper(std::vector<double> first, std::vector<double> second, int index);
 
         static int getDependencyIndex(std::vector<double> in1, std::vector<double> in2);
+
+        static int getDependencyIndex(std::vector<double> in);
+
+        static bool createValidIntervals(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound, bool upper, std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> &recursionBound);
+
+        static std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> setBoundWithSimpleSplit(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound, bool upper = false);
     };
 }
 
