@@ -45,7 +45,7 @@ namespace hpnmg {
         locationQueue.push_back(parametriclocationTree->getRootNode());
 
         while (!locationQueue.empty()) {
-            processNode(locationQueue[0], hybridPetrinet, maxTime);
+            processNode(locationQueue[0], hybridPetrinet, maxTime, 1);
             locationQueue.erase(locationQueue.begin());
         }
 
@@ -137,7 +137,15 @@ namespace hpnmg {
     }
 
     void ParseHybridPetrinet::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet,
-                                          double maxTime) {
+                                          double maxTime, int mode) {
+
+         /* --- Nondeterministic Conflicts ---
+         Mode 0: Nondeterminism resolved by priorities and conflicts (default)
+         Mode 1: Nondeterminism conflict set only includes transitions of highest priority (ignoring weights)
+         Mode 2: Nondeterminism conflict set includes all transitions that might fire (ignoring priorities and weights)
+          */
+
+
         int nodeMax = 5000;
         ParametricLocation location = node.getParametricLocation();
         vector<int> discreteMarking = location.getDiscreteMarking();
@@ -151,22 +159,30 @@ namespace hpnmg {
             shared_ptr<ImmediateTransition> transition = immediateTransition.second;
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location
                     .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
-                if (transition->getPriority() > highestPriority) {
+
+                if (mode < 2 && transition->getPriority() > highestPriority) {
                     highestPriority = transition->getPriority();
                     // priority is higher (number is greater), so we don't consider transitions with lower priority
                     enabledImmediateTransition.clear();
                     enabledImmediateTransition.push_back(transition);
-                } else if (transition->getPriority() == highestPriority) {
+                } else if (mode == 2 || transition->getPriority() == highestPriority) {
                     enabledImmediateTransition.push_back(transition);
                 }
+
             }
         }
         if (!enabledImmediateTransition.empty()) {
-            float sumWeight = 0;
-            for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
-                sumWeight += transition->getWeight();
-            for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
-                addLocationForImmediateEvent(transition, node, transition->getWeight() / sumWeight, hybridPetrinet);
+            if (mode == 0){
+                float sumWeight = 0;
+                for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
+                    sumWeight += transition->getWeight();
+                for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
+                    addLocationForImmediateEvent(transition, node, transition->getWeight() / sumWeight, hybridPetrinet);
+            } else  {
+                for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
+                    addLocationForImmediateEvent(transition, node, 1.0, hybridPetrinet);
+            }
+
             for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
                 if (childNode.getNodeID() <= nodeMax) { // to avoid zeno behavior
                     locationQueue.push_back(childNode);
@@ -424,12 +440,16 @@ namespace hpnmg {
         vector<vector<double>> newConsidered; // todo: we should order them by time Delta
         vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> nextDeterministicTransitions;
 
-
+        /* --- Nondeterministic Conflicts ---
+        Mode 0: Nondeterminism resolved by priorities and conflicts (default)
+        Mode 1: Nondeterminism conflict set only includes transitions of highest priority (ignoring weights)
+        Mode 2: Nondeterminism conflict set includes all transitions that might fire (ignoring priorities and weights)
+         */
         highestPriority = -1.0;
         for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
             shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location.getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
-                if (transition->getPriority() > highestPriority)
+                if (mode < 2 && transition->getPriority() > highestPriority)
                     highestPriority = transition->getPriority();
             }
         }
@@ -440,7 +460,7 @@ namespace hpnmg {
             if (!transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location
                     .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired()))
                 continue;
-            if (transition->getPriority() < highestPriority)
+            if (mode < 2 && transition->getPriority() < highestPriority)
                 continue;
             vector<double> clock = location.getDeterministicClock()[pos];
             vector<double> timeDelta;
@@ -466,13 +486,20 @@ namespace hpnmg {
         // Only resolve conflicts for next Deterministic events with equal time delta
         std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> orderedNextDeterministicTransitions = this->sortByEqualTimeDelta(nextDeterministicTransitions);
         for (std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> equalNextTransitions : orderedNextDeterministicTransitions) {
-            double sumWeight = 0;
-            for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : equalNextTransitions)
-                sumWeight += transitionItem.first->getWeight();
-            for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : equalNextTransitions) {
-                double probability = transitionItem.first->getWeight() / sumWeight;
-                addLocationForDeterministicEvent(transitionItem.first, probability, transitionItem.second, timeDeltas,
-                                                 node, hybridPetrinet);
+
+            if (mode == 0) {
+                double sumWeight = 0;
+                for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : equalNextTransitions)
+                    sumWeight += transitionItem.first->getWeight();
+                for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : equalNextTransitions) {
+                    double probability = transitionItem.first->getWeight() / sumWeight;
+                    addLocationForDeterministicEvent(transitionItem.first, probability, transitionItem.second, timeDeltas, node, hybridPetrinet);
+                }
+            } else {
+                for (pair<shared_ptr<DeterministicTransition>, vector<double>> transitionItem : equalNextTransitions) {
+                    addLocationForDeterministicEvent(transitionItem.first, 1.0, transitionItem.second, timeDeltas, node,
+                                                     hybridPetrinet);
+                }
             }
         }
 
