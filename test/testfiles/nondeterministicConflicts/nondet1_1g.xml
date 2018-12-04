@@ -13,10 +13,10 @@
     </places>
     <transitions>
         <generalTransition id="tg_x" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
-            <parameter name="a" value="0.001"/>
+            <parameter name="a" value="0.0"/>
             <parameter name="b" value="1.0"/>
         </generalTransition>
-        <deterministicTransition id="td_y" discTime="0.5" priority="0" weight="1.0E0"/>
+        <deterministicTransition id="td_y" discTime="0.25" priority="0" weight="1.0E0"/>
         <immediateTransition id="ti_2" priority="0" weight="1.0E0"/>
         <immediateTransition id="ti_3" priority="0" weight="1.0E0"/>
         <immediateTransition id="ti_4" priority="0" weight="1.0E0"/>

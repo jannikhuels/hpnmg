@@ -10,6 +10,7 @@
 #include "ReadHybridPetrinet.h"
 #include "ParseHybridPetrinet.h"
 #include "PLTWriter.h"
+#include "NondeterminismSolver.h"
 
 
 #include "../src/hpnmg/optimization/stdafx.h"
@@ -28,23 +29,33 @@ using namespace alglib;
 
 
 
-
-
-
-
-
 TEST(ParametricLocationTreeXML, Nondeterministic) {
 
+    cout << endl;
+
+    double maxtime = 2;
+    double checktime = 1;
+
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("nondet1_1g.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicConflicts/nondet1_1g.xml");
+
     ParseHybridPetrinet parser;
-    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 1);
-    int dim = plt->getDimension();
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxtime);
+
+    //int dim = plt->getDimension();
+
     auto writer = new PLTWriter();
+    writer->writePLT(plt, maxtime);
 
-    writer->writePLT(plt, 1);
+
+    std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTime(checktime);
 
 
+
+    NondeterminismSolver solver;
+    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 50000, 128);
+
+    cout << "Max probability: " << maxprob << endl;
 }
 
 
