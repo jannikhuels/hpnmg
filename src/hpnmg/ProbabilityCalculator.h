@@ -22,6 +22,25 @@ extern "C"{
 
 namespace hpnmg {
 
+
+	typedef struct {
+		double value;
+		double transformedValue;
+		pair<string, map<string, float>> distribution;
+	} singleDim;
+
+
+
+	typedef struct {
+		int current_index;
+		vector<singleDim> integrals;
+		vector<vector<double>> lowerBounds;
+		vector<vector<double>> upperBounds;
+        int evaluations;
+        double maxTime;
+	} allDims;
+
+
     class ProbabilityCalculator {
 
 
@@ -33,24 +52,29 @@ namespace hpnmg {
 
        	static double getDensity(pair<string, map<string, float>> distribution, double value);
 
-		double calculateIntervalsGauss(const ParametricLocation &location, ParametricLocationTree &tree, double timepoint, int nodeID, int evaluations);
-
-        double calculateIntervalsMonteCarlo(const ParametricLocation &location, ParametricLocationTree &tree, double timepoint, int nodeID, char algorithm, int functioncalls, double &error);
-
         double getProbability(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, char algorithm, int functioncalls, int evaluations, double &totalerror);
+
 
 
     public:
 
     	ProbabilityCalculator();
 
-        double getProbabilityGauss(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int evaluations);
+        double getTotalProbabilityUsingGauss(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int evaluations);
 
-        double getProbabilityMonteCarloPlain(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int functioncalls, double &totalerror);
+        double getTotalProbabilityUsingMonteCarloPlain(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int functioncalls, double &totalerror);
 
-        double getProbabilityMonteCarloMiser(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int functioncalls, double &totalerror);
+        double getTotalProbabilityUsingMonteCarloMiser(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int functioncalls, double &totalerror);
 
-        double getProbabilityMonteCarloVegas(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int functioncalls, double &totalerror);
+		double getTotalProbabilityUsingMonteCarloVegas(vector<ParametricLocationTree::Node> &nodes, ParametricLocationTree &tree, double timepoint, int functioncalls, double &totalerror);
+
+		double getProbabilityForLocationUsingGauss(const ParametricLocation &location, vector<pair<string, map<string, float>>> distributions, double maxTime, int evaluations);
+
+		double getProbabilityForLocationUsingMonteCarlo(const ParametricLocation &location, vector<pair<string, map<string, float>>> distributions, double maxTime, char algorithm, int functioncalls, double &error);
+
+		double computeMultivariateIntegralUsingGauss(int evaluations, hpnmg::allDims all, hpnmg::allDims allPlus, hpnmg::allDims allMinus);
+
+		double computeMultivariateIntegralUsingMonteCarlo(int functioncalls, hpnmg::allDims all, hpnmg::allDims allPlus, hpnmg::allDims allMinus, char algorithm, double &error);
 
 
     };

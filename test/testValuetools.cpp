@@ -114,7 +114,7 @@ TEST(Valuetools, valuetools_1){
             cout << "Number of candidates that satisfy the property " << propertySatisfyingNodes.size() << endl;
 
             double error;
-            double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(propertySatisfyingNodes,
+            double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(propertySatisfyingNodes,
                                                                                              *plt0, checkTime, 50000,
                                                                                              error);
             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();

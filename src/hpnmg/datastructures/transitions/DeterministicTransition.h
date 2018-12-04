@@ -14,6 +14,7 @@ namespace hpnmg {
         DeterministicTransition(std::string id, unsigned long priority, double weight, double discTime);
         double getDiscTime();
         double getWeight();
+        double getPriority();
         void setDiscTime(double discTime);
     };
 }
