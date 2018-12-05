@@ -19,6 +19,8 @@
         <discretePlace id="pd3" marking="0"/>
         <!-- cost -->
         <continuousPlace id="pc1" capacity="1" infiniteCapacity="1" level="0"/>
+        <!-- test cost -->
+        <discretePlace id="pc1test" marking="17"/>
     </places>
     <transitions>
         <!-- discharge battery -->
@@ -69,6 +71,9 @@
         <immediateTransition id="ti0" priority="1" weight="1.0E0"/>
         <!-- transition ti1: empty to not empty -->
         <deterministicTransition id="ti1" discTime="0.01" priority="1" weight="1.0E0"/>
+
+        <!-- test -->
+        <immediateTransition id="immtest" priority="1" weight="1.0E0"/>
     </transitions>
     <arcs>
         <!-- continuous arcs -->
@@ -121,5 +126,7 @@
         <discreteArc id="da5" fromNode="ti0" toNode="pd3" weight="1.0E0"/>
         <discreteArc id="da6" fromNode="pd3" toNode="ti1" weight="1.0E0"/>
         <discreteArc id="da7" fromNode="ti1" toNode="pd2" weight="1.0E0"/>
+
+        <guardArc fromNode="pc1" id="gatest" isInhibitor="0" toNode="immtest" weight="5.0E0"/>
     </arcs>
 </HPnG>

@@ -255,6 +255,13 @@ namespace hpnmg {
         }
     }
 
+    bool wayToSortTimes(std::vector<double> a, std::vector<double> b) {
+        int aDepIndex = Computation::getDependencyIndex(a);
+        int bDepIndex = Computation::getDependencyIndex(b);
+
+        return aDepIndex < bDepIndex;
+    }
+
     void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability, std::vector<int> occurings) {
         // nodeProbability is the probability to get here times the probability to be here
         double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
@@ -314,6 +321,8 @@ namespace hpnmg {
                 }
                 entryTimes.push_back(entryTime);
             }
+
+            std::sort(entryTimes.begin(), entryTimes.end(),  wayToSortTimes);
 
             if(valid) {
                 parametricLocation.setIntegrationIntervals(entryTimes, interval.first, occurings, dimension, this->maxTime);

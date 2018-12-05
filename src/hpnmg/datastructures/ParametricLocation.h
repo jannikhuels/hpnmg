@@ -21,6 +21,7 @@ namespace hpnmg {
         std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
         std::vector<double> generalDependenciesNormed;
         void scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound, double boundValue, double splitValue, int boundIndex, int splitIndex, bool parent);
+        void setSplitConstraints(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &newIntegrationIntervals, int index, int splitIndex, std::vector<double> splitBound, bool upper);
         bool validBound(int index, int boundIndex, std::vector<double> newBound, bool upper);
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;

@@ -48,14 +48,15 @@ TEST(Valuetools, valuetools_1){
 
     double detTime[] = {11};
     //double checkTimes[] = {0.0, 3.0, 4.0, 6.0, 8.0, 9.0};
-    double checkTimes[] = {8.0};
+    double checkTimes[] = {3.0};
     for (double time : detTime) {
 
         for(double checkTime : checkTimes) {
             // TODO: Check why I cannot reuse hybridPetrinet0 (When i remove the next 3 lines and move them outside the for loops, the probability is always 0)
             auto reader= new ReadHybridPetrinet();
             auto parser = new ParseHybridPetrinet();
-            auto hybridPetrinet0 = reader->readHybridPetrinet("norep_1_4.xml");
+            //auto hybridPetrinet0 = reader->readHybridPetrinet("norep_2_2.xml");
+            auto hybridPetrinet0 = reader->readHybridPetrinet("valuetools_1_1.xml");
 
             cout << endl << "=========" << endl;
             cout << "Computing startet for td=" << time << ", checkTime=" << checkTime << endl;
@@ -100,7 +101,7 @@ TEST(Valuetools, valuetools_1){
                 /*if ((minLevel <= 0.0 || maxLevel <= 0)) {
                     propertySatisfyingNodes.push_back(c);
                 }*/
-
+                //cout << "Current marking "  << c.getParametricLocation().getDiscreteMarking() << endl;
                 /*if (c.getParametricLocation().getDiscreteMarking()[0] <= 0) {
                     propertySatisfyingNodes.push_back(c);
                 }*/
@@ -113,7 +114,7 @@ TEST(Valuetools, valuetools_1){
             cout << "Number of candidates that satisfy the property " << propertySatisfyingNodes.size() << endl;
 
             double error;
-            double result = calculator->ProbabilityCalculator::getProbabilityMonteCarloVegas(propertySatisfyingNodes,
+            double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(propertySatisfyingNodes,
                                                                                              *plt0, checkTime, 50000,
                                                                                              error);
             std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();

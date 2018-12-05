@@ -34,10 +34,10 @@ TEST(ParametricLocationTreeXML, Nondeterministic) {
     cout << endl;
 
     double maxtime = 2;
-    double checktime = 1;
+    double checktime = 2;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicConflicts/nondet1_1g.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicConflicts/nondet1_2g.xml");
 
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxtime);

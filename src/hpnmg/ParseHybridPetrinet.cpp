@@ -440,11 +440,13 @@ namespace hpnmg {
         vector<vector<double>> newConsidered; // todo: we should order them by time Delta
         vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> nextDeterministicTransitions;
 
+
         /* --- Nondeterministic Conflicts ---
         Mode 0: Nondeterminism resolved by priorities and conflicts (default)
         Mode 1: Nondeterminism conflict set only includes transitions of highest priority (ignoring weights)
         Mode 2: Nondeterminism conflict set includes all transitions that might fire (ignoring priorities and weights)
          */
+
         highestPriority = -1.0;
         for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
             shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
@@ -455,12 +457,15 @@ namespace hpnmg {
         }
 
 
+
         for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
             shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
             if (!transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location
                     .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired()))
                 continue;
+
             if (mode < 2 && transition->getPriority() < highestPriority)
+
                 continue;
             vector<double> clock = location.getDeterministicClock()[pos];
             vector<double> timeDelta;
@@ -500,6 +505,7 @@ namespace hpnmg {
                     addLocationForDeterministicEvent(transitionItem.first, 1.0, transitionItem.second, timeDeltas, node,
                                                      hybridPetrinet);
                 }
+
             }
         }
 
