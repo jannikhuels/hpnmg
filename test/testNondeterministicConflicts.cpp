@@ -51,9 +51,8 @@ TEST(ParametricLocationTreeXML, Nondeterministic) {
     std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTime(checktime);
 
 
-
     NondeterminismSolver solver;
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 50000, 128, true);
+    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 50000, 128, false);
 
     vector<vector<int>> bestIds = solver.getBestChildIds();
 
