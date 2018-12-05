@@ -8,9 +8,6 @@ namespace hpnmg {
     NondeterminismSolver::NondeterminismSolver() {}
 
 
-
-
-
     //TODO diese Funktion muss später durch Janniks Model Checking sinnvoll ersetzt werden
     bool NondeterminismSolver::fulfillsProperty(ParametricLocationTree::Node node){
 
@@ -64,20 +61,17 @@ namespace hpnmg {
 
 
 
-    double NondeterminismSolver::recursivelySolveNondeterminism(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations){
+    double NondeterminismSolver::recursivelySolveNondeterminism(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum){
 
 
-        //TODO auch minimum Fall betrachten
-        double maxProbability = 0.0;
-        double currentProbability = 0.0;
+        double maxOrMinProbability = 0.0;
+        double currentProbability;
 
         //TODO Error beruecksichtigen
         double error = 0.0;
 
-        //TODO bestChild an Hauptfunktion zurueckgeben
-        //TODO Transitions ID statt Node ID
-        int bestChildId;
         int currentChildId;
+
 
         auto calculator = new ProbabilityCalculator();
 
@@ -86,50 +80,62 @@ namespace hpnmg {
         vector<ParametricLocationTree::Node> conflictSet = NondeterminismSolver::determineConflictSet(children);
 
         if (conflictSet.size() > 0) {
+
+            bool first = true;
+            vector<int> currentBestChildIds;
+
             for (ParametricLocationTree::Node child: conflictSet) {
 
                 currentChildId = child.getNodeID();
-                currentProbability = recursivelySolveNondeterminism(child, candidates, algorithm, functioncalls,
-                                                                    evaluations);
+                currentProbability = recursivelySolveNondeterminism(child, candidates, algorithm, functioncalls, evaluations, minimum);
 
-                if (currentProbability > maxProbability) {
+                if (first || (currentProbability > maxOrMinProbability && minimum == false) || (currentProbability < maxOrMinProbability && minimum == true)) {
 
-                    bestChildId = currentChildId;
-                    maxProbability = currentProbability;
+                    currentBestChildIds.clear();
+                    currentBestChildIds.push_back(currentChildId);
+                    maxOrMinProbability = currentProbability;
+                    first = false;
 
-                } else if (currentProbability == maxProbability) {
-                    //TODO diesen Fall auch beruecksichtigen
+                } else if (currentProbability == maxOrMinProbability) {
+                    currentBestChildIds.push_back(currentChildId);
                 }
             }
+
+            (this->bestChildIds).push_back(currentBestChildIds);
         }
 
 
 
         for (ParametricLocationTree::Node child: children)
-            maxProbability += recursivelySolveNondeterminism(child, candidates, algorithm, functioncalls, evaluations);
+            maxOrMinProbability += recursivelySolveNondeterminism(child, candidates, algorithm, functioncalls, evaluations, minimum);
 
 
         if (isCandidate(currentNode, candidates)){
 
             if (algorithm == 0)
                 //Gauss Legendre
-                maxProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
+                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
             else
                 //Monte Carlo
-                maxProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, error);
+                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, error);
 
         }
-        return maxProbability;
+        return maxOrMinProbability;
     }
 
 
 
-    double NondeterminismSolver::solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations){
+    double NondeterminismSolver::solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum){
 
         this->plt = plt;
 
-        return recursivelySolveNondeterminism(currentNode, candidates, algorithm, functioncalls, evaluations);
+        return recursivelySolveNondeterminism(currentNode, candidates, algorithm, functioncalls, evaluations, minimum);
 
+    }
+
+
+    vector<vector<int>> NondeterminismSolver::getBestChildIds(){
+        return this->bestChildIds;
     }
 
 }

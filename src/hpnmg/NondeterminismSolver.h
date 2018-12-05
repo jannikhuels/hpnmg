@@ -18,6 +18,7 @@ namespace hpnmg {
     private:
 
         shared_ptr<ParametricLocationTree> plt;
+        vector<vector<int>> bestChildIds;
 
         bool fulfillsProperty(ParametricLocationTree::Node node);
 
@@ -25,14 +26,16 @@ namespace hpnmg {
 
         bool isCandidate(ParametricLocationTree::Node &node, std::vector<ParametricLocationTree::Node> candidates);
 
-        double recursivelySolveNondeterminism(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations);
+        double recursivelySolveNondeterminism(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum);
 
 
     public:
 
         NondeterminismSolver();
 
-        double solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations);
+        double solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum);
+
+        vector<vector<int>> getBestChildIds();
 
 
 

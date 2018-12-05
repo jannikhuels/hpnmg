@@ -53,7 +53,9 @@ TEST(ParametricLocationTreeXML, Nondeterministic) {
 
 
     NondeterminismSolver solver;
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 50000, 128);
+    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 50000, 128, true);
+
+    vector<vector<int>> bestIds = solver.getBestChildIds();
 
     cout << "Max probability: " << maxprob << endl;
 }
