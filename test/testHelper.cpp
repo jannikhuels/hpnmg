@@ -3,6 +3,7 @@
 #include <hpnmg/ParseHybridPetrinet.h>
 #include "helper/Triangulation.h"
 #include "helper/Computation.h"
+#include "../resources/mathematica/wstp.h"
 
 using namespace hpnmg;
 
@@ -277,7 +278,7 @@ TEST(ComputationTest, getMinimiumTime) {
     ASSERT_EQ(8,t);
 }
 
-TEST(ComputationTest, isValidBound) {
+/*TEST(ComputationTest, isValidBound) {
     ASSERT_EQ(true, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 1, {2,-2,0}).first);
     ASSERT_EQ(false, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 1, {6,-2,0}).first);
     ASSERT_EQ(false, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 1, {8,0,0}).first);
@@ -294,7 +295,7 @@ TEST(ComputationTest, isValidBound) {
 }
 
 TEST(ComputationTest, setBound) {
-    /*std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> a = Computation::setBound({{1,{{0,0,0,0},{10,0,0,0}}},{1,{{0,0,0,0},{10,0,0,0}}},{1,{{0,0,0,0},{0,3,1,0}}}}, 2, {4.5, -3, -2, 0}, true);
+    std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> a = Computation::setBound({{1,{{0,0,0,0},{10,0,0,0}}},{1,{{0,0,0,0},{10,0,0,0}}},{1,{{0,0,0,0},{0,3,1,0}}}}, 2, {4.5, -3, -2, 0}, true);
     ASSERT_EQ(1.5, a[0].second.second[0]);
     ASSERT_EQ(2.25, a[1].second.second[0]);
     ASSERT_EQ(-1.5, a[1].second.second[1]);
@@ -303,7 +304,7 @@ TEST(ComputationTest, setBound) {
     std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> c = Computation::setBound({{1,{{0,0,0},{10,0,0}}}}, 0, {1, 0, 0}, true);
     ASSERT_EQ(1, c[0].second.second[0]);
     std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> d = Computation::setBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{10,0,0}}}}, 1, {1.5, -2, 0}, false);
-    ASSERT_EQ(0.75, b[0].second.second[0]);*/
+    ASSERT_EQ(0.75, b[0].second.second[0]);
     std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> a = Computation::setBound({{1,{{0,0,0},{10,0,0}}}}, 0, {1, 0, 0}, true);
     ASSERT_EQ(1, a.size());
     ASSERT_EQ(1, a[0][0].second.second[0]);
@@ -359,7 +360,7 @@ TEST(ComputationTest, repairIntervals) {
     ASSERT_EQ(-1, a[0][1].second.second[1]);
 
     std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> b = Computation::repairIntervals({{{1,{{0,0,0},{-7,0,0}}},{1,{{0,0,0},{3,-1,0}}}}});
-    ASSERT_EQ(0, b.size());
+    ASSERT_EQ(1, b.size());
 
     std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> c = Computation::repairIntervals({{{1,{{-7,0,0},{10,0,0}}},{1,{{0,0,0},{3,-1,0}}},{1,{{3,-1,-1},{0,3,1}}}}});
     ASSERT_EQ(1, c.size());
@@ -399,12 +400,16 @@ TEST(ComputationTest, repairIntervals) {
 
 TEST(ComputationTest, SetBoundSimpleSplit) {
     std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> a = Computation::setBoundWithSimpleSplit({{1,{{0,0,0},{3,0,0}}},{1,{{0,0,0},{10,0,0}}}}, 1, {3, -1, 0}, false);
-    ASSERT_EQ(1, a.size());
+    ASSERT_EQ(2, a.size());
     ASSERT_EQ(-7, a[0][0].second.first[0]);
     ASSERT_EQ(3, a[0][0].second.second[0]);
     ASSERT_EQ(3, a[0][1].second.first[0]);
     ASSERT_EQ(-1, a[0][1].second.first[1]);
 }
+
+TEST(ComputationTest, HyproIntervals) {
+    Computation::getDomainHypro();
+}*/
 
 /*TEST(ComputationTest, setAndRepair)
 {
@@ -499,3 +504,77 @@ TEST(ComputationTest, SetBoundSimpleSplit) {
     shouldUseResult = Computation::createValidIntervals(result, 1, {-2,-1,0}, false, result);
     ASSERT_EQ(false, shouldUseResult);
 }*/
+
+TEST(TestSplitRecurse, runSplit) {
+    std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> t = {{{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{10,0,0}}}}};
+    bool res = Computation::setBoundRecursivelyWithRepair(t,0, 1, {1.5, -2, 0}, false);
+    ASSERT_EQ(true, res);
+    ASSERT_EQ(2, t.size());
+    ASSERT_EQ(0, t[0][0].second.first[0]);
+    ASSERT_EQ(0.75, t[0][0].second.second[0]);
+    ASSERT_EQ(1.5, t[0][1].second.first[0]);
+    ASSERT_EQ(-2, t[0][1].second.first[1]);
+    ASSERT_EQ(0.75, t[1][0].second.first[0]);
+    ASSERT_EQ(10, t[1][0].second.second[0]);
+    ASSERT_EQ(0, t[1][1].second.first[0]);
+
+    cout << "Next ------" << endl;
+
+    t = {{{1,{{0,0,0,0},{10,0,0,0}}},{1,{{0,0,0,0},{10,0,0,0}}},{1,{{0,0,0,0},{0,3,1,0}}}}};
+    res = Computation::setBoundRecursivelyWithRepair(t, 0, 2, {3,-1,-1,0}, true);
+    //t = Computation::repairIntervals(t);
+    ASSERT_EQ(true, res);
+    ASSERT_EQ(3, t.size());
+    ASSERT_EQ(0, t[0][0].second.first[0]);
+    ASSERT_EQ(0.75, t[0][0].second.second[0]);
+    ASSERT_EQ(1.5, t[0][1].second.first[0]);
+    ASSERT_EQ(-2, t[0][1].second.first[1]);
+    ASSERT_EQ(3, t[0][1].second.second[0]);
+    ASSERT_EQ(-1, t[0][1].second.second[1]);
+    ASSERT_EQ(0, t[0][2].second.first[0]);
+    ASSERT_EQ(3, t[0][2].second.second[0]);
+    ASSERT_EQ(-1, t[0][2].second.second[1]);
+    ASSERT_EQ(-1, t[0][2].second.second[2]);
+
+    ASSERT_EQ(0, t[1][0].second.first[0]);
+    ASSERT_EQ(0.75, t[1][0].second.second[0]);
+    ASSERT_EQ(0, t[1][1].second.first[0]);
+    ASSERT_EQ(1.5, t[1][1].second.second[0]);
+    ASSERT_EQ(-2, t[1][1].second.second[1]);
+    ASSERT_EQ(0, t[1][2].second.first[0]);
+    ASSERT_EQ(3, t[1][2].second.second[1]);
+    ASSERT_EQ(1, t[1][2].second.second[2]);
+
+    ASSERT_EQ(0.75, t[2][0].second.first[0]);
+    ASSERT_EQ(3, t[2][0].second.second[0]);
+    ASSERT_EQ(0, t[2][1].second.first[0]);
+    ASSERT_EQ(3, t[2][1].second.second[0]);
+    ASSERT_EQ(-1, t[2][1].second.second[1]);
+    ASSERT_EQ(0, t[2][2].second.first[0]);
+    ASSERT_EQ(3, t[2][2].second.second[0]);
+    ASSERT_EQ(-1, t[2][2].second.second[1]);
+    ASSERT_EQ(-1, t[2][2].second.second[2]);
+
+    for (std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> intervals :t) {
+        cout << "Interval: " << endl;
+        for (std::pair<int, std::pair<std::vector<double>, std::vector<double>>> interval : intervals) {
+            cout << "   [" << interval.second.first << "; " << interval.second.second << "]" << endl;
+        }
+        cout << endl;
+    }
+
+    cout << "Next ------" << endl;
+
+    std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> x = {t[2]};
+    res = Computation::setBoundRecursivelyWithRepair(x, 0, 2, {4.5,-3,-2,0}, false);
+
+    for (std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> intervals : x) {
+        cout << "Interval: " << endl;
+        for (std::pair<int, std::pair<std::vector<double>, std::vector<double>>> interval : intervals) {
+            cout << "   [" << interval.second.first << "; " << interval.second.second << "]" << endl;
+        }
+        cout << endl;
+    }
+
+    ASSERT_EQ(true, true);
+}
