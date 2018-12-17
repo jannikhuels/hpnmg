@@ -679,7 +679,7 @@ namespace hpnmg {
     }
 
     bool Computation::setBoundRecursively(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &boundaries, int index, int boundIndex, std::vector<double> newBound, bool upper) {
-        std::cout << std::endl << "Set Bound [" << newBound << "] at boundIndex " << boundIndex << " for index " << index << " is upper " << upper << std::endl;
+        //std::cout << std::endl << "Set Bound [" << newBound << "] at boundIndex " << boundIndex << " for index " << index << " is upper " << upper << std::endl;
         if (boundaries.size() <= 0) {
             return false;
         }
