@@ -257,6 +257,7 @@ namespace hpnmg {
         }
         for (int currentIndex = 1; currentIndex <= maxIndex; currentIndex++) {
             int boundIndex = currentIndex;
+            std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> copyOfInterval = interval;
             for (; boundIndex >= 0; boundIndex--) {
                 /*if ((interval[0].second.first[0] >= interval[0].second.second[0]) || interval[0].second.second[0] < 0) {
                     return {};
@@ -285,6 +286,8 @@ namespace hpnmg {
                                 interval[repairBoundIndex].second.second = newBound;
                             } else if (newBound[0] < interval[0].second.first[0]) {
                                 return {};
+                            } else {
+                                interval = copyOfInterval;
                             }
                         } else {
                             interval[repairBoundIndex].second.second = newBound;
@@ -297,6 +300,8 @@ namespace hpnmg {
                                 interval[repairBoundIndex].second.first = newBound;
                             } else if (newBound[0] > interval[0].second.second[0]) {
                                 return {};
+                            } else {
+                                interval = copyOfInterval;
                             }
                         } else {
                             interval[repairBoundIndex].second.first = newBound;
@@ -730,6 +735,11 @@ namespace hpnmg {
                         }
                     }
 
+                } else {
+                    if (newBound[0] == formerBound[0]) {
+                        return true;
+                    }
+                    return res;
                 }
             } else {
                 std::vector<double> formerBound = boundaries[index][boundIndex].second.first;
@@ -757,6 +767,11 @@ namespace hpnmg {
                             boundaries.erase(boundaries.begin() + newIndex);
                         }
                     }
+                } else {
+                    if (newBound[0] == formerBound[0]) {
+                        return true;
+                    }
+                    return res;
                 }
             }
             return res;
