@@ -45,6 +45,6 @@
         <guardArc id="ga_xb" fromNode="pd_x2" toNode="ti_7" isInhibitor="0" weight="1.0E0"/>
         <guardArc id="ga_ya" fromNode="pd_y2" toNode="ti_5" isInhibitor="0" weight="1.0E0"/>
         <guardArc id="ga_yb" fromNode="pd_y2" toNode="ti_6" isInhibitor="0" weight="1.0E0"/>
-        <guardArc id="ga_in" fromNode="pd_l1" toNode="tg_x" isInhibitor="1" weight="1.0E0"/>
+        <guardArc id="ga_inh_x" fromNode="pd_l1" toNode="tg_x" isInhibitor="1" weight="1.0E0"/>
     </arcs>
 </HPnG>

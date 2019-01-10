@@ -722,6 +722,7 @@ namespace hpnmg {
         return time[0];
     }
 
+
     bool ParseHybridPetrinet::transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,
                                                   shared_ptr<Transition> transition,
                                                   shared_ptr<HybridPetrinet> hybridPetrinet,
@@ -755,7 +756,10 @@ namespace hpnmg {
                 if (arc->getIsInhibitor()) {
                     //double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
                     double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
-                    if (maxLevel >= arc->weight)
+                    //special case for inhibitor arc and weight = 0 to enable inhibitor condition 'level > 0' (because 'level >= 0' does not make sense as it is always true)
+                    if (arc->weight == 0.0 && maxLevel > 0.0)
+                        return false;
+                    if (arc->weight > 0 && maxLevel >= arc->weight) //enabled if maxLevel < weight
                         return false;
                 } else {
                     //double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
@@ -1298,6 +1302,7 @@ namespace hpnmg {
         auto continuousTransitions = hybridPetrinet->getContinuousTransitions();
         for (auto &continuousTransition : continuousTransitions) {
             shared_ptr<ContinuousTransition> transition = continuousTransition.second;
+            transition->resetOriginalRate();
             if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, lowerBounds,
                                     upperBounds, generalTransitionsFired)) {
                 for (auto arcItem : transition->getContinuousInputArcs()) {

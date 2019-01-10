@@ -33,11 +33,11 @@ TEST(ParametricLocationTreeXML, Nondeterministic) {
 
     cout << endl;
 
-    double maxtime = 2;
-    double checktime = 2;
+    double maxtime = 3;
+    double checktime = 3;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicConflicts/nondet1_2g.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicConflicts/nondet2_2g.xml");
 
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxtime);
@@ -48,11 +48,12 @@ TEST(ParametricLocationTreeXML, Nondeterministic) {
     writer->writePLT(plt, maxtime);
 
 
+//TODO sollte auch für time interval möglich sein
     std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTime(checktime);
 
 
     NondeterminismSolver solver;
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 50000, 128, false);
+    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 50000, 128, false, true);
 
     vector<vector<int>> bestIds = solver.getBestChildIds();
 
