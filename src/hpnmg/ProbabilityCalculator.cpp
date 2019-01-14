@@ -106,8 +106,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             for (int i = 0; i < integrationIntervals.size(); i++) {
                 singleDim sAll;
-                //sAll.distribution = distributions[integrationIntervals[i].first];
-                sAll.distribution = distributions[0];
+                sAll.distribution = distributions[integrationIntervals[i].first];
+                //sAll.distribution = distributions[0];
                 all.integrals.push_back(sAll);
                 singleDim sPlus;
                 sPlus.distribution = sAll.distribution;
@@ -431,8 +431,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
             for (int i = 0; i < integrationIntervals.size(); i++) {
                 singleDim sAll;
-                //sAll.distribution = distributions[integrationIntervals[i].first];
-                sAll.distribution = distributions[0];
+                sAll.distribution = distributions[integrationIntervals[i].first];
+                //sAll.distribution = distributions[0];
                 all.integrals.push_back(sAll);
                 singleDim sPlus;
                 sPlus.distribution = sAll.distribution;

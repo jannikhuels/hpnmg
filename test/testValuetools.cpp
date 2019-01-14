@@ -108,6 +108,10 @@ TEST(Valuetools, valuetools_1){
                 /*if (c.getParametricLocation().getDiscreteMarking()[0] <= 0 && c.getParametricLocation().getDiscreteMarking()[1] <= 0 && c.getParametricLocation().getDiscreteMarking()[2] <= 0 && c.getParametricLocation().getDiscreteMarking()[3] <= 0) {
                     propertySatisfyingNodes.push_back(c);
                 }*/
+
+                /*if (c.getParametricLocation().getDiscreteMarking()[3] <= 0) {
+                    propertySatisfyingNodes.push_back(c);
+                }*/
                 propertySatisfyingNodes.push_back(c);
             }
 
