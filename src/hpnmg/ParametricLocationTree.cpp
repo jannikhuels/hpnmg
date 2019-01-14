@@ -274,7 +274,7 @@ namespace hpnmg {
             // startNode's earliest entry time is before or equal the questioned time
             // (if it isn't, no childnode can be valid as well!)
 
-            // now we want to check if all (!) possible childevents latest entry times are bigger than t.
+            // now we want to check if there is a possible childevent with latest entry time bigger than t.
             const vector<Node> &childNodes = getChildNodes(startNode);
 
             /*
@@ -296,6 +296,10 @@ namespace hpnmg {
             std::vector<std::vector<double>> entryTimes;
 
             // if there is one child location which has a bigger entry time than interval.first, the parent is a candidate
+            // if there is no child location, the parent is a candidate as well
+            if (getChildNodes(startNode).size()==0) {
+                valid = true;
+            }
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
                 if (latestEntryTime >= interval.first) {
