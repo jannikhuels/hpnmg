@@ -522,7 +522,11 @@ namespace hpnmg {
 
         assert(result.size() == dimension-1);
 
-        this->integrationIntervals.push_back(result);
+        // TODO: empty result gets pushed in the case of no general transition, this needs to be fixed
+        // hopefully this if fixes it!
+        if(result.size()!=0) {
+            this->integrationIntervals.push_back(result);
+        }
 
         //std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
         //integerationIntervals.push_back(result);
