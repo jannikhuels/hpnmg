@@ -291,35 +291,38 @@ namespace hpnmg {
             std::sort(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end());
             idsOfNextGeneralTransitions.erase(std::unique(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end()), idsOfNextGeneralTransitions.end());
 
-            bool valid = true;
+            bool valid = false;
 
             std::vector<std::vector<double>> entryTimes;
 
+            // if there is one child location which has a bigger entry time than interval.first, the parent is a candidate
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
-                if (latestEntryTime <= interval.first) {
-                    valid = false;
-                    break;
-                }
+                if (latestEntryTime >= interval.first) {
+                    valid = true;
 
-                /*
-                 * Collect the entryTimes of the child node. Beware that we need to ensure that the ordering of each RV of a child location needs to be in accordance to its parent location.
-                 */
-                std::vector<double> entryTime(dimension);
-                fill(entryTime.begin(), entryTime.end(), 0);
-                entryTime[0] = node.getParametricLocation().getSourceEvent().getTime();
+                    /*
+                     * Collect the entryTimes of the child node. Beware that we need to ensure that the ordering of each RV of a child location needs to be in accordance to its parent location.
+                     */
+                    std::vector<double> entryTime(dimension);
+                    fill(entryTime.begin(), entryTime.end(), 0);
+                    entryTime[0] = node.getParametricLocation().getSourceEvent().getTime();
 
-                std::vector<double> childGeneralDependencies = node.getParametricLocation().getSourceEvent().getGeneralDependencies();
-                std::vector<int> childGeneralTransitionsFired = node.getParametricLocation().getGeneralTransitionsFired();
-                for (int i = 1; i <= parentGeneralDependencies.size(); i++) {
-                    entryTime[i] = childGeneralDependencies[i-1];
+                    std::vector<double> childGeneralDependencies = node.getParametricLocation().getSourceEvent().getGeneralDependencies();
+                    std::vector<int> childGeneralTransitionsFired = node.getParametricLocation().getGeneralTransitionsFired();
+                    for (int i = 1; i <= parentGeneralDependencies.size(); i++) {
+                        entryTime[i] = childGeneralDependencies[i - 1];
+                    }
+                    if (childGeneralDependencies.size() > parentGeneralDependencies.size()) {
+                        int id = childGeneralTransitionsFired[parentGeneralDependencies.size()];
+                        int pos =
+                                std::find(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end(), id) -
+                                idsOfNextGeneralTransitions.begin();
+                        entryTime[parentGeneralDependencies.size() + pos +
+                                  1] = childGeneralDependencies[parentGeneralDependencies.size()];
+                    }
+                    entryTimes.push_back(entryTime);
                 }
-                if (childGeneralDependencies.size() > parentGeneralDependencies.size()) {
-                    int id = childGeneralTransitionsFired[parentGeneralDependencies.size()];
-                    int pos = std::find(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end(), id) - idsOfNextGeneralTransitions.begin();
-                    entryTime[parentGeneralDependencies.size() + pos + 1] = childGeneralDependencies[parentGeneralDependencies.size()];
-                }
-                entryTimes.push_back(entryTime);
             }
 
             std::sort(entryTimes.begin(), entryTimes.end(),  wayToSortTimes);
