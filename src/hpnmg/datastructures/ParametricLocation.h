@@ -5,6 +5,8 @@
 #include "helper/Computation.h"
 
 namespace hpnmg {
+
+
     class ParametricLocation {
 
     private:
@@ -23,6 +25,8 @@ namespace hpnmg {
         void scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound, double boundValue, double splitValue, int boundIndex, int splitIndex, bool parent);
         void setSplitConstraints(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &newIntegrationIntervals, int index, int splitIndex, std::vector<double> splitBound, bool upper);
         bool validBound(int index, int boundIndex, std::vector<double> newBound, bool upper);
+
+
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;
 
@@ -114,10 +118,12 @@ namespace hpnmg {
 
         std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> getIntegrationIntervals() const;
 
-        void setIntegrationIntervals(std::vector<std::vector<double>> time, double value, std::vector<int> occurings,
+        void setIntegrationIntervals(std::vector<std::vector<double>> time, std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds, double value, std::vector<int> occurings,
                                      int dimension, int maxTime);
 
         std::pair<std::vector<double>, std::vector<double>> compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index);
+
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervals(std::vector<int> occurings, int maxTime, int dim);
 
     };
 }

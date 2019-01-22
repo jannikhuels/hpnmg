@@ -256,9 +256,9 @@ namespace hpnmg {
             maxIndex = interval.size() - 1;
         }
         for (int currentIndex = 1; currentIndex <= maxIndex; currentIndex++) {
-            int boundIndex = currentIndex;
             std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> copyOfInterval = interval;
-            for (; boundIndex >= 0; boundIndex--) {
+            int boundIndex = currentIndex;
+            for (;boundIndex > 0; boundIndex--) {
                 /*if ((interval[0].second.first[0] >= interval[0].second.second[0]) || interval[0].second.second[0] < 0) {
                     return {};
                 }*/
@@ -290,7 +290,17 @@ namespace hpnmg {
                                 interval = copyOfInterval;
                             }
                         } else {
-                            interval[repairBoundIndex].second.second = newBound;
+                            interval = setBoundNoSplit(interval, repairBoundIndex, newBound, upper);
+                            if (interval.size() > 0) {
+                                if (interval[0].second.first[0] < copyOfInterval[0].second.first[0]) {
+                                    interval[0].second.first[0] = copyOfInterval[0].second.first[0];
+                                }
+                                if (interval[0].second.second[0] > copyOfInterval[0].second.second[0]) {
+                                    interval[0].second.second[0] = copyOfInterval[0].second.second[0];
+                                }
+                                copyOfInterval = interval;
+                            }
+
                         }
 
                     } else {
@@ -304,7 +314,17 @@ namespace hpnmg {
                                 interval = copyOfInterval;
                             }
                         } else {
-                            interval[repairBoundIndex].second.first = newBound;
+                            interval = setBoundNoSplit(interval, repairBoundIndex, newBound, upper);
+                            if (interval.size() > 0) {
+                                if (interval[0].second.first[0] < copyOfInterval[0].second.first[0]) {
+                                    interval[0].second.first[0] = copyOfInterval[0].second.first[0];
+                                }
+                                if (interval[0].second.second[0] > copyOfInterval[0].second.second[0]) {
+                                    interval[0].second.second[0] = copyOfInterval[0].second.second[0];
+                                }
+                                copyOfInterval = interval;
+                            }
+
                         }
                     }
 
@@ -365,19 +385,30 @@ namespace hpnmg {
             if (upper) {
                 formerBound = boundaries[boundIndex].second.second;
                 if (boundIndex == 0) {
-                    if (newBound[0] > formerBound[0]) {
+                    if (newBound[0] > formerBound[0] || (newBound[0] >= boundaries[0].second.first[0] && newBound[0] <= formerBound[0])) {
+                        boundaries[0].second.second = newBound;
+                        return boundaries;
+                    }
+                    return {};
+
+                    /*if (newBound[0] > formerBound[0]) {
                         boundIndex = -1;
                         return {};
-                    }
+                    }*/
                 }
                 boundaries[boundIndex].second.second = newBound;
             } else {
                 formerBound = boundaries[boundIndex].second.first;
                 if (boundIndex == 0) {
-                    if (newBound[0] < formerBound[0]) {
+                    if (newBound[0] < formerBound[0] || (newBound[0] <= boundaries[0].second.second[0] && newBound[0] >= formerBound[0])) {
+                        boundaries[0].second.first = newBound;
+                        return boundaries;
+                    }
+                    return {};
+                    /*if (newBound[0] < formerBound[0]) {
                         boundIndex = -1;
                         return {};
-                    }
+                    }*/
                 }
                 boundaries[boundIndex].second.first = newBound;
             }
@@ -670,7 +701,10 @@ namespace hpnmg {
     }
 
     bool Computation::isUpper(std::vector<double> first, std::vector<double> second, int index) {
-        if (first[index] == 0 && first[0] == 0 && second[0] == 0) {
+        if (first[index] == 0) {
+            if (first[index] == 0) {
+                return second[index] < 0 ? true : false;
+            }
             return false;
         } else {
             return first[index] - second[index] > 0 ? true : false;

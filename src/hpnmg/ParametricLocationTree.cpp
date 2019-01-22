@@ -269,7 +269,6 @@ namespace hpnmg {
         parametricLocation.setAccumulatedProbability(nodeProbability);
         int dimension = this->getDimension();
 
-
         if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.second) {
             // startNode's earliest entry time is before or equal the questioned time
             // (if it isn't, no childnode can be valid as well!)
@@ -294,8 +293,14 @@ namespace hpnmg {
             bool valid = true;
 
             std::vector<std::vector<double>> entryTimes;
+            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds;
+            auto childs = getChildNodes(startNode);
 
-            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+            if (childs.size() == 0) {
+                bounds.push_back(parametricLocation.getRVIntervals(occurings, this->maxTime, dimension));
+            }
+
+            for (ParametricLocationTree::Node node : childs) {
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
                 if (latestEntryTime <= interval.first) {
                     valid = false;
@@ -320,12 +325,13 @@ namespace hpnmg {
                     entryTime[parentGeneralDependencies.size() + pos + 1] = childGeneralDependencies[parentGeneralDependencies.size()];
                 }
                 entryTimes.push_back(entryTime);
+                bounds.push_back(node.getParametricLocation().getRVIntervals(occurings, this->maxTime, dimension));
             }
 
             std::sort(entryTimes.begin(), entryTimes.end(),  wayToSortTimes);
 
             if(valid) {
-                parametricLocation.setIntegrationIntervals(entryTimes, interval.first, occurings, dimension, this->maxTime);
+                parametricLocation.setIntegrationIntervals(entryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
             }

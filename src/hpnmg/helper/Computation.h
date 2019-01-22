@@ -99,6 +99,7 @@ namespace hpnmg {
         static bool setBoundRecursively(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &boundaries, int index, int boundIndex, std::vector<double> newBound, bool upper = false);
 
         static bool setBoundRecursivelyWithRepair(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &boundaries, int index, int boundIndex, std::vector<double> newBound, bool upper = false);
+
     };
 }
 

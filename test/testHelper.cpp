@@ -529,6 +529,7 @@ TEST(TestSplitRecurse, runSplit) {
     ASSERT_EQ(0.75, t[0][0].second.second[0]);
     ASSERT_EQ(1.5, t[0][1].second.first[0]);
     ASSERT_EQ(-2, t[0][1].second.first[1]);
+    //ASSERT_EQ(10, t[0][1].second.second[0]);
     ASSERT_EQ(3, t[0][1].second.second[0]);
     ASSERT_EQ(-1, t[0][1].second.second[1]);
     ASSERT_EQ(0, t[0][2].second.first[0]);
@@ -557,13 +558,14 @@ TEST(TestSplitRecurse, runSplit) {
 
     //cout << "Next ------" << endl;
 
-    std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> x = {t[2]};
+    /*std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> x = {t[2]};
     res = Computation::setBoundRecursivelyWithRepair(x, 0, 2, {4.5,-3,-2,0}, false);
 
     ASSERT_EQ(true, res);
     ASSERT_EQ(3, x.size());
     ASSERT_EQ(0.75, x[0][0].second.first[0]);
     ASSERT_EQ(1.5, x[0][0].second.second[0]);
+    //ASSERT_EQ(0, x[0][1].second.first[0]);
     ASSERT_EQ(1.5, x[0][1].second.first[0]);
     ASSERT_EQ(2.25, x[0][1].second.second[0]);
     ASSERT_EQ(4.5, x[0][2].second.first[0]);
@@ -581,7 +583,19 @@ TEST(TestSplitRecurse, runSplit) {
     ASSERT_EQ(0, x[2][1].second.first[0]);
     ASSERT_EQ(3, x[2][1].second.second[0]);
     ASSERT_EQ(0, x[2][2].second.first[0]);
-    ASSERT_EQ(3, x[2][2].second.second[0]);
+    ASSERT_EQ(3, x[2][2].second.second[0]);*/
+
+    std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> u = {{{1,{{0,0,0,0},{10,0,0,0}}},{1,{{0,0,0,0},{10,0,0,0}}},{1,{{0,0,0,0},{0,3,1,0}}}}};
+    res = Computation::setBoundRecursivelyWithRepair(u, 0, 2, {4.5,-3,-2,0}, true);
+    for (std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> intervals : u) {
+        cout << "Interval: " << endl;
+        for (std::pair<int, std::pair<std::vector<double>, std::vector<double>>> interval : intervals) {
+            cout << "   [" << interval.second.first << "; " << interval.second.second << "]" << endl;
+        }
+        cout << endl;
+    }
+    ASSERT_EQ(false, false);
+
 
     /*for (std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> intervals : x) {
         cout << "Interval: " << endl;
