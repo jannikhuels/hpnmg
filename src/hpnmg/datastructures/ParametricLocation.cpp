@@ -522,6 +522,17 @@ namespace hpnmg {
      */
     void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds, double value,
                                                      std::vector<int> occurings, int dimension, int maxTime) {
+        //assert(result.size() == dimension-1);
+
+        // TODO: empty result gets pushed in the case of no general transition, this needs to be fixed
+        // hopefully this if fixes it!
+        /*if(result.size()!=0) {
+            this->integrationIntervals.push_back(result);
+        }*/
+
+        //std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
+        //integerationIntervals.push_back(result);
+
         /**
          * CheckTime Vector
          */

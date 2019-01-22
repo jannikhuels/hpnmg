@@ -1,4 +1,3 @@
-
 #include "Computation.h"
 
 namespace hpnmg {
