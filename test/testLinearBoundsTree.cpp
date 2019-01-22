@@ -136,3 +136,12 @@ TEST(LinearBoundsTree, FourDomainTest) {
     ASSERT_EQ(true, domains[2].equals({{{0,0,0,0,0},{3,0,0,0,0}}, {{3,-1,0,0,0},{10,0,0,0,0}}, {{0,0,0,0,0},{10,0,0,0,0}}, {{0,0,0,0,0},{10,0,0,0,0}}}));
     ASSERT_EQ(true, domains[3].equals({{{3,0,0,0,0},{10,0,0,0,0}}, {{0,0,0,0,0},{10,0,0,0,0}}, {{0,0,0,0,0},{10,0,0,0,0}}, {{0,0,0,0,0},{10,0,0,0,0}}}));
 }
+
+TEST(LinearBoundsTree, SingleDomainTest) {
+    LinearEquation equation({0,0}, {3,-1});
+    LinearBoundsTree tree = LinearBoundsTree({{{0,0}, {10,0}}}, equation);
+
+    std::vector<LinearDomain> domains = tree.getDomains();
+    ASSERT_EQ(1, domains.size());
+    ASSERT_EQ(true, domains[0].equals({{{0,0}, {3,0}}}));
+}
