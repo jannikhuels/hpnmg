@@ -40,6 +40,12 @@ namespace hpnmg {
         }
     }
 
+    LinearDomain::LinearDomain(hpnmg::Domain lin) {
+        for (LinearBound b : lin) {
+            this->localDomain.push_back(b);
+        }
+    }
+
     bool LinearDomain::isTrue(hpnmg::LinearEquation lin) {
         if(!this->isValid()) {
             return false;

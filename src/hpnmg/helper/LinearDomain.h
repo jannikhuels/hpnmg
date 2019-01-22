@@ -27,6 +27,7 @@ namespace hpnmg {
     public:
         LinearDomain(LinearEquation init, Domain comparison);
         LinearDomain(LinearEquation initOne, LinearEquation initTwo, Domain comparison);
+        LinearDomain(Domain lin);
         bool isValid();
         void addEquation(LinearEquation linEq);
         Domain getDomain();
