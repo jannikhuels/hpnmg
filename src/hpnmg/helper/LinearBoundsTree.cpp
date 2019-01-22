@@ -64,7 +64,8 @@ namespace hpnmg {
         } else {
             LinearDomain lin = LinearDomain(newCondition, domain);
             if (lin.isValid()) {
-             rootNode.linearDomains.push_back(lin);
+                lin.fill(domain);
+                rootNode.linearDomains.push_back(lin);
             }
             rootNode.childLeftTrueId = -1;
             rootNode.childLeftFalseId = -1;
