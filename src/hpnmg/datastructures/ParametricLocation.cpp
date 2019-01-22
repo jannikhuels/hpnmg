@@ -542,8 +542,8 @@ namespace hpnmg {
 
         for (int i = 0; i < bounds.size(); i++) {
             auto currentBounds = bounds[i];
-            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> result;
-            result.push_back(currentBounds);
+
+            std::vector<LinearDomain> linearDomains;
             /**
              * Check if source events influences the bounds
              */
@@ -552,8 +552,15 @@ namespace hpnmg {
             if (k > 0) {
                 std::vector<double> newBound = Computation::computeUnequationCut(startEvent, t, k);
                 bool upper = Computation::isUpper(startEvent, t, k);
-                bool res = Computation::setBoundRecursivelyWithRepair(result, 0, k - 1, newBound,
-                                                                      upper);
+                LinearEquation eq(newBound, upper, k-1);
+                Domain ld = LinearDomain::createDomain(currentBounds);
+                LinearBoundsTree tree(ld, eq);
+                std::vector<LinearDomain> dms = tree.getDomains();
+                linearDomains.insert(linearDomains.end(), dms.begin(), dms.end());
+            } else {
+                Domain ld = LinearDomain::createDomain(currentBounds);
+                LinearDomain l(ld);
+                linearDomains.push_back(l);
             }
 
             /**
@@ -561,21 +568,28 @@ namespace hpnmg {
              */
             if (time.size() > 0) {
                 std::vector<double> childEntryTime = time[i];
-                std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> copyOfIntegrationIntervals = result;
-                for (int i = 0; i < copyOfIntegrationIntervals.size(); i++) {
+                //std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> copyOfIntegrationIntervals = result;
+                for (int i = 0; i < linearDomains.size(); i++) {
                     int k = Computation::getDependencyIndex(childEntryTime, t);
                     if (k > 0) {
                         std::vector<double> newBound = Computation::computeUnequationCut(t, childEntryTime, k);
                         std::vector<double> valueToReplace;
                         bool upper = Computation::isUpper(t, childEntryTime, k);
-                        bool res = Computation::setBoundRecursivelyWithRepair(copyOfIntegrationIntervals, i, k - 1,
-                                                                              newBound, upper);
+                        LinearEquation eq(newBound,upper, k-1);
+                        LinearBoundsTree tree(linearDomains[i].getDomain(), eq);
+                        std::vector<LinearDomain> dms = tree.getDomains();
+                        //bool res = Computation::setBoundRecursivelyWithRepair(copyOfIntegrationIntervals, i, k - 1,newBound, upper);
 
-                        for (auto item: copyOfIntegrationIntervals) {
-                            this->integrationIntervals.push_back(item);
+                        for (LinearDomain item: dms) {
+                            this->integrationIntervals.push_back(item.toDomainWithIndex(currentBounds));
                         }
-                        copyOfIntegrationIntervals = result;
+                    } else {
+                        this->integrationIntervals.push_back(linearDomains[i].toDomainWithIndex(currentBounds));
                     }
+                }
+            } else {
+                for (LinearDomain item: linearDomains) {
+                    this->integrationIntervals.push_back(item.toDomainWithIndex(currentBounds));
                 }
             }
         }

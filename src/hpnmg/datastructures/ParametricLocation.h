@@ -3,6 +3,7 @@
 #include "Event.h"
 #include "Region.h"
 #include "helper/Computation.h"
+#include "helper/LinearBoundsTree.h"
 
 namespace hpnmg {
 
