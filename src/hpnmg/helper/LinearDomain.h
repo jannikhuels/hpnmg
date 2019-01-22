@@ -12,6 +12,7 @@ namespace hpnmg {
 
     typedef std::pair<LinEq, LinEq> LinearBound;
     typedef std::vector<LinearBound> Domain;
+    typedef std::vector<std::pair<int, LinearBound>> DomainWithIndex;
 
     class LinearDomain {
     private:
@@ -32,6 +33,10 @@ namespace hpnmg {
         bool intersect(LinearDomain lin);
         void fill(Domain lin);
         bool equals(Domain comparison);
+
+        DomainWithIndex toDomainWithIndex(DomainWithIndex dwi);
+
+        static Domain createDomain(DomainWithIndex dwi);
     };
 }
 

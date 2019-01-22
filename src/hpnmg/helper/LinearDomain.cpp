@@ -174,4 +174,20 @@ namespace hpnmg {
         }
         return true;
     }
+
+    DomainWithIndex LinearDomain::toDomainWithIndex(hpnmg::DomainWithIndex dwi) {
+        assert(dwi.size() == this->localDomain.size());
+        for (int i = 0; i < dwi.size(); i++) {
+            dwi[i].second = this->localDomain[i];
+        }
+        return dwi;
+    }
+
+    Domain LinearDomain::createDomain(hpnmg::DomainWithIndex dwi) {
+        Domain d;
+        for (std::pair<int, LinearBound> b : dwi) {
+            d.push_back(b.second);
+        }
+        return d;
+    }
 }
