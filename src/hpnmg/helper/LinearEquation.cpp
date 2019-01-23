@@ -21,15 +21,15 @@ namespace hpnmg {
 
     LinearEquation::LinearEquation(LinEq left, LinEq right) {
         int depIndex = Computation::getDependencyIndex(left, right);
-        assert(depIndex >= 0);
-        isUpper = Computation::isUpper(left, right, depIndex);
-        equation = Computation::computeUnequationCut(left, right, depIndex);
-        dependencyIndex = depIndex - 1;
-        alwaysTrue = false;
-        if (dependencyIndex < 0) {
+        if (depIndex < 0) {
             alwaysTrue = left[0] <= right[0];
+            dependencyIndex = depIndex;
+        } else {
+            isUpper = Computation::isUpper(left, right, depIndex);
+            equation = Computation::computeUnequationCut(left, right, depIndex);
+            dependencyIndex = depIndex - 1;
+            alwaysTrue = false;
         }
-
     }
 
     LinearEquation::LinearEquation(const hpnmg::LinearEquation &equation) {
