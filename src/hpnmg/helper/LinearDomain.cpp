@@ -106,7 +106,7 @@ namespace hpnmg {
     }
 
     bool LinearDomain::shouldSet(LinearEquation eq) {
-        if (this->isValid()) {
+        if (!eq.alwaysTrue && this->isValid()) {
             LinearBound firstBound = this->localDomain[0];
             return (firstBound.first[0] < eq.equation[0]) && (eq.equation[0] < firstBound.second[0]);
         }

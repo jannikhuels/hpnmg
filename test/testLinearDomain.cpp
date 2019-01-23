@@ -115,7 +115,7 @@ TEST(LinearDomain, Intersection) {
     ASSERT_EQ(dom1.getDomain()[1].second[0], 3);
 }
 
-TEST(LinearDomain, FalseIntersection) {
+TEST(LinearDomain, IntersectionWithNoChange) {
     LinearEquation eq1 = LinearEquation({3,0,0}, true, 0);
     LinearDomain dom1 = LinearDomain(eq1, {{{0,0,0},{20,0,0}},{{0,0,0},{20,0,0}}});
     LinearEquation eq2 = LinearEquation({3,-1,0}, true, 1);
@@ -128,7 +128,11 @@ TEST(LinearDomain, FalseIntersection) {
 
     bool valid = dom1.intersect(dom2);
 
-    ASSERT_EQ(valid, false);
+    ASSERT_EQ(valid, true);
+    ASSERT_EQ(0, dom1.getDomain()[0].first[0]);
+    ASSERT_EQ(3, dom1.getDomain()[0].second[0]);
+    ASSERT_EQ(0, dom1.getDomain()[1].first.size());
+    ASSERT_EQ(3, dom1.getDomain()[1].second[0]);
 }
 
 TEST(LinearDomain, EmptyIntersection) {

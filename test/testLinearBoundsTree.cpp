@@ -82,9 +82,6 @@ TEST(LinearBoundsTree, ThreeDependencyTree) {
     ASSERT_EQ(true, leaves[7].equationTwo.isUpper);
     ASSERT_EQ(-4.25, leaves[7].equationTwo.equation[0]);
     ASSERT_EQ(0, leaves[7].equationTwo.dependencyIndex);
-
-    ASSERT_EQ(0, leaves[4].equationOne.equation[0]);
-    ASSERT_EQ(true, leaves[4].equationOne.isUpper);
 }
 
 TEST(LinearBoundsTree, DomainTest) {
@@ -144,4 +141,10 @@ TEST(LinearBoundsTree, SingleDomainTest) {
     std::vector<LinearDomain> domains = tree.getDomains();
     ASSERT_EQ(1, domains.size());
     ASSERT_EQ(true, domains[0].equals({{{0,0}, {3,0}}}));
+}
+
+TEST(LinearBoundsTree, Error5Dimensions) {
+    LinearEquation equation({6,-4,-3,-2,0}, false, 3);
+    LinearBoundsTree tree({{{0,0,0,0,0},{3,0,0,0,0}}, {{0,0,0,0,0},{3,-1,0,0,0}}, {{0,0,0,0,0},{3,-1,-1,0,0}}, {{0,0,0,0,0},{3,-1,-1,-1,0}}}, equation);
+    std::vector<LinearDomain> dms = tree.getDomains();
 }
