@@ -46,3 +46,8 @@ TEST(LinearEquation, FourDimension) {
     ASSERT_EQ(false, l.isUpper);
 }
 
+TEST(LinearEquation, AlwaysTrueNoDep) {
+    LinearEquation l({0,0,0}, {10,0,0});
+    ASSERT_EQ(true, l.alwaysTrue);
+}
+
