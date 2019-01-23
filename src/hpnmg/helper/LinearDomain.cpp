@@ -82,10 +82,10 @@ namespace hpnmg {
             if (lin.localDomain.size() > 1) {
                 int i = 1;
                 for (; i < this->localDomain.size(); i++) {
-                    if (lin.localDomain[i].first.size() > 0) {
+                    if (lin.localDomain.size() > i && lin.localDomain[i].first.size() > 0) {
                         this->localDomain[i].first = lin.localDomain[i].first;
                     }
-                    if (lin.localDomain[i].second.size() > 0) {
+                    if (lin.localDomain.size() > i && lin.localDomain[i].second.size() > 0) {
                         this->localDomain[i].second = lin.localDomain[i].second;
                     }
                 }
