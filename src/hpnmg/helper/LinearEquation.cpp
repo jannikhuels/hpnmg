@@ -22,13 +22,18 @@ namespace hpnmg {
     LinearEquation::LinearEquation(LinEq left, LinEq right) {
         int depIndex = Computation::getDependencyIndex(left, right);
         if (depIndex < 0) {
-            alwaysTrue = left[0] <= right[0];
+            alwaysTrue = true;
             dependencyIndex = depIndex;
         } else {
             isUpper = Computation::isUpper(left, right, depIndex);
             equation = Computation::computeUnequationCut(left, right, depIndex);
             dependencyIndex = depIndex - 1;
-            alwaysTrue = false;
+            if (depIndex == 0) {
+                alwaysTrue = left[0] <= right[0];
+            } else {
+                alwaysTrue = false;
+            }
+
         }
     }
 
