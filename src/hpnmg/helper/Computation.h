@@ -2,6 +2,9 @@
 #define HPNMG_COMPUTATION_H
 
 #include <vector>
+#include "util/linearOptimization/Optimizer.h"
+
+using namespace hypro;
 
 namespace hpnmg {
     class Computation {
@@ -92,6 +95,11 @@ namespace hpnmg {
         static bool createValidIntervals(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound, bool upper, std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> &recursionBound);
 
         static std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> setBoundWithSimpleSplit(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, int boundIndex, std::vector<double> newBound, bool upper = false);
+
+        static bool setBoundRecursively(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &boundaries, int index, int boundIndex, std::vector<double> newBound, bool upper = false);
+
+        static bool setBoundRecursivelyWithRepair(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &boundaries, int index, int boundIndex, std::vector<double> newBound, bool upper = false);
+
     };
 }
 

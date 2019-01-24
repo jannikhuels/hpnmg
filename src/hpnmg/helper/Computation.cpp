@@ -254,53 +254,100 @@ namespace hpnmg {
         if (maxIndex == -1) {
             maxIndex = interval.size() - 1;
         }
-        for(int boundIndex=maxIndex; boundIndex >= 0; boundIndex--) {
-            /*if ((interval[0].second.first[0] >= interval[0].second.second[0]) || interval[0].second.second[0] < 0) {
-                return {};
-            }*/
-            if (interval.size() == 0) {
-                return interval;
-            }
-            if (interval[0].second.first[0] < 0) {
-                interval[0].second.first[0] = 0;
-            }
-
-            std::vector<double> lowerBound = interval[boundIndex].second.first;
-            std::vector<double> upperBound = interval[boundIndex].second.second;
-            int dependencyIndex = Computation::getDependencyIndex(lowerBound, upperBound);
-
-            if (dependencyIndex > 0) {
-                std::vector<double> newBound = Computation::computeUnequationCut(lowerBound, upperBound, dependencyIndex);
-                bool upper = Computation::isUpper(lowerBound, upperBound, dependencyIndex);
-                int repairBoundIndex = dependencyIndex-1;
-
-                if (upper) {
-                    interval[repairBoundIndex].second.second = newBound;
-                } else {
-                    interval[repairBoundIndex].second.first = newBound;
+        for (int currentIndex = 1; currentIndex <= maxIndex; currentIndex++) {
+            std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> copyOfInterval = interval;
+            int boundIndex = currentIndex;
+            for (;boundIndex > 0; boundIndex--) {
+                /*if ((interval[0].second.first[0] >= interval[0].second.second[0]) || interval[0].second.second[0] < 0) {
+                    return {};
+                }*/
+                if (interval.size() == 0) {
+                    return interval;
+                }
+                if (interval[0].second.first[0] < 0) {
+                    interval[0].second.first[0] = 0;
                 }
 
-                if (repairBoundIndex > 0) {
-                    int depIndexLower = Computation::getDependencyIndex(interval[repairBoundIndex-1].second.first, newBound);
-                    if (depIndexLower > 0) {
-                        upper = Computation::isUpper(interval[repairBoundIndex-1].second.first, newBound, depIndexLower);
-                        newBound = Computation::computeUnequationCut(interval[repairBoundIndex-1].second.first, newBound, depIndexLower);
-                        interval = Computation::setBoundNoSplit(interval, depIndexLower-1, newBound, upper);
-                    }
+                std::vector<double> lowerBound = interval[boundIndex].second.first;
+                std::vector<double> upperBound = interval[boundIndex].second.second;
+                int dependencyIndex = Computation::getDependencyIndex(lowerBound, upperBound);
 
-                    if (interval.size() > 0) {
-                        int depIndexUpper = Computation::getDependencyIndex(newBound, interval[repairBoundIndex-1].second.second);
-                        if (depIndexUpper > 0) {
-                            upper = Computation::isUpper(newBound, interval[repairBoundIndex-1].second.second, depIndexUpper);
-                            newBound = Computation::computeUnequationCut(newBound, interval[repairBoundIndex-1].second.second, depIndexUpper);
-                            interval = Computation::setBoundNoSplit(interval, depIndexUpper-1, newBound, upper);
+                if (dependencyIndex > 0) {
+                    std::vector<double> newBound = Computation::computeUnequationCut(lowerBound, upperBound,
+                                                                                     dependencyIndex);
+                    bool upper = Computation::isUpper(lowerBound, upperBound, dependencyIndex);
+                    int repairBoundIndex = dependencyIndex - 1;
+
+                    if (upper) {
+                        if (repairBoundIndex == 0) {
+                            if (newBound[0] <= interval[0].second.second[0] &&
+                                newBound[0] >= interval[0].second.first[0]) {
+                                interval[repairBoundIndex].second.second = newBound;
+                            } else if (newBound[0] < interval[0].second.first[0]) {
+                                return {};
+                            } else {
+                                interval = copyOfInterval;
+                            }
+                        } else {
+                            interval = setBoundNoSplit(interval, repairBoundIndex, newBound, upper);
+                            if (interval.size() > 0) {
+                                if (interval[0].second.first[0] < copyOfInterval[0].second.first[0]) {
+                                    interval[0].second.first[0] = copyOfInterval[0].second.first[0];
+                                }
+                                if (interval[0].second.second[0] > copyOfInterval[0].second.second[0]) {
+                                    interval[0].second.second[0] = copyOfInterval[0].second.second[0];
+                                }
+                                copyOfInterval = interval;
+                            }
+
+                        }
+
+                    } else {
+                        if (repairBoundIndex == 0) {
+                            if (newBound[0] >= interval[0].second.first[0] &&
+                                newBound[0] <= interval[0].second.second[0]) {
+                                interval[repairBoundIndex].second.first = newBound;
+                            } else if (newBound[0] > interval[0].second.second[0]) {
+                                return {};
+                            } else {
+                                interval = copyOfInterval;
+                            }
+                        } else {
+                            interval = setBoundNoSplit(interval, repairBoundIndex, newBound, upper);
+                            if (interval.size() > 0) {
+                                if (interval[0].second.first[0] < copyOfInterval[0].second.first[0]) {
+                                    interval[0].second.first[0] = copyOfInterval[0].second.first[0];
+                                }
+                                if (interval[0].second.second[0] > copyOfInterval[0].second.second[0]) {
+                                    interval[0].second.second[0] = copyOfInterval[0].second.second[0];
+                                }
+                                copyOfInterval = interval;
+                            }
+
                         }
                     }
-                }
-            }
-            else {
-                if (boundIndex > 0) {
-                    //return {};
+
+                    /*if (repairBoundIndex > 0) {
+                        int depIndexLower = Computation::getDependencyIndex(interval[repairBoundIndex-1].second.first, newBound);
+                        if (depIndexLower > 0) {
+                            upper = Computation::isUpper(interval[repairBoundIndex-1].second.first, newBound, depIndexLower);
+                            newBound = Computation::computeUnequationCut(interval[repairBoundIndex-1].second.first, newBound, depIndexLower);
+                            interval = Computation::setBoundNoSplit(interval, depIndexLower-1, newBound, upper);
+                        }
+
+                        if (interval.size() > 0) {
+                            int depIndexUpper = Computation::getDependencyIndex(newBound, interval[repairBoundIndex-1].second.second);
+                            if (depIndexUpper > 0) {
+                                upper = Computation::isUpper(newBound, interval[repairBoundIndex-1].second.second, depIndexUpper);
+                                newBound = Computation::computeUnequationCut(newBound, interval[repairBoundIndex-1].second.second, depIndexUpper);
+                                interval = Computation::setBoundNoSplit(interval, depIndexUpper-1, newBound, upper);
+                            }
+                        }
+                    }*/
+                } else {
+                    if (boundIndex > 0) {
+                        //return {};
+                    }
                 }
             }
         }
@@ -337,19 +384,30 @@ namespace hpnmg {
             if (upper) {
                 formerBound = boundaries[boundIndex].second.second;
                 if (boundIndex == 0) {
-                    if (newBound[0] > formerBound[0]) {
+                    if (newBound[0] > formerBound[0] || (newBound[0] >= boundaries[0].second.first[0] && newBound[0] <= formerBound[0])) {
+                        boundaries[0].second.second = newBound;
+                        return boundaries;
+                    }
+                    return {};
+
+                    /*if (newBound[0] > formerBound[0]) {
                         boundIndex = -1;
                         return {};
-                    }
+                    }*/
                 }
                 boundaries[boundIndex].second.second = newBound;
             } else {
                 formerBound = boundaries[boundIndex].second.first;
                 if (boundIndex == 0) {
-                    if (newBound[0] < formerBound[0]) {
+                    if (newBound[0] < formerBound[0] || (newBound[0] <= boundaries[0].second.second[0] && newBound[0] >= formerBound[0])) {
+                        boundaries[0].second.first = newBound;
+                        return boundaries;
+                    }
+                    return {};
+                    /*if (newBound[0] < formerBound[0]) {
                         boundIndex = -1;
                         return {};
-                    }
+                    }*/
                 }
                 boundaries[boundIndex].second.first = newBound;
             }
@@ -642,11 +700,116 @@ namespace hpnmg {
     }
 
     bool Computation::isUpper(std::vector<double> first, std::vector<double> second, int index) {
-        if (first[index] == 0 && first[0] == 0 && second[0] == 0) {
+        if (first[index] == 0) {
+            if (first[index] == 0) {
+                return second[index] < 0 ? true : false;
+            }
             return false;
         } else {
             return first[index] - second[index] > 0 ? true : false;
         }
+    }
+
+    bool Computation::setBoundRecursivelyWithRepair(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &boundaries, int index, int boundIndex, std::vector<double> newBound, bool upper) {
+        bool ret = setBoundRecursively(boundaries, index, boundIndex, newBound, upper);
+        boundaries = repairIntervals(boundaries, boundIndex);
+        return boundaries.size() > 0 && ret;
+    }
+
+    bool Computation::setBoundRecursively(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &boundaries, int index, int boundIndex, std::vector<double> newBound, bool upper) {
+        //std::cout << std::endl << "Set Bound [" << newBound << "] at boundIndex " << boundIndex << " for index " << index << " is upper " << upper << std::endl;
+        if (boundaries.size() <= 0) {
+            return false;
+        }
+        if (boundIndex == 0) {
+            if (upper) {
+                if (newBound[0] <= boundaries[index][0].second.second[0] && newBound[0] >= boundaries[index][0].second.first[0]) {
+                    boundaries[index][0].second.second = newBound;
+                    return true;
+                } else if (newBound[0] >= boundaries[index][0].second.second[0]) {
+                    return true;
+                }
+                return false;
+            }
+            if (!upper){
+                if (newBound[0] >= boundaries[index][0].second.first[0] && newBound[0] <= boundaries[index][0].second.second[0]) {
+                    boundaries[index][0].second.first = newBound;
+                    return true;
+                } else if (newBound[0] <= boundaries[index][0].second.first[0]) {
+                    return true;
+                }
+                return false;
+            }
+        } else {
+            bool res = false;
+            if (upper) {
+                std::vector<double> formerBound = boundaries[index][boundIndex].second.second;
+                int depIndex = Computation::getDependencyIndex(boundaries[index][boundIndex].second.second, newBound);
+                if(depIndex >= 0) {
+                    int newIndex = boundaries.size();
+                    boundaries.push_back(boundaries[index]);
+                    boundaries[index][boundIndex].second.second = newBound;
+                    //boundaries[index] = Computation::repairInterval(boundaries[index], boundIndex);
+
+                    std::vector<double> constraintBound = Computation::computeUnequationCut(newBound, formerBound, depIndex);
+                    upper = Computation::isUpper(newBound, formerBound, depIndex);
+                    if (boundaries[index].size() > 0 && Computation::setBoundRecursively(boundaries, index, depIndex-1, constraintBound, upper)) {
+                        res = true;
+                    } else {
+                        boundaries.erase(boundaries.begin() + index);
+                        newIndex--;
+                    }
+                    upper = Computation::isUpper(formerBound, newBound, depIndex);
+                    constraintBound = Computation::computeUnequationCut(formerBound, newBound, depIndex);
+                    if (!Computation::setBoundRecursively(boundaries, newIndex, depIndex-1, constraintBound, upper)) {
+                        res = res || false;
+                        if (boundaries.size() > 0 && boundaries[newIndex].size() > 0) {
+                            boundaries.erase(boundaries.begin() + newIndex);
+                        }
+                    }
+
+                } else {
+                    if (newBound[0] == formerBound[0]) {
+                        return true;
+                    }
+                    return res;
+                }
+            } else {
+                std::vector<double> formerBound = boundaries[index][boundIndex].second.first;
+                int depIndex = Computation::getDependencyIndex(boundaries[index][boundIndex].second.first, newBound);
+                if(depIndex >= 0) {
+                    int newIndex = boundaries.size();
+                    boundaries.push_back(boundaries[index]);
+                    boundaries[index][boundIndex].second.first = newBound;
+                    //boundaries[index] = Computation::repairInterval(boundaries[index], boundIndex);
+
+                    std::vector<double> constraintBound = Computation::computeUnequationCut(formerBound, newBound, depIndex);
+                    upper = Computation::isUpper(formerBound, newBound, depIndex);
+                    if (boundaries[index].size() > 0 && Computation::setBoundRecursively(boundaries, index, depIndex-1, constraintBound, upper)) {
+                        res = true;
+                    }
+                    else {
+                        boundaries.erase(boundaries.begin() + index);
+                        newIndex--;
+                    }
+                    upper = Computation::isUpper(newBound, formerBound, depIndex);
+                    constraintBound = Computation::computeUnequationCut(newBound, formerBound, depIndex);
+                    if (!Computation::setBoundRecursively(boundaries, newIndex, depIndex-1, constraintBound, upper)) {
+                        res = res || false;
+                        if (boundaries.size() > 0 && boundaries[newIndex].size() > 0) {
+                            boundaries.erase(boundaries.begin() + newIndex);
+                        }
+                    }
+                } else {
+                    if (newBound[0] == formerBound[0]) {
+                        return true;
+                    }
+                    return res;
+                }
+            }
+            return res;
+        }
+        return false;
     }
 
 
