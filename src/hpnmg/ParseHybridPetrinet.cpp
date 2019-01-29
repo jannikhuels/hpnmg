@@ -7,7 +7,7 @@ namespace hpnmg {
     ParseHybridPetrinet::~ParseHybridPetrinet() = default;
 
     shared_ptr<ParametricLocationTree>
-    ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime) {
+    ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, int mode) {
         // TODO: all floats to double?
         discretePlaceIDs = {};
         continuousPlaceIDs = {};
@@ -45,7 +45,7 @@ namespace hpnmg {
         locationQueue.push_back(parametriclocationTree->getRootNode());
 
         while (!locationQueue.empty()) {
-            processNode(locationQueue[0], hybridPetrinet, maxTime, 1);
+            processNode(locationQueue[0], hybridPetrinet, maxTime, mode);
             locationQueue.erase(locationQueue.begin());
         }
 
@@ -756,8 +756,9 @@ namespace hpnmg {
                 if (arc->getIsInhibitor()) {
                     //double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
                     double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
+                    double dependenciesSum = 0.0;
                     //special case for inhibitor arc and weight = 0 to enable inhibitor condition 'level > 0' (because 'level >= 0' does not make sense as it is always true)
-                    if (arc->weight == 0.0 && maxLevel > 0.0)
+                    if (arc->weight == 0.0 && (maxLevel > 0.0 || level[1]> 0.0 || level[2] > 0.0))
                         return false;
                     if (arc->weight > 0 && maxLevel >= arc->weight) //enabled if maxLevel < weight
                         return false;

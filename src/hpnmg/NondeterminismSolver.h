@@ -21,6 +21,7 @@ namespace hpnmg {
         vector<vector<ParametricLocationTree::Node>> orderedCandidates;
         vector<pair<string, map<string, float>>>  distributions;
         double maxTime;
+        double prob;
    	} nondetParams;
 
 

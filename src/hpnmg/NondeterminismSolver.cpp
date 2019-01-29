@@ -156,16 +156,17 @@ namespace hpnmg {
 
 //TODO Hard gecodete Variablen richtig übergeben bzw. auslesen
 int numberOfVariables = 2*2;
-char algorithm = 3;
-int functioncalls=1000;//50000
+char algorithm = 0;
+int functioncalls=10000;//50000
 int evaluations = 128;
 double error = 0.0;
 
 
 
-    double prob = 0;
+    double prob = 0.0;
     int counter = 0;
-    vector<double> conditions;
+    int counterConstraints = 2;
+   // vector<double> conditions;
 
     nondetParams* params = (nondetParams *)ptr;
 
@@ -180,79 +181,137 @@ double error = 0.0;
            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
 
            //TODO multiple interval sets
-           //for (std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals : location.getIntegrationIntervals()) {
-           std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals = location.getIntegrationIntervals()[0];
+           int numberOfIntervals = location.getIntegrationIntervals().size();
 
-           //for all random variables
-           //TODO only for fired RV with corresponding continuous place -> how to find out?
-           int i = 0;
-           //for (int i = 0; i < currentIntegrationIntervals.size(); i++) {
 
-                   conditions.push_back(currentIntegrationIntervals[i].second.first[0]);
-                   fi[counter + 2] =conditions[counter] - x[counter]; //inequality <=0
-                   currentIntegrationIntervals[i].second.first[0] = x[counter];
-                   counter++;
+           if (numberOfIntervals == 1) {
+               std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals = location.getIntegrationIntervals()[0];
 
-                   conditions.push_back(currentIntegrationIntervals[i].second.second[0]);
-                   fi[counter + 2] = x[counter] - conditions[counter]; //inequality <=0
-                   currentIntegrationIntervals[i].second.second[0] = x[counter];
-                   counter++;
+               //for all random variables
+               //TODO only for fired RV with corresponding continuous place -> how to find out?
+               int i = 0;
+               //for (int i = 0; i < currentIntegrationIntervals.size(); i++) {
 
-                   //TODO müssen Abhängigkeiten von anderen Variablen hier auf Null gesetzt werden? Beim Prüfen der Constraints zu berücksichtigen!
+             //  conditions.push_back(currentIntegrationIntervals[i].second.first[0]);
+               fi[counterConstraints] = currentIntegrationIntervals[i].second.first[0] - x[counter]; //inequality <=0
+               counterConstraints++;
+               currentIntegrationIntervals[i].second.first[0] = x[counter];
+               counter++;
+
+             //  conditions.push_back(currentIntegrationIntervals[i].second.second[0]);
+               fi[counterConstraints] = x[counter] - currentIntegrationIntervals[i].second.second[0]; //inequality <=0
+               counterConstraints++;
+               currentIntegrationIntervals[i].second.second[0] = x[counter];
+               counter++;
+
+
+               //TODO Sonderfall wenn Abhängigkeiten von anderen RV bestehen,
 //               }
                integrationIntervals.push_back(currentIntegrationIntervals);
-//           }
-           location.overwriteIntegrationIntervals(integrationIntervals);
+               location.overwriteIntegrationIntervals(integrationIntervals);
+
+               //x[0] <= x[1]
+               fi[counter + 2] = x[counter-2] - x[counter -1]; //inequality <=0
+               counterConstraints++;
+
+           } else if (numberOfIntervals == 2) {
+
+               std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals0 = location.getIntegrationIntervals()[0];
+               std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals1 = location.getIntegrationIntervals()[1];
+
+               //for all random variables
+               //TODO only for fired RV with corresponding continuous place -> how to find out?
+               int i = 0;
+               //for (int i = 0; i < currentIntegrationIntervals.size(); i++) {
+
+                   if (currentIntegrationIntervals0[i].second.first[0] <= currentIntegrationIntervals1[i].second.first[0]){
+
+                       //conditions.push_back(currentIntegrationIntervals0[i].second.first[0]);
+                       fi[counterConstraints] = currentIntegrationIntervals0[i].second.first[0] - x[counter]; //inequality <=0
+                       counterConstraints++;
+                       fi[counterConstraints] = x[counter] - currentIntegrationIntervals0[i].second.second[0]; //inequality <=0
+                       counterConstraints++;
+                       currentIntegrationIntervals0[i].second.first[0] = x[counter];
+                       counter++;
+
+                       //conditions.push_back(currentIntegrationIntervals1[i].second.second[0]);
+                       fi[counterConstraints] = currentIntegrationIntervals1[i].second.first[0] - x[counter]; //inequality <=0
+                       counterConstraints++;
+                       fi[counterConstraints] = x[counter] - currentIntegrationIntervals1[i].second.second[0]; //inequality <=0
+                       counterConstraints++;
+                       currentIntegrationIntervals1[i].second.second[0] = x[counter];
+                       counter++;
+
+                   } else {
+
+                       //conditions.push_back(currentIntegrationIntervals1[i].second.first[0]);
+                       fi[counterConstraints] = currentIntegrationIntervals1[i].second.first[0] - x[counter]; //inequality <=0
+                       counterConstraints++;
+                       fi[counterConstraints] = x[counter] - currentIntegrationIntervals1[i].second.second[0]; //inequality <=0
+                       counterConstraints++;
+                       currentIntegrationIntervals1[i].second.first[0] = x[counter];
+                       counter++;
+
+                      // conditions.push_back(currentIntegrationIntervals0[i].second.second[0]);
+                       fi[counterConstraints] = currentIntegrationIntervals0[i].second.first[0] - x[counter]; //inequality <=0
+                       counterConstraints++;
+                       fi[counterConstraints] = x[counter] - currentIntegrationIntervals0[i].second.second[0]; //inequality <=0
+                       counterConstraints++;
+                       currentIntegrationIntervals0[i].second.second[0] = x[counter];
+                       counter++;
+                   }
+
+
+               //TODO Sonderfall wenn Abhängigkeiten von anderen RV bestehen,
+//               }
+               integrationIntervals.push_back(currentIntegrationIntervals0);
+               integrationIntervals.push_back(currentIntegrationIntervals1);
+               location.overwriteIntegrationIntervals(integrationIntervals);
+
+           } else {
+            //TODO more than 2 intervals
+           }
 
 
 
 
         //map integration intervals to variables
 
-//        auto calculator = new ProbabilityCalculator();
-//        if (algorithm == 0)
-//            //Gauss Legendre
-//            prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(location, (*params).distributions, (*params).maxTime, evaluations);
-//        else
-//            //Monte Carlo
-//            prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(location, (*params).distributions, (*params).maxTime, algorithm, functioncalls, error);
-//
-//
-
-//TEST
-
-
-
+        auto calculator = new ProbabilityCalculator();
+        if (algorithm == 0)
+            //Gauss Legendre
+            prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(location, (*params).distributions, (*params).maxTime, evaluations);
+        else
+            //Monte Carlo
+            prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(location, (*params).distributions, (*params).maxTime, algorithm, functioncalls, error);
         }
 
 
 
     }
 
-    fi[0] = (-1.0)*((x[1]-x[0]) + (x[3]-x[2]));
 
+    fi[0] = (-1.0)*prob;//((x[1]-x[0]) + (x[3]-x[2]));
 
+    (*params).prob = prob;
 
-    //Constraints
-
-    //x[0] <= x[1]
-    fi[counter + 2] = x[0] - x[1]; //inequality <=0
-    counter++;
-
-    //x[2] <= x[3]
-    fi[counter + 2] = x[2] - x[3]; //inequality <=0
-    counter++;
 
     //x[1] = x[2]  OR x[0] = x[3]
-   fi[1] = (x[1] - x[2])*(x[0] - x[3]); //equality == 0
-//fi[1] = 0.0;
+    fi[1] = (x[1] - x[2])*(x[0] - x[3]); //equality == 0
+    //fi[1] = 0.0;
+
+
+
+   // if (abs(fi[1]) < 0.0001 && fi[2] <= 0.0 && fi[3] <= 0.0 && fi[4] <= 0.0 && fi[5] <= 0.0 && fi[6] <= 0.0 && fi[7] <= 0.0 && fi[8] <= 0.0)
+   //     cout << "x:" << x[0] <<", " << x[1] <<", " << x[2] <<", " << x[3] << " --- Prob: " << prob << endl;
+
+
 
 
 }
 
 
     double NondeterminismSolver::recursivelySolveNondeterminismProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum){
-
 
 
 
@@ -272,6 +331,7 @@ double error = 0.0;
            nondetParams params;
 
            if (conflictSet.size() > 0) {
+
             for (ParametricLocationTree::Node conflictNode : conflictSet){
 
                 vector<ParametricLocationTree::Node> currentCandidates;
@@ -287,8 +347,8 @@ double error = 0.0;
 
            real_1d_array x0 = "[0,0,0,0]";
            real_1d_array s = "[1,1,1,1]";
-           double epsx = 00000.1;//0.000001;
-           ae_int_t maxits = 0;//0; for unlimited
+           double epsx = 0.001;//0.000001;
+           ae_int_t maxits = 10;//0; for unlimited
            minnlcstate state; //state object
            minnlcreport rep;
            real_1d_array x1;
@@ -296,17 +356,8 @@ double error = 0.0;
            //
            // This variable contains differentiation step
            //
-           double diffstep = 1.0e-6;
+           double diffstep = 0.01;
 
-
-           // Create optimizer object, choose AUL algorithm and tune its settings:
-           // * rho=1000       penalty coefficient
-           // * outerits=5     number of outer iterations to tune Lagrange coefficients
-           // * epsx=0.000001  stopping condition for inner iterations
-           // * s=[1,1]        all variables have unit scale
-           // * exact low-rank preconditioner is used, updated after each 10 iterations
-           // * upper limit on step length is specified (to avoid probing locations where exp() is large)
-           //
            minnlccreatef(4, x0, diffstep, state); //create, use f at the end for automatic gradient calculation
            minnlcsetalgoslp(state); //activate
            minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
@@ -329,18 +380,19 @@ double error = 0.0;
                //       can easily find it in documentation on minnlcsetbc() and
                //       minnlcsetlc() functions.
                //
-               minnlcsetnlc(state, 1, 6);
+               minnlcsetnlc(state, 1, 7);
 
                //
                // Optimize and test results.    //
 
                //
 
-               alglib::minnlcoptimize(state, optimizationFunction, NULL, &params); //start optimizer
+               minnlcoptimize(state, optimizationFunction, NULL, &params); //start optimizer
                minnlcresults(state, x1, rep); //get results
                printf("%s\n", x1.tostring(5).c_str()); // EXPECTED: [-0.70710,-0.70710,0.49306]
                //return 0;
-
+               cout << rep.terminationtype << endl;
+               cout << params.prob << endl;
 
 
 

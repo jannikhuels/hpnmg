@@ -29,7 +29,7 @@ namespace hpnmg {
         // @param maxTime           maximal time for resulting parametric location tree
         // @return                  resulting parametric location tree
         shared_ptr<ParametricLocationTree>
-        parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
+        parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, int mode);
 
         // Generates the root parametric location
         //

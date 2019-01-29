@@ -465,9 +465,9 @@ namespace hpnmg {
     }
 
 
-    void ParametricLocation::overwriteIntegrationIntervals(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals){
+    void ParametricLocation::overwriteIntegrationIntervals(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals) {
         this->integrationIntervals = integrationIntervals;
-
+    }
 
     /*
      * Create the integration intervals for this location, ordered by the firings, i.e. starting with the first firing.
