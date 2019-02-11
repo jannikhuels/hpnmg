@@ -50,7 +50,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         for (int i = 0;i < nodes.size(); i++) {
             cout << "----" << endl;
             cout << "Node: " << nodes[i].getNodeID() << endl;
-            cout << "Normed: " << nodes[i].getParametricLocation().getGeneralDependenciesNormed() << " - ";
+            cout << "Normed: " << nodes[i].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed() << " - ";
 
             if (algorithm == 0)
                 //Gauss Legendre

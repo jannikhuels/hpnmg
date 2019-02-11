@@ -293,15 +293,15 @@ TEST(ParametricLocationTreeXML, Normed) {
 
     // GeneralDependencies
     ASSERT_EQ(candidates.size(), 3);
-    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
-    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
-    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed()[1], 0);
-    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
-    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
-    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed()[1], 1);
-    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
-    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
-    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[1], 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[1], 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[1].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[1], 1);
+    ASSERT_EQ(candidates[2].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[2].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[2].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[1], 2);
 
 //    // Integration Intervals
 //    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals().size(), 1);

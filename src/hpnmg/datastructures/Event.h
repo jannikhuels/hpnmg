@@ -18,6 +18,7 @@ namespace hpnmg {
     private:
         EventType type;
         std::vector<double> generalDependencies; // factors of s_1 ... s_n
+        std::vector<double> generalDependenciesNormed;
         RateDependencies rateDependencies = {0,0}; // factor + exponent of r
         double time; // scalar
 
@@ -32,6 +33,9 @@ namespace hpnmg {
 
         std::vector<double> getGeneralDependencies() const;
         void setGeneralDependencies(const std::vector<double> generalDependencies);
+
+        std::vector<double> getGeneralDependenciesNormed() const;
+        void setGeneralDependenciesNormed(const std::vector<double> generalDependencies);
 
         RateDependencies getRateDependencies() const;
         void setRateDependencies(const RateDependencies rateDependencies);
