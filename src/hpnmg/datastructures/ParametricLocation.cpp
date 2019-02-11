@@ -58,7 +58,6 @@ namespace hpnmg {
             generalTransitionFired(parametricLocation.generalTransitionFired),
             generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
             sourceEvent(parametricLocation.sourceEvent),
-            generalDependenciesNormed(parametricLocation.generalDependenciesNormed),
             integrationIntervals(parametricLocation.integrationIntervals)
     {
 
@@ -125,18 +124,6 @@ namespace hpnmg {
 
     void ParametricLocation::setGeneralTransitionsFired(std::vector<int> generalTransitionsFired) {
         this->generalTransitionFired = generalTransitionsFired; }
-
-    vector<double> ParametricLocation::getGeneralDependenciesNormed() {
-        //return this->sourceEvent.getGeneralDependenciesNormed();
-        return this->generalDependenciesNormed;
-    }
-
-    void ParametricLocation::setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed) {
-        //ParametricLocation::generalDependenciesNormed = generalDependenciesNormed;
-        //this->sourceEvent.setGeneralDependenciesNormed(generalDependenciesNormed);
-        this->generalDependenciesNormed = generalDependenciesNormed;
-    }
-
 
     const vector<bool> &ParametricLocation::getGeneralTransitionsEnabled() const {
         return generalTransitionsEnabled;

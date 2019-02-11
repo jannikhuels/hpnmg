@@ -113,7 +113,9 @@ namespace hpnmg {
             startPositionForTransition += possibleFirings;
         }
         assert(startPositionForTransition == dimension);
-        loc.setGeneralDependenciesNormed(generalDependenciesNormed);
+
+        event.setGeneralDependenciesNormed(generalDependenciesNormed);
+        loc.setSourceEvent(event);
         startNode.setParametricLocation(loc);
 
         std::pair <std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator, std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator> ret;
