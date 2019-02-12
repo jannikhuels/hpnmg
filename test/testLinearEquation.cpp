@@ -58,3 +58,8 @@ TEST(LinearEquation, OneDep) {
     ASSERT_EQ(8,equation.equation[0]);
 }
 
+TEST(LinearEquation, AlwaysFalse) {
+    LinearEquation equation({8,0,0,0}, {7,0,0,0});
+    ASSERT_EQ(true, equation.alwaysFalse());
+}
+

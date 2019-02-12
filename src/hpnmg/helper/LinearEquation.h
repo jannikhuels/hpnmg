@@ -23,8 +23,7 @@ namespace hpnmg {
 
         bool isDecidable();
 
-
-
+        bool alwaysFalse();
     };
 }
 
