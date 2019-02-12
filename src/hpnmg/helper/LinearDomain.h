@@ -21,7 +21,6 @@ namespace hpnmg {
         bool shouldSet(LinearEquation lin);
         std::pair<bool,bool> shouldSet(LinearBound bound);
         bool isTrue(LinearEquation lin);
-        void setEquation(LinearEquation lin);
         void init(LinearEquation init, Domain comparison);
 
     public:
@@ -29,11 +28,14 @@ namespace hpnmg {
         LinearDomain(LinearEquation initOne, LinearEquation initTwo, Domain comparison);
         LinearDomain(Domain lin);
         bool isValid();
+        bool isEmpty();
         void addEquation(LinearEquation linEq);
         Domain getDomain();
         bool intersect(LinearDomain lin);
         void fill(Domain lin);
         bool equals(Domain comparison);
+        void setEquation(LinearEquation lin);
+        void setSingleEquation(LinearEquation lin);
 
         DomainWithIndex toDomainWithIndex(DomainWithIndex dwi);
 

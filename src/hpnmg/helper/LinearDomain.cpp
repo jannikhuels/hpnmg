@@ -135,6 +135,18 @@ namespace hpnmg {
         }
     }
 
+    void LinearDomain::setSingleEquation(hpnmg::LinearEquation lin) {
+        if (this->localDomain.size() > lin.dependencyIndex) {
+            if (lin.isUpper) {
+                this->localDomain[lin.dependencyIndex].second = lin.equation;
+                this->localDomain[lin.dependencyIndex].first = {};
+            } else {
+                this->localDomain[lin.dependencyIndex].first = lin.equation;
+                this->localDomain[lin.dependencyIndex].second = {};
+            }
+        }
+    }
+
     Domain LinearDomain::getDomain() {
         return this->localDomain;
     }
@@ -195,5 +207,26 @@ namespace hpnmg {
             d.push_back(b.second);
         }
         return d;
+    }
+
+    bool equalBoundItem(LinEq first, LinEq second) {
+        if (first.size() != second.size()) {
+            return false;
+        }
+        for (int i = 0; i < first.size(); i++) {
+            if (first[i] != second[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool LinearDomain::isEmpty() {
+        for (int i = 0; i < this->localDomain.size(); i++) {
+            if (equalBoundItem(this->localDomain[i].first, this->localDomain[i].second)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
