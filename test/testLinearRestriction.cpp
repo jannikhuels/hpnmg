@@ -39,3 +39,8 @@ TEST(LinearRestrictionTest, TwoRestrictionsFourDimension) {
     ASSERT_EQ(true, lr.solutionOne.isUpper);
     ASSERT_EQ(false, lr.solutionTwo.isUpper);
 }
+
+TEST(LinearRestrictionTest, InvalidRestriction) {
+    LinearRestriction lr = LinearRestriction({0,0,0,0}, {8,-1,0,0}, {16/3,-1,0,0});
+    ASSERT_EQ(true, lr.alwaysFalse());
+}

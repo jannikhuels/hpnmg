@@ -17,6 +17,8 @@ namespace hpnmg {
         LinearRestriction();
         LinearRestriction(LinEq left, LinEq center, LinEq right);
         LinearRestriction(const LinearRestriction &linearRestriction);
+
+        bool alwaysFalse();
     };
 }
 
