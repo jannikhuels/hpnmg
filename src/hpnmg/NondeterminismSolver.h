@@ -18,10 +18,15 @@
 namespace hpnmg {
 
     typedef struct {
-        vector<vector<ParametricLocationTree::Node>> orderedCandidates;
+        vector<ParametricLocationTree::Node> candidatesLeft;
+        vector<ParametricLocationTree::Node> candidatesRight;
         vector<pair<string, map<string, float>>>  distributions;
         double maxTime;
         double prob;
+        double result;
+        int functioncalls;
+        char algorithm;
+        int evaluations;
    	} nondetParams;
 
 
@@ -37,11 +42,11 @@ namespace hpnmg {
 
         vector<ParametricLocationTree::Node> determineConflictSet(std::vector<ParametricLocationTree::Node> &children);
 
-        bool isCandidate(ParametricLocationTree::Node &node, std::vector<ParametricLocationTree::Node> candidates);
+        bool isCandidateForProperty(ParametricLocationTree::Node &node, std::vector<ParametricLocationTree::Node> candidates);
 
-        double recursivelySolveNondeterminismNonProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum);
+        double recursivelySolveNondeterminismNonProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error);
 
-        double recursivelySolveNondeterminismProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum);
+        double recursivelySolveNondeterminismProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error);
 
         void recursivelyGetCandidates(vector<ParametricLocationTree::Node> &list, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates);
 
@@ -50,11 +55,11 @@ namespace hpnmg {
 
         NondeterminismSolver();
 
-        double solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic);
+        double solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic, double &error);
 
         vector<vector<int>> getBestChildIds();
 
     };
 
-    void optimizationFunction(const alglib::real_1d_array &x, alglib::real_1d_array &fi, void *ptr);
+   void optimizationFunction(const alglib::real_1d_array &x, alglib::real_1d_array &fi, void *ptr);
 }

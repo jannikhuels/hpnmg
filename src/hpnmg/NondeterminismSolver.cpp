@@ -9,7 +9,7 @@ namespace hpnmg {
     NondeterminismSolver::NondeterminismSolver() {}
 
 
-    //TODO diese Funktion muss später durch Janniks Model Checking sinnvoll ersetzt werden
+    //TODO diese Funktion muss später durch Janniks / Henners Model Checking sinnvoll ersetzt werden, vermutlich werden dann noch Intervalle eingeschränkt
     bool NondeterminismSolver::fulfillsProperty(ParametricLocationTree::Node node){
 
     std::vector<int> discreteMarking = node.getParametricLocation().getDiscreteMarking();
@@ -47,7 +47,8 @@ namespace hpnmg {
 
 
 
-    bool NondeterminismSolver::isCandidate(ParametricLocationTree::Node &node, std::vector<ParametricLocationTree::Node> candidates){
+    bool NondeterminismSolver::isCandidateForProperty(ParametricLocationTree::Node &node,
+                                                      std::vector<ParametricLocationTree::Node> candidates){
 
         for (ParametricLocationTree::Node currentCandidate : candidates){
 
@@ -63,7 +64,7 @@ namespace hpnmg {
 
     void NondeterminismSolver::recursivelyGetCandidates(vector<ParametricLocationTree::Node> &list, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates){
 
-        if (isCandidate(node, candidates))
+        if (isCandidateForProperty(node, candidates))
             list.push_back(node);
 
         vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(node);
@@ -74,14 +75,12 @@ namespace hpnmg {
 
 
 
-    double NondeterminismSolver::recursivelySolveNondeterminismNonProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum){
+    double NondeterminismSolver::recursivelySolveNondeterminismNonProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error){
 
 
         double maxOrMinProbability = 0.0;
         double currentProbability;
-
-        //TODO Error beruecksichtigen
-        double error = 0.0;
+        double currentError;
 
         int currentChildId;
 
@@ -100,17 +99,23 @@ namespace hpnmg {
             for (ParametricLocationTree::Node child: conflictSet) {
 
                 currentChildId = child.getNodeID();
-                currentProbability = recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum);
+                currentError = 0.0;
+                currentProbability = recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError);
 
+//TODO error in vergleich mit einbeziehen?
                 if (first || (currentProbability > maxOrMinProbability && minimum == false) || (currentProbability < maxOrMinProbability && minimum == true)) {
 
                     currentBestChildIds.clear();
                     currentBestChildIds.push_back(currentChildId);
                     maxOrMinProbability = currentProbability;
+                    error = currentError;
                     first = false;
 
+//TODO error in vergleich mit einbeziehen?
                 } else if (currentProbability == maxOrMinProbability) {
                     currentBestChildIds.push_back(currentChildId);
+                    if (currentError > error)
+                        error = currentError;
                 }
             }
 
@@ -119,344 +124,301 @@ namespace hpnmg {
 
 
 
-        for (ParametricLocationTree::Node child: children)
-            maxOrMinProbability += recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum);
+        for (ParametricLocationTree::Node child: children){
+            maxOrMinProbability += recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError);
+            error += currentError;
+        }
 
 
-        if (isCandidate(currentNode, candidates)){
+        if (isCandidateForProperty(currentNode, candidates)){
+
+            currentError = 0.0;
 
             if (algorithm == 0)
                 //Gauss Legendre
                 maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
             else
                 //Monte Carlo
-                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, error);
+                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, currentError);
 
+            error += currentError;
         }
+
         return maxOrMinProbability;
     }
 
 
 
 
+//TODO error berechnen
+    void optimizationFunction(const real_1d_array &x, real_1d_array &fi, void* ptr){
 
-    void optimizationFunction(const real_1d_array &x, real_1d_array &fi, void* ptr)
-    {
-//    //
-//    // this callback calculates
-//    //
-//    //     f0(x0,x1,x2) = x0+x1
-//    //     f1(x0,x1,x2) = x2-exp(x0)
-//    //     f2(x0,x1,x2) = x0^2+x1^2-1
-//    //
-//    fi[0] = x[0]+x[1];
-//    fi[1] = x[2]-exp(x[0]);
-//    fi[2] = x[0]*x[0] + x[1]*x[1] - 1.0;
-//
+        double error = 0.0;
+        double prob = 0.0;
+        int counterConstraints = 1;
 
-//TODO Hard gecodete Variablen richtig übergeben bzw. auslesen
-int numberOfVariables = 2*2;
-char algorithm = 0;
-int functioncalls=10000;//50000
-int evaluations = 128;
-double error = 0.0;
+        double a = x[0];
+        //cout << a << endl;
+        nondetParams* params = (nondetParams *)ptr;
+
+        //for all random variables
+        //TODO only for fired RV with corresponding continuous place -> how to find out? for now only first variable
+        int i = 0;
+        bool found;
 
 
+//START First Sub-tree (möglicherweise in eigene Funktion auslagern?)
 
-    double prob = 0.0;
-    int counter = 0;
-    int counterConstraints = 2;
-   // vector<double> conditions;
-
-    nondetParams* params = (nondetParams *)ptr;
+        vector<ParametricLocationTree::Node> nodes = (*params).candidatesLeft;
+        //nodes = (*params).candidatesRight;
 
 
-    //for all conflict locations
-    for (std::vector<ParametricLocationTree::Node> nodes : (*params).orderedCandidates) {
+        //for all candidates in sub-tree
+        for (ParametricLocationTree::Node node : nodes) {
 
-       //for all candidates in sub-tree
-       for (ParametricLocationTree::Node node : nodes) {
+            ParametricLocation location = node.getParametricLocation();
+            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
 
-           ParametricLocation location = node.getParametricLocation();
-           std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
+            std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals;
+            found = false;
 
-           //TODO multiple interval sets
-           int numberOfIntervals = location.getIntegrationIntervals().size();
-
-
-           if (numberOfIntervals == 1) {
-               std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals = location.getIntegrationIntervals()[0];
-
-               //for all random variables
-               //TODO only for fired RV with corresponding continuous place -> how to find out?
-               int i = 0;
-               //for (int i = 0; i < currentIntegrationIntervals.size(); i++) {
-
-             //  conditions.push_back(currentIntegrationIntervals[i].second.first[0]);
-               fi[counterConstraints] = currentIntegrationIntervals[i].second.first[0] - x[counter]; //inequality <=0
-               counterConstraints++;
-               currentIntegrationIntervals[i].second.first[0] = x[counter];
-               counter++;
-
-             //  conditions.push_back(currentIntegrationIntervals[i].second.second[0]);
-               fi[counterConstraints] = x[counter] - currentIntegrationIntervals[i].second.second[0]; //inequality <=0
-               counterConstraints++;
-               currentIntegrationIntervals[i].second.second[0] = x[counter];
-               counter++;
+            //for multiple interval sets, find interval which contains a
+            vector<vector<pair<int, pair<vector<double>, vector<double>>>>> intervals = location.getIntegrationIntervals();
+            for (int j = 0; j < intervals.size();j++){
+                if (intervals[j][i].second.first[0] <= x[0] && intervals[j][i].second.second[0] >= x[0]) {
+                    currentIntegrationIntervals = intervals[j];
+                    found = true;
+                    break;
+                }
+            }
 
 
-               //TODO Sonderfall wenn Abhängigkeiten von anderen RV bestehen,
-//               }
-               integrationIntervals.push_back(currentIntegrationIntervals);
-               location.overwriteIntegrationIntervals(integrationIntervals);
+            if (found){
 
-               //x[0] <= x[1]
-               fi[counter + 2] = x[counter-2] - x[counter -1]; //inequality <=0
-               counterConstraints++;
+                fi[counterConstraints] = currentIntegrationIntervals[i].second.first[0] - a; //inequality <=0
+                counterConstraints++;
+                fi[counterConstraints] = a - currentIntegrationIntervals[i].second.second[0]; //inequality <=0
+                counterConstraints++;
+                currentIntegrationIntervals[i].second.second[0] = a;
+                //currentIntegrationIntervals[i].second.first[0] = a;
 
-           } else if (numberOfIntervals == 2) {
+                //TODO Sonderfall wenn Abhängigkeiten von anderen RV bestehen
 
-               std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals0 = location.getIntegrationIntervals()[0];
-               std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals1 = location.getIntegrationIntervals()[1];
-
-               //for all random variables
-               //TODO only for fired RV with corresponding continuous place -> how to find out?
-               int i = 0;
-               //for (int i = 0; i < currentIntegrationIntervals.size(); i++) {
-
-                   if (currentIntegrationIntervals0[i].second.first[0] <= currentIntegrationIntervals1[i].second.first[0]){
-
-                       //conditions.push_back(currentIntegrationIntervals0[i].second.first[0]);
-                       fi[counterConstraints] = currentIntegrationIntervals0[i].second.first[0] - x[counter]; //inequality <=0
-                       counterConstraints++;
-                       fi[counterConstraints] = x[counter] - currentIntegrationIntervals0[i].second.second[0]; //inequality <=0
-                       counterConstraints++;
-                       currentIntegrationIntervals0[i].second.first[0] = x[counter];
-                       counter++;
-
-                       //conditions.push_back(currentIntegrationIntervals1[i].second.second[0]);
-                       fi[counterConstraints] = currentIntegrationIntervals1[i].second.first[0] - x[counter]; //inequality <=0
-                       counterConstraints++;
-                       fi[counterConstraints] = x[counter] - currentIntegrationIntervals1[i].second.second[0]; //inequality <=0
-                       counterConstraints++;
-                       currentIntegrationIntervals1[i].second.second[0] = x[counter];
-                       counter++;
-
-                   } else {
-
-                       //conditions.push_back(currentIntegrationIntervals1[i].second.first[0]);
-                       fi[counterConstraints] = currentIntegrationIntervals1[i].second.first[0] - x[counter]; //inequality <=0
-                       counterConstraints++;
-                       fi[counterConstraints] = x[counter] - currentIntegrationIntervals1[i].second.second[0]; //inequality <=0
-                       counterConstraints++;
-                       currentIntegrationIntervals1[i].second.first[0] = x[counter];
-                       counter++;
-
-                      // conditions.push_back(currentIntegrationIntervals0[i].second.second[0]);
-                       fi[counterConstraints] = currentIntegrationIntervals0[i].second.first[0] - x[counter]; //inequality <=0
-                       counterConstraints++;
-                       fi[counterConstraints] = x[counter] - currentIntegrationIntervals0[i].second.second[0]; //inequality <=0
-                       counterConstraints++;
-                       currentIntegrationIntervals0[i].second.second[0] = x[counter];
-                       counter++;
-                   }
+                integrationIntervals.push_back(currentIntegrationIntervals);
+                location.overwriteIntegrationIntervals(integrationIntervals);
 
 
-               //TODO Sonderfall wenn Abhängigkeiten von anderen RV bestehen,
-//               }
-               integrationIntervals.push_back(currentIntegrationIntervals0);
-               integrationIntervals.push_back(currentIntegrationIntervals1);
-               location.overwriteIntegrationIntervals(integrationIntervals);
+                auto calculator = new ProbabilityCalculator();
+                if ((*params).algorithm == 0)
+                    //Gauss Legendre
+                    prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(location, (*params).distributions, (*params).maxTime, (*params).evaluations);
+                else
+                    //Monte Carlo
+                    prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(location, (*params).distributions, (*params).maxTime, (*params).algorithm, (*params).functioncalls, error);
 
-           } else {
-            //TODO more than 2 intervals
-           }
-
-
-
-
-        //map integration intervals to variables
-
-        auto calculator = new ProbabilityCalculator();
-        if (algorithm == 0)
-            //Gauss Legendre
-            prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(location, (*params).distributions, (*params).maxTime, evaluations);
-        else
-            //Monte Carlo
-            prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(location, (*params).distributions, (*params).maxTime, algorithm, functioncalls, error);
+            }
         }
 
+
+//ENDE First Sub-tree
+
+//START Second Sub-tree
+
+
+        nodes = (*params).candidatesRight;
+
+        //for all candidates in sub-tree
+        for (ParametricLocationTree::Node node : nodes) {
+
+            ParametricLocation location = node.getParametricLocation();
+            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
+
+            std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals;
+            found = false;
+
+            //for multiple interval sets, find interval which contains a
+            for (int j = 0; j < location.getIntegrationIntervals().size();j++){
+                if (location.getIntegrationIntervals()[j][i].second.first[0] <= a && location.getIntegrationIntervals()[j][i].second.second[0] >= a) {
+                    currentIntegrationIntervals = location.getIntegrationIntervals()[j];
+                    found = true;
+                    break;
+                }
+            }
+
+
+            if (found){
+
+                fi[counterConstraints] = currentIntegrationIntervals[i].second.first[0] - a; //inequality <=0
+                counterConstraints++;
+                fi[counterConstraints] = a - currentIntegrationIntervals[i].second.second[0]; //inequality <=0
+                counterConstraints++;
+                currentIntegrationIntervals[i].second.first[0] = a;
+
+                //TODO Sonderfall wenn Abhängigkeiten von anderen RV bestehen
+
+                integrationIntervals.push_back(currentIntegrationIntervals);
+                location.overwriteIntegrationIntervals(integrationIntervals);
+
+
+                auto calculator = new ProbabilityCalculator();
+                if ((*params).algorithm == 0)
+                    //Gauss Legendre
+                    prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(location, (*params).distributions, (*params).maxTime, (*params).evaluations);
+                else
+                    //Monte Carlo
+                    prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(location, (*params).distributions, (*params).maxTime, (*params).algorithm, (*params).functioncalls, error);
+
+            }
+        }
+
+//ENDE Second Sub-tree
+
+
+
+        fi[0] = (-1.0) * prob;
+
+       // if (fi[1] <= 0 && fi[2] <= 0  && fi[3] <= 0 && fi[4] <= 0)
+       //     cout << " TOTAL: " << a  << " --- Prob: " <<  prob << endl;
+
+
+        (*params).prob = prob;
+        (*params).result = a;
 
 
     }
 
 
-    fi[0] = (-1.0)*prob;//((x[1]-x[0]) + (x[3]-x[2]));
-
-    (*params).prob = prob;
+    double NondeterminismSolver::recursivelySolveNondeterminismProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error){
 
 
-    //x[1] = x[2]  OR x[0] = x[3]
-    fi[1] = (x[1] - x[2])*(x[0] - x[3]); //equality == 0
-    //fi[1] = 0.0;
+       double maxOrMinProbability = 0.0;
+       double currentProbability;
+       double currentError;
+
+       auto calculator = new ProbabilityCalculator();
+
+       vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(currentNode);
+       vector<ParametricLocationTree::Node> conflictSet = NondeterminismSolver::determineConflictSet(children);
 
 
+       if (conflictSet.size() > 0) {
 
-   // if (abs(fi[1]) < 0.0001 && fi[2] <= 0.0 && fi[3] <= 0.0 && fi[4] <= 0.0 && fi[5] <= 0.0 && fi[6] <= 0.0 && fi[7] <= 0.0 && fi[8] <= 0.0)
-   //     cout << "x:" << x[0] <<", " << x[1] <<", " << x[2] <<", " << x[3] << " --- Prob: " << prob << endl;
-
-
-
-
-}
+            //TODO extend for more than two conflict sub-trees
+           vector<nondetParams> params;
 
 
-    double NondeterminismSolver::recursivelySolveNondeterminismProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum){
-
-
-
-           double maxOrMinProbability = 0.0;
-           double currentProbability;
-
-           //TODO Error beruecksichtigen
-           double error = 0.0;
-
-           int currentChildId;
-
-           auto calculator = new ProbabilityCalculator();
-
-           vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(currentNode);
-           vector<ParametricLocationTree::Node> conflictSet = NondeterminismSolver::determineConflictSet(children);
-           void *ptr;
-           nondetParams params;
-
-           if (conflictSet.size() > 0) {
-
-            for (ParametricLocationTree::Node conflictNode : conflictSet){
-
-                vector<ParametricLocationTree::Node> currentCandidates;
-                recursivelyGetCandidates(currentCandidates, conflictNode,  candidates);
-                params.orderedCandidates.push_back(currentCandidates);
-            }
-
-
-            params.distributions = (*this->plt).getDistributions();
-            params.maxTime = (*this->plt).getMaxTime();
-
-
-
-           real_1d_array x0 = "[0,0,0,0]";
-           real_1d_array s = "[1,1,1,1]";
-           double epsx = 0.001;//0.000001;
+           real_1d_array x0 = "[0]";
+           real_1d_array s = "[1]";
+           double epsx = 0.01;//0.000001;
            ae_int_t maxits = 10;//0; for unlimited
            minnlcstate state; //state object
            minnlcreport rep;
            real_1d_array x1;
+           double diffstep = 1.0;
 
-           //
-           // This variable contains differentiation step
-           //
-           double diffstep = 0.01;
 
-           minnlccreatef(4, x0, diffstep, state); //create, use f at the end for automatic gradient calculation
-           minnlcsetalgoslp(state); //activate
-           minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
-           minnlcsetscale(state, s); //set scale (here always 1)
-           minnlcsetstpmax(state, 10.0); //settings
 
-               //
-               // Set constraints:
-               //
-               // Nonlinear constraints are tricky - you can not "pack" general
-               // nonlinear function into double precision array. That's why
-               // minnlcsetnlc() does not accept constraints itself - only constraint
-               // counts are passed: first parameter is number of equality constraints,
-               // second one is number of inequality constraints.
-               //
-               //
-               // NOTE: MinNLC optimizer supports arbitrary combination of boundary, general
-               //       linear and general nonlinear constraints. This example does not
-               //       show how to work with boundary or general linear constraints, but you
-               //       can easily find it in documentation on minnlcsetbc() and
-               //       minnlcsetlc() functions.
-               //
-               minnlcsetnlc(state, 1, 7);
+            for (int i = 0; i <= 1; i++){
 
-               //
-               // Optimize and test results.    //
+               nondetParams currentParams;
+               currentParams.algorithm = algorithm;
+               currentParams.evaluations = min(64, evaluations);
+               currentParams.functioncalls = min(1000, functioncalls);
+               currentParams.distributions = (*this->plt).getDistributions();
+               currentParams.maxTime = (*this->plt).getMaxTime();
 
-               //
 
-               minnlcoptimize(state, optimizationFunction, NULL, &params); //start optimizer
+               vector<ParametricLocationTree::Node> currentCandidates0;
+               recursivelyGetCandidates(currentCandidates0, conflictSet[i%2], candidates);
+               currentParams.candidatesRight = currentCandidates0;
+
+               vector<ParametricLocationTree::Node> currentCandidates1;
+               recursivelyGetCandidates(currentCandidates1, conflictSet[(i+1)%2], candidates);
+               currentParams.candidatesLeft = currentCandidates1;
+
+               minnlccreatef(1, x0, diffstep, state); //create, use f at the end for automatic gradient calculation
+               minnlcsetalgoslp(state); //activate
+               minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
+               minnlcsetscale(state, s); //set scale (here always 1)
+               minnlcsetstpmax(state, 0.0); //settings
+               minnlcsetnlc(state, 0, 4);
+               minnlcoptimize(state, optimizationFunction, NULL, &currentParams); //start optimizer
                minnlcresults(state, x1, rep); //get results
-               printf("%s\n", x1.tostring(5).c_str()); // EXPECTED: [-0.70710,-0.70710,0.49306]
-               //return 0;
-               cout << rep.terminationtype << endl;
-               cout << params.prob << endl;
 
-
-
-
-
-
-
-
-
-
-
-//               bool first = true;
-//               vector<int> currentBestChildIds;
-//
-//               for (ParametricLocationTree::Node child: conflictSet) {
-//
-//                   currentChildId = child.getNodeID();
-//                   currentProbability = recursivelySolveNondeterminismProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum);
-//
-//                   if (first || (currentProbability > maxOrMinProbability && minimum == false) || (currentProbability < maxOrMinProbability && minimum == true)) {
-//
-//                       currentBestChildIds.clear();
-//                       currentBestChildIds.push_back(currentChildId);
-//                       maxOrMinProbability = currentProbability;
-//                       first = false;
-//
-//                   } else if (currentProbability == maxOrMinProbability) {
-//                       currentBestChildIds.push_back(currentChildId);
-//                   }
-//               }
-//
-//               (this->bestChildIds).push_back(currentBestChildIds);
-           }
-
-
-
-           for (ParametricLocationTree::Node child: children)
-               maxOrMinProbability += recursivelySolveNondeterminismProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum);
-
-
-           if (isCandidate(currentNode, candidates)){
-
-               if (algorithm == 0)
-                   //Gauss Legendre
-                   maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
+               if (rep.terminationtype == 2)
+                   cout << "Pre-computation " << i+1 << " succeeded: x = " << currentParams.result << " with P_max = " << currentParams.prob << endl;
                else
-                   //Monte Carlo
-                   maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, error);
+                   cout << "Pre-computation " << i+1 << " failed" << endl;
+
+               params.push_back(currentParams);
 
            }
-           return maxOrMinProbability;
+
+            int i;
+            if(params[0].prob >= params[1].prob)
+                i = 0;
+            else
+                i = 1;
+            params[i].functioncalls = functioncalls;
+            params[i].evaluations = evaluations;
+            minnlccreatef(1, x0, diffstep, state); //create, use f at the end for automatic gradient calculation
+            minnlcsetalgoslp(state); //activate
+            minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
+            minnlcsetscale(state, s); //set scale (here always 1)
+            minnlcsetstpmax(state, 0.0); //settings
+            minnlcsetnlc(state, 0, 4);
+            minnlcoptimize(state, optimizationFunction, NULL, &params[i]); //start optimizer
+            minnlcresults(state, x1, rep); //get results
+
+           if (rep.terminationtype == 2)
+               cout << "Main computation succeeded: x = " << params[i].result << " with P_max = " << params[i].prob << endl;
+           else
+               cout << "Main computation failed" << endl;
+
+
+           maxOrMinProbability = params[i].prob;
+           //TODO Error
+
        }
 
 
 
+        for (ParametricLocationTree::Node child: children){
+            maxOrMinProbability += recursivelySolveNondeterminismProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError);
+            error += currentError;
+        }
 
-    double NondeterminismSolver::solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic){
+
+
+        if (isCandidateForProperty(currentNode, candidates)){
+
+            currentError = 0.0;
+
+            if (algorithm == 0)
+                //Gauss Legendre
+                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
+            else
+                //Monte Carlo
+                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, currentError);
+
+            error += currentError;
+        }
+
+
+       return maxOrMinProbability;
+   }
+
+
+
+
+    double NondeterminismSolver::solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic, double &error){
 
         this->plt = plt;
 
         if (prophetic)
-            return recursivelySolveNondeterminismProphetic(currentNode, candidates, algorithm, functioncalls, evaluations, minimum);
+            return recursivelySolveNondeterminismProphetic(currentNode, candidates, algorithm, functioncalls, evaluations, minimum, error);
         else
-            return recursivelySolveNondeterminismNonProphetic(currentNode, candidates, algorithm, functioncalls, evaluations, minimum);
+            return recursivelySolveNondeterminismNonProphetic(currentNode, candidates, algorithm, functioncalls, evaluations, minimum, error);
     }
 
 
