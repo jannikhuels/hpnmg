@@ -33,16 +33,16 @@ protected:
 TEST(STDiagramTest, DimensionTest)
 {
     Region baseRegion = STDiagram::createBaseRegion(2,10);
-    ASSERT_EQ(baseRegion.dimension(), 2);
+    ASSERT_EQ(baseRegion.hPolytope.dimension(), 2);
 
     Region highDimRegion = STDiagram::createBaseRegion(24,10);
-    ASSERT_EQ(highDimRegion.dimension(), 24);
+    ASSERT_EQ(highDimRegion.hPolytope.dimension(), 24);
 }
 
 TEST(STDiagramTest, VertexTest)
 {
     Region baseRegion = STDiagram::createBaseRegion(2,10);
-    ASSERT_EQ(baseRegion.vertices().size(), 4);
+    ASSERT_EQ(baseRegion.hPolytope.vertices().size(), 4);
 }
 
 //TEST(STDiagramTest, DimensionErrorTest)
@@ -71,32 +71,32 @@ TEST(STDiagramTest, RegionFromVerticesTest) {
     Point<double> p3({20,0});
     Region region = STDiagram::createRegionForVertices({p1,p2,p3});
 
-    ASSERT_EQ(region.contains(Point<double>({0,0})), true);
-    ASSERT_EQ(region.contains(Point<double>({1,1})), true);
-    ASSERT_EQ(region.contains(Point<double>({21,0})), false);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>({0,0})), true);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>({1,1})), true);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>({21,0})), false);
 }
 
 TEST_F(STDiagramRegionTest, CreateRegionTest)
 {
     Region region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
-    ASSERT_EQ(region.dimension(), 2);
+    ASSERT_EQ(region.hPolytope.dimension(), 2);
     
     vector_t<double> containedPoint = vector_t<double>::Zero(2);
     containedPoint << 3,1;
-    ASSERT_EQ(region.contains(Point<double>(containedPoint)), true);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>(containedPoint)), true);
 
     containedPoint << 0,0;
-    ASSERT_EQ(region.contains(Point<double>(containedPoint)), true);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>(containedPoint)), true);
     containedPoint << 5,5;
-    ASSERT_EQ(region.contains(Point<double>(containedPoint)), true);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>(containedPoint)), true);
     containedPoint << 10,5;
-    ASSERT_EQ(region.contains(Point<double>(containedPoint)), true);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>(containedPoint)), true);
     containedPoint << 10,0;
-    ASSERT_EQ(region.contains(Point<double>(containedPoint)), true);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>(containedPoint)), true);
 
     vector_t<double> notContainedPoint = vector_t<double>::Zero(2);
     notContainedPoint << 2,8;
-    ASSERT_EQ(region.contains(Point<double>(notContainedPoint)), false);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>(notContainedPoint)), false);
 }
 
 TEST_F(STDiagramRegionTest, CreateRegionOnlySourceEvent)
@@ -108,8 +108,8 @@ TEST_F(STDiagramRegionTest, CreateRegionOnlySourceEvent)
     std::vector<Event> noDestEvents(0);
     Region region = STDiagram::createRegion(baseRegion, testEvent, noDestEvents);
 
-    ASSERT_EQ(region.contains(Point<double>{5,2}),false);
-    ASSERT_EQ(region.contains(Point<double>{5,6}),true);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>{5,2}),false);
+    ASSERT_EQ(region.hPolytope.contains(Point<double>{5,6}),true);
 }
 
 TEST_F(STDiagramRegionTest, CreateRegionErrorTest)
@@ -235,46 +235,46 @@ TEST_F(STDiagramRegionTest, TestRegionNoEvent) {
 
 TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersection) {
     Region resultNoDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 5);
-    ASSERT_EQ(resultNoDep.contains(Point<double>{2,2}), true);
-    ASSERT_EQ(resultNoDep.contains(Point<double>{2,6}), false);
+    ASSERT_EQ(resultNoDep.hPolytope.contains(Point<double>{2,2}), true);
+    ASSERT_EQ(resultNoDep.hPolytope.contains(Point<double>{2,6}), false);
     
     
     Region resultPosDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 1, 5);
-    ASSERT_EQ(resultPosDep.contains(Point<double>{1,2}), true);
-    ASSERT_EQ(resultPosDep.contains(Point<double>{1,5}), false);
+    ASSERT_EQ(resultPosDep.hPolytope.contains(Point<double>{1,2}), true);
+    ASSERT_EQ(resultPosDep.hPolytope.contains(Point<double>{1,5}), false);
 
     Region resultNegDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{1,2}, 1, 5);
-    ASSERT_EQ(resultNegDep.contains(Point<double>{2,2}), true);
-    ASSERT_EQ(resultNegDep.contains(Point<double>{2,6}), false);
+    ASSERT_EQ(resultNegDep.hPolytope.contains(Point<double>{2,2}), true);
+    ASSERT_EQ(resultNegDep.hPolytope.contains(Point<double>{2,6}), false);
 }
 
 TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersectionZeroDrift) {
     Region resultNoDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 0, 5);
-    ASSERT_EQ(resultNoDep.contains(Point<double>{2,2}), true);
-    ASSERT_EQ(resultNoDep.contains(Point<double>{6,2}), false);
+    ASSERT_EQ(resultNoDep.hPolytope.contains(Point<double>{2,2}), true);
+    ASSERT_EQ(resultNoDep.hPolytope.contains(Point<double>{6,2}), false);
 
     Region result = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 4);
-    ASSERT_EQ(result.contains(Point<double>{2,2}), true);
-    ASSERT_EQ(result.contains(Point<double>{3,2}), true);
-    ASSERT_EQ(result.contains(Point<double>{1,5}), false);
+    ASSERT_EQ(result.hPolytope.contains(Point<double>{2,2}), true);
+    ASSERT_EQ(result.hPolytope.contains(Point<double>{3,2}), true);
+    ASSERT_EQ(result.hPolytope.contains(Point<double>{1,5}), false);
 
     Region resultNeg = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,6}, -1, 4);
-    ASSERT_EQ(resultNeg.contains(Point<double>{1,1}), false);
-    ASSERT_EQ(resultNeg.contains(Point<double>{1,3}), true);
+    ASSERT_EQ(resultNeg.hPolytope.contains(Point<double>{1,1}), false);
+    ASSERT_EQ(resultNeg.hPolytope.contains(Point<double>{1,3}), true);
 
     Region region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
     Region intersectedRegion = STDiagram::intersectRegionForContinuousLevel(region, std::vector<double>{0,2}, 0, 3);
-    ASSERT_EQ(intersectedRegion.empty(), true);
+    ASSERT_EQ(intersectedRegion.hPolytope.empty(), true);
 }
 
 TEST_F(STDiagramRegionTest, TestTimeRegionCreation) {
     Region region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
     Region timeRegion = STDiagram::createTimeRegion(region,5,2);
 
-    ASSERT_EQ(timeRegion.contains(Point<double>{5,5}), true);
-    ASSERT_EQ(timeRegion.contains(Point<double>{4,5}), false);
-    ASSERT_EQ(timeRegion.contains(Point<double>{6,5}), true);
-    ASSERT_EQ(timeRegion.contains(Point<double>{5,6}), false);
+    ASSERT_EQ(timeRegion.hPolytope.contains(Point<double>{5,5}), true);
+    ASSERT_EQ(timeRegion.hPolytope.contains(Point<double>{4,5}), false);
+    ASSERT_EQ(timeRegion.hPolytope.contains(Point<double>{6,5}), true);
+    ASSERT_EQ(timeRegion.hPolytope.contains(Point<double>{5,6}), false);
 }
 
 TEST(STDiagramIntervalTest, TestDifference1D) 

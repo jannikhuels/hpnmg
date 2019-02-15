@@ -33,7 +33,7 @@ namespace hpnmg {
             double drift = candidateNode.getParametricLocation().getDrift()[placeIndex];
             try {
                 Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(candidateRegion, candidateNode.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
-                if (regionIntersected.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree.getDimension()).first) {
+                if (regionIntersected.hPolytope.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree.getDimension()).first) {
                     ModelChecker::insertIntervalBoundariesForRegionAtTime(regionIntersected, time, parametricLocationTree.getDimension(), intervals);
                 }
             } catch (IllegalIntersectionLevelException e)  {
@@ -68,7 +68,7 @@ namespace hpnmg {
                 Region candidateRegion = candidateNode.getRegion();            
                 double drift = candidateNode.getParametricLocation().getDrift()[placeIndex];
                 Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(candidateRegion, candidateNode.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
-                if (regionIntersected.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree->getDimension()).first) {
+                if (regionIntersected.hPolytope.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree->getDimension()).first) {
                     regions.insert(regions.end(), candidateNode.getRegion());
                 }
             } catch (IllegalIntersectionLevelException e)  {
@@ -104,8 +104,8 @@ namespace hpnmg {
         std::vector<Region> sat;
         for(Region ai : a) {
             for (Region bi : b) {
-                Region res = ai.intersect(bi);
-                if (!res.empty()) {
+                Region res = ai.hPolytope.intersect(bi.hPolytope);
+                if (!res.hPolytope.empty()) {
                     sat.push_back(res);
                 }
             }
@@ -126,8 +126,8 @@ namespace hpnmg {
         for(Region r : regions) 
         {
             std::vector<Halfspace<double>> region_hsps;
-            for (Halfspace<double> hsp : r.constraints()) {
-                if (nodeRegion.dimension() != hsp.dimension()) {
+            for (Halfspace<double> hsp : r.hPolytope.constraints()) {
+                if (nodeRegion.hPolytope.dimension() != hsp.dimension()) {
                     continue;
                 }
                 region_hsps.push_back(hsp);
@@ -135,23 +135,23 @@ namespace hpnmg {
             hsps.push_back(region_hsps);                    
         }
 
-        int dimension = nodeRegion.dimension();
+        int dimension = nodeRegion.hPolytope.dimension();
         for(int i = 0; i < hsps.size(); i++) {
             for (Halfspace<double> creatorHsp : hsps[i]) {
                 Region b(nodeRegion);                
-                b.insert(-creatorHsp);
+                b.hPolytope.insert(-creatorHsp);
                 for (int j = 0; j < hsps.size(); j++) {
                     if (j == i) {
                         continue;
                     } 
                     for (Halfspace<double> constraint : hsps[j]) {
-                        std::pair<bool, Region> satisfies = b.satisfiesHalfspace(-constraint);
-                        if (satisfies.first && satisfies.second.vertices().size() > dimension) {
+                        std::pair<bool, Region> satisfies = b.hPolytope.satisfiesHalfspace(-constraint);
+                        if (satisfies.first && satisfies.second.hPolytope.vertices().size() > dimension) {
                             b = satisfies.second;
                         }
                     }
                 }
-                if (b.vertices().size() > dimension) {
+                if (b.hPolytope.vertices().size() > dimension) {
                     negregions.push_back(b);
                 }                 
             }                       

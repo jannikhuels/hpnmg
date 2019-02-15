@@ -195,13 +195,13 @@ namespace hpnmg {
     
     void ParametricLocationTree::recursivelySetRegions(ParametricLocationTree::Node &startNode, Region &r) {
         std::vector<ParametricLocationTree::Node> childNodes = getChildNodes(startNode);
-        if (childNodes.size() > 0) {
+        if (!childNodes.empty()) {
             Region region = STDiagram::createRegion(r, startNode.getParametricLocation().getSourceEvent(), getSourceEventsFromNodes(childNodes));
             startNode.setRegion(region);
 
             std::pair <std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator, std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator> ret;
             ret = parametricLocations.equal_range(startNode.getNodeID());
-            for (std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator it=ret.first; it!=ret.second; ++it) {
+            for (auto it=ret.first; it!=ret.second; ++it) {
                 recursivelySetRegions(it->second, r);
             }
         } else {

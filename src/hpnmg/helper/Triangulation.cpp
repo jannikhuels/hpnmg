@@ -27,7 +27,7 @@ namespace hpnmg {
     }
 
     std::vector<DT::Point> regionToDTPoints(Region r) {
-        vector<Point<double>> vertices = r.vertices();
+        vector<Point<double>> vertices = r.hPolytope.vertices();
         return pointsToDTPoints(vertices);
     }
 
@@ -39,7 +39,7 @@ namespace hpnmg {
     std::vector<Region> Triangulation::create(const ParametricLocationTree::Node &node) {
 
         Region r = node.getRegion();
-        DT dt(r.dimension());
+        DT dt(r.hPolytope.dimension());
         std::vector<DT::Point> points = regionToDTPoints(r);
         dt.insert(points.begin(), points.end());
 
