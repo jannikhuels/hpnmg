@@ -135,7 +135,7 @@ void printIntervals(std::vector<Intervals> intervals) {
 std::vector<Intervals> getIntervals(std::vector<Region> rs) {
     std::vector<Intervals> IS;
     for(Region r : rs){
-        if (!r.empty()) {
+        if (!r.hPolytope.empty()) {
             Intervals br = STDiagram::createIntervals(r);
             if (std::find(IS.begin(), IS.end(), br) == IS.end()) {
                 IS.push_back(br);
@@ -149,9 +149,9 @@ std::vector<Intervals> getIntervals(std::vector<Region> rs) {
 std::vector<Intervals> getIntervals(std::vector<Region> rs, Halfspace<double> hsp) {
     std::vector<Intervals> IS;
     for(Region r : rs){
-        if (!r.empty()) {
-            r.insert(hsp);
-            if (!r.empty()) {
+        if (!r.hPolytope.empty()) {
+            r.hPolytope.insert(hsp);
+            if (!r.hPolytope.empty()) {
                 Intervals br = STDiagram::createIntervals(r);
                 if (std::find(IS.begin(), IS.end(), br) == IS.end()) {
                     IS.push_back(br);
@@ -166,8 +166,8 @@ std::vector<Intervals> getIntervals(std::vector<Region> rs, Halfspace<double> hs
 std::vector<Region> until(shared_ptr<hpnmg::ParametricLocationTree> plt, ParametricLocationTree::Node node, Halfspace<double> hUpperTime, Halfspace<double> hLowerTime) {
     //printf("---Model Checking Until---\n");
     Region region = node.getRegion();
-    region.insert(hUpperTime);
-    if (region.empty()) {
+    region.hPolytope.insert(hUpperTime);
+    if (region.hPolytope.empty()) {
         return {};
     }
 
@@ -210,7 +210,7 @@ std::vector<Region> until(shared_ptr<hpnmg::ParametricLocationTree> plt, Paramet
     std::vector<Region> nonEmpty;
     for (Region r : satFacets) {
         for (Region s2 : sat2) {
-            if (s2.intersect(r).empty()) {
+            if (s2.hPolytope.intersect(r).empty()) {
                 nonEmpty.push_back(r);
             }
         }
@@ -300,7 +300,7 @@ TEST_F(ModelCheckerTestComplexXML, UntilFormulaTest) {
         /*if (satNeg.size() > 0) {
             regions.insert(regions.end(), satNeg.begin(), satNeg.end());
         }*/
-        if (!sat.empty()) {
+        if (!sat.hPolytope.empty()) {
             regions.push_back(sat);
         }
     }

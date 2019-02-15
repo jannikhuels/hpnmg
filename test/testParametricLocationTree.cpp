@@ -99,35 +99,35 @@ TEST(ParametricLocationTreeTest, RegionTest)
 
     parametricLocationTree->updateRegions();
     ParametricLocationTree::Node rootNode = parametricLocationTree->getRootNode();
-    ASSERT_EQ(rootNode.getRegion().dimension(), 2);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.dimension(), 2);
 
     //parametricLocationTree.print(true);
 
     vector_t<double> point = vector_t<double>::Zero(2);
     point << 2,1;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
     point << 10,0;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
     point << 1,2;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), false);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), false);
 
     vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree->getChildNodes(rootNode);
     vector<ParametricLocationTree::Node> stocChildNodes;
     for (ParametricLocationTree::Node node: rootChildNodes) {
         if (node.getParametricLocation().getSourceEvent().getEventType() == EventType::General) {
             point << 2,2;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), true);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), true);
             point << 1,2;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), true);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), true);
             point << 1,3;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), false);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), false);
             point << 1,0.5;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), false);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), false);
         } else {
             point << 8,6;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), true);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), true);
             point << 8,4;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), false);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), false);
         }
     }
 }
@@ -179,15 +179,15 @@ TEST(ParametricLocationTreeXML, CreateRegions) {
     plt->print(false);
 
     ParametricLocationTree::Node rootNode = plt->getRootNode();
-    ASSERT_EQ(rootNode.getRegion().dimension(), 2);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.dimension(), 2);
 
     vector_t<double> point = vector_t<double>::Zero(2);
     point << 2,1;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
     point << 20,0;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
     point << 1,2;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), false);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), false);
 
     //TODO Extended checks for example.xml
 }

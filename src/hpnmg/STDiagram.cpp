@@ -32,13 +32,13 @@ namespace hpnmg {
         /*if (!isValidEvent(sourceEvent, baseRegion)) {
             throw IllegalArgumentException("sourceEvent");
         }*/
-        region.insert(createHalfspaceFromEvent(makeValidEvent(sourceEvent, baseRegion),true));
+        region.hPolytope.insert(createHalfspaceFromEvent(makeValidEvent(sourceEvent, baseRegion),true));
         
         for (Event e : destinationEvents) {
             /*if (!isValidEvent(e, baseRegion)) {
                 throw IllegalArgumentException("destinationEvents");
             }*/
-            region.insert(createHalfspaceFromEvent(makeValidEvent(e, baseRegion), false));
+            region.hPolytope.insert(createHalfspaceFromEvent(makeValidEvent(e, baseRegion), false));
         }
         return region;
     }
@@ -78,8 +78,8 @@ namespace hpnmg {
 
     Event STDiagram::makeValidEvent(const Event &event, const Region &baseRegion) {
         Event e(event);
-        if (!(e.getGeneralDependencies().size() == baseRegion.dimension()-1)) { 
-            auto gdependencies = STDiagram::makeValidDependencies(event.getGeneralDependencies(), baseRegion.dimension());
+        if (!(e.getGeneralDependencies().size() == baseRegion.hPolytope.dimension()-1)) {
+            auto gdependencies = STDiagram::makeValidDependencies(event.getGeneralDependencies(), baseRegion.hPolytope.dimension());
             e.setGeneralDependencies(gdependencies);                  
         }
         return e;
@@ -92,7 +92,7 @@ namespace hpnmg {
         plt.rSettings().cummulative = cummulative;
 
         for (Region region : regionsToPrint) {
-            plt.addObject(region.vertices());
+            plt.addObject(region.hPolytope.vertices());
         }
 
         plt.plot2d();
@@ -104,14 +104,14 @@ namespace hpnmg {
 
     std::pair<bool, Region> STDiagram::regionIsCandidateForTimeInterval(const std::pair<double,double> &interval, const Region &region, int dimension) {
         std::pair<matrix_t<double>,vector_t<double>> ihspRepresentations = createHalfspacesFromTimeInterval(interval, dimension);
-        std::pair<bool, Region> intersectionPair = region.satisfiesHalfspaces(ihspRepresentations.first, ihspRepresentations.second);
+        std::pair<bool, Region> intersectionPair = region.hPolytope.satisfiesHalfspaces(ihspRepresentations.first, ihspRepresentations.second);
         return intersectionPair;
     }
 
     Region STDiagram::createTimeRegion(const Region &region, double time, int dimension) {
         Region timeRegion(region);
         std::pair<matrix_t<double>,vector_t<double>> timeHalfspaceRepresentation = createHalfspacesFromTimeInterval(std::pair<double,double>(time,time), dimension);
-        std::pair<bool, HPolytope<double>> intersectionPair = region.satisfiesHalfspaces(timeHalfspaceRepresentation.first, timeHalfspaceRepresentation.second);
+        std::pair<bool, HPolytope<double>> intersectionPair = region.hPolytope.satisfiesHalfspaces(timeHalfspaceRepresentation.first, timeHalfspaceRepresentation.second);
         return intersectionPair.second;
     }
 
@@ -146,11 +146,11 @@ namespace hpnmg {
             throw IllegalArgumentException("sourceEvent");
         }*/
 
-        region.insert(createHalfspaceFromEvent(makeValidEvent(sourceEvent, r),true));
+        region.hPolytope.insert(createHalfspaceFromEvent(makeValidEvent(sourceEvent, r),true));
         if (leftBounds.size() > 0)
-            region.insert(createVerticalHalfspace(makeValidDependencies(leftBounds, r.dimension()), true));
+            region.hPolytope.insert(createVerticalHalfspace(makeValidDependencies(leftBounds, r.hPolytope.dimension()), true));
         if (rightBounds.size() > 0)
-            region.insert(createVerticalHalfspace(makeValidDependencies(rightBounds, r.dimension()), false));
+            region.hPolytope.insert(createVerticalHalfspace(makeValidDependencies(rightBounds, r.hPolytope.dimension()), false));
             
         return region;
     }
@@ -207,7 +207,7 @@ namespace hpnmg {
         continuousDependencies.pop_back();
 
         //TODO Check with patricia how these dependencies are created.
-        continuousDependencies = STDiagram::makeValidDependencies(continuousDependencies, baseRegion.dimension());
+        continuousDependencies = STDiagram::makeValidDependencies(continuousDependencies, baseRegion.hPolytope.dimension());
 
         double divisor = drift;
 
@@ -240,7 +240,7 @@ namespace hpnmg {
         if (negate)
             fillLevelHsp = -fillLevelHsp;
 
-        intersectRegion.insert(fillLevelHsp);
+        intersectRegion.hPolytope.insert(fillLevelHsp);
         return intersectRegion;
     }
 
@@ -254,7 +254,7 @@ namespace hpnmg {
         for (carl::Interval<double> i : boundaries) {
             printf("[%f,%f]\n", i.lower(), i.upper());
         }*/
-        if(boundingBox.dimension() == baseInterval.dimension()) {
+        if(boundingBox.dimension() == baseInterval.hPolytope.dimension()) {
             boundaries.pop_back();
         }
         //carl::Interval<double> timeInterval = carl::Interval<double>((double)0,time);
@@ -411,11 +411,11 @@ namespace hpnmg {
             Box<double> box(i);
             Region boxRegion(box.constraints());
             for (Halfspace<double> h: box.constraints()) {
-                r.insert(h);
+                r.hPolytope.insert(h);
             }
             //Region boxRegion(box.constraints());
             //r.intersect(boxRegion);
-            r.insert(timeHsp);
+            r.hPolytope.insert(timeHsp);
             regions.push_back(r);
         }
         return regions;
@@ -436,7 +436,7 @@ namespace hpnmg {
 
     std::vector<std::vector<double>> STDiagram::stochasticConstraints(Region region) {
         std::vector<std::vector<double>> res;
-        for (Halfspace<double> h : region.constraints()) {
+        for (Halfspace<double> h : region.hPolytope.constraints()) {
             std::vector<double> r;
             r.push_back(h.offset());
             Eigen::VectorXd v = h.normal();
