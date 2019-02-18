@@ -168,28 +168,44 @@ TEST(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
 }
 
 TEST(ParametricLocationTreeXML, CreateRegions) {
-    ReadHybridPetrinet reader;
-    //TODO Check impl. of reader. Create singletons!
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
-    ParseHybridPetrinet parser;
-    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 20);
+    shared_ptr<hpnmg::ParametricLocationTree> plt = ParseHybridPetrinet().parseHybridPetrinet(
+            ReadHybridPetrinet{}.readHybridPetrinet("norep_1_1.xml"),
+            20
+    );
     plt->updateRegions();
 
+    // Each sample pair consists of a test point and the NODE_ID of the PLT node containing the point.
+    const vector<pair<Point<double>, NODE_ID>> samples{
+        {Point<double>{ 2,  1},  1},
+        {Point<double>{ 2,  3},  2},
+        {Point<double>{14, 13},  3},
+        {Point<double>{ 7, 13},  4},
+        {Point<double>{ 1,  3},  5},
+        {Point<double>{13, 14},  6},
+        {Point<double>{19, 18},  7},
+        {Point<double>{ 7, 18},  8},
+        {Point<double>{ 1, 13},  9},
+        {Point<double>{18, 19}, 10},
+    };
 
-    plt->print(false);
+    deque<ParametricLocationTree::Node> working_set{plt->getRootNode()};
+    while (!working_set.empty()) {
+        const ParametricLocationTree::Node node = working_set.front();
+        working_set.pop_front();
+        const vector<ParametricLocationTree::Node> children = plt->getChildNodes(node);
+        working_set.insert(working_set.end(), children.begin(), children.end());
 
-    ParametricLocationTree::Node rootNode = plt->getRootNode();
-    ASSERT_EQ(rootNode.getRegion().hPolytope.dimension(), 2);
+        const Region::PolytopeT &polytope = node.getRegion().hPolytope;
+        ASSERT_EQ(polytope.dimension(), 2);
 
-    vector_t<double> point = vector_t<double>::Zero(2);
-    point << 2,1;
-    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
-    point << 20,0;
-    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
-    point << 1,2;
-    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), false);
-
-    //TODO Extended checks for example.xml
+        for (const auto &sample : samples) {
+            const auto point = sample.first;
+            if (node.getNodeID() == sample.second)
+                EXPECT_TRUE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+            else
+                EXPECT_FALSE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+        }
+    }
 }
 
 TEST(ParametricLocationTreeXML, CollectCandidatesWithPLT) {
