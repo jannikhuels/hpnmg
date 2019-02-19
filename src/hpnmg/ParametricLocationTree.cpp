@@ -311,7 +311,7 @@ namespace hpnmg {
                     /*
                      * Collect the entryTimes of the child node. Beware that we need to ensure that the ordering of each RV of a child location needs to be in accordance to its parent location.
                      */
-                    std::vector<double> entryTime(dimension);
+                    /*std::vector<double> entryTime(dimension);
                     fill(entryTime.begin(), entryTime.end(), 0);
                     entryTime[0] = node.getParametricLocation().getSourceEvent().getTime();
 
@@ -328,15 +328,23 @@ namespace hpnmg {
                         entryTime[parentGeneralDependencies.size() + pos +
                                   1] = childGeneralDependencies[parentGeneralDependencies.size()];
                     }
+                    entryTimes.push_back(entryTime);*/
+                    std::vector<double> entryTime(dimension);
+                    fill(entryTime.begin(), entryTime.end(), 0);
+                    entryTime[0] = node.getParametricLocation().getSourceEvent().getTime();
+                    std::vector<double> childGeneralDependencies = node.getParametricLocation().getSourceEvent().getGeneralDependencies();
+                    for (int i = 1; i <= childGeneralDependencies.size(); i++) {
+                        entryTime[i] = childGeneralDependencies[i - 1];
+                    }
                     entryTimes.push_back(entryTime);
                     bounds.push_back(node.getParametricLocation().getRVIntervals(occurings, this->maxTime, dimension));
                 }
             }
-
+            std::vector<std::vector<double>> unsortedEntryTimes = entryTimes;
             std::sort(entryTimes.begin(), entryTimes.end(),  wayToSortTimes);
 
             if(valid) {
-                parametricLocation.setIntegrationIntervals(entryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
+                parametricLocation.setIntegrationIntervals(unsortedEntryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
             }

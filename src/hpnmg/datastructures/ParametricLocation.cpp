@@ -566,7 +566,7 @@ namespace hpnmg {
                 LinearEquation eq(newBound, upper, k-1);
                 Domain ld = LinearDomain::createDomain(currentBounds);
                 LinearBoundsTree tree(ld, eq);
-                std::vector<LinearDomain> dms = tree.getDomains();
+                std::vector<LinearDomain> dms = tree.getUniqueDomains();
                 linearDomains.insert(linearDomains.end(), dms.begin(), dms.end());
             } else {
                 Domain ld = LinearDomain::createDomain(currentBounds);
@@ -588,7 +588,7 @@ namespace hpnmg {
                         bool upper = Computation::isUpper(t, childEntryTime, k);
                         LinearEquation eq(newBound,upper, k-1);
                         LinearBoundsTree tree(linearDomains[i].getDomain(), eq);
-                        std::vector<LinearDomain> dms = tree.getDomains();
+                        std::vector<LinearDomain> dms = tree.getUniqueDomains();
                         //bool res = Computation::setBoundRecursivelyWithRepair(copyOfIntegrationIntervals, i, k - 1,newBound, upper);
 
                         for (LinearDomain item: dms) {

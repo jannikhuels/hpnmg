@@ -51,3 +51,15 @@ TEST(LinearEquation, AlwaysTrueNoDep) {
     ASSERT_EQ(true, l.alwaysTrue);
 }
 
+TEST(LinearEquation, OneDep) {
+    LinearEquation equation({8,0,0,0}, {0,0,0,1});
+    ASSERT_EQ(2, equation.dependencyIndex);
+    ASSERT_EQ(false, equation.isUpper);
+    ASSERT_EQ(8,equation.equation[0]);
+}
+
+TEST(LinearEquation, AlwaysFalse) {
+    LinearEquation equation({8,0,0,0}, {7,0,0,0});
+    ASSERT_EQ(true, equation.alwaysFalse());
+}
+

@@ -47,4 +47,8 @@ namespace hpnmg {
     bool LinearEquation::isDecidable() {
         return dependencyIndex <= 0;
     }
+
+    bool LinearEquation::alwaysFalse() {
+        return (this->dependencyIndex==-1) && !this->alwaysTrue;
+    }
 }

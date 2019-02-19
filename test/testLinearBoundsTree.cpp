@@ -148,3 +148,35 @@ TEST(LinearBoundsTree, Error5Dimensions) {
     LinearBoundsTree tree({{{0,0,0,0,0},{3,0,0,0,0}}, {{0,0,0,0,0},{3,-1,0,0,0}}, {{0,0,0,0,0},{3,-1,-1,0,0}}, {{0,0,0,0,0},{3,-1,-1,-1,0}}}, equation);
     std::vector<LinearDomain> dms = tree.getDomains();
 }
+
+TEST(LinearBoundsTree, ErrorThreeParallel) {
+    LinearEquation equation({0,0,0,0}, {4,-1,-1,0});
+    LinearBoundsTree tree({{{0,0,0,0},{10,0,0,0}}, {{0,1,0,0},{10,0,0,0}}, {{0,1,1,0},{10,0,0,0}}}, equation);
+    std::vector<LinearDomain> domains = tree.getDomains();
+    ASSERT_EQ(1, domains.size());
+    ASSERT_EQ(true, domains[0].equals({{{0,0,0,0},{2,0,0,0}}, {{0,1,0,0},{4,-1,0,0}}, {{0,1,1,0},{10,0,0,0}}}));
+
+    LinearEquation equation2({8,0,0,0}, {0,0,0,1});
+    LinearBoundsTree tree2(domains[0].getDomain(), equation2);
+    std::vector<LinearDomain> domains2 = tree2.getDomains();
+    ASSERT_EQ(1, domains2.size());
+    ASSERT_EQ(true, domains2[0].equals({{{0,0,0,0},{2,0,0,0}}, {{0,1,0,0},{4,-1,0,0}}, {{8,0,0,0},{10,0,0,0}}}));
+}
+
+TEST(LinearBoundsTree, ErrorThreeParallel2) {
+    LinearEquation equation({0,0,0,0}, {8,-1,-1,0});
+    LinearBoundsTree tree({{{0,0,0,0},{10,0,0,0}}, {{0,0,0,0},{10,0,0,0}}, {{0,0,0,0},{0,3,1,0}}}, equation);
+    std::vector<LinearDomain> domains = tree.getDomains();
+    ASSERT_EQ(1, domains.size());
+    ASSERT_EQ(true, domains[0].equals({{{0,0,0,0},{8,0,0,0}}, {{0,0,0,0},{8,-1,0,0}}, {{0,0,0,0},{0,3,1,0}}}));
+
+    LinearEquation equation2({8,0,0,0}, {0,1,1,1});
+    LinearBoundsTree tree2(domains[0].getDomain(), equation2);
+
+    std::vector<LinearBoundsTree::Node> leaves = tree2.getLeaves();
+
+    std::vector<LinearDomain> domains2 = tree2.getUniqueDomains();
+    ASSERT_EQ(2, domains2.size());
+    ASSERT_EQ(true, domains2[0].equals({{{0,0,0,0},{2,0,0,0}}, {{4,-2,0,0},{8,-1,0,0}}, {{8,-1,-1,0},{0,3,1,0}}}));
+    ASSERT_EQ(true, domains2[1].equals({{{2,0,0,0},{8,0,0,0}}, {{0,0,0,0},{8,-1,0,0}}, {{8,-1,-1,0},{0,3,1,0}}}));
+}

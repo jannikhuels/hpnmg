@@ -39,6 +39,7 @@ namespace hpnmg {
         std::vector<LinearBoundsTree::Node> getLeaves();
 
         std::vector<LinearDomain> getDomains();
+        std::vector<LinearDomain> getUniqueDomains();
 
         LinearBoundsTree(Domain domain, LinearEquation newCondition);
     private:

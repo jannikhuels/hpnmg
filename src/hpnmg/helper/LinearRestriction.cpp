@@ -20,4 +20,8 @@ namespace hpnmg {
         this->solutionOne = linearRestriction.solutionOne;
         this->solutionTwo = linearRestriction.solutionTwo;
     }
+
+    bool LinearRestriction::alwaysFalse() {
+        return this->solutionOne.alwaysFalse() || this->solutionTwo.alwaysFalse();
+    }
 }

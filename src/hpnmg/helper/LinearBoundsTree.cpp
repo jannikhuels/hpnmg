@@ -240,8 +240,10 @@ namespace hpnmg {
                 } else {
                     LinearBoundsTree::Node left = this->nodes[parent.childLeftTrueId];
                     for(LinearDomain ld : left.linearDomains) {
+                        ld.fill(this->domain);
                         if (!parent.equationOne.alwaysTrue) {
-                            ld.addEquation(parent.equationOne);
+                            ld.setSingleEquation(parent.equationOne);
+                            //ld.addEquation(parent.equationOne);
                         }
                         ld.fill(this->domain);
                         parent.linearDomains.push_back(ld);
@@ -288,5 +290,27 @@ namespace hpnmg {
 
     void LinearBoundsTree::setNode(int id, hpnmg::LinearBoundsTree::Node node) {
         this->nodes[id] = node;
+    }
+
+    bool containsDomain(std::vector<LinearDomain> domains, LinearDomain toCompare) {
+        for (LinearDomain d: domains) {
+            if (d.equals(toCompare.getDomain())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::vector<LinearDomain> LinearBoundsTree::getUniqueDomains() {
+        std::vector<LinearDomain> domains = this->getDomains();
+        std::vector<LinearDomain> uniqueDomains;
+
+        for (LinearDomain d : domains) {
+            if (!containsDomain(uniqueDomains, d) && !d.isEmpty()) {
+                uniqueDomains.push_back(d);
+            }
+        }
+
+        return uniqueDomains;
     }
 }
