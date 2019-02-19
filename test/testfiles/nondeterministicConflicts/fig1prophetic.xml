@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="pd_x1" marking="1"/>
+        <discretePlace id="pd_x2" marking="0"/>
+        <discretePlace id="pd_x3" marking="0"/>
+        <discretePlace id="pd_y1" marking="0"/>
+        <discretePlace id="pd_y2" marking="0"/>
+        <discretePlace id="pd_y3" marking="0"/>
+        <discretePlace id="pd_l0" marking="1"/>
+        <discretePlace id="pd_l1" marking="0"/>
+        <discretePlace id="pd_l2" marking="0"/>
+        <discretePlace id="pd_l3" marking="0"/>
+        <discretePlace id="pd_true" marking="0"/>
+        <discretePlace id="pd_false" marking="0"/>
+        <continuousPlace id="pc_x" capacity="1" infiniteCapacity="1" level="0.0"/>
+        <continuousPlace id="pc_y" capacity="1" infiniteCapacity="1" level="0.0"/>
+    </places>
+    <transitions>
+        <generalTransition id="tg_x" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0.0"/>
+            <parameter name="b" value="1.0"/>
+        </generalTransition>
+        <generalTransition id="tg_y" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0.0"/>
+            <parameter name="b" value="1.0"/>
+        </generalTransition>
+        <immediateTransition id="ti_1" priority="0" weight="1.0E0"/>
+        <immediateTransition id="ti_2" priority="0" weight="1.0E0"/>
+        <immediateTransition id="ti_3" priority="0" weight="1.0E0"/>
+        <immediateTransition id="ti_4" priority="0" weight="1.0E0"/>
+        <immediateTransition id="ti_5" priority="0" weight="1.0E0"/>
+        <immediateTransition id="ti_6" priority="0" weight="1.0E0"/>
+        <immediateTransition id="ti_7" priority="0" weight="1.0E0"/>
+        <immediateTransition id="ti_x" priority="0" weight="1.0E0"/>
+        <immediateTransition id="ti_y" priority="0" weight="1.0E0"/>
+        <continuousTransition id="tc_x_in" rate="1.0"/>
+        <continuousTransition id="tc_x_out" rate="1.0"/>
+        <continuousTransition id="tc_y_in" rate="1.0"/>
+        <continuousTransition id="tc_y_out" rate="1.0"/>
+    </transitions>
+    <arcs>
+        <discreteArc id="da_xa1" fromNode="pd_x1" toNode="tg_x" weight="1.0E0"/>
+        <discreteArc id="da_xb1" fromNode="tg_x" toNode="pd_x2" weight="1.0E0"/>
+        <discreteArc id="da_xa2" fromNode="pd_x2" toNode="ti_x" weight="1.0E0"/>
+        <discreteArc id="da_xb2" fromNode="ti_x" toNode="pd_x3" weight="1.0E0"/>
+        <discreteArc id="da_ya" fromNode="pd_y1" toNode="tg_y" weight="1.0E0"/>
+        <discreteArc id="da_yb" fromNode="tg_y" toNode="pd_y2" weight="1.0E0"/>
+        <discreteArc id="da_ya2" fromNode="pd_y2" toNode="ti_y" weight="1.0E0"/>
+        <discreteArc id="da_yb2" fromNode="ti_y" toNode="pd_y3" weight="1.0E0"/>
+        <discreteArc id="da_1a" fromNode="pd_l0" toNode="ti_1" weight="1.0E0"/>
+        <discreteArc id="da_1b" fromNode="ti_1" toNode="pd_l1" weight="1.0E0"/>
+        <discreteArc id="da_1a" fromNode="pd_l1" toNode="ti_2" weight="1.0E0"/>
+        <discreteArc id="da_1b" fromNode="ti_2" toNode="pd_l2" weight="1.0E0"/>
+        <discreteArc id="da_2a" fromNode="pd_l1" toNode="ti_3" weight="1.0E0"/>
+        <discreteArc id="da_2b" fromNode="ti_3" toNode="pd_l3" weight="1.0E0"/>
+        <discreteArc id="da_3a" fromNode="pd_l2" toNode="ti_4" weight="1.0E0"/>
+        <discreteArc id="da_3b" fromNode="ti_4" toNode="pd_true" weight="1.0E0"/>
+        <discreteArc id="da_4a" fromNode="pd_l2" toNode="ti_5" weight="1.0E0"/>
+        <discreteArc id="da_4b" fromNode="ti_5" toNode="pd_false" weight="1.0E0"/>
+        <discreteArc id="da_5a" fromNode="pd_l3" toNode="ti_6" weight="1.0E0"/>
+        <discreteArc id="da_5b" fromNode="ti_6" toNode="pd_true" weight="1.0E0"/>
+        <discreteArc id="da_6a" fromNode="pd_l3" toNode="ti_7" weight="1.0E0"/>
+        <discreteArc id="da_y_i4" fromNode="pd_y2" toNode="ti_4" weight="1.0E0"/>
+        <discreteArc id="da_x_i5" fromNode="pd_x2" toNode="ti_5" weight="1.0E0"/>
+        <discreteArc id="da_x_i6" fromNode="pd_x2" toNode="ti_6" weight="1.0E0"/>
+        <discreteArc id="da_y_i7" fromNode="pd_y2" toNode="ti_7" weight="1.0E0"/>
+        <guardArc id="ga_xa" fromNode="pd_x3" toNode="ti_4" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_xb" fromNode="pd_x3" toNode="ti_7" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_ya" fromNode="pd_y3" toNode="ti_5" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_yb" fromNode="pd_y3" toNode="ti_6" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_x_in" fromNode="pd_x1" toNode="tc_x_in" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_x_out" fromNode="pd_x2" toNode="tc_x_out" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_y_in" fromNode="pd_y1" toNode="tc_y_in" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_y_out" fromNode="pd_y2" toNode="tc_y_out" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_x_inh" fromNode="pc_x" toNode="ti_x" isInhibitor="1" weight="0.0"/>
+        <guardArc id="ga_y_inh" fromNode="pc_y" toNode="ti_y" isInhibitor="1" weight="0.0"/>
+        <guardArc id="ga_x2" fromNode="pd_x2" toNode="ti_1" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_x2" fromNode="pd_y2" toNode="ti_1" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ga_y1" fromNode="pd_l0" toNode="tc_x_out" isInhibitor="1" weight="0.0E0"/>
+        <guardArc id="ga_y1" fromNode="pd_l0" toNode="tc_y_out" isInhibitor="1" weight="0.0E0"/>
+        <continuousArc id="ca_x_in" fromNode="tc_x_in" priority="1" share="1.0E0" toNode="pc_x" weight="1.0E0"/>
+        <continuousArc id="ca_x_out" fromNode="pc_x" priority="1" share="1.0E0" toNode="tc_x_out" weight="1.0E0"/>
+        <continuousArc id="ca_y_in" fromNode="tc_y_in" priority="1" share="1.0E0" toNode="pc_y" weight="1.0E0"/>
+        <continuousArc id="ca_y_out" fromNode="pc_y" priority="1" share="1.0E0" toNode="tc_y_out" weight="1.0E0"/>
+    </arcs>
+</HPnG>

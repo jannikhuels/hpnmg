@@ -13,7 +13,7 @@ namespace hpnmg {
     bool NondeterminismSolver::fulfillsProperty(ParametricLocationTree::Node node){
 
     std::vector<int> discreteMarking = node.getParametricLocation().getDiscreteMarking();
-    if (discreteMarking[5] > 0)
+    if (discreteMarking[4] > 0) //fig5: discreteMarking[5] > 0 , fig1: discreteMarking[4] > 0
         return true;
 
     return false;
@@ -102,20 +102,21 @@ namespace hpnmg {
                 currentError = 0.0;
                 currentProbability = recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError);
 
-//TODO error in vergleich mit einbeziehen?
+                //if (first || (currentProbability - currentError > maxOrMinProbability + error && minimum == false) || (currentProbability + currentError < maxOrMinProbability - error && minimum == true)) { //error intervals do not overlap
                 if (first || (currentProbability > maxOrMinProbability && minimum == false) || (currentProbability < maxOrMinProbability && minimum == true)) {
-
                     currentBestChildIds.clear();
                     currentBestChildIds.push_back(currentChildId);
                     maxOrMinProbability = currentProbability;
                     error = currentError;
                     first = false;
 
-//TODO error in vergleich mit einbeziehen?
+               // } else if (currentProbability + currentError >= maxOrMinProbability - error && currentProbability - currentError <= maxOrMinProbability + error) { //overlapping error intervals
                 } else if (currentProbability == maxOrMinProbability) {
                     currentBestChildIds.push_back(currentChildId);
-                    if (currentError > error)
+                    if ((currentProbability > maxOrMinProbability && minimum == false) || (currentProbability < maxOrMinProbability && minimum == true)) {
+                        maxOrMinProbability = currentProbability;
                         error = currentError;
+                    }
                 }
             }
 
