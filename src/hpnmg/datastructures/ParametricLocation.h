@@ -9,38 +9,7 @@ namespace hpnmg {
 
 
     class ParametricLocation {
-
-    private:
-        std::vector<int> discreteMarking;
-        std::vector<std::vector<double>> continuousMarking;
-        std::vector<double> drift;
-        std::vector<std::vector<double>> deterministicClock;
-        std::vector<std::vector<double>> generalClock;
-        std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft;
-        std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
-        std::vector<int> generalTransitionFired; // order of general transitions, that already fired
-        std::vector<bool> generalTransitionsEnabled;
-
-        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
-
-        void scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound, double boundValue, double splitValue, int boundIndex, int splitIndex, bool parent);
-        void setSplitConstraints(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &newIntegrationIntervals, int index, int splitIndex, std::vector<double> splitBound, bool upper);
-        bool validBound(int index, int boundIndex, std::vector<double> newBound, bool upper);
-
-
     public:
-        const vector<bool> &getGeneralTransitionsEnabled() const;
-
-        void setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled);
-
-    private:
-        // enabling status in this loc for all general transitions
-        Event sourceEvent;
-        double conflictProbability;
-        double accumulatedProbability;
-        int dimension;
-    public:
-
         ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces, int numberOfGeneralTransitions);
 
         ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces, int numberOfGeneralTransitions,
@@ -56,6 +25,32 @@ namespace hpnmg {
                            std::vector<double> drift, int numberOfGeneralTransitions, const Event &sourceEvent,
                            std::vector<std::vector<std::vector<double>>> intervalBoundLeft,
                            std::vector<std::vector<std::vector<double>>> intervalBoundRight);
+
+        double getEarliestEntryTime();
+
+        double getLatestEntryTime();
+
+        double getMinimumTime(vector<vector<vector<double>>> lowerBoundaries,
+                              vector<vector<vector<double>>> upperBoundaries,
+                              double time,
+                              vector<double> dependencies
+        );
+
+        std::pair<std::vector<double>, std::vector<double>>
+        compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries,
+                std::pair<std::vector<double>, std::vector<double>> value,
+                int index
+        );
+
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>
+        getRVIntervals(std::vector<int> occurings, int maxTime, int dim);
+
+        //region simple getters/setters
+        int getDimension() const;
+
+        const vector<bool> &getGeneralTransitionsEnabled() const;
+
+        void setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled);
 
         std::vector<int> getDiscreteMarking() const;
 
@@ -83,7 +78,8 @@ namespace hpnmg {
 
         std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundRight() const;
 
-        void setGeneralIntervalBoundRight(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundRight);
+        void
+        setGeneralIntervalBoundRight(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundRight);
 
         Event getSourceEvent() const;
 
@@ -97,28 +93,49 @@ namespace hpnmg {
 
         void setAccumulatedProbability(double accumulatedProbability);
 
-        int getDimension() const;
-
         std::vector<int> getGeneralTransitionsFired() const;
 
         void setGeneralTransitionsFired(std::vector<int> generalTransitionsFired);
 
-        int getId() const;
+        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>>
+        getIntegrationIntervals() const;
 
-        double getEarliestEntryTime();
+        void setIntegrationIntervals(std::vector<std::vector<double>> time,
+                                     std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds,
+                                     double value,
+                                     std::vector<int> occurings,
+                                     int dimension,
+                                     int maxTime
+        );
+        //endregion simple getters/setters
 
-        double getLatestEntryTime();
+    private:
+        void scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound,
+                                          double boundValue, double splitValue, int boundIndex, int splitIndex,
+                                          bool parent);
 
-        double getMinimumTime(vector<vector<vector<double>>> lowerBoundaries, vector<vector<vector<double>>> upperBoundaries, double time, vector<double> dependencies);
+        void setSplitConstraints(
+                std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &newIntegrationIntervals,
+                int index, int splitIndex, std::vector<double> splitBound, bool upper);
 
-        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> getIntegrationIntervals() const;
+        bool validBound(int index, int boundIndex, std::vector<double> newBound, bool upper);
 
-        void setIntegrationIntervals(std::vector<std::vector<double>> time, std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds, double value, std::vector<int> occurings,
-                                     int dimension, int maxTime);
+        Event sourceEvent;
+        double conflictProbability;
+        double accumulatedProbability;
+        int dimension;
 
-        std::pair<std::vector<double>, std::vector<double>> compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index);
+        std::vector<int> discreteMarking;
+        std::vector<std::vector<double>> continuousMarking;
+        std::vector<double> drift;
+        std::vector<std::vector<double>> deterministicClock;
+        std::vector<std::vector<double>> generalClock;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
+        std::vector<int> generalTransitionFired; // order of general transitions, that already fired
+        std::vector<bool> generalTransitionsEnabled; // enabling status in this loc for all general transitions
 
-        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervals(std::vector<int> occurings, int maxTime, int dim);
+        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
 
     };
 }
