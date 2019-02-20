@@ -189,24 +189,37 @@ namespace hpnmg {
     void ParametricLocationTree::updateRegions() {
         std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator root;
         root = parametricLocations.find(ROOT_NODE_INDEX);
-        Region r = STDiagram::createBaseRegion(this->getDimension(), this->maxTime);
-        recursivelySetRegions(root->second, r);
+        recursivelySetRegions(root->second);
     }
     
-    void ParametricLocationTree::recursivelySetRegions(ParametricLocationTree::Node &startNode, Region &r) {
+    void ParametricLocationTree::recursivelySetRegions(ParametricLocationTree::Node &startNode) {
+        const auto dimension = this->getDimension();
+        const auto &rvIntervals = startNode.getParametricLocation().getRVIntervals(
+            getDimensionRecursively(getRootNode(), startNode.getParametricLocation().getGeneralClock().size()),
+            this->maxTime,
+            dimension
+        );
+        Region baseRegion = STDiagram::createBaseRegion(dimension, this->maxTime, rvIntervals);
         std::vector<ParametricLocationTree::Node> childNodes = getChildNodes(startNode);
         if (!childNodes.empty()) {
-            Region region = STDiagram::createRegion(r, startNode.getParametricLocation().getSourceEvent(), getSourceEventsFromNodes(childNodes));
-            startNode.setRegion(region);
+            startNode.setRegion(STDiagram::createRegion(
+                baseRegion,
+                startNode.getParametricLocation().getSourceEvent(),
+                getSourceEventsFromNodes(childNodes)
+            ));
 
-            std::pair <std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator, std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator> ret;
-            ret = parametricLocations.equal_range(startNode.getNodeID());
+            const auto &ret = parametricLocations.equal_range(startNode.getNodeID());
             for (auto it=ret.first; it!=ret.second; ++it) {
-                recursivelySetRegions(it->second, r);
+                recursivelySetRegions(it->second);
             }
         } else {
             //TODO Change when a single general transitions fires more than one time
-            Region region = STDiagram::createRegionNoEvent(r, startNode.getParametricLocation().getSourceEvent(), startNode.getParametricLocation().getGeneralIntervalBoundLeft()[0][0], startNode.getParametricLocation().getGeneralIntervalBoundRight()[0][0]);
+            Region region = STDiagram::createRegionNoEvent(
+                baseRegion,
+                startNode.getParametricLocation().getSourceEvent(),
+                startNode.getParametricLocation().getGeneralIntervalBoundLeft()[0][0],
+                startNode.getParametricLocation().getGeneralIntervalBoundRight()[0][0]
+            );
             startNode.setRegion(region);
         }
     }

@@ -33,6 +33,8 @@ namespace hpnmg {
         // TODO: Do not create a base region but instead try to read it from the PLT.
         static Region createBaseRegion(int dimension, int maxTime);
 
+        static Region createBaseRegion(int dimension, int maxTime, const std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> &rvIntervals);
+
         static Region createRegionForVertices(std::vector<Point<double>> vertices);
 
         static Halfspace<double> createHalfspaceForTime(const double &time, int dimension);

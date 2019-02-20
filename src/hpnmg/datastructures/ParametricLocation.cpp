@@ -1,5 +1,10 @@
 #include "ParametricLocation.h"
 
+#include <algorithm>
+#include <cassert>
+
+#include "representations/GeometricObject.h"
+
 namespace hpnmg {
 
     ParametricLocation::ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces,
@@ -451,9 +456,23 @@ namespace hpnmg {
         }*/
     }
 
+    /**
+     * Each element (int transition, ([double] lower, [double] upper)) of the result vector represents the <code>lower</code>
+     * and <code>upper</code> limit of the firing time of the <code>transition</code>.
+     *
+     * If <code>transition</code> occurs multiple times, this represents multiple firings of that transition in chronological order.
+     *
+     * The vectors <code>lower</code> and <code>upper</code> represent the coefficients of linear (in)equations
+     * depending on other firing times, ordered as usual (that is, in global firing order [?]).
+     *
+     * @param occurings
+     * @param maxTime
+     * @param dim
+     * @return
+     */
     std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getRVIntervals(std::vector<int> occurings, int maxTime, int dim) {
-        std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
-        std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
+        const std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
+        const std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
 
         vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();
         /*
@@ -461,11 +480,9 @@ namespace hpnmg {
          */
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result;
 
-        vector<int> counter = vector<int>(occurings.size());
-        fill(counter.begin(), counter.end(),0);
+        vector<int> counter = vector<int>(occurings.size(), 0);
 
-        vector<double> bound(dim);
-        fill(bound.begin(), bound.end(), 0);
+        vector<double> bound(dim, 0);
         vector<double> zero = bound;
         vector<double> mTime = bound;
         mTime[0] = maxTime;
@@ -488,11 +505,11 @@ namespace hpnmg {
                 int firing = i;
                 if (j < this->getGeneralIntervalBoundLeft().size() && firing < this->getGeneralIntervalBoundLeft()[j].size()) {
                     lastFiring = firing;
-                    bool enablingTimeGreaterZero = false;
-                    for (int l = 0; l < this->getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
-                        if (this->getGeneralIntervalBoundLeft()[j][firing][l] > 0)
-                            enablingTimeGreaterZero = true;
-                    }
+                    bool enablingTimeGreaterZero = std::any_of(
+                            leftBoundaries[j][firing].begin(),
+                            leftBoundaries[j][firing].end(),
+                            [](const auto &bound) { return bound > 0; }
+                    );
                     if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
                         result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(
                                 fillVector(leftBoundaries[j][firing], dim),
@@ -591,5 +608,4 @@ namespace hpnmg {
     std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> ParametricLocation::getIntegrationIntervals() const{
         return this->integrationIntervals;
     }
-
 }

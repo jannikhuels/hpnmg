@@ -5,25 +5,65 @@ namespace hpnmg {
     Region STDiagram::createBaseRegion(int dimension, int maxTime) {
         if (dimension < 1)
             throw IllegalDimensionException(dimension);
-        if (maxTime < 1) {
+        if (maxTime < 1)
             throw IllegalMaxTimeException(maxTime);
+
+        const auto lower = std::vector<double>(dimension, 0);
+        auto upper = std::vector<double>(lower);
+        upper[0] = maxTime;
+
+        //TODO: createBaseRegion(int, int, rvIntervals) does not use the transition index of the rvIntervals, but is it
+        // really okay to just put a fake value of 0 there?
+        const auto rvIntervals = std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>(
+            dimension,
+            {0, {lower, upper}}
+        );
+
+        return createBaseRegion(dimension, maxTime, rvIntervals);
+    }
+
+    Region STDiagram::createBaseRegion(int dimension, int maxTime, const std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> &rvIntervals) {
+        Region::PolytopeT polytope{};
+
+        // Ensure that the polytope is properly limited by the time in every dimension
+        for (int currentDimension = 0; currentDimension < dimension; ++currentDimension)
+        {
+            hypro::vector_t<double> dimensionDirection = hypro::vector_t<double>::Zero(dimension);
+            dimensionDirection[currentDimension] = 1;
+            polytope.insert(Halfspace<double>(-dimensionDirection, 0));
+            polytope.insert(Halfspace<double>(dimensionDirection, maxTime));
         }
 
-        std::vector<Halfspace<double>> box;
+        // Each RV corresponds to one dimension of the region. We'll restrict the polytope accordingly.
+        for (int currentRV = 0; currentRV < rvIntervals.size(); ++currentRV) {
+            const auto &firing = rvIntervals[currentRV];
+            const auto &lowerBound = firing.second.first;
+            const auto &upperBound = firing.second.second;
 
-        for (int i = 0; i < dimension; i++) {
-            vector_t<double> direction = vector_t<double>::Zero(dimension);
-            direction[i] = -1;
-  
-            Halfspace<double> lowerHsp(direction,0);
-            box.emplace_back(lowerHsp);
+            assert(lowerBound.size() == upperBound.size());
+            // The dimension must be large enough to include all firings plus time
+            assert(dimension >= lowerBound.size());
+            if (!lowerBound.empty()) {
+                hypro::vector_t<double> lowerDirection = hypro::vector_t<double>::Zero(dimension);
+                hypro::vector_t<double> upperDirection = hypro::vector_t<double>::Zero(dimension);
 
-            Halfspace<double> upperHsp(-direction,maxTime);
-            box.emplace_back(upperHsp);            
+                double lowerOffset = lowerBound[0];
+                lowerDirection[currentRV] = 1;
+                double upperOffset = upperBound[0];
+                upperDirection[currentRV] = 1;
+
+                for (int dependencyRV = 0; dependencyRV + 1 < lowerBound.size(); ++dependencyRV) {
+                    // Move the coefficients from the right side of the (in)equation to the left side
+                    lowerDirection[dependencyRV] -= lowerBound[dependencyRV + 1];
+                    upperDirection[dependencyRV] -= upperBound[dependencyRV + 1];
+                }
+
+                polytope.insert(Halfspace<double>(-lowerDirection, -lowerOffset));
+                polytope.insert(Halfspace<double>(upperDirection, upperOffset));
+            }
         }
 
-        Region diagramPolytope(box);
-        return diagramPolytope;
+        return Region(polytope);
     }
 
     Region STDiagram::createRegion(const Region &baseRegion, const Event &sourceEvent, const std::vector<Event> &destinationEvents) {

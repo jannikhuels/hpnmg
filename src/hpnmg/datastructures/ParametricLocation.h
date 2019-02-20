@@ -119,6 +119,5 @@ namespace hpnmg {
         std::pair<std::vector<double>, std::vector<double>> compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index);
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervals(std::vector<int> occurings, int maxTime, int dim);
-
     };
 }

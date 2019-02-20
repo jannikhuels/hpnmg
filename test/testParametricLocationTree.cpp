@@ -168,9 +168,9 @@ TEST(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
 }
 
 TEST(ParametricLocationTreeXML, CreateRegions) {
-    shared_ptr<hpnmg::ParametricLocationTree> plt = ParseHybridPetrinet().parseHybridPetrinet(
-            ReadHybridPetrinet{}.readHybridPetrinet("norep_1_1.xml"),
-            20
+    shared_ptr<hpnmg::ParametricLocationTree> plt = ParseHybridPetrinet{}.parseHybridPetrinet(
+        ReadHybridPetrinet{}.readHybridPetrinet("norep_1_1.xml"),
+        20
     );
     plt->updateRegions();
 
