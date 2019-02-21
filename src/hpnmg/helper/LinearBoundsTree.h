@@ -42,6 +42,8 @@ namespace hpnmg {
         std::vector<LinearDomain> getUniqueDomains();
 
         LinearBoundsTree(Domain domain, LinearEquation newCondition);
+
+        static Domain Repair(Domain domain);
     private:
         Domain domain;
         int create(Domain domain, LinearRestriction restriction, int parentId);
