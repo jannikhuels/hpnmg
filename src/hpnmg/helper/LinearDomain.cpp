@@ -99,6 +99,15 @@ namespace hpnmg {
             return true;
         } else if (lin.isValid()) {
             if (lin.localDomain[0].first[0] <= this->localDomain[0].first[0] && lin.localDomain[0].second[0] >= this->localDomain[0].second[0]) {
+
+                /*
+                 * Ensure that at least the new restriction from the tree was set.
+                 */
+                if (this->localDomain.size() == lin.localDomain.size()-1) {
+                    int index = lin.localDomain.size()-1;
+                    this->localDomain.push_back(lin.localDomain[index]);
+                }
+
                 return true;
             }
         }
@@ -118,10 +127,16 @@ namespace hpnmg {
     }
 
     void LinearDomain::addEquation(hpnmg::LinearEquation linEq) {
+        int index = linEq.dependencyIndex;
+        if (this->localDomain.size() <= index) {
+            for (int i = this->localDomain.size(); i<= index; i++) {
+                this->localDomain.push_back({{}, {}});
+            }
+        }
         if (linEq.isUpper) {
-            this->localDomain.push_back({{}, linEq.equation});
+            this->localDomain[index].second = linEq.equation;
         } else {
-            this->localDomain.push_back({linEq.equation, {}});
+            this->localDomain[index].first = linEq.equation;
         }
     }
 
