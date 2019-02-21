@@ -18,11 +18,12 @@
 namespace hpnmg {
 
     typedef struct {
-        vector<ParametricLocationTree::Node> candidatesLeft;
-        vector<ParametricLocationTree::Node> candidatesRight;
+        vector<ParametricLocationTree::Node> candidatesFirst;
+        vector<ParametricLocationTree::Node> candidatesSecond;
         vector<pair<string, map<string, float>>>  distributions;
         double maxTime;
         double prob;
+        double error;
         double result;
         int functioncalls;
         char algorithm;
@@ -61,5 +62,9 @@ namespace hpnmg {
 
     };
 
-   void optimizationFunction(const alglib::real_1d_array &x, alglib::real_1d_array &fi, void *ptr);
+    void computeSubTree(nondetParams* params, alglib::real_1d_array &fi, bool firstTree, double a, int &counterConstraints, int i, double &prob, double &error);
+
+    void optimizationFunction(const alglib::real_1d_array &x, alglib::real_1d_array &fi, void *ptr);
+
+
 }

@@ -43,7 +43,7 @@ TEST(ParametricLocationTreeXML, Nondeterministic) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicConflicts/nondet1_2g.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicConflicts/fig5prophetic.xml");
 
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 2);
@@ -60,11 +60,11 @@ TEST(ParametricLocationTreeXML, Nondeterministic) {
 
     NondeterminismSolver solver;
     double error;
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 5000, 128, false, false, error);
+    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 5000, 128, false, true, error);
 
     vector<vector<int>> bestIds = solver.getBestChildIds();
 
-    cout << "Max probability: " << maxprob << endl;
+    cout << "Max probability: " << maxprob << " +- " << error << endl;
 }
 
 

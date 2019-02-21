@@ -4,7 +4,7 @@
         <discretePlace id="pd_x1" marking="1"/>
         <discretePlace id="pd_x2" marking="0"/>
         <discretePlace id="pd_x3" marking="0"/>
-        <discretePlace id="pd_y1" marking="0"/>
+        <discretePlace id="pd_y1" marking="1"/>
         <discretePlace id="pd_y2" marking="0"/>
         <discretePlace id="pd_y3" marking="0"/>
         <discretePlace id="pd_l0" marking="1"/>
