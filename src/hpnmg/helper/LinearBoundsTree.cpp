@@ -148,13 +148,14 @@ namespace hpnmg {
         std::vector<LinearDomain> combination;
         for (LinearDomain l : aTrue) {
             if (l.isValid()) {
-                LinearDomain c = l;
                 for (LinearDomain f : bTrue) {
-                    if (f.isValid() && l.intersect(f)) {
-                        combination.push_back(l);
+                    LinearDomain c = l;
+                    if (f.isValid() && c.intersect(f)) {
+                        combination.push_back(c);
                     }
                 }
                 for (LinearDomain f : bFalse) {
+                    LinearDomain c = l;
                     if (f.isValid() && c.intersect(f)) {
                         combination.push_back(c);
                     }
@@ -163,14 +164,15 @@ namespace hpnmg {
         }
 
         for (LinearDomain l : aFalse) {
-            LinearDomain c = l;
             if (l.isValid()) {
                 for (LinearDomain f : bTrue) {
-                    if (f.isValid() && l.intersect(f)) {
-                        combination.push_back(l);
+                    LinearDomain c = l;
+                    if (f.isValid() && c.intersect(f)) {
+                        combination.push_back(c);
                     }
                 }
                 for (LinearDomain f : bFalse) {
+                    LinearDomain c = l;
                     if (f.isValid() && c.intersect(f)) {
                         combination.push_back(c);
                     }
@@ -312,5 +314,30 @@ namespace hpnmg {
         }
 
         return uniqueDomains;
+    }
+
+    Domain LinearBoundsTree::Repair(hpnmg::Domain domain) {
+        bool restrictionFound = false;
+        LinEq first;
+        LinEq second;
+        for (LinearBound b : domain) {
+            if (Computation::getDependencyIndex(b.first) > 0 || Computation::getDependencyIndex(b.second) > 0) {
+                restrictionFound = true;
+                first = b.first;
+                second = b.second;
+            }
+        }
+
+        if (restrictionFound) {
+            LinearEquation linEq(first, second);
+            if (!linEq.alwaysTrue) {
+                LinearBoundsTree tree(domain, linEq);
+                return tree.getUniqueDomains()[0].getDomain();
+            } else {
+                return domain;
+            }
+        } else {
+            return domain;
+        }
     }
 }

@@ -565,11 +565,15 @@ namespace hpnmg {
                 bool upper = Computation::isUpper(startEvent, t, k);
                 LinearEquation eq(newBound, upper, k-1);
                 Domain ld = LinearDomain::createDomain(currentBounds);
+                //TODO: Remove Repair when bounds in the PLT are created correctly.
+                ld = LinearBoundsTree::Repair(ld);
                 LinearBoundsTree tree(ld, eq);
                 std::vector<LinearDomain> dms = tree.getUniqueDomains();
                 linearDomains.insert(linearDomains.end(), dms.begin(), dms.end());
             } else {
                 Domain ld = LinearDomain::createDomain(currentBounds);
+                //TODO: Remove Repair when bounds in the PLT are created correctly.
+                ld = LinearBoundsTree::Repair(ld);
                 LinearDomain l(ld);
                 linearDomains.push_back(l);
             }

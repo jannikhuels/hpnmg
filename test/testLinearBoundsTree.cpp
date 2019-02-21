@@ -180,3 +180,112 @@ TEST(LinearBoundsTree, ErrorThreeParallel2) {
     ASSERT_EQ(true, domains2[0].equals({{{0,0,0,0},{2,0,0,0}}, {{4,-2,0,0},{8,-1,0,0}}, {{8,-1,-1,0},{0,3,1,0}}}));
     ASSERT_EQ(true, domains2[1].equals({{{2,0,0,0},{8,0,0,0}}, {{0,0,0,0},{8,-1,0,0}}, {{8,-1,-1,0},{0,3,1,0}}}));
 }
+
+TEST(LinearBoundsTree, ErrorThreeParallel3) {
+    LinearEquation equation({0,0,0,0}, {8,0,0,-1});
+    LinearBoundsTree tree({{{0,0,0,0},{10,0,0,0}}, {{0,1,0,0},{10,0,0,0}}, {{0,1,1,0},{0,2,2,0}}}, equation);
+    std::vector<LinearDomain> domains = tree.getUniqueDomains();
+    ASSERT_EQ(3, domains.size());
+    ASSERT_EQ(true, domains[0].equals({{{0,0,0,0},{2,0,0,0}}, {{4,-1,0,0},{8,-1,0,0}}, {{0,1,1,0},{8,0,0,0}}}));
+    ASSERT_EQ(true, domains[1].equals({{{2,0,0,0},{4,0,0,0}}, {{0,1,0,0},{8,-1,0,0}}, {{0,1,1,0},{8,0,0,0}}}));
+    ASSERT_EQ(true, domains[2].equals({{{0,0,0,0},{2,0,0,0}}, {{0,1,0,0},{4,-1,0,0}}, {{0,1,1,0},{0,2,2,0}}}));
+
+    LinearEquation equation2({8,0,0,0}, {0,1,1,0.5});
+
+    LinearBoundsTree tree2(domains[0].getDomain(), equation2);
+    std::vector<LinearDomain> domains2 = tree2.getUniqueDomains();
+    ASSERT_EQ(2, domains2.size());
+
+    LinearBoundsTree tree3(domains[1].getDomain(), equation2);
+    std::vector<LinearDomain> domains3 = tree3.getUniqueDomains();
+    ASSERT_EQ(3, domains3.size());
+
+    LinearBoundsTree tree4(domains[2].getDomain(), equation2);
+    std::vector<LinearDomain> domains4 = tree4.getUniqueDomains();
+    ASSERT_EQ(0, domains4.size());
+}
+
+TEST(LinearBoundsTree, ErrorFour) {
+    LinearEquation equation({0,1,1,1,0}, {8,0,0,0,0});
+    LinearBoundsTree tree({{{0,0,0,0,0},{10,0,0,0,0}}, {{0,1,0,0,0},{10,0,0,0,0}}, {{0,1,1,0,0},{10,0,0,0,0}},{{0,1,1,1,0},{10,0,0,0,0}}}, equation);
+    std::vector<LinearDomain> domains = tree.getUniqueDomains();
+    ASSERT_EQ(1, domains.size());
+    ASSERT_EQ(true, domains[0].equals({{{0,0,0,0,0},{2,0,0,0,0}}, {{0,1,0,0,0},{4,-1,0,0,0}}, {{0,1,1,0,0},{8,-1,-1,0,0}},{{0,1,1,1,0},{10,0,0,0,0}}}));
+
+    LinearEquation equation2({8,0,0,0,0}, {0,0,0,0,1});
+
+    LinearBoundsTree tree2(domains[0].getDomain(), equation2);
+
+    std::vector<LinearDomain> domains2 = tree2.getUniqueDomains();
+    ASSERT_EQ(1, domains2.size());
+    ASSERT_EQ(true, domains2[0].equals({{{0,0,0,0,0},{2,0,0,0,0}}, {{0,1,0,0,0},{4,-1,0,0,0}}, {{0,1,1,0,0},{8,-1,-1,0,0}},{{8,0,0,0,0},{10,0,0,0,0}}}));
+}
+
+TEST(LinearBoundsTree, RepairResult)
+{
+    LinearEquation equation({0,2,1,0}, {0,0,0,1});
+    LinearBoundsTree tree({{{0,0,0,0},{10,0,0,0}}, {{0,0,0,0},{10,0,0,0}}, {{0,0,0,0},{10,0,0,0}}}, equation);
+    std::vector<LinearDomain> domains = tree.getUniqueDomains();
+    ASSERT_EQ(1, domains.size());
+    ASSERT_EQ(true, domains[0].equals({{{0,0,0,0},{5,0,0,0}}, {{0,0,0,0},{10,-2,0,0}}, {{0,2,1,0},{10,0,0,0}}}));
+}
+
+TEST(LinearBoundsTree, Repair)
+{
+    Domain d = LinearBoundsTree::Repair({{{0,0,0,0},{10,0,0,0}}, {{0,0,0,0},{10,0,0,0}}, {{0,2,1,0},{10,0,0,0}}});
+    LinearDomain ld(d);
+    ASSERT_EQ(true, ld.equals({{{0,0,0,0},{5,0,0,0}}, {{0,0,0,0},{10,-2,0,0}}, {{0,2,1,0},{10,0,0,0}}}));
+}
+
+TEST(LinearBoundsTree, ErrorFiveOne) {
+    LinearEquation equation({0, 1, 1, 1, 0}, {8, 0, 0, 0, 0});
+    LinearBoundsTree tree({{{0, 0, 0, 0, 0}, {10, 0, 0, 0, 0}},
+                           {{0, 0, 0, 0, 0}, {10, 0, 0, 0, 0}},
+                           {{0, 0, 0, 0, 0}, {10, 0, 0, 0, 0}},
+                           {{0, 0, 0, 0, 0}, {0, 2, 1, 0, 0}}}, equation);
+    std::vector<LinearDomain> domains = tree.getUniqueDomains();
+    ASSERT_EQ(1, domains.size());
+    ASSERT_EQ(true, domains[0].equals({{{0, 0, 0, 0, 0}, {8,  0,  0,  0, 0}},
+                                       {{0, 0, 0, 0, 0}, {8,  -1, 0,  0, 0}},
+                                       {{0, 0, 0, 0, 0}, {8,  -1, -1, 0, 0}},
+                                       {{0, 0, 0, 0, 0}, {0, 2,  1,  0, 0}}}));
+
+    LinearEquation equation2({8, 0, 0, 0, 0}, {0, 1, 1, 1, 1});
+
+    LinearBoundsTree tree2(domains[0].getDomain(), equation2);
+    std::vector<LinearDomain> domains2 = tree2.getUniqueDomains();
+    ASSERT_EQ(3, domains2.size());
+    /*ASSERT_EQ(true, domains2[0].equals({{{0, 0,  0,  0,  0}, {8,  0,  0,  0, 0}},
+                                        {{0, 0,  0,  0,  0}, {8,  -1, 0,  0, 0}},
+                                        {{0, 0,  0,  0,  0}, {8,  -1, -1, 0, 0}},
+                                        {{8, -1, -1, -1, 0}, {10, 0,  0,  0, 0}}}));*/
+}
+
+TEST(LinearBoundsTree, ErrorFiveTwo) {
+    LinearEquation equation({0, 0, 0, 0, 0}, {8, -1, -1, -1, 0});
+    Domain d = LinearBoundsTree::Repair({{{0, 0, 0, 0, 0}, {10, 0, 0, 0, 0}},
+                                         {{0, 0, 0, 0, 0}, {10, 0, 0, 0, 0}},
+                                         {{0, 0, 0, 0, 0}, {10, 0, 0, 0, 0}},
+                                         {{0, 2, 1, 0, 0}, {10, 0, 0, 0, 0}}});
+    LinearBoundsTree tree(d, equation);
+    std::vector<LinearDomain> domains = tree.getUniqueDomains();
+    ASSERT_EQ(2, domains.size());
+    ASSERT_EQ(true, domains[0].equals({{{0, 0, 0, 0, 0}, {2,  0,  0,  0, 0}},
+                                       {{0, 0, 0, 0, 0}, {8,  -1, 0,  0, 0}},
+                                       {{0, 0, 0, 0, 0}, {8,  -1, -1, 0, 0}},
+                                       {{0, 2, 1, 0, 0}, {10, 0,  0,  0, 0}}}));
+    ASSERT_EQ(true, domains[1].equals({{{2, 0, 0, 0, 0}, {5,  0,  0,  0, 0}},
+                                       {{0, 0, 0, 0, 0}, {10, -2, 0,  0, 0}},
+                                       {{0, 0, 0, 0, 0}, {8,  -1, -1, 0, 0}},
+                                       {{0, 2, 1, 0, 0}, {10, 0,  0,  0, 0}}}));
+
+    LinearEquation equation2({8, 0, 0, 0, 0}, {0, 3, 2, 1, 0});
+
+    LinearBoundsTree tree2(domains[0].getDomain(), equation2);
+    std::vector<LinearDomain> domains2 = tree2.getUniqueDomains();
+    ASSERT_EQ(2, domains2.size());
+
+    LinearBoundsTree tree3(domains[1].getDomain(), equation2);
+    std::vector<LinearDomain> domains3 = tree3.getUniqueDomains();
+    ASSERT_EQ(3, domains3.size());
+}
