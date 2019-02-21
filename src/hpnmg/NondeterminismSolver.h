@@ -4,15 +4,14 @@
 #include "datastructures/ParametricLocation.h"
 #include "datastructures/Event.h"
 #include "ProbabilityCalculator.h"
+#include "helper/LinearBoundsTree.h"
 #include <math.h>
 #include <iostream>
 #include <stdlib.h>
-
-#include "../src/hpnmg/optimization/stdafx.h"
-#include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
+#include "../src/hpnmg/optimization/stdafx.h"
 #include "../src/hpnmg/optimization/optimization.h"
+
 
 
 namespace hpnmg {

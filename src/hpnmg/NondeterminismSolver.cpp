@@ -152,7 +152,6 @@ namespace hpnmg {
 
     void computeSubTree(nondetParams* params, real_1d_array &fi, bool firstTree, double a, int &counterConstraints, int i, double &prob, double &error){
 
-        bool found;
 
         vector<ParametricLocationTree::Node> nodes;
         if (firstTree)
@@ -161,54 +160,76 @@ namespace hpnmg {
             nodes = (*params).candidatesSecond;
 
 
-       //for all candidates in sub-tree
-       for (ParametricLocationTree::Node node : nodes) {
+        //for all candidates in sub-tree
+        for (ParametricLocationTree::Node node : nodes) {
 
-           ParametricLocation location = node.getParametricLocation();
-           std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
+            ParametricLocation location = node.getParametricLocation();
+            vector<vector<pair<int, pair<vector<double>, vector<double>>>>> originalIntegrationIntervals = location.getIntegrationIntervals();
+            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> newIntegrationIntervals;
 
-           std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> currentIntegrationIntervals;
-           found = false;
-
-           //for multiple interval sets, find interval which contains a
-           vector<vector<pair<int, pair<vector<double>, vector<double>>>>> intervals = location.getIntegrationIntervals();
-           for (int j = 0; j < intervals.size();j++){
-               if (intervals[j][i].second.first[0] <= a && intervals[j][i].second.second[0] >= a) {
-                   currentIntegrationIntervals = intervals[j];
-                   found = true;
-                   break;
-               }
-           }
-
-
-           if (found){
-
-               fi[counterConstraints] = currentIntegrationIntervals[i].second.first[0] - a; //inequality <=0
-               counterConstraints++;
-               fi[counterConstraints] = a - currentIntegrationIntervals[i].second.second[0]; //inequality <=0
-               counterConstraints++;
-               if (firstTree)
-                    currentIntegrationIntervals[i].second.second[0] = a;
-               else
-                    currentIntegrationIntervals[i].second.first[0] = a;
-
-               //TODO Sonderfall wenn Abhängigkeiten von anderen RV bestehen
-
-               integrationIntervals.push_back(currentIntegrationIntervals);
-               location.overwriteIntegrationIntervals(integrationIntervals);
+//            std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> intervalContainingA;
+//
+//            double minLower = originalIntegrationIntervals[0][i].second.first[0];
+//            double maxUpper = originalIntegrationIntervals[0][i].second.second[0];
+//
+//            //for multiple interval sets, find maximal upper bound and minimal lower bound
+//
+//            for (int j = 1; j < originalIntegrationIntervals.size();j++){
+//                if (originalIntegrationIntervals[j][i].second.first[0] <= a && originalIntegrationIntervals[j][i].second.second[0] >= a) {
+//                    intervalContainingA = originalIntegrationIntervals[j];
+//                    found = true;
+//                    break;
+//                }
+//                if (originalIntegrationIntervals[j][i].second.first[0] < minLower)
+//                    minLower = originalIntegrationIntervals[j][i].second.first[0];
+//
+//                if (originalIntegrationIntervals[j][i].second.second[0])
+//            }
+//
+//            if (found){//
+//                fi[counterConstraints] = intervalContainingA[i].second.first[0] - a; //inequality <=0
+//                counterConstraints++;
+//                fi[counterConstraints] = a - intervalContainingA[i].second.second[0]; //inequality <=0
+//                counterConstraints++;//
+//            }
 
 
-               auto calculator = new ProbabilityCalculator();
-               if ((*params).algorithm == 0)
-                   //Gauss Legendre
-                   prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(location, (*params).distributions, (*params).maxTime, (*params).evaluations);
-               else
-                   //Monte Carlo
-                   prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(location, (*params).distributions, (*params).maxTime, (*params).algorithm, (*params).functioncalls, error);
 
-           }
+            int dim = location.getDimension();
+            std::vector<double> LinEqLeft(dim, 0.0);
+            std::vector<double> LinEqRight(dim, 0.0);
+
+            if (firstTree) {
+                LinEqLeft[i + 1] = 1.0; // s  <=  a
+                LinEqRight[0] = a;
+            } else {
+                LinEqLeft[0] = a;
+                LinEqRight[i + 1] = 1.0; // a  <=  s
+            }
+            LinearEquation equation(LinEqLeft, LinEqRight);
+
+            for (DomainWithIndex domainWithIndex : originalIntegrationIntervals) {
+                Domain domain = LinearDomain::createDomain(domainWithIndex);
+                LinearBoundsTree tree(domain, equation);
+                std::vector<LinearDomain> domains = tree.getUniqueDomains();
+                for (LinearDomain resultDomain : domains) {
+                    newIntegrationIntervals.push_back(resultDomain.toDomainWithIndex(domainWithIndex));
+                }
+            }
+
+
+            location.overwriteIntegrationIntervals(newIntegrationIntervals);
+
+
+            auto calculator = new ProbabilityCalculator();
+            if ((*params).algorithm == 0)
+                //Gauss Legendre
+                prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(location, (*params).distributions, (*params).maxTime, (*params).evaluations);
+            else
+                //Monte Carlo
+                prob += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(location, (*params).distributions, (*params).maxTime, (*params).algorithm, (*params).functioncalls, error);
+
        }
-
     }
 
 
@@ -220,12 +241,12 @@ namespace hpnmg {
         double currentError = 0.0;
         int counterConstraints = 1;
 
-        //cout << x[0] << endl;
+        cout << x[0] << endl;
         nondetParams* params = (nondetParams *)ptr;
 
         //for all random variables
         //TODO only for fired RV with corresponding continuous place -> how to find out? for now only first variable
-        int i = 0;
+        int i = 1;
 
         computeSubTree(params, fi,  true, x[0], counterConstraints, i, prob, currentError);
         error += currentError;
@@ -249,7 +270,6 @@ namespace hpnmg {
 
 
         double maxOrMinProbability = 0.0;
-        double currentProbability;
         double currentError;
 
         auto calculator = new ProbabilityCalculator();
@@ -305,9 +325,6 @@ namespace hpnmg {
                         currentParams.functioncalls = min(1000, functioncalls);
                         currentParams.distributions = (*this->plt).getDistributions();
                         currentParams.maxTime = (*this->plt).getMaxTime();
-
-
-                        //TODO bessere Struktur für Candidates, damit diese unten noch wieder verwendet werden können
 
                         currentParams.candidatesSecond = currentCandidatesVector[second];
                         currentParams.candidatesFirst = currentCandidatesVector[first];
@@ -366,38 +383,36 @@ namespace hpnmg {
                     } else {
 
                         //TODO test this part with appropriate example
-                        bool found;
-                        double a = params[i].result;
 
+                        double a = params[i].result;
 
                         //adjust upper bound for first
                         for (int l = 0; j < currentCandidatesVector[first].size(); j++){
 
                             ParametricLocation location = currentCandidatesVector[first][l].getParametricLocation();
-                            vector<vector<pair<int, pair<vector<double>, vector<double>>>>> integrationIntervals;
-                            vector<pair<int, pair<vector<double>, vector<double>>>> currentIntegrationIntervals;
-                            found = false;
+                            vector<vector<pair<int, pair<vector<double>, vector<double>>>>> originalIntegrationIntervals = location.getIntegrationIntervals();
 
-                            //for multiple interval sets, find interval which contains a
-                            vector<vector<pair<int, pair<vector<double>, vector<double>>>>> intervals = currentCandidatesVector[first][l].getParametricLocation().getIntegrationIntervals();
-                            for (int j = 0; j < intervals.size();j++){
-                                if (intervals[j][i].second.first[0] <= a && intervals[j][i].second.second[0] >= a) {
-                                    currentIntegrationIntervals = intervals[j];
-                                    found = true;
-                                    break;
+                            vector<vector<pair<int, pair<vector<double>, vector<double>>>>> newIntegrationIntervals;
+
+                            int dim = location.getDimension();
+                            std::vector<double> LinEqLeft(dim, 0.0);
+                            std::vector<double> LinEqRight(dim, 0.0);
+
+                            LinEqLeft[i + 1] = 1.0; // s  <=  a
+                            LinEqRight[0] = a;
+
+                            LinearEquation equation(LinEqLeft, LinEqRight);
+
+                            for (DomainWithIndex domainWithIndex : originalIntegrationIntervals) {
+                                Domain domain = LinearDomain::createDomain(domainWithIndex);
+                                LinearBoundsTree tree(domain, equation);
+                                std::vector<LinearDomain> domains = tree.getUniqueDomains();
+                                for (LinearDomain resultDomain : domains) {
+                                    newIntegrationIntervals.push_back(resultDomain.toDomainWithIndex(domainWithIndex));
                                 }
                             }
+                            currentCandidatesVector[first][l].getParametricLocation().overwriteIntegrationIntervals(newIntegrationIntervals);
 
-
-                            if (found){
-
-                                currentIntegrationIntervals[i].second.second[0] = a;
-
-                                //TODO Sonderfall wenn Abhängigkeiten von anderen RV bestehen
-
-                                integrationIntervals.push_back(currentIntegrationIntervals);
-                                currentCandidatesVector[first][l].getParametricLocation().overwriteIntegrationIntervals(integrationIntervals);
-                            }
                         }
 
 
@@ -405,31 +420,31 @@ namespace hpnmg {
                         //adjust lower bound for second
                         for (int l = 0; l < currentCandidatesVector[second].size(); l++){
 
-                            ParametricLocation location = currentCandidatesVector[second][l].getParametricLocation();
-                            vector<vector<pair<int, pair<vector<double>, vector<double>>>>> integrationIntervals;
-                            vector<pair<int, pair<vector<double>, vector<double>>>> currentIntegrationIntervals;
-                            found = false;
+                           ParametricLocation location = currentCandidatesVector[second][l].getParametricLocation();
+                           vector<vector<pair<int, pair<vector<double>, vector<double>>>>> originalIntegrationIntervals = location.getIntegrationIntervals();
 
-                            //for multiple interval sets, find interval which contains a
-                            vector<vector<pair<int, pair<vector<double>, vector<double>>>>> intervals = currentCandidatesVector[second][l].getParametricLocation().getIntegrationIntervals();
-                            for (int j = 0; j < intervals.size();j++){
-                                if (intervals[j][i].second.first[0] <= a && intervals[j][i].second.second[0] >= a) {
-                                    currentIntegrationIntervals = intervals[j];
-                                    found = true;
-                                    break;
-                                }
-                            }
+                           vector<vector<pair<int, pair<vector<double>, vector<double>>>>> newIntegrationIntervals;
+
+                           int dim = location.getDimension();
+                           std::vector<double> LinEqLeft(dim, 0.0);
+                           std::vector<double> LinEqRight(dim, 0.0);
+
+                           LinEqLeft[0] = a;
+                           LinEqRight[i + 1] = 1.0; // a  <=  s
+
+                           LinearEquation equation(LinEqLeft, LinEqRight);
+
+                           for (DomainWithIndex domainWithIndex : originalIntegrationIntervals) {
+                               Domain domain = LinearDomain::createDomain(domainWithIndex);
+                               LinearBoundsTree tree(domain, equation);
+                               std::vector<LinearDomain> domains = tree.getUniqueDomains();
+                               for (LinearDomain resultDomain : domains) {
+                                   newIntegrationIntervals.push_back(resultDomain.toDomainWithIndex(domainWithIndex));
+                               }
+                           }
+                           currentCandidatesVector[second][l].getParametricLocation().overwriteIntegrationIntervals(newIntegrationIntervals);
 
 
-                            if (found){
-
-                                currentIntegrationIntervals[i].second.first[0] = a;
-
-                                //TODO Sonderfall wenn Abhängigkeiten von anderen RV bestehen
-
-                                integrationIntervals.push_back(currentIntegrationIntervals);
-                                currentCandidatesVector[second][l].getParametricLocation().overwriteIntegrationIntervals(integrationIntervals);
-                            }
                         }
                     }
 
