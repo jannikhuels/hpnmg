@@ -22,8 +22,8 @@
             <parameter name="b" value="1.0"/>
         </generalTransition>
         <generalTransition id="tg_y" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
-            <parameter name="a" value="0.0"/>
-            <parameter name="b" value="1.0"/>
+            <parameter name="a" value="3.0"/>
+            <parameter name="b" value="4.0"/>
         </generalTransition>
         <immediateTransition id="ti_1" priority="0" weight="1.0E0"/>
         <immediateTransition id="ti_2" priority="0" weight="1.0E0"/>

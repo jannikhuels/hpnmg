@@ -13,7 +13,7 @@ namespace hpnmg {
     bool NondeterminismSolver::fulfillsProperty(ParametricLocationTree::Node node){
 
     std::vector<int> discreteMarking = node.getParametricLocation().getDiscreteMarking();
-    if (discreteMarking[5] > 0) //fig5: discreteMarking[5] > 0 , fig1: discreteMarking[4] > 0
+    if (discreteMarking[5] > 0) //fig5nonprophetic: discreteMarking[5] > 0 , fig1prophetic: discreteMarking[4] > 0
         return true;
 
     return false;

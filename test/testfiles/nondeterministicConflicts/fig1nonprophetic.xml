@@ -44,6 +44,10 @@
         <discreteArc id="da_5b" fromNode="ti_6" toNode="pd_true" weight="1.0E0"/>
         <discreteArc id="da_6a" fromNode="pd_l3" toNode="ti_7" weight="1.0E0"/>
         <discreteArc id="da_6b" fromNode="ti_7" toNode="pd_false" weight="1.0E0"/>
+        <discreteArc id="da_y_i4" fromNode="pd_y1" toNode="ti_4" weight="1.0E0"/>
+        <discreteArc id="da_x_i5" fromNode="pd_x1" toNode="ti_5" weight="1.0E0"/>
+        <discreteArc id="da_x_i6" fromNode="pd_x1" toNode="ti_6" weight="1.0E0"/>
+        <discreteArc id="da_y_i7" fromNode="pd_y1" toNode="ti_7" weight="1.0E0"/>
         <guardArc id="ga_xa" fromNode="pd_x2" toNode="ti_4" isInhibitor="0" weight="1.0E0"/>
         <guardArc id="ga_xb" fromNode="pd_x2" toNode="ti_7" isInhibitor="0" weight="1.0E0"/>
         <guardArc id="ga_ya" fromNode="pd_y2" toNode="ti_5" isInhibitor="0" weight="1.0E0"/>

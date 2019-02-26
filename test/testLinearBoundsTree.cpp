@@ -289,3 +289,15 @@ TEST(LinearBoundsTree, ErrorFiveTwo) {
     std::vector<LinearDomain> domains3 = tree3.getUniqueDomains();
     ASSERT_EQ(3, domains3.size());
 }
+
+TEST(LinearBoundsTree, Carina){
+
+    LinearEquation equation({0,0,1}, {0.5,0,0}); //<=
+    LinearBoundsTree tree({{{0,0,0}, {2,0,0}}, {{0,1,0}, {6,-2,0}}}, equation);
+    std::vector<LinearDomain> domains = tree.getUniqueDomains();
+
+    ASSERT_EQ(1, domains.size());
+    ASSERT_EQ(true, domains[0].equals({{{0,0,0}, {0.5,0,0}}, {{0,1,0}, {0.5,0,0}}}));
+    //ASSERT_EQ(true, domains[1].equals({{{0.5,0,0}, {2,0,0}}, {{0,1,0}, {6,-2,0}}}));
+
+}
