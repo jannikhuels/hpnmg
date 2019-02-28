@@ -3,7 +3,6 @@
 #include <hpnmg/ParseHybridPetrinet.h>
 #include "helper/Triangulation.h"
 #include "helper/Computation.h"
-#include "../resources/mathematica/wstp.h"
 
 using namespace hpnmg;
 
