@@ -31,22 +31,24 @@ TEST(ParseHybridPetrinet, ImmediateTransitions)
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, 20);
 
     std::vector<int> expectedRootMarking = {2,0,0,1};
     ASSERT_EQ(expectedRootMarking, initState.getParametricLocation().getDiscreteMarking());
 
     auto children = plt->getChildNodes(initState);
 
-    std::vector<int> expectedFirstChildMarking = {1,1,0,0};
-    ASSERT_EQ(1, children.size());
+    std::vector<int> expectedFirstChildMarking = {1,1,0,1};
+    ASSERT_EQ(2, children.size());
     ASSERT_EQ(EventType::Immediate, children[0].getParametricLocation().getSourceEvent().getEventType());
     ASSERT_EQ(expectedFirstChildMarking, children[0].getParametricLocation().getDiscreteMarking());
     ASSERT_EQ(0, children[0].getParametricLocation().getSourceEvent().getTime());
 
     children = plt->getChildNodes(children[0]);
 
-    std::vector<int> expectedSecondChildMarking1 = {0,2,0,0};
-    std::vector<int> expectedSecondChildMarking2 = {0,1,1,0};
+    std::vector<int> expectedSecondChildMarking1 = {0,2,0,1};
+    std::vector<int> expectedSecondChildMarking2 = {0,1,1,1};
 
     ASSERT_EQ(2, children.size());
     ASSERT_EQ(expectedSecondChildMarking1, children[0].getParametricLocation().getDiscreteMarking());
