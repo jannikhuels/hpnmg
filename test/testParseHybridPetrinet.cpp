@@ -423,7 +423,7 @@ TEST(ParseHybridPetrinet, DynamicTransitions)
 
 }
 
-TEST(ParseHybridPetrinet, DynamicTransitions2)
+/*TEST(ParseHybridPetrinet, DynamicTransitions2)
 {
     ReadHybridPetrinet reader;
     ParseHybridPetrinet parser;
@@ -437,6 +437,114 @@ TEST(ParseHybridPetrinet, DynamicTransitions2)
     writer.writePLT(plt2,20);
 
 
+}*/
+
+TEST(ParseHybridPetrinet, GuardArcContinuous)
+{
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("guard_continuous.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto initState = plt->getRootNode();
+
+    std::vector<int> expectedRootMarking = {1,0};
+    ASSERT_EQ(expectedRootMarking, initState.getParametricLocation().getDiscreteMarking());
+
+    auto children = plt->getChildNodes(initState);
+
+    std::vector<int> expectedFirstChildMarking = {1,0};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Continuous, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedFirstChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(5, children[0].getParametricLocation().getSourceEvent().getTime());
+
+    children= plt->getChildNodes(children[0]);
+
+    std::vector<int> expectedSecondChildMarking = {0,1};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Immediate, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedSecondChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(5, children[0].getParametricLocation().getSourceEvent().getTime());
+}
+
+TEST(ParseHybridPetrinet, GuardArcContinuousNegation)
+{
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("guard_continuous_negation.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto initState = plt->getRootNode();
+
+    std::vector<int> expectedRootMarking = {1,0};
+    ASSERT_EQ(expectedRootMarking, initState.getParametricLocation().getDiscreteMarking());
+
+    auto children = plt->getChildNodes(initState);
+
+    std::vector<int> expectedFirstChildMarking = {1,0};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Continuous, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedFirstChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(3, children[0].getParametricLocation().getSourceEvent().getTime());
+
+    children= plt->getChildNodes(children[0]);
+
+    std::vector<int> expectedSecondChildMarking = {0,1};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Immediate, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedSecondChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(3, children[0].getParametricLocation().getSourceEvent().getTime());
+}
+
+TEST(ParseHybridPetrinet, GuardArcFillLevelTest)
+{
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("guard_fill_level_test.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto initState = plt->getRootNode();
+
+    std::vector<int> expectedRootMarking = {1,0,1,0};
+    ASSERT_EQ(expectedRootMarking, initState.getParametricLocation().getDiscreteMarking());
+
+    auto children = plt->getChildNodes(initState);
+
+    std::vector<int> expectedFirstChildMarking = {1,0,1,0};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Continuous, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedFirstChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(5, children[0].getParametricLocation().getSourceEvent().getTime());
+
+    children= plt->getChildNodes(children[0]);
+
+    std::vector<int> expectedSecondChildMarking = {0,1,1,0};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Immediate, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedSecondChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(5, children[0].getParametricLocation().getSourceEvent().getTime());
+
+    children= plt->getChildNodes(children[0]);
+
+    std::vector<int> expectedThirdChildMarking = {0,1,0,1};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Timed, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedThirdChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(6, children[0].getParametricLocation().getSourceEvent().getTime());
+
+    children= plt->getChildNodes(children[0]);
+
+    std::vector<int> expectedFourthChildMarking = {0,1,0,1};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Continuous, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedFourthChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(7, children[0].getParametricLocation().getSourceEvent().getTime());
+
+    children= plt->getChildNodes(children[0]);
+
+    std::vector<int> expectedFifthChildMarking = {1,0,0,1};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Immediate, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedFifthChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(7, children[0].getParametricLocation().getSourceEvent().getTime());
 }
 
 

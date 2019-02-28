@@ -610,10 +610,22 @@ namespace hpnmg {
                                              generalIntervalBoundRight, level);
         double maximumLevel = getBoundedTime(generalTransitionsFired, generalIntervalBoundRight,
                                              generalIntervalBoundLeft, level);
+
+        // an inhibited guard arc should not have an effect when drift is positive
+        if (drift > 0 && arc->getIsInhibitor()) {
+            return {};
+        }
+        // a guard arc should not have an effect when drift is negative
+        if (drift < 0 && !arc->getIsInhibitor()) {
+            return {};
+        }
+
+
         // drift is negative and level is over arc weight
         if (drift < 0 && weight < minimumLevel) {
             // remaining time is (level - arc) / abs(drift)
             vector<double> levelDelta = level;
+
             levelDelta[0] -= weight;
             vector<double> timeDelta;
             for (double deltaPart : levelDelta) {
@@ -717,15 +729,24 @@ namespace hpnmg {
                 long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), place->id) -
                            continuousPlaceIDs.begin();
                 vector<double> level = continousMarking[pos];
+                double drift = getDrift(discreteMarking, continousMarking, hybridPetrinet,
+                                                lowerBounds,
+                                                upperBounds, generalTransitionsFired )[pos];
+
                 if (arc->getIsInhibitor()) {
-                    //double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
-                    double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
-                    if (maxLevel >= arc->weight)
+                    if (drift >= 0) {
+                        return false;
+                    }
+                    double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
+                    //double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
+                    if (minLevel > arc->weight)
                         return false;
                 } else {
-                    //double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
-                    double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
-                    if (minLevel < arc->weight)
+                    if (drift <= 0) {
+                        return false;
+                    }
+                    double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
+                    if (maxLevel < arc->weight)
                         return false;
                 }
             }
