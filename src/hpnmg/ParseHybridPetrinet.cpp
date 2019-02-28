@@ -795,27 +795,24 @@ namespace hpnmg {
                            continuousPlaceIDs.begin();
 
                 vector<double> level = continousMarking[pos];
+                double drift = getDrift(discreteMarking, continousMarking, hybridPetrinet,
+                                                lowerBounds,
+                                                upperBounds, generalTransitionsFired )[pos];
 
                 if (arc->getIsInhibitor()) {
-
-                    double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
-
-                    if (arc->weight > 0 && maxLevel >= arc->weight)//disabled if maxLevel >= weight
+                    if (drift >= 0) {
                         return false;
-
-                    if (arc->weight == 0.0 && (maxLevel > 0.0)) //special case: disabled if maxLevel > 0
-                        return false;
-
-                } else {
-
-
+                    }
                     double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
-
-                    if (arc->weight > 0 && minLevel < arc->weight) //disabled if maxLevel < weight
+                    //double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
+                    if (minLevel > arc->weight)
                         return false;
-
+                } else {
+                    if (drift <= 0) {
+                        return false;
+                    }
                     double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
-                    if (arc->weight == 0.0 && maxLevel == 0.0) //special case: disabled if maxLevel == 0
+                    if (maxLevel < arc->weight)
                         return false;
                 }
             }
