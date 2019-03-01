@@ -549,6 +549,27 @@ TEST(ParseHybridPetrinet, GuardArcFillLevelTest)
     ASSERT_EQ(7, children[0].getParametricLocation().getSourceEvent().getTime());
 }
 
+TEST(ParseHybridPetrinet, GuardArcContinuousConflict)
+{
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("guard_continuous_conflict.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto initState = plt->getRootNode();
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, 20);
+
+    std::vector<int> expectedRootMarking = {1,0,1,0};
+    ASSERT_EQ(expectedRootMarking, initState.getParametricLocation().getDiscreteMarking());
+
+    auto children = plt->getChildNodes(initState);
+
+    std::vector<int> expectedFirstChildMarking = {1,0,1,0};
+    ASSERT_EQ(1, children.size());
+    ASSERT_EQ(EventType::Continuous, children[0].getParametricLocation().getSourceEvent().getEventType());
+    ASSERT_EQ(expectedFirstChildMarking, children[0].getParametricLocation().getDiscreteMarking());
+    ASSERT_EQ(5, children[0].getParametricLocation().getSourceEvent().getTime());
+}
 
 
 /*TEST(ParseHybridPetrinet, Example5General) {

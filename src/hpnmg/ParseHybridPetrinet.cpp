@@ -410,6 +410,8 @@ namespace hpnmg {
                 // timedelta is not minimal
                 if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
                     continue;
+                if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end())
+                    continue;
                 double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                     generalIntervalBoundRight, timeDelta);
                 if (minimumTime <= minimalMaximum) {
@@ -576,6 +578,8 @@ namespace hpnmg {
                 if (timeDelta.empty())
                     continue;
                 if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
+                    continue;
+                if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end())
                     continue;
                 double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                     generalIntervalBoundRight, timeDelta);
