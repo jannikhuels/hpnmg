@@ -187,11 +187,7 @@ namespace hpnmg {
         }*/
 
         region.hPolytope.insert(createHalfspaceFromEvent(makeValidEvent(sourceEvent, r),true));
-        if (leftBounds.size() > 0)
-            region.hPolytope.insert(createVerticalHalfspace(makeValidDependencies(leftBounds, r.hPolytope.dimension()), true));
-        if (rightBounds.size() > 0)
-            region.hPolytope.insert(createVerticalHalfspace(makeValidDependencies(rightBounds, r.hPolytope.dimension()), false));
-            
+
         return region;
     }
 
