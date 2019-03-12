@@ -6,7 +6,7 @@
         <!-- no charge -->
         <discretePlace id="pd1" marking="0"/>
         <!-- battery -->
-        <continuousPlace id="pc0" capacity="15" infiniteCapacity="0" level="10"/>
+        <continuousPlace id="pc0" capacity="40" infiniteCapacity="0" level="0"/>
         <!-- demand lvl Pa-X -->
         <discretePlace id="dl0" marking="0"/>
         <!-- demand lvl Pa -->
@@ -14,11 +14,14 @@
         <!-- demand lvl Pa+x -->
         <discretePlace id="dl2" marking="0"/>
         <!-- battery not empty-->
-        <discretePlace id="pd2" marking="1"/>
+        <discretePlace id="pd2" marking="0"/>
         <!-- battery empty-->
-        <discretePlace id="pd3" marking="0"/>
+        <discretePlace id="pd3" marking="1"/>
         <!-- cost -->
         <continuousPlace id="pc1" capacity="1" infiniteCapacity="1" level="0"/>
+        <!-- cost level control -->
+        <discretePlace id="pd4" marking="1"/>
+        <discretePlace id="pd5" marking="0"/>
     </places>
     <transitions>
         <!-- discharge battery -->
@@ -39,28 +42,35 @@
         <!-- transition td0: charge to no charge -->
         <deterministicTransition id="td0" discTime="11.0" priority="1" weight="1.0E0"/>
         <!-- transition demand level -->
-        <deterministicTransition id="tdl01" discTime="2.0" priority="1" weight="1.0E0"/>
+        <deterministicTransition id="tdl01" discTime="11.0" priority="1" weight="1.0E0"/>
+        <!--<deterministicTransition id="tdl12" discTime="2.0" priority="1" weight="1.0E0"/>-->
         <generalTransition id="tdl12" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
             <parameter name="a" value="0.0"/>
             <parameter name="b" value="10.0"/>
         </generalTransition>
-        <deterministicTransition id="tdl21" discTime="9.0" priority="1" weight="1.0E0"/>
-        <deterministicTransition id="tdl10" discTime="8.0" priority="1" weight="1.0E0"/>
+        <deterministicTransition id="tdl21" discTime="11.0" priority="1" weight="1.0E0"/>
+        <!--<deterministicTransition id="tdl10" discTime="8.0" priority="1" weight="1.0E0"/>-->
+        <generalTransition id="tdl10" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0.0"/>
+            <parameter name="b" value="10.0"/>
+        </generalTransition>
 
         <!-- transition ti0: not empty to empty -->
         <immediateTransition id="ti0" priority="1" weight="1.0E0"/>
         <!-- transition ti1: empty to not empty -->
         <immediateTransition id="ti1" priority="1" weight="1.0E0"/>
         <!-- exceeding costs -->
-        <!--<continuousTransition id="tf_c1" rate="20.0"/>-->
-        <!--<continuousTransition id="tf_c2" rate="70.0"/>-->
+        <continuousTransition id="tf_c1" rate="20.0"/>
+        <continuousTransition id="tf_c2" rate="70.0"/>
+        <!-- cost limit -->
+        <immediateTransition id="ti2" priority="1" weight="1.0E0"/>
     </transitions>
     <arcs>
         <!-- continuous arcs -->
         <continuousArc id="ca0" fromNode="tf_p0" priority="1" share="1.0E0" toNode="pc0" weight="1.0E0"/> <!-- charge battery -->
-        <!--<continuousArc id="ca2" fromNode="tf_c1" priority="1" share="1.0E0" toNode="pc1" weight="1.0E0"/>--> <!-- charge costs -->
-        <!--<continuousArc id="ca3" fromNode="tf_c2" priority="1" share="1.0E0" toNode="pc1" weight="1.0E0"/>--> <!-- charge costs -->
-        <!--<continuousArc id="ca1" fromNode="pc0" priority="1" share="1.0E0" toNode="tdy0" weight="1.0E0"/>--> <!-- discharge battery -->
+        <continuousArc id="ca2" fromNode="tf_c1" priority="1" share="1.0E0" toNode="pc1" weight="1.0E0"/> <!-- charge costs -->
+        <continuousArc id="ca3" fromNode="tf_c2" priority="1" share="1.0E0" toNode="pc1" weight="1.0E0"/> <!-- charge costs -->
+        <!-- discharge battery -->
         <continuousArc id="ca1" fromNode="pc0" priority="1" share="1.0E0" toNode="tf_d0" weight="1.0E0"/>
         <continuousArc id="ca3" fromNode="pc0" priority="1" share="1.0E0" toNode="tf_d1" weight="1.0E0"/>
         <continuousArc id="ca4" fromNode="pc0" priority="1" share="1.0E0" toNode="tf_d2" weight="1.0E0"/>
@@ -71,19 +81,19 @@
         <discreteArc id="da3" fromNode="td0" toNode="pd0" weight="1.0E0"/>
         <!-- guard arcs: battery -->
         <guardArc fromNode="pd0" id="ga0" isInhibitor="0" toNode="tf_p0" weight="1.0E0"/> <!-- guard arc that enables battery charging -->
-        <guardArc fromNode="pc0" id="ga1" isInhibitor="1" toNode="ti0" weight="0.0E0"/> <!-- guard arc: battery = 0  -->
+        <guardArc fromNode="pc0" id="ga1" isInhibitor="1" toNode="ti0" weight="0.0001E0"/> <!-- guard arc: battery = 0  -->
         <guardArc fromNode="pc0" id="ga2" isInhibitor="0" toNode="ti1" weight="0.0E0"/> <!-- guard arc: battery > 0  -->
         <!-- guard arcs: demand -->
         <guardArc fromNode="dl0" id="gal0" isInhibitor="0" toNode="tf_d0" weight="1.0E0"/>
         <guardArc fromNode="dl1" id="gal1" isInhibitor="0" toNode="tf_d1" weight="1.0E0"/>
         <guardArc fromNode="dl2" id="gal2" isInhibitor="0" toNode="tf_d2" weight="1.0E0"/>
         <!-- guard arcs: cost -->
-        <!--<guardArc fromNode="pd0" id="gac5" isInhibitor="0" toNode="tf_c1" weight="1.0E0"/>
+        <guardArc fromNode="pd0" id="gac5" isInhibitor="0" toNode="tf_c1" weight="1.0E0"/>
         <guardArc fromNode="pd3" id="gac0" isInhibitor="0" toNode="tf_c1" weight="1.0E0"/>
-        <guardArc fromNode="dl2" id="gac1" isInhibitor="0" toNode="tf_c1" weight="1.0E0"/>-->
-        <!--<guardArc fromNode="pd3" id="gac2" isInhibitor="0" toNode="tf_c2" weight="1.0E0"/>
+        <guardArc fromNode="dl2" id="gac1" isInhibitor="0" toNode="tf_c1" weight="1.0E0"/>
+        <guardArc fromNode="pd3" id="gac2" isInhibitor="0" toNode="tf_c2" weight="1.0E0"/>
         <guardArc fromNode="dl2" id="gac3" isInhibitor="0" toNode="tf_c2" weight="1.0E0"/>
-        <guardArc fromNode="pd1" id="gac4" isInhibitor="0" toNode="tf_c2" weight="1.0E0"/>-->
+        <guardArc fromNode="pd1" id="gac4" isInhibitor="0" toNode="tf_c2" weight="1.0E0"/>
 
         <!-- discrete arcs: change level -->
         <discreteArc id="dalvl0" fromNode="dl0" toNode="tdl01" weight="1.0E0"/>
@@ -100,5 +110,10 @@
         <discreteArc id="da5" fromNode="ti0" toNode="pd3" weight="1.0E0"/>
         <discreteArc id="da6" fromNode="pd3" toNode="ti1" weight="1.0E0"/>
         <discreteArc id="da7" fromNode="ti1" toNode="pd2" weight="1.0E0"/>
+
+        <!-- discrete arcs: cost level -->
+        <discreteArc id="dacost1" fromNode="pd4" toNode="ti2" weight="1.0E0"/>
+        <discreteArc id="dacost2" fromNode="ti2" toNode="pd5" weight="1.0E0"/>
+        <guardArc fromNode="pc1" id="gac5" isInhibitor="0" toNode="ti2" weight="120.0E0"/>
     </arcs>
 </HPnG>
