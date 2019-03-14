@@ -43,10 +43,10 @@ TEST(ParametricLocationTreeXML, Nondeterministic) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicConflicts/fig5prophetic.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicConflicts/fig1prophetic.xml");
 
     ParseHybridPetrinet parser;
-    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 2);
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
 
     //int dim = plt->getDimension();
 
@@ -54,17 +54,19 @@ TEST(ParametricLocationTreeXML, Nondeterministic) {
     writer->writePLT(plt, maxTime);
 
 
-//TODO sollte auch für time interval möglich sein
-    std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTime(checkTime);
+
+   // std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTime(checkTime);
+    std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTimeInterval(make_pair(0.0, maxTime));
 
 
-    NondeterminismSolver solver;
-    double error;
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 5000, 128, false, true, error);
+        NondeterminismSolver solver;
+        double error;
+        double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), candidates, 3, 5000, 128, false, false, error);
 
-    vector<vector<int>> bestIds = solver.getBestChildIds();
+        vector<vector<pair<int, string>>> bestIds = solver.getBestChildLocations();
 
-    cout << "Max probability: " << maxprob << " +- " << error << endl;
+        cout << "Max probability: " << maxprob << " +- " << error << endl;
+
 }
 
 

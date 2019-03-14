@@ -9,7 +9,7 @@ namespace hpnmg {
 
     }
 
-    Event::Event(EventType type, std::vector<double> generalDependencies, double time): type(type), generalDependencies(generalDependencies), time(time) {
+    Event::Event(EventType type, std::vector<double> generalDependencies, double time, std::string id): type(type), generalDependencies(generalDependencies), time(time), id(id) {
 
     }
 
@@ -33,6 +33,9 @@ namespace hpnmg {
 
     double Event::getTime() const{return time;}
     void Event::setTime(double time){this->time = time;}
+
+    std::string Event::getId() const{return id;}
+    void Event::setId(std::string id){this->id = id;}
 
     std::vector<double> Event::getTimeVector(int dimension) {
         std::vector<double> timeVector(dimension);

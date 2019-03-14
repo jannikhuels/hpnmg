@@ -91,7 +91,7 @@ namespace hpnmg {
                                               shared_ptr<HybridPetrinet> hybridPetrinet);
 
         void addLocationForBoundaryEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode,
-                                         shared_ptr<HybridPetrinet> hybridPetrinet);
+                                         shared_ptr<HybridPetrinet> hybridPetrinet, std::string);
 
         vector<double> getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking,
                                 shared_ptr<HybridPetrinet> hybridPetrinet,

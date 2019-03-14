@@ -4,6 +4,7 @@
 namespace hpnmg {
 
     ParametricLocationTree::Node::Node(NODE_ID id, const ParametricLocation &parametricLocation) : id(id), parametricLocation(parametricLocation) {
+        this->parametricLocation.setSourceEventId(parametricLocation.getSourceEventId());
     }
 
     NODE_ID ParametricLocationTree::Node::getNodeID() const {return id;}

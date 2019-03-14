@@ -27,6 +27,7 @@ namespace hpnmg {
         int functioncalls;
         char algorithm;
         int evaluations;
+        int rvIndex;
    	} nondetParams;
 
 
@@ -36,7 +37,7 @@ namespace hpnmg {
     private:
 
         shared_ptr<ParametricLocationTree> plt;
-        vector<vector<int>> bestChildIds;
+        vector<vector<pair<int, string>>> bestChildLocations;
 
         bool fulfillsProperty(ParametricLocationTree::Node node);
 
@@ -57,11 +58,11 @@ namespace hpnmg {
 
         double solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic, double &error);
 
-        vector<vector<int>> getBestChildIds();
+        vector<vector<pair<int, string>>> getBestChildLocations();
 
     };
 
-    void computeSubTree(nondetParams* params, alglib::real_1d_array &fi, bool firstTree, double a, int &counterConstraints, int i, double &prob, double &error);
+    void computeSubTree(nondetParams* params, alglib::real_1d_array &fi, bool firstTree, double a, int rvIdnex, double &prob, double &error);
 
     void optimizationFunction(const alglib::real_1d_array &x, alglib::real_1d_array &fi, void *ptr);
 

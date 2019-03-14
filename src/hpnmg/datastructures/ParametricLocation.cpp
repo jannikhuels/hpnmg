@@ -61,7 +61,7 @@ namespace hpnmg {
             generalDependenciesNormed(parametricLocation.generalDependenciesNormed),
             integrationIntervals(parametricLocation.integrationIntervals)
     {
-
+        sourceEvent.setId(parametricLocation.getSourceEventId());
     }
 
 
@@ -108,6 +108,14 @@ namespace hpnmg {
     Event ParametricLocation::getSourceEvent() const { return sourceEvent; }
 
     void ParametricLocation::setSourceEvent(const Event &event) { this->sourceEvent = event; }
+
+    std::string ParametricLocation::getSourceEventId() const{
+        return sourceEvent.getId();
+    }
+
+    void ParametricLocation::setSourceEventId(const std::string &id){
+        this->sourceEvent.setId(id);
+    }
 
     double ParametricLocation::getConflictProbability() const { return conflictProbability; }
 

@@ -95,6 +95,10 @@ namespace hpnmg {
 
         void setSourceEvent(const Event &event);
 
+        std::string getSourceEventId() const;
+
+        void setSourceEventId(const std::string &id);
+
         double getConflictProbability() const;
 
         void setConflictProbability(double conflictProbability);

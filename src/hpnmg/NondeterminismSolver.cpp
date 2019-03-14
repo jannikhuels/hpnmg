@@ -13,11 +13,12 @@ namespace hpnmg {
     bool NondeterminismSolver::fulfillsProperty(ParametricLocationTree::Node node){
 
     std::vector<int> discreteMarking = node.getParametricLocation().getDiscreteMarking();
-    if (discreteMarking[5] > 0) //fig5nonprophetic: discreteMarking[5] > 0 , fig1prophetic: discreteMarking[4] > 0
+    if (discreteMarking[5] > 0) //fig5prophetic + fig1prophetic: discreteMarking[5] > 0 , fig1nonprophetic + fig5nonprophetic: discreteMarking[4] > 0
         return true;
 
     return false;
 }
+
 
 
     vector<ParametricLocationTree::Node> NondeterminismSolver::determineConflictSet(std::vector<ParametricLocationTree::Node> &children){
@@ -83,6 +84,7 @@ namespace hpnmg {
         double currentError;
 
         int currentChildId;
+        std::string currentComponent;
 
 
         auto calculator = new ProbabilityCalculator();
@@ -94,25 +96,27 @@ namespace hpnmg {
         if (conflictSet.size() > 0) {
 
             bool first = true;
-            vector<int> currentBestChildIds;
+            vector<pair<int, string>> currentBestChildLocations;
+
 
             for (ParametricLocationTree::Node child: conflictSet) {
 
                 currentChildId = child.getNodeID();
+                currentComponent = child.getParametricLocation().getSourceEventId();
                 currentError = 0.0;
                 currentProbability = recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError);
 
-                if (first || (currentProbability - currentError > maxOrMinProbability + error && minimum == false) || (currentProbability + currentError < maxOrMinProbability - error && minimum == true)) { //error intervals do not overlap
-               // if (first || (currentProbability > maxOrMinProbability && minimum == false) || (currentProbability < maxOrMinProbability && minimum == true)) {
-                    currentBestChildIds.clear();
-                    currentBestChildIds.push_back(currentChildId);
+                if (first || (currentProbability - currentError > maxOrMinProbability + error && minimum == false) || (currentProbability + currentError < maxOrMinProbability - error && minimum == true)) {
+                //error intervals do not overlap
+                    currentBestChildLocations.clear();
+                    currentBestChildLocations.push_back(make_pair(currentChildId, currentComponent));
                     maxOrMinProbability = currentProbability;
                     error = currentError;
                     first = false;
 
-                } else if (currentProbability + currentError >= maxOrMinProbability - error && currentProbability - currentError <= maxOrMinProbability + error) { //overlapping error intervals
-              //  } else if (currentProbability == maxOrMinProbability) {
-                    currentBestChildIds.push_back(currentChildId);
+                } else if (currentProbability + currentError >= maxOrMinProbability - error && currentProbability - currentError <= maxOrMinProbability + error) {
+                //overlapping error intervals
+                    currentBestChildLocations.push_back(make_pair(currentChildId, currentComponent));
                     if ((currentProbability > maxOrMinProbability && minimum == false) || (currentProbability < maxOrMinProbability && minimum == true)) {
                         maxOrMinProbability = currentProbability;
                         error = currentError;
@@ -120,7 +124,7 @@ namespace hpnmg {
                 }
             }
 
-            (this->bestChildIds).push_back(currentBestChildIds);
+            (this->bestChildLocations).push_back(currentBestChildLocations);
         }
 
 
@@ -150,7 +154,7 @@ namespace hpnmg {
 
 
 
-    void computeSubTree(nondetParams* params, real_1d_array &fi, bool firstTree, double a, int &counterConstraints, int i, double &prob, double &error){
+    void computeSubTree(nondetParams* params, real_1d_array &fi, bool firstTree, double a, int rvIdnex, double &prob, double &error){
 
 
         vector<ParametricLocationTree::Node> nodes;
@@ -167,44 +171,17 @@ namespace hpnmg {
             vector<vector<pair<int, pair<vector<double>, vector<double>>>>> originalIntegrationIntervals = location.getIntegrationIntervals();
             std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> newIntegrationIntervals;
 
-//            std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> intervalContainingA;
-//
-//            double minLower = originalIntegrationIntervals[0][i].second.first[0];
-//            double maxUpper = originalIntegrationIntervals[0][i].second.second[0];
-//
-//            //for multiple interval sets, find maximal upper bound and minimal lower bound
-//
-//            for (int j = 1; j < originalIntegrationIntervals.size();j++){
-//                if (originalIntegrationIntervals[j][i].second.first[0] <= a && originalIntegrationIntervals[j][i].second.second[0] >= a) {
-//                    intervalContainingA = originalIntegrationIntervals[j];
-//                    found = true;
-//                    break;
-//                }
-//                if (originalIntegrationIntervals[j][i].second.first[0] < minLower)
-//                    minLower = originalIntegrationIntervals[j][i].second.first[0];
-//
-//                if (originalIntegrationIntervals[j][i].second.second[0])
-//            }
-//
-//            if (found){//
-//                fi[counterConstraints] = intervalContainingA[i].second.first[0] - a; //inequality <=0
-//                counterConstraints++;
-//                fi[counterConstraints] = a - intervalContainingA[i].second.second[0]; //inequality <=0
-//                counterConstraints++;//
-//            }
-
-
 
             int dim = location.getDimension();
             std::vector<double> LinEqLeft(dim, 0.0);
             std::vector<double> LinEqRight(dim, 0.0);
 
             if (firstTree) {
-                LinEqLeft[i + 1] = 1.0; // s  <=  a
+                LinEqLeft[rvIdnex + 1] = 1.0; // s  <=  a
                 LinEqRight[0] = a;
             } else {
                 LinEqLeft[0] = a;
-                LinEqRight[i + 1] = 1.0; // a  <=  s
+                LinEqRight[rvIdnex + 1] = 1.0; // a  <=  s
             }
             LinearEquation equation(LinEqLeft, LinEqRight);
 
@@ -239,25 +216,20 @@ namespace hpnmg {
         double prob = 0.0;
         double error = 0.0;
         double currentError = 0.0;
-        int counterConstraints = 1;
 
-        cout << x[0] << endl;
+        //cout << x[0] << endl;
         nondetParams* params = (nondetParams *)ptr;
 
-        //for all random variables
-        //TODO only for fired RV with corresponding continuous place -> how to find out? for now only first variable
-        int i = 1;
 
-        computeSubTree(params, fi,  true, x[0], counterConstraints, i, prob, currentError);
+        computeSubTree(params, fi,  true, x[0], (*params).rvIndex, prob, currentError);
         error += currentError;
         currentError = 0.0;
-        computeSubTree(params, fi, false, x[0], counterConstraints, i, prob, currentError);
+        computeSubTree(params, fi, false, x[0], (*params).rvIndex, prob, currentError);
 
 
         fi[0] = (-1.0) * prob;
-
-       // if (fi[1] <= 0 && fi[2] <= 0  && fi[3] <= 0 && fi[4] <= 0)
-       //     cout << " TOTAL: " << a  << " --- Prob: " <<  prob << endl;
+        fi[1] = 0 - x[0];
+        fi[2] = x[0] - (*params).maxTime;
 
         (*params).prob = prob;
         (*params).result = error;
@@ -283,7 +255,7 @@ namespace hpnmg {
             real_1d_array x0 = "[0]";
             real_1d_array s = "[1]";
             double epsx = 0.01;//0.000001;
-            ae_int_t maxits = 10;//0; for unlimited
+            ae_int_t maxits = 0;//0; for unlimited
             minnlcstate state; //state object
             minnlcreport rep;
             real_1d_array x1;
@@ -293,7 +265,6 @@ namespace hpnmg {
 
             vector<vector<ParametricLocationTree::Node>> currentCandidatesVector;
             vector<ParametricLocationTree::Node> currentCandidates;
-            //currentCandidates.clear();
             recursivelyGetCandidates(currentCandidates, conflictSet[0], candidates);
             currentCandidatesVector.push_back(currentCandidates);
 
@@ -325,6 +296,8 @@ namespace hpnmg {
                         currentParams.functioncalls = min(1000, functioncalls);
                         currentParams.distributions = (*this->plt).getDistributions();
                         currentParams.maxTime = (*this->plt).getMaxTime();
+                        //only for first fired general transition
+                        currentParams.rvIndex = currentNode.getParametricLocation().getGeneralTransitionsFired()[0];
 
                         currentParams.candidatesSecond = currentCandidatesVector[second];
                         currentParams.candidatesFirst = currentCandidatesVector[first];
@@ -334,7 +307,7 @@ namespace hpnmg {
                         minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
                         minnlcsetscale(state, s); //set scale (here always 1)
                         minnlcsetstpmax(state, 0.0); //settings
-                        minnlcsetnlc(state, 0, 4);
+                        minnlcsetnlc(state, 0, 2);
                         minnlcoptimize(state, optimizationFunction, NULL, &currentParams); //start optimizer
                         minnlcresults(state, x1, rep); //get results
 
@@ -365,7 +338,7 @@ namespace hpnmg {
                     minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
                     minnlcsetscale(state, s); //set scale (here always 1)
                     minnlcsetstpmax(state, 0.0); //settings
-                    minnlcsetnlc(state, 0, 4);
+                    minnlcsetnlc(state, 0, 2);
                     minnlcoptimize(state, optimizationFunction, NULL, &params[i]); //start optimizer
                     minnlcresults(state, x1, rep); //get results
 
@@ -382,7 +355,7 @@ namespace hpnmg {
 
                     } else {
 
-                        //TODO test this part with appropriate example
+                        //TODO test this part with an example with conflict set size>2
 
                         double a = params[i].result;
 
@@ -513,8 +486,8 @@ namespace hpnmg {
 
 
 
-    vector<vector<int>> NondeterminismSolver::getBestChildIds(){
-        return this->bestChildIds;
+    vector<vector<pair<int, string>>> NondeterminismSolver::getBestChildLocations(){
+        return this->bestChildLocations;
     }
 
 }
