@@ -1,3 +1,4 @@
+#include <ParametricLocationTree.h>
 #include "Event.h"
 
 namespace hpnmg {
@@ -31,6 +32,9 @@ namespace hpnmg {
     std::vector<double> Event::getGeneralDependencies() const{return generalDependencies;}
     void Event::setGeneralDependencies(const std::vector<double> generalDependencies){this->generalDependencies = generalDependencies;}
 
+    RateDependencies Event::getRateDependencies() const {return rateDependencies;}
+    void Event::setRateDependencies(const RateDependencies rateDependencies) {this->rateDependencies = rateDependencies;}
+
     double Event::getTime() const{return time;}
     void Event::setTime(double time){this->time = time;}
 
@@ -46,4 +50,5 @@ namespace hpnmg {
         }
         return timeVector;
     }
+
 }
