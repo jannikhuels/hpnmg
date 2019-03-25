@@ -17,7 +17,7 @@ namespace hpnmg {
     // rateDependencies stores the factor of r or r⁻¹
     // .first is the factor, .second is the exponent of r (1 or -1)
     // Example: for t=5*r, the pair would be <5,1>, for t=3/r, the pair would be <3,-1>
-    typedef pair<double, double> rateDependencies;
+    typedef pair<double, double> RateDependencies;
 
     class ParametricLocationTree 
     {
