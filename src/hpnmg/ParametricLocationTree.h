@@ -2,6 +2,7 @@
 
 #include "datastructures/ParametricLocation.h"
 #include <map>
+#include <utility>
 #include "exceptions/ParametricLocationTreeExceptions.h"
 #include "STDiagram.h"
 
@@ -13,6 +14,10 @@ using namespace std;
 namespace hpnmg {
     typedef int NODE_ID;
     typedef NODE_ID PARENT_NODE_ID;
+    // rateDependencies stores the factor of r or r⁻¹
+    // .first is the factor, .second is the exponent of r (1 or -1)
+    // Example: for t=5*r, the pair would be <5,1>, for t=3/r, the pair would be <3,-1>
+    typedef pair<double, double> rateDependencies;
 
     class ParametricLocationTree 
     {
