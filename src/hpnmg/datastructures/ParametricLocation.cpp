@@ -514,10 +514,12 @@ namespace hpnmg {
         /*
          * Create all intervals for GTs that are currently enabled.
          */
+        int lastFiring = 0;
         for (int j = 0; j < occurings.size(); j++) {
             for (int i = counter[j]; i < occurings[j]; i++) {
                 int firing = i;
                 if (j < this->getGeneralIntervalBoundLeft().size() && firing < this->getGeneralIntervalBoundLeft()[j].size()) {
+                    lastFiring = firing;
                     bool enablingTimeGreaterZero = false;
                     for (int l = 0; l < this->getGeneralIntervalBoundLeft()[j][firing].size(); l++) {
                         if (this->getGeneralIntervalBoundLeft()[j][firing][l] > 0)
@@ -530,7 +532,7 @@ namespace hpnmg {
                         continue;
                     }
                 }
-                result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(zero, mTime)});
+                //result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(zero, mTime)});
             }
         }
         return result;

@@ -332,7 +332,12 @@ namespace hpnmg {
             LinearEquation linEq(first, second);
             if (!linEq.alwaysTrue) {
                 LinearBoundsTree tree(domain, linEq);
-                return tree.getUniqueDomains()[0].getDomain();
+                std::vector<LinearDomain> uniqueDomain = tree.getUniqueDomains();
+                if (uniqueDomain.size() > 0) {
+                    return uniqueDomain[0].getDomain();
+                } else {
+                    return domain;
+                }
             } else {
                 return domain;
             }

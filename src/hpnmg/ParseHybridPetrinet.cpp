@@ -426,6 +426,8 @@ namespace hpnmg {
                 // timedelta is not minimal
                 if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
                     continue;
+                if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end())
+                    continue;
                 double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                     generalIntervalBoundRight, timeDelta);
                 if (minimumTime <= minimalMaximum) {
@@ -612,6 +614,8 @@ namespace hpnmg {
                     continue;
                 if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
                     continue;
+                if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end())
+                    continue;
                 double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                     generalIntervalBoundRight, timeDelta);
                 if (minimumTime <= minimalMaximum) {
@@ -645,10 +649,22 @@ namespace hpnmg {
                                              generalIntervalBoundRight, level);
         double maximumLevel = getBoundedTime(generalTransitionsFired, generalIntervalBoundRight,
                                              generalIntervalBoundLeft, level);
+
+        // an inhibited guard arc should not have an effect when drift is positive
+        if (drift > 0 && arc->getIsInhibitor()) {
+            return {};
+        }
+        // a guard arc should not have an effect when drift is negative
+        if (drift < 0 && !arc->getIsInhibitor()) {
+            return {};
+        }
+
+
         // drift is negative and level is over arc weight
         if (drift < 0 && weight < minimumLevel) {
             // remaining time is (level - arc) / abs(drift)
             vector<double> levelDelta = level;
+
             levelDelta[0] -= weight;
             vector<double> timeDelta;
             for (double deltaPart : levelDelta) {
@@ -745,7 +761,7 @@ namespace hpnmg {
                 shared_ptr<DiscretePlace> place = hybridPetrinet->getDiscretePlaces()[arc->place->id];
                 long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), place->id) - discretePlaceIDs.begin();
                 double marking = discreteMarking[pos];
-                if ((marking > arc->weight && arc->getIsInhibitor()) ||
+                if ((marking >= arc->weight && arc->getIsInhibitor()) ||
                     ((marking < arc->weight && !arc->getIsInhibitor())))
                     return false;
             }  else { // place is continuous
@@ -753,19 +769,27 @@ namespace hpnmg {
                 long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), place->id) -
                            continuousPlaceIDs.begin();
                 vector<double> level = continousMarking[pos];
+
                 if (arc->getIsInhibitor()) {
-                    //double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
+
                     double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
-                    double dependenciesSum = 0.0;
-                    //special case for inhibitor arc and weight = 0 to enable inhibitor condition 'level > 0' (because 'level >= 0' does not make sense as it is always true)
-                    if (arc->weight == 0.0 && (maxLevel > 0.0 || level[1]> 0.0 || level[2] > 0.0))
+
+                    if (arc->weight > 0 && maxLevel >= arc->weight)//disabled if maxLevel >= weight
                         return false;
-                    if (arc->weight > 0 && maxLevel >= arc->weight) //enabled if maxLevel < weight
+
+                    if (arc->weight == 0.0 && (maxLevel > 0.0)) //special case: disabled if maxLevel > 0
                         return false;
+
                 } else {
-                    //double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
+
+
                     double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
-                    if (minLevel < arc->weight)
+
+                    if (arc->weight > 0 && minLevel < arc->weight) //disabled if maxLevel < weight
+                        return false;
+
+                    double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
+                    if (arc->weight == 0.0 && maxLevel == 0.0) //special case: disabled if maxLevel == 0
                         return false;
                 }
             }
@@ -843,8 +867,12 @@ namespace hpnmg {
                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet,
                                     parentLocation.getGeneralIntervalBoundLeft(), parentLocation
                                                                                          .getGeneralIntervalBoundRight(), parentLocation.getGeneralTransitionsFired())) {
-                for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
-                    generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+                for (int j = 0; j < timeDelta.size(); ++j) {
+                    if (generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].size() <= j)
+                        generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].push_back(timeDelta[j]);
+                    else
+                        generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+                }
             }
         }
         // adjust general bounds for every other timeDelta, than timeDelta
@@ -993,8 +1021,12 @@ namespace hpnmg {
                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet,
                                     parentLocation.getGeneralIntervalBoundLeft(), parentLocation.getGeneralIntervalBoundRight(), parentLocation.getGeneralTransitionsFired()
             )) {
-                for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
-                    generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+                for (int j = 0; j < timeDelta.size(); ++j) {
+                    if (generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].size() <= j)
+                        generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].push_back(timeDelta[j]);
+                    else
+                        generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+                }
             }
         }
         // adjust general bounds for every other timeDelta, than timeDelta
@@ -1289,10 +1321,7 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    vector<double> ParseHybridPetrinet::getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking,
-                                                 shared_ptr<HybridPetrinet> hybridPetrinet,
-                                                 vector<vector<vector<double>>> lowerBounds,
-                                                         vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired) {
+    vector<double> ParseHybridPetrinet::getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking, shared_ptr<HybridPetrinet> hybridPetrinet, vector<vector<vector<double>>> lowerBounds, vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired) {
         vector<double> drift(continuousMarking.size());
         vector<double> inputDrift(continuousMarking.size());
         vector<double> outputDrift(continuousMarking.size());
