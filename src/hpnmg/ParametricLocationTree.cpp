@@ -374,6 +374,45 @@ namespace hpnmg {
         return locations;
     }
 
+
+    std::vector<ParametricLocationTree::Node> ParametricLocationTree::getAllLocations() {
+            this->getDimension();
+
+            int numberOfGeneralTransitions = getRootNode().getParametricLocation().getGeneralClock().size();
+            std::vector<int> dimV = getDimensionRecursively(getRootNode(), numberOfGeneralTransitions);
+
+            vector<ParametricLocationTree::Node> locations;
+            // recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
+        recursivelyCollectAllLocationsWithPLT(getRootNode(), locations, 1.0, dimV);
+            return locations;
+        }
+
+
+    void ParametricLocationTree::recursivelyCollectAllLocationsWithPLT(Node startNode, vector<Node> &candidates, double probability, std::vector<int> occurings) {
+            // nodeProbability is the probability to get here times the probability to be here
+            double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
+            ParametricLocation parametricLocation = startNode.getParametricLocation();
+            parametricLocation.setAccumulatedProbability(nodeProbability);
+            int dimension = this->getDimension();
+
+
+            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds;
+
+            bounds.push_back(parametricLocation.getRVIntervals(occurings, this->maxTime, dimension));
+
+
+            parametricLocation.overwriteIntegrationIntervals(bounds);
+            //parametricLocation.setIntegrationIntervals(unsortedEntryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
+            startNode.setParametricLocation(parametricLocation);
+            candidates.push_back(startNode);
+
+
+            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+                recursivelyCollectAllLocationsWithPLT(node, candidates, nodeProbability, occurings);
+            }
+
+        }
+
     const vector<pair<string, map<string, float>>> &hpnmg::ParametricLocationTree::getDistributions() const {
         return distributions;
     }

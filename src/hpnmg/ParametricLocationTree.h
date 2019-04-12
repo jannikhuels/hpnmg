@@ -30,6 +30,7 @@ namespace hpnmg {
             void setRegion(const Region &region);
             ParametricLocation getParametricLocation() const;
             void setParametricLocation(const ParametricLocation &location);
+
         };
     private:
         NODE_ID currentId;
@@ -74,6 +75,9 @@ namespace hpnmg {
 
         void addNormedDependenciesRecursively(ParametricLocationTree::Node &startNode, std::vector<int> genTransOccurings, int dimension);
 
+        void recursivelyCollectAllLocationsWithPLT(Node startNode, vector<Node> &candidates, double probability, std::vector<int> occurings);
+
+
     public:
 
         ParametricLocationTree();
@@ -100,7 +104,9 @@ namespace hpnmg {
 
         std::vector<Node> getCandidateLocationsForTime(double time);
 
-        std::vector<Node> getCandidateLocationsForTimeInterval(std::pair<double,double> interval);  
+        std::vector<Node> getCandidateLocationsForTimeInterval(std::pair<double,double> interval);
+
+        std::vector<ParametricLocationTree::Node> getAllLocations();
 
     }; 
 }
