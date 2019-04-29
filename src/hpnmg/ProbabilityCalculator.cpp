@@ -1,5 +1,8 @@
 #include "ProbabilityCalculator.h"
 
+#include "Eigen/Geometry"
+#include "Eigen/LU"
+
 using namespace std;
 
 namespace hpnmg {
@@ -797,49 +800,22 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         return result;
     }
 
-
-
     double ProbabilityCalculator::transformedFunctionToIntegrateMonteCarlo(double *k, size_t dim, void* params){
-
-
-
-   	    allDims all = *((allDims *)params);
-   	    double currentResult;
-   	    double currentResultWithJacobian;
+        allDims all = *((allDims *)params);
         double result = 1.0;
-        double jacobianFactor;
 
-        singleDim current;
-        singleDim currentDependency;
-        double lower;
-        double upper;
-        double lowerFactor;
-        double upperFactor;
-        double halfLower;
-        double halfUpper;
+        const auto values = Eigen::Map<Eigen::VectorXd>(k, dim);
+        auto transformedValues = Eigen::VectorXd(dim);
+        auto jacobianFactors = std::vector<double>(dim, 1.0);
 
-
-        double* transformedValues = new double[dim];
-
-
-
-        for (int i = 0; i < dim; i++){
-
-
-
-            current = all.integrals[i];
-            lower = all.lowerBounds[i][0];
-            upper = all.upperBounds[i][0];
-
+        for (int i = 0; i < dim; i++) {
+            double lower = all.lowerBounds[i][0];
+            double upper = all.upperBounds[i][0];
 
             if (!isinf(upper)) {
-
-
                 for (int j = 0; j < i; j++) {
-                    currentDependency = all.integrals[j];
-
-                    lowerFactor = 0.0;
-                    upperFactor = 0.0;
+                    double lowerFactor = 0.0;
+                    double upperFactor = 0.0;
 
                     if (all.lowerBounds[i].size() > j + 1)
                         lowerFactor = all.lowerBounds[i][j + 1];
@@ -851,34 +827,39 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
                     if (!isnan(upperFactor) && upperFactor != 0.0)
                         upper += (upperFactor * transformedValues[j]);
-
                 }
-
 
                 if ((lower > 0.0 && isinf(lower)) || upper <= 0.0)
                     return 0.0;
 
-
-                halfLower = 0.5 * lower;
-                halfUpper = 0.5 * upper;
+                double halfLower = 0.5 * lower;
+                double halfUpper = 0.5 * upper;
 
                 transformedValues[i] = halfUpper + halfLower + k[i] * (halfUpper - halfLower);
-                currentResult = getDensity(current.distribution, transformedValues[i]);
+                jacobianFactors[i] *= (halfUpper - halfLower);
+            }
+        }
+
+        for (int i = 0; i < dim; i++) {
+            singleDim current = all.integrals[i];
+            double upper = all.upperBounds[i][0];
+
+            if (!isinf(upper)) {
+                double currentResult = getDensity(current.distribution, transformedValues[i]);
 
                 if (currentResult == 0.0)
                     return 0.0;
 
-                jacobianFactor = (halfUpper - halfLower);
-                currentResultWithJacobian = currentResult * jacobianFactor;
+                double currentResultWithJacobian = currentResult * jacobianFactors[i];
                 result *= currentResultWithJacobian;
-
-            } else //Infinity case
-                result *=  0.5;
-
+            }
+            else //Infinity case
+                result *= 0.5;
         }
+
         return result;
 
-   	}
+    }
 
 
 
