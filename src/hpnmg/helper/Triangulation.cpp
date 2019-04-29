@@ -183,7 +183,7 @@ namespace hpnmg {
         return res;
     }
 
-    std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> bounds(Region r) {
+    /*std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> bounds(Region r) {
         // Do not split for the t coordinates
         int max_dim = r.dimension() - 2;
 
@@ -195,7 +195,7 @@ namespace hpnmg {
         }
 
         return res;
-    }
+    }*/
 
     std::vector<std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>>> Triangulation::getBounds() {
         for (Region r : this->t) {

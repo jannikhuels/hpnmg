@@ -61,10 +61,10 @@ endif()
 # -----------------------------------------------------------------
 
 add_subdirectory(resources)
-find_package(hypro REQUIRED)
-find_package(carl REQUIRED)
+find_package(hypro CONFIG REQUIRED)
+find_package(carl CONFIG REQUIRED)
 find_package(XercesC REQUIRED)
-find_package(cgal REQUIRED)
+find_package(CGAL CONFIG REQUIRED) #also link lib: sudo ln -s /usr/lib/x86_64-linux-gnu/libCGAL.so /usr/lib/x86_64-linux-gnu/libcgal.so
 
 if ( CGAL_FOUND )
 

@@ -3,115 +3,122 @@
 #include <iostream>
 #include <ParseHybridPetrinet.h>
 #include <PLTWriter.h>
-#include <ctime>
+#include <SingularAutomatonCreator.h>
+#include <SingularAutomatonWriter.h>
 
 using namespace hpnmg;
 using namespace std;
 
-unsigned long getNodes(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node node) {
+unsigned long getNodes(const shared_ptr<ParametricLocationTree>& plt, const ParametricLocationTree::Node& node) {
     vector<ParametricLocationTree::Node> children = plt->getChildNodes(node);
     unsigned long nodes = children.size();
-    for (ParametricLocationTree::Node child : children)
+    for (const ParametricLocationTree::Node& child : children)
         nodes += getNodes(plt, child);
     return nodes;
 }
 
+unsigned long getNumberOfLocations(const shared_ptr<SingularAutomaton>& automaton) {
+    return automaton->getLocations().size();
+}
+
+unsigned long getNumberOfEdges(const shared_ptr<SingularAutomaton>& automaton) {
+    unsigned long numberOfEdges = 0;
+    for(const shared_ptr<SingularAutomaton::Location>& loc : automaton->getLocations()) {
+        numberOfEdges += loc->getOutgoingTransitions().size();
+    }
+    return numberOfEdges;
+}
+
 int main (int argc, char *argv[])
 {
-    auto reader= new ReadHybridPetrinet();
-    auto parser = new ParseHybridPetrinet();
-    auto writer = new PLTWriter();
+    ReadHybridPetrinet reader;
+    ParseHybridPetrinet parser;
+    PLTWriter PLTwriter;
+    SingularAutomatonCreator transformer;
+    SingularAutomatonWriter automatonWriter;
 
-    cout << "Example 0 with repair and N=0 and t=10:" << endl;
-    clock_t begin0 = clock();
-    auto hybridPetrinet0 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_1_0.xml");
-    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
-    clock_t end0 = clock();
-    double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
-    cout << elapsed_secs << " seconds" << endl;
-    cout << getNodes(plt0, plt0->getRootNode()) + 1 << " locations" << endl;
+    /**************************
+     * The hourglass example. *
+     **************************/
 
-    cout << "Example 0 with repair and N=1 and t=10:" << endl;
-    clock_t begin1 = clock();
-    auto hybridPetrinet1 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/rep_1_1.xml");
-    auto plt1 = parser->parseHybridPetrinet(hybridPetrinet1, 10);
-    clock_t end1 = clock();
-    elapsed_secs = double(end1 - begin1) / CLOCKS_PER_SEC;
-    cout << elapsed_secs << " seconds" << endl;
-//    writer->writePLT(plt1, 10);
-    cout << getNodes(plt1, plt1->getRootNode()) + 1 << " locations" << endl;
+    // setup
+    string filePath = "../test/testfiles/hourglass.xml";
+    double tauMax = 2.5;
 
-//    cout << "Example 1 with repair and N=2 and t=10:" << endl;
-//    clock_t begin2 = clock();
-//    auto hybridPetrinet2 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/rep_2_2.xml");
-//    auto plt2 = parser->parseHybridPetrinet(hybridPetrinet2, 10);
-//    clock_t end2 = clock();
-//    elapsed_secs = double(end2 - begin2) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-////    writer->writePLT(plt2, 10);
-//    cout << getNodes(plt2, plt2->getRootNode()) + 1 << " locations" << endl;
-//////
-    cout << "Example 1 with repair and N=3 and t=10:" << endl;
-    clock_t begin3 = clock();
-    auto hybridPetrinet3 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/rep_2_3.xml");
-    auto plt3 = parser->parseHybridPetrinet(hybridPetrinet3, 10);
-    clock_t end3 = clock();
-    elapsed_secs = double(end3 - begin3) / CLOCKS_PER_SEC;
-    cout << elapsed_secs << " seconds" << endl;
-    cout << getNodes(plt3, plt3->getRootNode()) + 1 << " locations" << endl;
+    // read
+    shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
 
-//    cout << "Example 0 without repair and N=4 and t=10:" << endl;
-//    clock_t begin4 = clock();
-//    auto hybridPetrinet4 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_1_4.xml");
-//    auto plt4 = parser->parseHybridPetrinet(hybridPetrinet4, 10);
-//    clock_t end4 = clock();
-//    elapsed_secs = double(end4 - begin4) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt4, plt4->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 0 without repair and N=5 and t=10:" << endl;
-//    clock_t begin5 = clock();
-//    auto hybridPetrinet5 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_1_5.xml");
-//    auto plt5 = parser->parseHybridPetrinet(hybridPetrinet5, 10);
-//    clock_t end5 = clock();
-//    elapsed_secs = double(end5 - begin5) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt5, plt5->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 2 without repair and N=2 and t=10:" << endl;
-//    clock_t begin6 = clock();
-//    auto hybridPetrinet6 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_2_2.xml");
-//    auto plt6 = parser->parseHybridPetrinet(hybridPetrinet6, 10);
-//    clock_t end6 = clock();
-//    elapsed_secs = double(end6 - begin6) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt6, plt6->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 2 without repair and N=3 and t=10:" << endl;
-//    clock_t begin7 = clock();
-//    auto hybridPetrinet7 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_2_3.xml");
-//    auto plt7 = parser->parseHybridPetrinet(hybridPetrinet7, 10);
-//    clock_t end7 = clock();
-//    elapsed_secs = double(end7 - begin7) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt7, plt7->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 2 without repair and N=4 and t=10:" << endl;
-//    clock_t begin8 = clock();
-//    auto hybridPetrinet8 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_2_4.xml");
-//    auto plt8 = parser->parseHybridPetrinet(hybridPetrinet8, 10);
-//    clock_t end8 = clock();
-//    elapsed_secs = double(end8 - begin8) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt8, plt8->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 2 without repair and N=5 and t=10:" << endl;
-//    clock_t begin9 = clock();
-//    auto hybridPetrinet9 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_2_5.xml");
-//    auto plt9 = parser->parseHybridPetrinet(hybridPetrinet9, 10);
-//    clock_t end9 = clock();
-//    elapsed_secs = double(end9 - begin9) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt9, plt9->getRootNode()) + 1 << " locations" << endl;
+    // transform
+    auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tauMax));
+    shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
+    shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
 
+    // print
+    unsigned long p = getNodes(plt, plt->getRootNode()) + 1;
+    unsigned long l = getNumberOfLocations(automaton);
+    unsigned long e = getNumberOfEdges(automaton);
+
+    cout << "Hourglass example:" << endl;
+    cout << "tau_max=" << tauMax << ", #PL=" << p << ", #Loc=" << l << ", #Edge=" << e << "\n" << endl;
+
+    // write
+    PLTwriter.writePLT(plt, tauMax, "plt_hourglass");
+    automatonWriter.writeAutomaton(automaton, "hourglass");
+
+    /**************************************
+     * Case study: Water treatment plant. *
+     **************************************/
+
+    // setup
+    vector<int>          x = {   2,   3, 3,   3, 3,   4, 4, 4,   5, 5, 5, 5, 5,   5};
+    vector<int>          y = {   0,   0, 1,   1, 1,   0, 1, 2,   0, 1, 2, 3, 3,   3};
+    vector<int>          z = {   1,   1, 1,   2, 3,   1, 1, 1,   1, 1, 1, 1, 2,   3};
+    vector<double> maxTime = { 2.5, 3.5, 4, 6.5, 7, 4.5, 5, 5, 5.5, 6, 6, 6, 8, 8.5};
+
+    cout << "Water treatment plant case-study:" << endl;
+    cout << " No. | x | y | z |  t  | #PL | #Loc | #Edge" << endl;
+    cout << "-----+---+---+---+-----+-----+------+-------" << endl;
+
+    for(int i = 1; i <= x.size(); i++) {
+        string name = string("waterTreatmentPlant-") + string(to_string(x[i-1])) + string("-") +
+                      string(to_string(y[i-1])) + string("-") + string(to_string(z[i-1]));
+        string filePath = string("../test/testfiles/caseStudy-waterTreatmentPlant/") + name + string(".xml");
+
+        // read
+        shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
+
+        // transform with individual maxTime
+        auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, maxTime[i-1]));
+        shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
+        shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
+
+        // print
+        p = getNodes(plt, plt->getRootNode()) + 1;
+        l = getNumberOfLocations(automaton);
+        e = getNumberOfEdges(automaton);
+
+        cout << "  " << setw(2) << i << " | " << x[i-1] << " | " << y[i-1] << " | " << z[i-1] << " | "
+             << setw(3) << maxTime[i-1] << " | " << setw(3) << p << " |  " << setw(2) << l << "  |  "
+             << setw(2) << e << endl;
+
+        double maxTimeConst = 8.5;
+
+        // transform with constant maxTime
+        auto treeAndAutomatonConst(transformer.transformIntoSingularAutomaton(hybridPetriNet, maxTimeConst));
+        shared_ptr<ParametricLocationTree> pltConst(treeAndAutomatonConst.first);
+        shared_ptr<SingularAutomaton> automatonConst(treeAndAutomatonConst.second);
+
+        // print
+        p = getNodes(pltConst, pltConst->getRootNode()) + 1;
+        l = getNumberOfLocations(automatonConst);
+        e = getNumberOfEdges(automatonConst);
+
+        cout << "     |   |   |   | " << setw(3) << maxTimeConst << " | " << setw(3) << p << " |  " << setw(2) << l
+             << "  |  " << setw(2) << e << endl;
+
+        // write
+        string filenamePLT = "plt_" + name;
+        PLTwriter.writePLT(plt, maxTime[i-1], filenamePLT);
+        automatonWriter.writeAutomaton(automaton, name);
+    }
 }

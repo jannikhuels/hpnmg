@@ -22,6 +22,8 @@ namespace hpnmg {
 
         void writePLT(shared_ptr<ParametricLocationTree> plt, double maxTime);
 
+        void writePLT(shared_ptr<ParametricLocationTree> plt, double maxTime, string filepath);
+
         xercesc::DOMNode *
         generateParametricLocationElement(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node node,
                                           xercesc::DOMDocument *domNode);

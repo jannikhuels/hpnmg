@@ -16,10 +16,15 @@ namespace hpnmg {
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
+        std::vector<bool> deterministicTransitionsEnabled;
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;
 
         void setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled);
+
+        const vector<bool> &getDeterministicTransitionsEnabled() const;
+
+        void setDeterministicTransitionsEnabled(const vector<bool> &deterministicTransitionsEnabled);
 
     private:
         // enabling status in this loc for all general transitions
@@ -98,6 +103,7 @@ namespace hpnmg {
 
         void setGeneralTransitionsFired(std::vector<int> generalTransitionsFired);
 
+        // TODO not defined and never used
         int getId() const;
 
         double getEarliestEntryTime();

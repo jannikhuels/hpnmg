@@ -56,9 +56,9 @@ namespace hpnmg {
             accumulatedProbability(parametricLocation.accumulatedProbability),
             dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
-            sourceEvent(parametricLocation.sourceEvent) {
-
-    }
+            sourceEvent(parametricLocation.sourceEvent),
+            generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
+            deterministicTransitionsEnabled(parametricLocation.deterministicTransitionsEnabled) {}
 
 
     std::vector<int> ParametricLocation::getDiscreteMarking() const { return discreteMarking; }
@@ -137,6 +137,14 @@ namespace hpnmg {
 
     void ParametricLocation::setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled) {
         ParametricLocation::generalTransitionsEnabled = generalTransitionsEnabled;
+    }
+
+    const vector<bool> &ParametricLocation::getDeterministicTransitionsEnabled() const {
+        return deterministicTransitionsEnabled;
+    }
+
+    void ParametricLocation::setDeterministicTransitionsEnabled(const vector<bool> &deterministicTransitionsEnabled) {
+        ParametricLocation::deterministicTransitionsEnabled = deterministicTransitionsEnabled;
     }
 
     double ParametricLocation::getEarliestEntryTime() {
