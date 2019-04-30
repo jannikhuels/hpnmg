@@ -150,3 +150,63 @@ TEST(ProbabilityCalculator, valuetools_1){
     //ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
 
 }
+
+// Tests Monte-Carlo Plain for a triangle "◣" with vertices (0,0), (1,0), (0,1). Each dimension is uniformly distributed over [0,1].
+TEST(ProbabilityCalculator, SimpleMonteCarloPlain) {
+    singleDim single;
+    single.distribution = {"uniform", {{"a", 0.0}, {"b", 1.0}}};
+
+    allDims all{};
+    all.integrals.push_back(single);
+    all.integrals.push_back(single);
+    all.lowerBounds.push_back({0, 1, 0});
+    all.upperBounds.push_back({1, 1, 0});
+    all.lowerBounds.push_back({0, 0, 1});
+    all.upperBounds.push_back({1, -1, 1});
+
+    auto calculator = ProbabilityCalculator();
+    double error = -1;
+    double probability = -1;
+
+    const auto t1 = std::chrono::high_resolution_clock::now();
+    probability = calculator.computeMultivariateIntegralUsingMonteCarlo(5000, all, all, all, 1, error);
+    const auto t2 = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+    cout << "The probability is: " << probability << endl;
+    cout << "The error is: " << error << endl;
+    cout << "It took " << duration << "ms." << endl;
+
+    EXPECT_NEAR(0.5 / 1.0, probability, error);
+}
+
+// Tests Monte-Carlo Plain for a triangle "▶" with vertices (1,3), (3,4), (1,5). Each dimension is uniformly distributed over [0,5].
+TEST(ProbabilityCalculator, RotatetdMonteCarloPlain) {
+    singleDim single;
+    single.distribution = {"uniform", {{"a", 0.0}, {"b", 5.0}}};
+
+    allDims all{};
+    all.integrals.push_back(single);
+    all.integrals.push_back(single);
+    all.lowerBounds.push_back({1, 1, 0});
+    all.upperBounds.push_back({3, 1, 0});
+    all.lowerBounds.push_back({2.5, 0.5, 1});
+    all.upperBounds.push_back({5.5, -0.5, 1});
+
+    auto calculator = ProbabilityCalculator();
+    double error = -1;
+    double probability = -1;
+
+    const auto t1 = std::chrono::high_resolution_clock::now();
+    probability = calculator.computeMultivariateIntegralUsingMonteCarlo(5000, all, all, all, 1, error);
+    const auto t2 = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+    cout << "The probability is: " << probability << endl;
+    cout << "The error is: " << error << endl;
+    cout << "It took " << duration << "ms." << endl;
+
+    EXPECT_NEAR(2.0 / 25.0, probability, error);
+}
