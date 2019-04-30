@@ -2,6 +2,10 @@
 
 #include "ParametricLocationTree.h"
 #include "datastructures/ParametricLocation.h"
+#include "datastructures/Region.h"
+
+#include "Eigen/Geometry"
+
 #include <math.h>
 #include <iostream>
 #include <stdlib.h>
@@ -31,14 +35,30 @@ namespace hpnmg {
 
 
 
-	typedef struct {
-		int current_index;
-		vector<singleDim> integrals;
-		vector<vector<double>> lowerBounds;
-		vector<vector<double>> upperBounds;
+    typedef struct {
+        int current_index;
+        vector<singleDim> integrals;
+        vector<vector<double>> lowerBounds;
+        vector<vector<double>> upperBounds;
+
+        /**
+         * Controls whether or not to apply the integration bounds transformation provided by
+         * <code>allDims::transformationMatrix</code>.
+         */
+        bool applyTransformation = false;
+        /**
+         * An augmented matrix representing an affine transformation applied to the integrator according to the
+         * transformation theorem.
+         *
+         * This to calculate the integral over a different (transformed) set of intetragion bounds.
+         *
+         * <code>allDims::applyTransformation</code> must be true for this to take effect.
+         */
+        Eigen::MatrixXd transformationMatrix;
+
         int evaluations;
         double maxTime;
-	} allDims;
+    } allDims;
 
 
     class ProbabilityCalculator {
@@ -71,6 +91,8 @@ namespace hpnmg {
 		double getProbabilityForLocationUsingGauss(const ParametricLocation &location, vector<pair<string, map<string, float>>> distributions, double maxTime, int evaluations);
 
 		double getProbabilityForLocationUsingMonteCarlo(const ParametricLocation &location, vector<pair<string, map<string, float>>> distributions, double maxTime, char algorithm, int functioncalls, double &error);
+
+		double getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributions, char algorithm, int functioncalls, double &error);
 
 		double computeMultivariateIntegralUsingGauss(int evaluations, hpnmg::allDims all, hpnmg::allDims allPlus, hpnmg::allDims allMinus);
 

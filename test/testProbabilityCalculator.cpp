@@ -175,7 +175,7 @@ TEST(ProbabilityCalculator, SimpleMonteCarloPlain) {
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
     cout << "The probability is: " << probability << endl;
-    cout << "The error is: " << error << endl;
+    cout << "The error is:       " << error << endl;
     cout << "It took " << duration << "ms." << endl;
 
     EXPECT_NEAR(0.5 / 1.0, probability, error);
@@ -205,8 +205,82 @@ TEST(ProbabilityCalculator, RotatetdMonteCarloPlain) {
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
     cout << "The probability is: " << probability << endl;
-    cout << "The error is: " << error << endl;
+    cout << "The error is:       " << error << endl;
     cout << "It took " << duration << "ms." << endl;
 
     EXPECT_NEAR(2.0 / 25.0, probability, error);
+}
+
+TEST(ProbabilityCalculator, ForRegion2D) {
+    Region region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
+        hypro::Point<double>{1, 0},
+        hypro::Point<double>{3, 0},
+        hypro::Point<double>{2, 2},
+    }))};
+
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 5.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 5.0}}},
+    };
+
+    auto calculator = ProbabilityCalculator();
+    double error = -1;
+    double probability = -1;
+
+    for (auto alg : {1, 2, 3})
+    {
+        const auto t1 = std::chrono::high_resolution_clock::now();
+        probability = calculator.getProbabilityForRegionUsingMonteCarlo(region, distributions, alg, 50000, error);
+        const auto t2 = std::chrono::high_resolution_clock::now();
+
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << probability << endl;
+        cout << "The error is:       " << error << endl;
+        cout << "It took " << duration << "ms." << endl;
+
+        if (error > 0)
+            EXPECT_NEAR(2.0 / 25.0, probability, error);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+    }
+}
+
+TEST(ProbabilityCalculator, ForRegion3D) {
+    Region region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
+        hypro::Point<double>{1, 0, 0},
+        hypro::Point<double>{0, 1, 0},
+        hypro::Point<double>{0, 0, 1},
+        hypro::Point<double>{1, 1, 1},
+    }))};
+
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 1.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 1.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 1.0}}},
+    };
+
+    auto calculator = ProbabilityCalculator();
+    double error = -1;
+    double probability = -1;
+
+    for (auto alg : {1, 2, 3})
+    {
+        const auto t1 = std::chrono::high_resolution_clock::now();
+        probability = calculator.getProbabilityForRegionUsingMonteCarlo(region, distributions, alg, 50000, error);
+        const auto t2 = std::chrono::high_resolution_clock::now();
+
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << probability << endl;
+        cout << "The error is:       " << error << endl;
+        cout << "It took " << duration << "ms." << endl;
+
+        if (error > 0)
+            EXPECT_NEAR(1.0 / 3.0, probability, error);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+    }
 }

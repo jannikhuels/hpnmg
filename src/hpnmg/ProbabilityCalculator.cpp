@@ -3,6 +3,8 @@
 #include "Eigen/Geometry"
 #include "Eigen/LU"
 
+#include <cmath>
+
 using namespace std;
 
 namespace hpnmg {
@@ -155,117 +157,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 }
 
             }
-
-
-
-/*              vector<short> includedInterval(integrationIntervals.size());
-                fill(includedInterval.begin(), includedInterval.end(), 0);
-
-
-                vector<int> counter = vector<int>(location.getDimension() - 1);
-                fill(counter.begin(), counter.end(), 0);
-
-                //firings in the past
-                for (int i = 0; i < generalTransitionsFired.size(); i++) {
-
-                int transitionID = generalTransitionsFired[i];
-                int firing = counter[transitionID];
-
-                if (integrationIntervals[transitionID + firing].second.first.size() == 0 ||
-                    integrationIntervals[transitionID + firing].second.second.size() == 0) {
-                    continue;
-                }
-
-
-                double u = integrationIntervals[transitionID + firing].second.first[transitionID + firing + 1];
-                integrationIntervals[transitionID + firing].second.first[transitionID + firing + 1] = integrationIntervals[transitionID + firing].second.first[i + 1];
-                integrationIntervals[transitionID + firing].second.first[i + 1] = u;
-
-                double t = integrationIntervals[transitionID + firing].second.second[transitionID + firing + 1];
-                integrationIntervals[transitionID + firing].second.second[transitionID + firing + 1] = integrationIntervals[transitionID + firing].second.second[i + 1];
-                integrationIntervals[transitionID + firing].second.second[i + 1] = t;
-
-                singleDim sAll;
-                sAll.distribution = distributions[integrationIntervals[transitionID].first];
-                all.integrals.push_back(sAll);
-                singleDim sPlus;
-                sPlus.distribution = sAll.distribution;
-                allPlus.integrals.push_back(sPlus);
-                singleDim sMinus;
-                sMinus.distribution = sAll.distribution;
-                allMinus.integrals.push_back(sMinus);
-
-
-                all.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
-                all.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
-                allPlus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
-                allPlus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
-                allMinus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
-                allMinus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
-
-                includedInterval[transitionID + firing] = 1;
-
-                integrationIntervals[transitionID + firing].first = -1;
-
-                counter[transitionID] += 1;
-
-            }
-
-
-
-            //future firings
-            for (int i = 0; i < integrationIntervals.size(); i++) {
-
-                if (integrationIntervals[i].first == -1) {
-                    continue;
-                }
-                if (integrationIntervals[i].second.first.size() == 0 ||
-                    integrationIntervals[i].second.second.size() == 0) {
-                    continue;
-                }
-
-                if (includedInterval[i] == 1) {
-                    continue;
-                }
-
-
-                singleDim sAll;
-                sAll.distribution = distributions[integrationIntervals[i].first];
-                all.integrals.push_back(sAll);
-                singleDim sPlus;
-                sPlus.distribution = sAll.distribution;
-                allPlus.integrals.push_back(sPlus);
-                singleDim sMinus;
-                sMinus.distribution = sAll.distribution;
-                allMinus.integrals.push_back(sMinus);
-
-
-                all.lowerBounds.push_back(integrationIntervals[i].second.first);
-                all.upperBounds.push_back(integrationIntervals[i].second.second);
-                allPlus.lowerBounds.push_back(integrationIntervals[i].second.first);
-                allPlus.upperBounds.push_back(integrationIntervals[i].second.second);
-                allMinus.lowerBounds.push_back(integrationIntervals[i].second.first);
-                allMinus.upperBounds.push_back(integrationIntervals[i].second.second);
-
-
-                if (integrationIntervals[i].second.second[0] >= maxTime) {
-
-                    int last = allPlus.upperBounds.size() - 1;
-                    fill(allPlus.lowerBounds[last].begin(), allPlus.lowerBounds[last].end(), 0.0);
-
-                    pair<string, map<string, float>> uniform;
-                    uniform.first = "uniform";
-                    std::map<string, float> params;
-                    params["a"] = 0.0;
-                    params["b"] = maxTime;
-                    uniform.second = params;
-                    allPlus.integrals[last].distribution = uniform;
-
-                    fill(allMinus.lowerBounds[last].begin(), allMinus.lowerBounds[last].end(), 0.0);
-                }
-
-            }*/
-
 
             result = computeMultivariateIntegralUsingGauss(evaluations, all, allPlus, allMinus);
 
@@ -482,81 +373,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             }
 
 
-            /*std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
-              vector<int> counter = vector<int>(location.getDimension() - 1);
-              fill(counter.begin(), counter.end(),0);
-              vector<short> includedInterval(integrationIntervals.size());
-              fill(includedInterval.begin(), includedInterval.end(),0);
-              vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
-              //firings in the past
-              for (int i = 0; i < generalTransitionsFired.size(); i++) {
-                  int transitionID = generalTransitionsFired[i];
-                  int firing = counter[transitionID];
-                  if (integrationIntervals[transitionID + firing].second.first.size() == 0 || integrationIntervals[transitionID + firing].second.second.size() == 0) {
-                      continue;
-                  }
-                  cout << "Before switching: TransitionID[" << transitionID << "] Firing[" << firing << "] Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
-                  cout << "Before switching: TransitionID[" << transitionID << "] Firing[" << firing << "] Right bound:" << integrationIntervals[transitionID + firing].second.second << endl;
-                  singleDim sAll;
-                  sAll.distribution = distributions[integrationIntervals[transitionID].first];
-                  all.integrals.push_back(sAll);
-                  singleDim sPlus;
-                  sPlus.distribution = sAll.distribution;
-                  allPlus.integrals.push_back(sPlus);
-                  singleDim sMinus;
-                  sMinus.distribution = sAll.distribution;
-                  allMinus.integrals.push_back(sMinus);
-                  double u = integrationIntervals[transitionID + firing].second.first[transitionID + firing+1];
-                  integrationIntervals[transitionID + firing].second.first[transitionID + firing+1] = integrationIntervals[transitionID + firing].second.first[i+1];
-                  integrationIntervals[transitionID + firing].second.first[i+1] = u;
-                  double t = integrationIntervals[transitionID + firing].second.second[transitionID + firing+1];
-                  integrationIntervals[transitionID + firing].second.second[transitionID + firing +1] = integrationIntervals[transitionID + firing].second.second[i+1];
-                  integrationIntervals[transitionID + firing].second.second[i+1] = t;
-                  all.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
-                  all.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
-                  allPlus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
-                  allPlus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
-                  allMinus.lowerBounds.push_back(integrationIntervals[transitionID + firing].second.first);
-                  allMinus.upperBounds.push_back(integrationIntervals[transitionID + firing].second.second);
-                  includedInterval[transitionID + firing] = 1;
-                  counter[transitionID] +=1;
-                  cout << "After switching: TransitionID[" << transitionID << "] Firing[" << firing << "] Left bound:" << integrationIntervals[transitionID + firing].second.first << endl;
-                  cout << "After switching: TransitionID[" << transitionID << "] Firing[" << firing << "] Right bound:" << integrationIntervals[transitionID + firing].second.second << endl;
-              }
-              //future firings
-              for (int i = 0; i < integrationIntervals.size(); i++) {
-                  if (includedInterval[i] == 1) {
-                      continue;
-                  }
-                  if (integrationIntervals[i].second.first.size() == 0 || integrationIntervals[i].second.second.size() == 0) {
-                      continue;
-                  }
-                  singleDim sAll;
-                  //sAll.distribution = distributions[integrationIntervals[i].first];
-                  sAll.distribution = distributions[0];
-                  all.integrals.push_back(sAll);
-                  singleDim sPlus;
-                  sPlus.distribution = sAll.distribution;
-                  allPlus.integrals.push_back(sPlus);
-                  singleDim sMinus;
-                  sMinus.distribution = sAll.distribution;
-                  allMinus.integrals.push_back(sMinus);
-                  all.lowerBounds.push_back(integrationIntervals[i].second.first);
-                  all.upperBounds.push_back(integrationIntervals[i].second.second);
-                  allPlus.lowerBounds.push_back(integrationIntervals[i].second.first);
-                  allPlus.upperBounds.push_back(integrationIntervals[i].second.second);
-                  allMinus.lowerBounds.push_back(integrationIntervals[i].second.first);
-                  allMinus.upperBounds.push_back(integrationIntervals[i].second.second);
-                  int last = allPlus.upperBounds.size() - 1;
-                  if  (integrationIntervals[i].second.second[0] >= maxTime){
-                      fill(allPlus.lowerBounds[last].begin(), allPlus.lowerBounds[last].end(),0.0);
-                      fill(allPlus.upperBounds[last].begin(), allPlus.upperBounds[last].end(),numeric_limits<double>::infinity());
-                      fill(allMinus.lowerBounds[last].begin(), allMinus.lowerBounds[last].end(),0.0);
-                  }
-                  cout << "TransitionID[" << i << "] Left bound:" << integrationIntervals[i].second.first << endl;
-                  cout << "TransitionID[" << i << "] Right bound:" << integrationIntervals[i].second.second << endl;
-              }*/
-
             result = computeMultivariateIntegralUsingMonteCarlo(functioncalls, all, allPlus,  allMinus, algorithm, error);
 
 
@@ -567,6 +383,74 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         return completeResult;
    	}
+
+
+
+    double ProbabilityCalculator::getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributions,char algorithm, int functioncalls, double &error) {
+        double result = 0.0;
+
+        std::vector<std::pair<std::vector<double>, std::vector<double>>> integrationIntervals = region.getIntegrationIntervals();
+        //TODO turn this into a loop when the function returns more than one set of intervals
+        {
+            allDims all;
+            allDims allPlus;
+            allDims allMinus;
+
+            all.current_index = 0;
+            all.applyTransformation = true;
+            all.transformationMatrix = region.getIntegrationTransformationMatrix();
+            allPlus.current_index = 0;
+            allPlus.applyTransformation = true;
+            allPlus.transformationMatrix = region.getIntegrationTransformationMatrix();
+            allMinus.current_index = 0;
+            allMinus.applyTransformation = true;
+            allMinus.transformationMatrix = region.getIntegrationTransformationMatrix();
+
+
+            for (int i = 0; i < integrationIntervals.size(); i++) {
+                singleDim sAll;
+                sAll.distribution = distributions[i];
+                all.integrals.push_back(sAll);
+                singleDim sPlus;
+                sPlus.distribution = sAll.distribution;
+                allPlus.integrals.push_back(sPlus);
+                singleDim sMinus;
+                sMinus.distribution = sAll.distribution;
+                allMinus.integrals.push_back(sMinus);
+
+                all.lowerBounds.push_back(integrationIntervals[i].first);
+                all.upperBounds.push_back(integrationIntervals[i].second);
+                allPlus.lowerBounds.push_back(integrationIntervals[i].first);
+                allPlus.upperBounds.push_back(integrationIntervals[i].second);
+                allMinus.lowerBounds.push_back(integrationIntervals[i].first);
+                allMinus.upperBounds.push_back(integrationIntervals[i].second);
+
+                if (isinf(integrationIntervals[i].second[0])) {
+                    int last = allPlus.upperBounds.size() - 1;
+
+                    fill(all.upperBounds[last].begin(), all.upperBounds[last].end(), 0.0);
+                    all.upperBounds[last][0] = 1.0;
+
+                    // Faking a distribution with probability 1
+                    fill(allPlus.upperBounds[last].begin(), allPlus.upperBounds[last].end(), 0.0);
+                    allPlus.upperBounds[last][0] = 1.0;
+                    fill(allPlus.lowerBounds[last].begin(), allPlus.lowerBounds[last].end(), 0.0);
+                    const auto &uniform = std::pair<std::string, std::map<std::string, float>>{"uniform", {{"a", 0.0}, {"b", 0.0}}};
+                    allPlus.integrals[last].distribution = uniform;
+
+                    fill(allMinus.upperBounds[last].begin(), allMinus.upperBounds[last].end(), 0.0);
+                    allMinus.upperBounds[last][0] = 1.0;
+                    fill(allMinus.lowerBounds[last].begin(), allMinus.lowerBounds[last].end(), 0.0);
+                }
+            }
+
+
+            result += computeMultivariateIntegralUsingMonteCarlo(functioncalls, all, allPlus,  allMinus, algorithm, error);
+        }
+
+
+        return result;
+    }
 
 
 
@@ -806,8 +690,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         const auto values = Eigen::Map<Eigen::VectorXd>(k, dim);
         auto transformedValues = Eigen::VectorXd(dim);
-        auto jacobianFactors = std::vector<double>(dim, 1.0);
+        Eigen::VectorXd jacobianFactors = Eigen::VectorXd::Ones(dim);
 
+        // Apply the transformation from the Monte Carlo hypercube into the volume defined by the intervals
         for (int i = 0; i < dim; i++) {
             double lower = all.lowerBounds[i][0];
             double upper = all.upperBounds[i][0];
@@ -838,6 +723,11 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 transformedValues[i] = halfUpper + halfLower + k[i] * (halfUpper - halfLower);
                 jacobianFactors[i] *= (halfUpper - halfLower);
             }
+        }
+
+        if (all.applyTransformation) {
+            transformedValues = (all.transformationMatrix * transformedValues.homogeneous()).hnormalized();
+            result *= std::abs(all.transformationMatrix.determinant());
         }
 
         for (int i = 0; i < dim; i++) {
