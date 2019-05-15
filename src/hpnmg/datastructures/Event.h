@@ -21,7 +21,7 @@ namespace hpnmg {
         std::string id;
 
     public:
-        Event(EventType type, std::vector<double> generalDependencies, double time, std::string id);
+        Event(EventType type, std::vector<double> generalDependencies, double time, std::string id = "");
         Event();
         Event(int numberOfGeneralTransitions);
         Event(const Event &event);
