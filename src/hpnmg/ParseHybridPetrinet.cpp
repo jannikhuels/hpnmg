@@ -157,10 +157,11 @@ namespace hpnmg {
         double highestPriority = -1.0;
         for (auto &immediateTransition : immediateTransitions) {
             shared_ptr<ImmediateTransition> transition = immediateTransition.second;
-            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location
-                    .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
+
+            if (transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location.getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
 
                 if (mode < 2 && transition->getPriority() > highestPriority) {
+
                     highestPriority = transition->getPriority();
                     // priority is higher (number is greater), so we don't consider transitions with lower priority
                     enabledImmediateTransition.clear();
@@ -442,7 +443,6 @@ namespace hpnmg {
         vector<vector<double>> newConsidered; // todo: we should order them by time Delta
         vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> nextDeterministicTransitions;
 
-
         /* --- Nondeterministic Conflicts ---
         Mode 0: Nondeterminism resolved by priorities and conflicts (default)
         Mode 1: Nondeterminism conflict set only includes transitions of highest priority (ignoring weights)
@@ -459,7 +459,6 @@ namespace hpnmg {
         }
 
 
-
         for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
             shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
             if (!transitionIsEnabled(discreteMarking, continuousMarking, transition, hybridPetrinet, location
@@ -468,6 +467,8 @@ namespace hpnmg {
 
             if (mode < 2 && transition->getPriority() < highestPriority)
 
+                continue;
+            if (transition->getPriority() < highestPriority)
                 continue;
             vector<double> clock = location.getDeterministicClock()[pos];
             vector<double> timeDelta;

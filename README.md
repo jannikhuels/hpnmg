@@ -79,6 +79,7 @@ latter command should include lines like these:
 ```
 Build HyPro's resources and HyPro itself with `make resources && make hypro`. This may take 10 minutes.
 
+
 ## Instructions
 
 Nondetermnistic scheduling (QEST):
