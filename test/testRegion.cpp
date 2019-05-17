@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "datastructures/Region.h"
+#include "hpnmg/helper/Triangulation.h"
 
 #include "representations/GeometricObject.h"
 
@@ -68,4 +69,35 @@ TEST(RegionTest, IntegrationTransformation3D)
     std::sort(mappedUnitSimplex.begin(), mappedUnitSimplex.end());
 
     ASSERT_EQ(simplex, mappedUnitSimplex);
+}
+
+TEST(RegionTest, IntegrationTransformationQuadrilateral)
+{
+    auto quadrilateral = std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 1},
+        hypro::Point<double>{2, 0},
+        hypro::Point<double>{4, 2},
+        hypro::Point<double>{2, 4},
+    };
+
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(quadrilateral))};
+
+    const auto simplexes = Triangulation::create(quadRegion);
+
+    EXPECT_EQ(simplexes.size(), 2);
+
+    for (auto &region : simplexes) {
+        const auto &trans = region.getIntegrationTransformationMatrix();
+
+        auto mappedUnitSimplex = std::vector<hypro::Point<double>>();
+        for (const auto &vertex : createUnitSimplex(2)) {
+            mappedUnitSimplex.emplace_back((trans * Eigen::VectorXd(vertex.rawCoordinates()).homogeneous()).hnormalized());
+        }
+
+        auto regionVertices = region.hPolytope.vertices();
+        std::sort(regionVertices.begin(), regionVertices.end());
+        std::sort(mappedUnitSimplex.begin(), mappedUnitSimplex.end());
+
+        EXPECT_EQ(regionVertices, mappedUnitSimplex);
+    }
 }
