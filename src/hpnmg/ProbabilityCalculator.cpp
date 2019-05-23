@@ -934,10 +934,18 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
    			} else  if (distribution.first == "exp"){
 
-                double lambda = (double) normalMap.at("lambda");
+   			    double lambda;
+   			    double mean = 0.0;
 
-                if (lambda <= 0.0) {
-                    cout << "Invalid exponential distribution. Make sure that lambda > 0." << endl;
+                if (normalMap.find("lambda") == normalMap.end() ) {
+                    mean = (double) normalMap.at("mean");
+                    lambda = 1.0 / mean;
+                } else {
+                    lambda = (double) normalMap.at("lambda");
+                }
+
+                if (lambda <= 0.0 && mean <= 0.0) {
+                    cout << "Invalid exponential distribution. Make sure that either lambda > 0 or mean > 0 is given." << endl;
                     throw std::invalid_argument("invalid distribution");
                 }
 
