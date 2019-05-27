@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <!-- charge battery -->
+        <discretePlace id="pd0" marking="1"/>
+        <!-- no charge -->
+        <discretePlace id="pd1" marking="0"/>
+        <!-- battery -->
+        <continuousPlace id="pc0" capacity="15" infiniteCapacity="0" level="10"/>
+    </places>
+    <transitions>
+        <!-- charge battery -->
+        <continuousTransition id="tf_p0" rate="5.0"/>
+        <dynamicTransition id="tdy0" function="max" factor="-1" parameter="0">
+            <continuousTransition referenceId="tf_p0"></continuousTransition>
+            <constant value="0.0" factor="1" name="Pa"></constant>
+        </dynamicTransition>
+        <!-- discharge battery -->
+        <dynamicTransition id="tdy1" function="max" parameter="0">
+            <continuousTransition referenceId="tf_p0"></continuousTransition>
+            <constant value="0.0" factor="1" name="Pa"></constant>
+        </dynamicTransition>
+        <!-- transition tg0: no charge to charge -->
+        <generalTransition id="tg0" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0.0"/>
+            <parameter name="b" value="10.0"/>
+        </generalTransition>
+        <!-- transition td0: charge to no charge -->
+        <deterministicTransition id="td0" discTime="3.0" priority="1" weight="1.0E0"/>
+    </transitions>
+    <arcs>
+        <!-- continuous arcs -->
+        <continuousArc id="ca0" fromNode="tdy0" priority="1" share="1.0E0" toNode="pc0" weight="1.0E0"/> <!-- charge battery -->
+        <continuousArc id="ca1" fromNode="pc0" priority="1" share="1.0E0" toNode="tdy1" weight="1.0E0"/> <!-- discharge battery -->
+        <!-- discrete arcs: battery charging or not -->
+        <discreteArc id="da0" fromNode="pd0" toNode="td0" weight="1.0E0"/>
+        <discreteArc id="da1" fromNode="td0" toNode="pd1" weight="1.0E0"/>
+        <discreteArc id="da2" fromNode="pd1" toNode="tg0" weight="1.0E0"/>
+        <discreteArc id="da3" fromNode="tg0" toNode="pd0" weight="1.0E0"/>
+        <!-- guard arcs: battery -->
+        <guardArc fromNode="pd0" id="ga0" isInhibitor="0" toNode="tdy0" weight="1.0E0"/> <!-- guard arc that enables battery charging -->
+    </arcs>
+</HPnG>

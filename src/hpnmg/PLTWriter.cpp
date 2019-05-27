@@ -113,6 +113,16 @@ namespace hpnmg {
         }
         element->appendChild(generalClocksElement);
 
+        // add general transition fired
+        DOMElement *generalTransitionsFiredElement = domDocument->createElement(XMLString::transcode("generalTransitionsFired"));
+        vector<int> genFired = location.getGeneralTransitionsFired();
+        for (int i = 0; i < genFired.size(); ++i) {
+            DOMElement *firedElement = domDocument->createElement(XMLString::transcode("fired"));
+            firedElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(to_string(genFired[i]).c_str()));
+            generalTransitionsFiredElement->appendChild(firedElement);
+        }
+        element->appendChild(generalTransitionsFiredElement);
+
         // add general boundaries
         DOMElement* generalBoundariesElement = domDocument->createElement(XMLString::transcode("boundaries"));
         vector<vector<vector<double>>> generalBoundariesLeft = location.getGeneralIntervalBoundLeft();

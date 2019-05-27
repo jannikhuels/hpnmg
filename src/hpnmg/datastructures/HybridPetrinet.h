@@ -8,6 +8,7 @@
 #include "places/Place.h"
 #include "transitions/DeterministicTransition.h"
 #include "transitions/ContinuousTransition.h"
+#include "transitions/DynamicTransition.h"
 #include "transitions/GeneralTransition.h"
 #include "transitions/ImmediateTransition.h"
 #include "transitions/Transition.h"
@@ -53,6 +54,7 @@ namespace hpnmg {
 
         void addTransition(shared_ptr<DeterministicTransition> &transition);
         void addTransition(shared_ptr<ContinuousTransition> &transition);
+        void addTransition(shared_ptr<DynamicTransition> &transition);
         void addTransition(shared_ptr<GeneralTransition> &transition);
         void addTransition(shared_ptr<ImmediateTransition> &transition);
 

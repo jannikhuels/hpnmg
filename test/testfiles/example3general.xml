@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="pd1" marking="1"/>
+        <discretePlace id="pd2" marking="0"/>
+        <discretePlace id="pd3" marking="0"/>
+        <discretePlace id="pd4" marking="0"/>
+    </places>
+    <transitions>
+        <generalTransition id="tg1" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0.0"/>
+            <parameter name="b" value="10.0"/>
+        </generalTransition>
+        <generalTransition id="tg2" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0.0"/>
+            <parameter name="b" value="10.0"/>
+        </generalTransition>
+        <generalTransition id="tg3" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0.0"/>
+            <parameter name="b" value="10.0"/>
+        </generalTransition>
+    </transitions>
+    <arcs>
+        <discreteArc id="da1" fromNode="pd1" toNode="tg1" weight="1.0E0"/>
+        <discreteArc id="da2" fromNode="tg1" toNode="pd2" weight="1.0E0"/>
+        <discreteArc id="da3" fromNode="pd2" toNode="tg2" weight="1.0E0"/>
+        <discreteArc id="da4" fromNode="tg2" toNode="pd3" weight="1.0E0"/>
+        <discreteArc id="da5" fromNode="pd3" toNode="tg3" weight="1.0E0"/>
+        <discreteArc id="da6" fromNode="tg3" toNode="pd4" weight="1.0E0"/>
+    </arcs>
+</HPnG>

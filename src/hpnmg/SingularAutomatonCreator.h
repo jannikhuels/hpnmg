@@ -10,10 +10,6 @@ using namespace std;
 
 namespace hpnmg {
 
-    // Compares two ordered vectors
-    // Returns true, if lhs < rhs and false otherwise
-    static bool
-    compareOrderedVectors(const vector<vector<vector<double>>> &lhs, const vector<vector<vector<double>>> &rhs);
 
     class SingularAutomatonCreator {
     private:
@@ -68,5 +64,10 @@ namespace hpnmg {
         void mergeIdenticalLocations(shared_ptr<SingularAutomaton> singularAutomaton);
 
         vector<vector<vector<double>>> sortByOrder(const vector<vector<double>> &values, const vector<int> &order);
+
+        // Compares two ordered vectors
+        // Returns true, if lhs < rhs and false otherwise
+        static bool compareOrderedVectors(const vector<vector<vector<double>>> &lhs, const vector<vector<vector<double>>> &rhs);
+
     };
 }

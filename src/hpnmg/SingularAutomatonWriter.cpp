@@ -249,6 +249,8 @@ namespace hpnmg {
                 return vector<string>{op_bin(LEQ, name + to_string(index + 1), to_string(value))};
             case GREATER_EQUAL:
                 return vector<string>{op_bin(LEQ, to_string(value), name + to_string(index + 1))};
+            case UNLIMITED:
+                return vector<string>();
         }
     }
 

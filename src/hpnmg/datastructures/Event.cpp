@@ -9,7 +9,7 @@ namespace hpnmg {
 
     }
 
-    Event::Event(EventType type, std::vector<double> generalDependencies, double time): type(type), generalDependencies(generalDependencies), time(time) {
+    Event::Event(EventType type, std::vector<double> generalDependencies, double time): type(type), generalDependencies(generalDependencies), time(time){
 
     }
 
@@ -50,4 +50,43 @@ namespace hpnmg {
 
     shared_ptr<ContinuousPlace> Event::getPlaceMember() const {return placeMember;};
     void Event::setPlaceMember(shared_ptr<ContinuousPlace> placeMember) {this->placeMember = placeMember;};
+
+    std::vector<double> Event::getTimeVector(int dimension) {
+        std::vector<double> timeVector(dimension);
+        timeVector[0] = this->time;
+        for (int i = 1; i < dimension; i++) {
+            if (i <= this->generalDependencies.size()) {
+                timeVector[i] = this->generalDependencies[i-1];
+            } else {
+                timeVector[i] = 0;
+            }
+        }
+        return timeVector;
+    }
+
+    std::string Event::getMemberID(){
+
+
+        switch (this->type){
+
+            case Immediate:
+                return  (*(this->immediateTransitionMember)).getId();
+
+            case General:
+                return  (*(this->generalTransitionMember)).getId();
+
+            case Timed:
+                return  (*(this->deterministicTransitionMember)).getId();
+
+            case Continuous:
+                return  (*(this->placeMember)).id;
+
+            case Root :
+                return "";
+
+            default:
+                return "";
+
+        }
+    }
 }

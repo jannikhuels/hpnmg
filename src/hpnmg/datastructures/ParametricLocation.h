@@ -2,8 +2,12 @@
 
 #include "Event.h"
 #include "Region.h"
+#include "helper/Computation.h"
+#include "helper/LinearBoundsTree.h"
 
 namespace hpnmg {
+
+
     class ParametricLocation {
 
     private:
@@ -17,6 +21,13 @@ namespace hpnmg {
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
         std::vector<bool> deterministicTransitionsEnabled;
+        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
+        std::vector<double> generalDependenciesNormed;
+        void scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound, double boundValue, double splitValue, int boundIndex, int splitIndex, bool parent);
+        void setSplitConstraints(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &newIntegrationIntervals, int index, int splitIndex, std::vector<double> splitBound, bool upper);
+        bool validBound(int index, int boundIndex, std::vector<double> newBound, bool upper);
+
+
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;
 
@@ -32,9 +43,8 @@ namespace hpnmg {
         double conflictProbability;
         double accumulatedProbability;
         int dimension;
-        std::vector<double> generalDependenciesNormed;
     public:
-        const vector<double> &getGeneralDependenciesNormed() const;
+        vector<double> getGeneralDependenciesNormed();
 
         void setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed);
         // vector needed for STD is empty while parsing and set when PLT is computed
@@ -89,6 +99,10 @@ namespace hpnmg {
 
         void setSourceEvent(const Event &event);
 
+        std::string getSourceEventId() const;
+
+        void setSourceEventId(const std::string &id);
+
         double getConflictProbability() const;
 
         void setConflictProbability(double conflictProbability);
@@ -110,6 +124,18 @@ namespace hpnmg {
 
         double getLatestEntryTime();
 
-        double getMinimumTime(std::vector<std::vector<std::vector<double>>> lowerBoundaries, std::vector<std::vector<std::vector<double>>> upperBoundaries);
+        double getMinimumTime(vector<vector<vector<double>>> lowerBoundaries, vector<vector<vector<double>>> upperBoundaries, double time, vector<double> dependencies);
+
+        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> getIntegrationIntervals() const;
+
+        void setIntegrationIntervals(std::vector<std::vector<double>> time, std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds, double value, std::vector<int> occurings,
+                                     int dimension, int maxTime);
+
+        void overwriteIntegrationIntervals(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals);
+
+        std::pair<std::vector<double>, std::vector<double>> compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index);
+
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervals(std::vector<int> occurings, int maxTime, int dim);
+
     };
 }

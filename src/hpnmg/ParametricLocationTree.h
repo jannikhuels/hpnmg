@@ -29,7 +29,8 @@ namespace hpnmg {
             Region getRegion() const;
             void setRegion(const Region &region);
             ParametricLocation getParametricLocation() const;
-            void setParametricLocation(ParametricLocation location);
+            void setParametricLocation(const ParametricLocation &location);
+
         };
     private:
         NODE_ID currentId;
@@ -64,7 +65,7 @@ namespace hpnmg {
 
         void recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, Region> (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension);
 
-        void recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability);
+        void recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability, std::vector<int> occurings);
 
         std::vector<Event> getSourceEventsFromNodes(const std::vector<Node> &nodes);
 
@@ -72,7 +73,10 @@ namespace hpnmg {
 
         std::vector<int> getDimensionRecursively(const ParametricLocationTree::Node &startNode, int numberOfGeneralTransitions);
 
-        void addNormedDependenciesRecursively(const ParametricLocationTree::Node &startNode, std::vector<int> genTransOccurings, int dimension);
+        void addNormedDependenciesRecursively(ParametricLocationTree::Node &startNode, std::vector<int> genTransOccurings, int dimension);
+
+        void recursivelyCollectAllLocationsWithPLT(Node startNode, vector<Node> &candidates, double probability, std::vector<int> occurings);
+
 
     public:
 
@@ -96,9 +100,13 @@ namespace hpnmg {
 
         void printText();
 
+        int numberOfLocations();
+
         std::vector<Node> getCandidateLocationsForTime(double time);
 
-        std::vector<Node> getCandidateLocationsForTimeInterval(std::pair<double,double> interval);  
+        std::vector<Node> getCandidateLocationsForTimeInterval(std::pair<double,double> interval);
+
+        std::vector<ParametricLocationTree::Node> getAllLocations();
 
     }; 
 }

@@ -108,7 +108,7 @@ protected:
     ModelCheckerTestComplexXML() {
         ReadHybridPetrinet reader;
         //TODO Check impl. Pointer seems to be a problem here. (Memory Leak?)
-        shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("jannik1general.xml");
+        shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("jannik5general.xml");
         ParseHybridPetrinet parser;
         int maxTime = 20;
         shared_ptr<hpnmg::ParametricLocationTree> pltC = parser.parseHybridPetrinet(hybridPetrinet, maxTime);
@@ -164,7 +164,7 @@ std::vector<Intervals> getIntervals(std::vector<Region> rs, Halfspace<double> hs
 }
 
 std::vector<Region> until(shared_ptr<hpnmg::ParametricLocationTree> plt, ParametricLocationTree::Node node, Halfspace<double> hUpperTime, Halfspace<double> hLowerTime) {
-    printf("---Model Checking Until---\n");
+    //printf("---Model Checking Until---\n");
     Region region = node.getRegion();
     region.insert(hUpperTime);
     if (region.empty()) {
@@ -232,8 +232,8 @@ std::vector<Region> until(shared_ptr<hpnmg::ParametricLocationTree> plt, Paramet
     //printIntervals(iCandidates);
     std::vector<Intervals> rest = STDiagram::differenceOfIntervals(iCandidates, I1);
     rest = STDiagram::differenceOfIntervals(rest, I2);
-    printf("Rest: ");
-    printIntervals(rest);
+    //printf("Rest: ");
+    //printIntervals(rest);
 
     std::vector<Intervals> I3;
     //cout << "Size of rest " << rest.size() << endl;
@@ -250,18 +250,18 @@ std::vector<Region> until(shared_ptr<hpnmg::ParametricLocationTree> plt, Paramet
     }
     //printf("I3: ");
     //printIntervals(I3);
-    cout << "I1" << endl;
-    printIntervals(I1);
-    cout << "I2" << endl;
-    printIntervals(I2);
-    cout << "I3" << endl;
-    printIntervals(I3);
-    cout << "-----------------" << endl;
+    //cout << "I1" << endl;
+    //printIntervals(I1);
+    //cout << "I2" << endl;
+    //printIntervals(I2);
+    //cout << "I3" << endl;
+    //printIntervals(I3);
+    //cout << "-----------------" << endl;
     std::vector<Intervals> result = STDiagram::unionOfIntervals(I1,I2);
     result = STDiagram::unionOfIntervals(result, I3);
     result = STDiagram::removeEmptyIntervals(result);
-    printf("Result of Until Model Checking: ");
-    printIntervals(result);
+    //printf("Result of Until Model Checking: ");
+    //printIntervals(result);
     return STDiagram::boundRegionByIntervals(node.getRegion(), plt->getMaxTime(), result, hUpperTime);   
 }
 
@@ -278,7 +278,7 @@ TEST_F(ModelCheckerTestComplexXML, UntilFormulaTest) {
     
     std::vector<Region> regions;
     double time = 0;
-    double timeT = 4 + time;
+    double timeT = 1 + time;
     double cfmlTime = 4;
     
     //std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTime(0);
@@ -293,15 +293,16 @@ TEST_F(ModelCheckerTestComplexXML, UntilFormulaTest) {
     auto startTime = chrono::high_resolution_clock::now();
     for (ParametricLocationTree::Node candidate : candidates) {
         //std::vector<Region> sat = until(plt, candidate, upperTimeHsp, startTimeHsp);
-        Region sat = ModelChecker::dfml(candidate,0,0,false);
-        sat = STDiagram::createTimeRegion(sat, cfmlTime, dim);
-        //std::vector<Region> satNeg = ModelChecker::neg({sat}, candidate.getRegion());
-        /*if (sat.size() > 0) {
+        //Region sat = ModelChecker::dfml(candidate,0,0,false);
+        Region sat = ModelChecker::cfml(candidate,0,2,true);
+        //sat = STDiagram::createTimeRegion(sat, cfmlTime, dim);
+       // std::vector<Region> satNeg = ModelChecker::neg({sat}, candidate.getRegion());
+        /*if (satNeg.size() > 0) {
             regions.insert(regions.end(), satNeg.begin(), satNeg.end());
-        } */  
+        }*/
         if (!sat.empty()) {
             regions.push_back(sat);
-        }    
+        }
     }
     auto endTime = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> elapsed = endTime - startTime;
@@ -311,12 +312,12 @@ TEST_F(ModelCheckerTestComplexXML, UntilFormulaTest) {
     cout << "Number of regions that satisfy until: " << regions.size() << endl;
     cout << "It took " << elapsed.count() << "ms" << endl;
 
-    cout << "Satisfaction intervals of returned regions:" << endl;
+    /*cout << "Satisfaction intervals of returned regions:" << endl;
     std::vector<Intervals> sat =  STDiagram::intervalsFromRegions(regions);
-    sat = STDiagram::removeEmptyIntervals(sat);
+    sat = STDiagram::removeEmptyIntervals(sat);*/
     
-    printIntervals(sat);
-    cout << "Number of satisfaction intervals: " << sat.size() << endl;
+    /*printIntervals(sat);
+    cout << "Number of satisfaction intervals: " << sat.size() << endl;*/
 
     //std::vector<Region> printRegions;
     //STDiagram::print(regions, true, "candidates4Until");

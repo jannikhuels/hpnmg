@@ -8,8 +8,13 @@ namespace hpnmg {
     private:
         double rate;
 
+
     public:
+        double currentRate;
         ContinuousTransition(std::string id, double rate);
-        double getRate();
+
+        virtual double getRate();
+        void setCurrentRate(double newRate);
+        void resetOriginalRate();
     };
 }

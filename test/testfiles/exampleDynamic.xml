@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="pd1" marking="1"/>
+        <discretePlace id="pd2" marking="1"/>
+        <continuousPlace id="pc0" capacity="10" infiniteCapacity="0" level="0"/>
+    </places>
+    <transitions>
+        <continuousTransition id="tf0" rate="2.0"/>
+        <continuousTransition id="tf1" rate="2.0"/>
+        <continuousTransition id="tf2" rate="2.0"/>
+        <dynamicTransition id="td0" function="max" parameter="0">
+            <continuousTransition referenceId="tf1" factor="2"></continuousTransition>
+            <continuousTransition referenceId="tf2"></continuousTransition>
+            <constant value="-1.0" name="A"></constant>
+        </dynamicTransition>
+    </transitions>
+    <arcs>
+        <guardArc fromNode="pd1" id="ga1" isInhibitor="0" toNode="tf1" weight="1.0E0"/>
+        <guardArc fromNode="pd2" id="ga2" isInhibitor="0" toNode="tf2" weight="1.0E0"/>
+        <continuousArc id="ca0" fromNode="td0" priority="1" share="1.0E0" toNode="pc0" weight="1.0E0"/>
+        <continuousArc id="ca1" fromNode="pc0" priority="1" share="1.0E0" toNode="tf0" weight="1.0E0"/>
+    </arcs>
+</HPnG>

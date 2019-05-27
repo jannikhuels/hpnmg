@@ -17,6 +17,7 @@
 #include "datastructures/places/ContinuousPlace.h"
 #include "datastructures/transitions/DeterministicTransition.h"
 #include "datastructures/transitions/ContinuousTransition.h"
+#include "datastructures/transitions/DynamicTransition.h"
 #include "datastructures/transitions/GeneralTransition.h"
 #include "datastructures/transitions/ImmediateTransition.h"
 
@@ -51,6 +52,7 @@ namespace hpnmg {
         shared_ptr<HybridPetrinet> readHybridPetrinet(const std::string &filepath);
         void parsePlaces(xercesc::DOMElement* placesNode);
         void parseTransitions(xercesc::DOMElement* transitionsNode);
+        void parseDynamicTransitions(xercesc::DOMElement *transistionsNode);
         void parseArcs(xercesc::DOMElement* arcsNode);
         bool validateSchema(const std::string &filepath);
 

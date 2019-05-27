@@ -35,7 +35,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 	endif()
 	set(CMAKE_CXX_RELEASE_FLAGS "${CMAKE_CXX_RELEASE_FLAGS} -O3")
-	set(CMAKE_CXX_DEBUG_FLAGS "${CMAKE_CXX_DEBUG_FLAGS} -g -O0")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 	set(USE_CLANG PARENT SCOPE)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message("-- Using g++")
@@ -60,11 +60,42 @@ endif()
 # External Libraries
 # -----------------------------------------------------------------
 
+
 add_subdirectory(resources)
 find_package(hypro CONFIG REQUIRED)
 find_package(carl CONFIG REQUIRED)
 find_package(XercesC REQUIRED)
-find_package(CGAL CONFIG REQUIRED) #also link lib: sudo ln -s /usr/lib/x86_64-linux-gnu/libCGAL.so /usr/lib/x86_64-linux-gnu/libcgal.so
+
+find_package(Boost REQUIRED)
+find_package(GSL REQUIRED)
+find_package(CGAL REQUIRED)#find_package(CGAL CONFIG REQUIRED) #also link lib: sudo ln -s /usr/lib/x86_64-linux-gnu/libCGAL.so /usr/lib/x86_64-linux-gnu/libcgal.so
+
+
+if ( CGAL_FOUND )
+
+  include( ${CGAL_USE_FILE} )
+
+  include( CGAL_CreateSingleSourceCGALProgram )
+
+  find_package(Eigen3)
+  if (EIGEN3_FOUND)
+    include( ${EIGEN3_USE_FILE} )
+
+    include_directories (BEFORE "../../include")
+
+    #create_single_source_cgal_program( "Epick_d.cpp" )
+
+  else()
+
+    message(STATUS "NOTICE: This program requires the Eigen3 library, and will not be compiled.")
+
+  endif()
+
+else()
+
+    message(STATUS "NOTICE: This program requires the CGAL library, and will not be compiled.")
+
+endif()
 
 if ( CGAL_FOUND )
 
@@ -96,8 +127,12 @@ endif()
 # Include files
 # -----------------------------------------------------------------
 
+INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 include_directories("${PROJECT_BINARY_DIR}/src")
+include_directories(${GSL_INCLUDE_DIR})
+
 add_subdirectory(src)
+
 
 # Copy files needed at runtime
 # -----------------------------------------------------------------
@@ -119,4 +154,4 @@ add_subdirectory(examples)
 # -----------------------------------------------------------------
 
 add_executable(main main.cpp)
-target_link_libraries(main hpnmg)
+target_link_libraries(main hpnmg ${Boost_LIBRARIES} GSL::gsl GSL::gslcblas)

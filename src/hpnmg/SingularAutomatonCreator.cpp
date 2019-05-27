@@ -5,7 +5,7 @@
 
 namespace hpnmg {
 
-    static bool compareOrderedVectors(const vector<vector<vector<double>>> &lhs, const vector<vector<vector<double>>> &rhs) {
+    bool SingularAutomatonCreator::compareOrderedVectors(const vector<vector<vector<double>>> &lhs, const vector<vector<vector<double>>> &rhs) {
         int coincidingTransitionNumber = min(lhs.size(),rhs.size()); // the maximal general transition that fired in both states
         // for each coinciding transition (and the firing-independent values at index 0)
         for(int transitionNumber = 0; transitionNumber < coincidingTransitionNumber; transitionNumber++) {

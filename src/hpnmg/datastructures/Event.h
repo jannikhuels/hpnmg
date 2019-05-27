@@ -55,6 +55,10 @@ namespace hpnmg {
         shared_ptr<ContinuousPlace> getPlaceMember() const;
         void setPlaceMember(shared_ptr<ContinuousPlace> placeMember);
 
+        std::vector<double> getTimeVector(int dimension);
+
         void print() const;
+
+        std::string getMemberID();
     };
 }

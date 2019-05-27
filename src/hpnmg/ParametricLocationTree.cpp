@@ -3,8 +3,7 @@
 
 namespace hpnmg {
 
-    ParametricLocationTree::Node::Node(NODE_ID id, const ParametricLocation &parametricLocation) : id(id), parametricLocation(parametricLocation) {
-    }
+    ParametricLocationTree::Node::Node(NODE_ID id, const ParametricLocation &parametricLocation) : id(id), parametricLocation(parametricLocation) {}
 
     NODE_ID ParametricLocationTree::Node::getNodeID() const {return id;}
     ParametricLocation ParametricLocationTree::Node::getParametricLocation() const {return parametricLocation;}
@@ -14,7 +13,7 @@ namespace hpnmg {
         this->region = region;
     }
 
-    void ParametricLocationTree::Node::setParametricLocation(ParametricLocation parametricLocation) {
+    void ParametricLocationTree::Node::setParametricLocation(const ParametricLocation &parametricLocation) {
         this->parametricLocation = parametricLocation;
     }
 
@@ -77,7 +76,7 @@ namespace hpnmg {
         return current;
     }
 
-    void ParametricLocationTree::addNormedDependenciesRecursively(const ParametricLocationTree::Node &startNode,
+    void ParametricLocationTree::addNormedDependenciesRecursively(ParametricLocationTree::Node &startNode,
                                                                   std::vector<int> genTransOccurings, int dimension) {
         // inititalize normed vector and fill with 0
         vector<double> generalDependenciesNormed(dimension);
@@ -93,6 +92,9 @@ namespace hpnmg {
         // first val in normed dependencies is time
         generalDependenciesNormed[0] = time;
 
+        //vector<int> counter = vector<int>(this->dimension - 1);
+        //fill(counter.begin(), counter.end(),0);
+
         // startPosition is initial 1 because 0 is the time
         int startPositionForTransition = 1;
         // iterate over all general transitions
@@ -103,7 +105,7 @@ namespace hpnmg {
             for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
                 if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
                     int posNormed = startPositionForTransition + counter;
-                    generalDependenciesNormed[posNormed] = generalDependenciesNormed[realFiring];
+                    generalDependenciesNormed[posNormed] = generalDependenciesOrig[realFiring];
                     ++counter;
                 }
             }
@@ -111,12 +113,20 @@ namespace hpnmg {
         }
         assert(startPositionForTransition == dimension);
         loc.setGeneralDependenciesNormed(generalDependenciesNormed);
-        for (ParametricLocationTree::Node &node : getChildNodes(startNode)) {
-            addNormedDependenciesRecursively(node, genTransOccurings, dimension);
+        startNode.setParametricLocation(loc);
+
+        std::pair <std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator, std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator> ret;
+        ret = parametricLocations.equal_range(startNode.getNodeID());
+        for (std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator it=ret.first; it!=ret.second; ++it) {
+            addNormedDependenciesRecursively(it->second, genTransOccurings, dimension);
         }
+        /*for (ParametricLocationTree::Node &node : getChildNodes(startNode)) {
+            addNormedDependenciesRecursively(node, genTransOccurings, dimension);
+        }*/
     }
 
-    //TODO Set Dimension accordingly. This is bad -> the dimension should be equal for the whole tree.
+    //TODO Set Dimension accordingly. This is bad -> the dimension should be equal for the whole tree. And Normed Dependencies it should be
+    // set every time tree is computed.
     int ParametricLocationTree::getDimension() { 
         if (this->dimension == 0) {
             int numberOfGeneralTransitions = getRootNode().getParametricLocation().getGeneralClock().size();
@@ -131,7 +141,9 @@ namespace hpnmg {
                 this->dimension = dim + 1;
             }
             // add normed general dependency vector to all parametric locations
-            addNormedDependenciesRecursively(getRootNode(), dimV, dim+1);
+            std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator root;
+            root = parametricLocations.find(ROOT_NODE_INDEX);
+            addNormedDependenciesRecursively(root->second, dimV, dim+1);
         }
         return this->dimension;
     }
@@ -242,36 +254,102 @@ namespace hpnmg {
         }
     }
 
-    void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability) {
+    bool wayToSortTimes(std::vector<double> a, std::vector<double> b) {
+        int aDepIndex = Computation::getDependencyIndex(a);
+        int bDepIndex = Computation::getDependencyIndex(b);
 
+        return aDepIndex < bDepIndex;
+    }
+
+    void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability, std::vector<int> occurings) {
         // nodeProbability is the probability to get here times the probability to be here
         double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
         ParametricLocation parametricLocation = startNode.getParametricLocation();
         parametricLocation.setAccumulatedProbability(nodeProbability);
-        startNode.setParametricLocation(parametricLocation);
+        int dimension = this->getDimension();
 
         if (startNode.getParametricLocation().getEarliestEntryTime() <= interval.second) {
             // startNode's earliest entry time is before or equal the questioned time
             // (if it isn't, no childnode can be valid as well!)
 
-            // now we want to check if all (!) possible childevents latest entry times are bigger than t.
+            // now we want to check if there is a possible childevent with latest entry time bigger than t.
             const vector<Node> &childNodes = getChildNodes(startNode);
 
-            bool valid = true;
-
-            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
-                double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
-                if (latestEntryTime < interval.first) {
-                    valid = false;
+            /*
+             * Check how many General Events are fired and sort them by id
+             */
+            std::vector<double> parentGeneralDependencies = startNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
+            std::vector<int> idsOfNextGeneralTransitions;
+            for (ParametricLocationTree::Node node : childNodes) {
+                std::vector<int> generalTransitionsFired = node.getParametricLocation().getGeneralTransitionsFired();
+                if (generalTransitionsFired.size() > parentGeneralDependencies.size()) {
+                    idsOfNextGeneralTransitions.push_back(generalTransitionsFired[parentGeneralDependencies.size()]);
                 }
             }
+            std::sort(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end());
+            idsOfNextGeneralTransitions.erase(std::unique(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end()), idsOfNextGeneralTransitions.end());
+
+            bool valid = false;
+
+            std::vector<std::vector<double>> entryTimes;
+            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds;
+            auto childs = getChildNodes(startNode);
+
+            // if there is one child location which has a bigger entry time than interval.first, the parent is a candidate
+            // if there is no child location, the parent is a candidate as well
+            if (getChildNodes(startNode).size()==0) {
+                valid = true;
+                bounds.push_back(parametricLocation.getRVIntervals(occurings, this->maxTime, dimension));
+            }
+            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+
+                double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
+                if (latestEntryTime >= interval.first) {
+                    valid = true;
+
+                    /*
+                     * Collect the entryTimes of the child node. Beware that we need to ensure that the ordering of each RV of a child location needs to be in accordance to its parent location.
+                     */
+                    /*std::vector<double> entryTime(dimension);
+                    fill(entryTime.begin(), entryTime.end(), 0);
+                    entryTime[0] = node.getParametricLocation().getSourceEvent().getTime();
+
+                    std::vector<double> childGeneralDependencies = node.getParametricLocation().getSourceEvent().getGeneralDependencies();
+                    std::vector<int> childGeneralTransitionsFired = node.getParametricLocation().getGeneralTransitionsFired();
+                    for (int i = 1; i <= parentGeneralDependencies.size(); i++) {
+                        entryTime[i] = childGeneralDependencies[i - 1];
+                    }
+                    if (childGeneralDependencies.size() > parentGeneralDependencies.size()) {
+                        int id = childGeneralTransitionsFired[parentGeneralDependencies.size()];
+                        int pos =
+                                std::find(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end(), id) -
+                                idsOfNextGeneralTransitions.begin();
+                        entryTime[parentGeneralDependencies.size() + pos +
+                                  1] = childGeneralDependencies[parentGeneralDependencies.size()];
+                    }
+                    entryTimes.push_back(entryTime);*/
+                    std::vector<double> entryTime(dimension);
+                    fill(entryTime.begin(), entryTime.end(), 0);
+                    entryTime[0] = node.getParametricLocation().getSourceEvent().getTime();
+                    std::vector<double> childGeneralDependencies = node.getParametricLocation().getSourceEvent().getGeneralDependencies();
+                    for (int i = 1; i <= childGeneralDependencies.size(); i++) {
+                        entryTime[i] = childGeneralDependencies[i - 1];
+                    }
+                    entryTimes.push_back(entryTime);
+                    bounds.push_back(node.getParametricLocation().getRVIntervals(occurings, this->maxTime, dimension));
+                }
+            }
+            std::vector<std::vector<double>> unsortedEntryTimes = entryTimes;
+            std::sort(entryTimes.begin(), entryTimes.end(),  wayToSortTimes);
 
             if(valid) {
+                parametricLocation.setIntegrationIntervals(unsortedEntryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
+                startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
             }
 
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
-                recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval, nodeProbability);
+                recursivelyCollectCandidateLocationsWithPLT(node, candidates, interval, nodeProbability, occurings);
             }
 
             // not even the earliest entry time is before (or equal) t, so the event happens after the questioned time. no childnode can be valid.
@@ -283,11 +361,55 @@ namespace hpnmg {
     }
 
     std::vector<ParametricLocationTree::Node> ParametricLocationTree::getCandidateLocationsForTimeInterval(std::pair<double,double> interval) {
+        this->getDimension();
+
+        int numberOfGeneralTransitions = getRootNode().getParametricLocation().getGeneralClock().size();
+        std::vector<int> dimV = getDimensionRecursively(getRootNode(), numberOfGeneralTransitions);
+
         vector<ParametricLocationTree::Node> locations;
         // recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
-        recursivelyCollectCandidateLocationsWithPLT(getRootNode(), locations, interval, 1.0);
+        recursivelyCollectCandidateLocationsWithPLT(getRootNode(), locations, interval, 1.0, dimV);
         return locations;
     }
+
+
+    std::vector<ParametricLocationTree::Node> ParametricLocationTree::getAllLocations() {
+            this->getDimension();
+
+            int numberOfGeneralTransitions = getRootNode().getParametricLocation().getGeneralClock().size();
+            std::vector<int> dimV = getDimensionRecursively(getRootNode(), numberOfGeneralTransitions);
+
+            vector<ParametricLocationTree::Node> locations;
+            // recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
+        recursivelyCollectAllLocationsWithPLT(getRootNode(), locations, 1.0, dimV);
+            return locations;
+        }
+
+
+    void ParametricLocationTree::recursivelyCollectAllLocationsWithPLT(Node startNode, vector<Node> &candidates, double probability, std::vector<int> occurings) {
+            // nodeProbability is the probability to get here times the probability to be here
+            double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
+            ParametricLocation parametricLocation = startNode.getParametricLocation();
+            parametricLocation.setAccumulatedProbability(nodeProbability);
+            int dimension = this->getDimension();
+
+
+            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds;
+
+            bounds.push_back(parametricLocation.getRVIntervals(occurings, this->maxTime, dimension));
+
+
+            parametricLocation.overwriteIntegrationIntervals(bounds);
+            //parametricLocation.setIntegrationIntervals(unsortedEntryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
+            startNode.setParametricLocation(parametricLocation);
+            candidates.push_back(startNode);
+
+
+            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+                recursivelyCollectAllLocationsWithPLT(node, candidates, nodeProbability, occurings);
+            }
+
+        }
 
     const vector<pair<string, map<string, float>>> &hpnmg::ParametricLocationTree::getDistributions() const {
         return distributions;
@@ -296,5 +418,9 @@ namespace hpnmg {
     void
     hpnmg::ParametricLocationTree::setDistributions(const vector<pair<string, map<string, float>>> &distributions) {
         ParametricLocationTree::distributions = distributions;
+    }
+
+    int hpnmg::ParametricLocationTree::numberOfLocations() {
+        return this->parametricLocations.size();
     }
 }

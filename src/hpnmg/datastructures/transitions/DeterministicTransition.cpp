@@ -11,4 +11,8 @@ namespace hpnmg {
     double DeterministicTransition::getWeight() { return weight; }
 
     double DeterministicTransition::getPriority() { return priority; }
+
+    void DeterministicTransition::setDiscTime(double discTime) {
+        this->discTime = discTime;
+    }
 }

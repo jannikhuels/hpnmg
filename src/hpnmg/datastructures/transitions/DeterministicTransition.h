@@ -15,5 +15,6 @@ namespace hpnmg {
         double getDiscTime();
         double getWeight();
         double getPriority();
+        void setDiscTime(double discTime);
     };
 }

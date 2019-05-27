@@ -1,3 +1,4 @@
+#include <datastructures/transitions/DynamicTransition.h>
 #include "HybridPetrinet.h"
 
 using namespace std;
@@ -77,6 +78,9 @@ namespace hpnmg {
         deterministicTransitions[transition->id] = transition;
     }
     void HybridPetrinet::addTransition(shared_ptr<ContinuousTransition> &transition) {
+        continuousTransitions[transition->id] = transition;
+    }
+    void HybridPetrinet::addTransition(shared_ptr<DynamicTransition> &transition) {
         continuousTransitions[transition->id] = transition;
     }
     void HybridPetrinet::addTransition(shared_ptr<GeneralTransition> &transition) {
