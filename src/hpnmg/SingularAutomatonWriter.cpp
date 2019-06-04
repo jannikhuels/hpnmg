@@ -10,7 +10,7 @@ namespace hpnmg {
 
         outputFile << "{\n"
                    << "\t\"jani-version\": 1,\n"
-                   << "\t\"name\": \"" << filename << ",\n"
+                   << "\t\"name\": \"" << filename << "\",\n"
                    << "\t\"type\": \"ha\",\n"
                    << "\t\"automata\": [\n"
                    << "\t\t{\n";
@@ -41,7 +41,7 @@ namespace hpnmg {
         if (initX.size() + initC.size() + initG.size() > 0) {
             outputFile << "\t\t\t\"variables\": [\n";
             writeVariables(initX, initC, initG);
-            outputFile << "\t\t\t]\n";
+            outputFile << "\t\t\t],\n";
         }
 
         writeLocations(automaton);
@@ -145,14 +145,14 @@ namespace hpnmg {
         }
 
         outputFile << "\n"
-                   << "\t\t\t],\n";
+                   << "\t\t\t]\n";
     }
 
     void SingularAutomatonWriter::writeGuard(shared_ptr<SingularAutomaton::Transition> transition) {
         outputFile << "\t\t\t\t\t\"guard\": {\n"
                    << "\t\t\t\t\t\t\"exp\": {\n";
 
-        string var = (transition->getType() == Continuous ? "x" : "c") + to_string(transition->getVariableIndex()+1);
+        string var = (transition->getType() == Continuous ? "\"x" : "\"c") + to_string(transition->getVariableIndex()+1) + "\"";
         double value = transition->getValuePreCompare();
         for (const string& line : op_bin(EQUAL, var, to_string(value))) {
             outputFile << "\t\t\t\t\t\t\t" << line << "\n";
@@ -232,11 +232,11 @@ namespace hpnmg {
 
     vector<string>
     SingularAutomatonWriter::singletonIndexToString(SingularAutomaton::singleton singleton, string name, int index) {
-        return vector<string>{op_bin(EQUAL, op_der(name + to_string(index + 1)), to_string(singleton[index]))};
+        return vector<string>{op_bin(EQUAL, op_der("\"" + name + to_string(index + 1) + "\""), to_string(singleton[index]))};
     }
 
     vector<string> SingularAutomatonWriter::boolIndexToString(vector<bool> boolean, string name, int index) {
-        return vector<string>{op_bin(EQUAL, op_der(name + to_string(index + 1)), to_string(boolean[index]))};
+        return vector<string>{op_bin(EQUAL, op_der("\"" + name + to_string(index + 1) + "\""), to_string(boolean[index]))};
     }
 
     vector<string>
@@ -246,9 +246,9 @@ namespace hpnmg {
         double value = rectangularSet[index].second;
         switch (invOperator) {
             case LOWER_EQUAL:
-                return vector<string>{op_bin(LEQ, name + to_string(index + 1), to_string(value))};
+                return vector<string>{op_bin(LEQ, "\"" + name + to_string(index + 1) + "\"", to_string(value))};
             case GREATER_EQUAL:
-                return vector<string>{op_bin(LEQ, to_string(value), name + to_string(index + 1))};
+                return vector<string>{op_bin(LEQ, to_string(value), "\"" + name + to_string(index + 1) + "\"")};
             case UNLIMITED:
                 return vector<string>();
         }

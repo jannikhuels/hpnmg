@@ -317,11 +317,17 @@ namespace hpnmg {
 
     vector<vector<vector<double>>> SingularAutomatonCreator::sortByOrder(const vector<vector<double>>& values,
                                                                          const vector<int>& order) {
+
+        if (values.size() == 0)
+            return {};
+
         // get amount of different general transitions that fired and create vector accordingly
         unsigned long amount = order.empty() ? 0 : *max_element(order.begin(), order.end())+1;
+
         vector<vector<vector<double>>> orderedValues(amount+1);
 
         vector<double> valuesAtThisTime(values.size());
+
         for(int pointInTime = 0; pointInTime < values[0].size(); pointInTime++) {
             for(int posOfVar = 0; posOfVar < values.size(); posOfVar++) {
                 valuesAtThisTime[posOfVar] = values[posOfVar][pointInTime];
