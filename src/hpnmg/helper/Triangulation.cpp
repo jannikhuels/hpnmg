@@ -41,8 +41,13 @@ namespace hpnmg {
     }
 
     std::vector<Region> Triangulation::create(const Region &r) {
-        DT dt(r.hPolytope.dimension());
+        const auto dimension = r.hPolytope.dimension();
         std::vector<DT::Point> points = regionToDTPoints(r);
+
+        if (points.size() < dimension + 1)
+            return {};
+
+        DT dt(dimension);
         dt.insert(points.begin(), points.end());
 
         std::vector<Region> regions;

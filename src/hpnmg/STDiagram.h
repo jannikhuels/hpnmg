@@ -17,6 +17,8 @@ namespace hpnmg {
 
         static Halfspace<double> createHalfspaceFromDependencies(std::vector<double> dependencies, double offset, bool isVertical);
 
+        static Halfspace<double> createHalfspaceFromDependenciesNormed(std::vector<double> dependenciesNormed);
+
         static std::vector<double> makeValidDependencies(std::vector<double> dependencies, int dimension);
 
         static Halfspace<double> createVerticalHalfspace(std::vector<double> bounds, bool isLeftBound);
@@ -38,6 +40,14 @@ namespace hpnmg {
         static Region createRegionForVertices(std::vector<Point<double>> vertices);
 
         static Halfspace<double> createHalfspaceForTime(const double &time, int dimension);
+
+        /**
+         * Creates a <code>dimension</code> dimensional hyperplane representing the gien point in time.
+         * @param time
+         * @param dimension
+         * @return
+         */
+        static Region::PolytopeT createHyperplaneForTime(const double &time, int dimension);
 
         static Region createRegion(const Region &baseRegion, const Event &sourceEvent, const std::vector<Event> &destinationEvents);
 

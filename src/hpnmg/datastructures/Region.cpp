@@ -37,7 +37,7 @@ namespace hpnmg {
         const auto &vertices = this->hPolytope.vertices();
 
         assert(this->hPolytope.dimension() > 0);
-        assert(vertices.size() > 2);
+        assert(vertices.size() > 1);
 
         if (vertices.size() > this->hPolytope.dimension() + 1) {
             //TODO: recursively partition the polytope into simplexes

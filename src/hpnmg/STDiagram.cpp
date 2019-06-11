@@ -99,8 +99,22 @@ namespace hpnmg {
         return hsp;
     }
 
+    Halfspace<double> STDiagram::createHalfspaceFromDependenciesNormed(std::vector<double> dependencies) {
+        vector_t<double> direction = vector_t<double>::Zero(dependencies.size());
+        // dependenciesNormed carry the time as first element so we have to copy all entries but that one ...
+        for (int i = 1; i < dependencies.size(); i++) {
+            direction[i - 1] = -dependencies[i];
+        }
+        // ... and set the coefficient for the time-dimension to 1
+        direction[dependencies.size() - 1] = 1;
+
+        Halfspace<double> hsp(direction, dependencies[0]);
+
+        return hsp;
+    }
+
     Halfspace<double> STDiagram::createHalfspaceFromEvent(const Event &event, bool isSourceEvent) {
-        Halfspace<double> hsp = STDiagram::createHalfspaceFromDependencies(event.getGeneralDependencies(), event.getTime(), false);
+        Halfspace<double> hsp = STDiagram::createHalfspaceFromDependenciesNormed(event.getGeneralDependenciesNormed());
         
         if (isSourceEvent)
             return -hsp;
@@ -161,7 +175,15 @@ namespace hpnmg {
         return Halfspace<double>(direction, time);
     }
 
-    std::pair<matrix_t<double>,vector_t<double>> STDiagram::createHalfspacesFromTimeInterval(const std::pair<double, double> &interval, int dimension) { 
+    Region::PolytopeT STDiagram::createHyperplaneForTime(const double &time, int dimension) {
+        const auto timeHalfspace = STDiagram::createHalfspaceForTime(time, dimension);
+        auto timeHyperplane = Region::PolytopeT{};
+        timeHyperplane.insert(timeHalfspace);
+        timeHyperplane.insert(-timeHalfspace);
+        return timeHyperplane;
+    }
+
+    std::pair<matrix_t<double>,vector_t<double>> STDiagram::createHalfspacesFromTimeInterval(const std::pair<double, double> &interval, int dimension) {
         if (interval.first < 0) {
             throw IllegalArgumentException("interval", "Start time < 0.");
         }

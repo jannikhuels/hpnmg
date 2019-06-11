@@ -5,6 +5,8 @@
 
 #include <cmath>
 
+#include "helper/Triangulation.h"
+
 using namespace std;
 
 namespace hpnmg {
@@ -389,22 +391,23 @@ ProbabilityCalculator::ProbabilityCalculator(){}
     double ProbabilityCalculator::getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributions,char algorithm, int functioncalls, double &error) {
         double result = 0.0;
 
-        std::vector<std::pair<std::vector<double>, std::vector<double>>> integrationIntervals = region.getIntegrationIntervals();
-        //TODO turn this into a loop when the function returns more than one set of intervals
+        for(const auto &simplex : Triangulation::create(region))
         {
+            std::vector<std::pair<std::vector<double>, std::vector<double>>> integrationIntervals = simplex.getIntegrationIntervals();
+
             allDims all;
             allDims allPlus;
             allDims allMinus;
 
             all.current_index = 0;
             all.applyTransformation = true;
-            all.transformationMatrix = region.getIntegrationTransformationMatrix();
+            all.transformationMatrix = simplex.getIntegrationTransformationMatrix();
             allPlus.current_index = 0;
             allPlus.applyTransformation = true;
-            allPlus.transformationMatrix = region.getIntegrationTransformationMatrix();
+            allPlus.transformationMatrix = simplex.getIntegrationTransformationMatrix();
             allMinus.current_index = 0;
             allMinus.applyTransformation = true;
-            allMinus.transformationMatrix = region.getIntegrationTransformationMatrix();
+            allMinus.transformationMatrix = simplex.getIntegrationTransformationMatrix();
 
 
             for (int i = 0; i < integrationIntervals.size(); i++) {

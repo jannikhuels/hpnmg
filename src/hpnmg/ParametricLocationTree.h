@@ -1,7 +1,9 @@
 #pragma once
 
-#include "datastructures/ParametricLocation.h"
 #include <map>
+#include <unordered_map>
+
+#include "datastructures/ParametricLocation.h"
 #include "exceptions/ParametricLocationTreeExceptions.h"
 #include "STDiagram.h"
 
