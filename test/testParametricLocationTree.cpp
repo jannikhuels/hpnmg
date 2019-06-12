@@ -229,14 +229,15 @@ TEST(ParametricLocationTreeXML, CreateRegions3D) {
         {Point<double>{ 172/9.,       10.,    164/9.},  7},
         {Point<double>{261/38.,    65/19.,   294/19.},  8},
         {Point<double>{   3/2.,        3.,        9.},  9},
-        {Point<double>{     6.,     26/3.,     52/3.}, 10},
+        {Point<double>{107/17.,   144/17.,   294/17.}, 10},
         {Point<double>{703/51.,    35/17.,   914/51.}, 11},
         {Point<double>{169/10., 1331/120.,   229/12.}, 12},
         {Point<double>{784/43., 1346/129., 2464/129.}, 13},
         {Point<double>{ 63/16.,     43/8.,     69/4.}, 14},
         {Point<double>{     2.,        4.,       16.}, 15},
-        {Point<double>{    17.,      5/3.,     58/3.}, 16},
-        {Point<double>{    18.,      2/3.,     58/3.}, 17},
+        {Point<double>{     1.,       12.,       18.}, 16},
+        {Point<double>{    17.,      5/3.,     58/3.}, 17},
+        {Point<double>{    18.,      2/3.,     58/3.}, 18},
     };
 
     deque<ParametricLocationTree::Node> working_set{plt->getRootNode()};
