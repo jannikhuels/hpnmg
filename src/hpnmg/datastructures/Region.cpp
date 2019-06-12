@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <iostream>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -26,6 +27,28 @@ namespace hpnmg {
             this->computeIntegrationFields();
 
         return *this->integrationTransformationMatrix;
+    }
+
+    void Region::printForWolframMathematica(std::ostream &os) const {
+        os << "{";
+        bool firstHalfspace = true;
+        for (const auto &halfspace : this->hPolytope.constraints()) {
+            if (!firstHalfspace)
+                os << ", ";
+
+            os << "HalfSpace[{";
+            const auto &normal = halfspace.normal();
+            for (auto i = 0; i < normal.size(); ++i) {
+                if (i > 0)
+                    os << ", ";
+                os << normal[i];
+            }
+            os << "}, " << halfspace.offset()
+                << "]";
+
+            firstHalfspace = false;
+        }
+        os << "}";
     }
 
     //region Region<->PolytopeT conversion
@@ -87,4 +110,9 @@ namespace hpnmg {
         this->integrationTransformationMatrix = std::make_shared<Eigen::MatrixXd>(transMatrix);
         this->integrationIntervals = std::make_shared<std::vector<std::pair<std::vector<double>, std::vector<double>>>>(intervals);
     }
+}
+
+std::ostream& operator<<(std::ostream &os, const hpnmg::Region &region) {
+    region.printForWolframMathematica(os);
+    return os;
 }
