@@ -1,9 +1,8 @@
-#include <utility>
-
 #ifndef HPNMG_DISCRETEATOMICPROPERTY_H
 #define HPNMG_DISCRETEATOMICPROPERTY_H
 
 #include <string>
+#include <utility>
 
 namespace hpnmg {
     struct DiscreteAtomicProperty {

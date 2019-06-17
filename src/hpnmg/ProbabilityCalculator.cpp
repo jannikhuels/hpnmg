@@ -390,6 +390,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
     double ProbabilityCalculator::getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributions,char algorithm, int functioncalls, double &error) {
+        if (region.hPolytope.empty() || region.hPolytope.dimension() == 0)
+            return 0.0;
+
         assert(distributions.size() == region.hPolytope.dimension());
         double result = 0.0;
 

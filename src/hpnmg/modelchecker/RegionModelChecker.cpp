@@ -52,6 +52,15 @@ namespace hpnmg {
 
     std::vector<Region> RegionModelChecker::satisfiesHandler(const Formula &formula, double atTime) {
         switch (formula.getType()) {
+            case Formula::Type::ContinuousAtomicProperty: {
+                auto result = std::vector<Region>();
+                for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
+                    auto region = this->cfml(node, formula.getContinuousAtomicProperty()->place, formula.getContinuousAtomicProperty()->value);
+                    if (!region.hPolytope.empty())
+                        result.push_back(region);
+                }
+                return result;
+            }
             case Formula::Type::DiscreteAtomicProperty: {
                 auto result = std::vector<Region>();
                 for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
@@ -70,6 +79,19 @@ namespace hpnmg {
         }
 
         return {};
+    }
+
+    //TODO this checks x_p <= u. Should I change this?
+    Region RegionModelChecker::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value)
+    {
+        const auto &continuousPlaces = this->hpng->getContinuousPlaces();
+        auto placeOffset = std::distance(continuousPlaces.begin(), continuousPlaces.find(placeId));
+
+        Region candidateRegion = node.getRegion();
+
+        double drift = node.getParametricLocation().getDrift()[placeOffset];
+        Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(candidateRegion, node.getParametricLocation().getContinuousMarking()[placeOffset], drift, value);
+        return regionIntersected;
     }
 
     Region RegionModelChecker::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value) {
