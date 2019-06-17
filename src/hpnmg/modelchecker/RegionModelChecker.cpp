@@ -2,6 +2,7 @@
 
 #include <iterator>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "datastructures/Region.h"
@@ -19,7 +20,7 @@ namespace hpnmg {
         plt.updateRegions();
     }
 
-    double RegionModelChecker::satisfies(const Formula &formula, double atTime) {
+    std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
         const auto &sat = this->satisfiesHandler(formula, atTime);
 
         auto calculator = ProbabilityCalculator();
@@ -38,13 +39,14 @@ namespace hpnmg {
             probability += calculator.getProbabilityForRegionUsingMonteCarlo(
                 Region::PolytopeT(reducedVertices),
                 this->plt.getDistributions(),
-                1,
+                3,
                 50000,
                 error
             );
             totalError += error;
         }
-        return probability;
+
+        return {probability, totalError};
     }
 
     std::vector<Region> RegionModelChecker::satisfiesHandler(const Formula &formula, double atTime) {

@@ -26,17 +26,23 @@ TEST(RegionModelChecker, DiscreteAtomicPropertyTest1GT) {
 }
 
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest2GT) {
-    auto hpng = ReadHybridPetrinet{}.readHybridPetrinet("example2general.xml");
-    auto plt1 = ParseHybridPetrinet{}.parseHybridPetrinet(hpng, 10);
-    auto plt2 = ParseHybridPetrinet{}.parseHybridPetrinet(hpng, 10);
-    auto plt3 = ParseHybridPetrinet{}.parseHybridPetrinet(hpng, 10);
-    auto modelChecker = RegionModelChecker(*hpng, 10);
-    auto plt = ParseHybridPetrinet{}.parseHybridPetrinet(hpng, 10);
-    PLTWriter{}.writePLT(plt, 10);
+    auto hpng = ReadHybridPetrinet{}.readHybridPetrinet("norep_1_2.xml");
+    auto modelChecker = RegionModelChecker(*hpng, 20);
 
-    auto formula = Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 1));
+    auto result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 2)), 0);
+    EXPECT_NEAR(1.0, result.first, result.second);
 
-    EXPECT_DOUBLE_EQ(1.0, modelChecker.satisfies(formula, 2));
+    result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)), 5);
+    EXPECT_NEAR(0.125, result.first, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 1)), 10);
+    EXPECT_NEAR(0.5, result.first, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)), 20);
+    EXPECT_NEAR(1.0, result.first, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 1)), 20);
+    EXPECT_NEAR(0.0, result.first, result.second);
 }
 
 TEST(RegionModelChecker, ConjunctionTest) {
@@ -47,5 +53,6 @@ TEST(RegionModelChecker, ConjunctionTest) {
     ));
 
 
-    EXPECT_DOUBLE_EQ(1.0, modelChecker.satisfies(formula, 0));
+    const auto result = modelChecker.satisfies(formula, 0);
+    EXPECT_NEAR(1.0, result.first, result.second);
 }

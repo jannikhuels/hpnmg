@@ -2,6 +2,7 @@
 #define HPNMG_REGIONMODELCHECKER_H
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "datastructures/HybridPetrinet.h"
@@ -14,7 +15,7 @@ namespace hpnmg {
     public:
         RegionModelChecker(HybridPetrinet hpng, double maxTime);
 
-        double satisfies(const Formula &formula, double atTime);
+        std::pair<double, double> satisfies(const Formula &formula, double atTime);
 
     private:
         Region dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
