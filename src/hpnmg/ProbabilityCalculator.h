@@ -92,7 +92,18 @@ namespace hpnmg {
 
 		double getProbabilityForLocationUsingMonteCarlo(const ParametricLocation &location, vector<pair<string, map<string, float>>> distributions, double maxTime, char algorithm, int functioncalls, double &error);
 
-		double getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributions, char algorithm, int functioncalls, double &error);
+		/**
+		 * Note that the <code>distributions</code> is slightly different from the ones used in the
+		 * <code>getProbabilityForLocation...</code> functions.
+*
+		 * @param region
+		 * @param distributionsNormalized The probability distribution for each dimension of <code>region</code>.
+		 * @param algorithm
+		 * @param functioncalls
+		 * @param error
+		 * @return
+		 */
+		double getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error);
 
 		double computeMultivariateIntegralUsingGauss(int evaluations, hpnmg::allDims all, hpnmg::allDims allPlus, hpnmg::allDims allMinus);
 

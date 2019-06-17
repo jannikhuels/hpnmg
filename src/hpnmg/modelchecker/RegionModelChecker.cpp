@@ -23,10 +23,11 @@ namespace hpnmg {
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
         const auto &sat = this->satisfiesHandler(formula, atTime);
 
-        auto calculator = ProbabilityCalculator();
         double probability = 0.0;
         double totalError = 0.0;
 
+        auto calculator = ProbabilityCalculator();
+        const auto &distributionsNormalized = this->plt.getDistrbutionsNormalized();
         const auto timeHyperplane = STDiagram::createHyperplaneForTime(atTime, this->plt.getDimension());
         for (const auto &region : sat) {
             auto intersectedRegion = region.hPolytope.intersect(timeHyperplane);
@@ -38,7 +39,7 @@ namespace hpnmg {
             double error = 0.0;
             probability += calculator.getProbabilityForRegionUsingMonteCarlo(
                 Region::PolytopeT(reducedVertices),
-                this->plt.getDistributions(),
+                distributionsNormalized,
                 3,
                 50000,
                 error

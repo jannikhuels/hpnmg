@@ -3,6 +3,7 @@
 #include "Eigen/Geometry"
 #include "Eigen/LU"
 
+#include <cassert>
 #include <cmath>
 
 #include "helper/Triangulation.h"
@@ -389,6 +390,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
     double ProbabilityCalculator::getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributions,char algorithm, int functioncalls, double &error) {
+        assert(distributions.size() == region.hPolytope.dimension());
         double result = 0.0;
 
         for(const auto &simplex : Triangulation::create(region))

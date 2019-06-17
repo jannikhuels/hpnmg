@@ -53,6 +53,7 @@ namespace hpnmg {
         vector<pair<string, map<string, float>>> distributions;
     public:
         const vector<pair<string, map<string, float>>> &getDistributions() const;
+        vector<pair<string, map<string, float>>> getDistrbutionsNormalized();
 
         void setDistributions(const vector<pair<string, map<string, float>>> &distributions);
 

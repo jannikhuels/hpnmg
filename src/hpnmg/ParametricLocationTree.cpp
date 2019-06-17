@@ -1,4 +1,5 @@
 #include "ParametricLocationTree.h"
+
 #include <numeric>
 
 namespace hpnmg {
@@ -396,8 +397,28 @@ namespace hpnmg {
         return locations;
     }
 
+    /**
+     * @return std::vector where the i-th entry representes the probability distribution of the i-th general transition.
+     */
     const vector<pair<string, map<string, float>>> &hpnmg::ParametricLocationTree::getDistributions() const {
         return distributions;
+    }
+
+    /**
+     * @return std::vector where the i-th entry representes the probability distribution of the i-th random variable,
+     *         that is the i-th firing in the normalized global firing order
+     */
+    vector<pair<string, map<string, float>>> hpnmg::ParametricLocationTree::getDistrbutionsNormalized() {
+        auto distributionsNormalized = vector<pair<string, map<string, float>>>();
+        distributionsNormalized.reserve(this->getDimension());
+
+        const auto &occurrings = this->getDimensionRecursively(this->getRootNode(), getRootNode().getParametricLocation().getGeneralClock().size());
+        auto it = distributionsNormalized.begin();
+        for (int transition = 0; transition < occurrings.size(); ++transition)
+            for (int i = 0; i < occurrings[transition]; ++i)
+                distributionsNormalized.push_back(this->getDistributions()[transition]);
+
+        return distributionsNormalized;
     }
 
     void
