@@ -57,6 +57,8 @@ namespace hpnmg {
             deterministicClock(parametricLocation.deterministicClock), generalClock(parametricLocation.generalClock),
             generalIntervalBoundLeft(parametricLocation.generalIntervalBoundLeft),
             generalIntervalBoundRight(parametricLocation.generalIntervalBoundRight),
+            generalIntervalBoundNormedLeft(parametricLocation.generalIntervalBoundNormedLeft),
+            generalIntervalBoundNormedRight(parametricLocation.generalIntervalBoundNormedRight),
             conflictProbability(parametricLocation.conflictProbability),
             accumulatedProbability(parametricLocation.accumulatedProbability),
             dimension(parametricLocation.dimension),
@@ -107,6 +109,22 @@ namespace hpnmg {
     void ParametricLocation::setGeneralIntervalBoundRight(
             const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundRight) {
         this->generalIntervalBoundRight = generalIntervalBoundRight;
+    }
+
+    std::vector<std::vector<std::vector<double>>> ParametricLocation::getGeneralIntervalBoundNormedLeft() const {
+        return this->generalIntervalBoundNormedLeft;
+    }
+
+    void ParametricLocation::setGeneralIntervalBoundNormedLeft(const std::vector<std::vector<std::vector<double>>> &normedBoundLeft) {
+        this->generalIntervalBoundNormedLeft = normedBoundLeft;
+    }
+
+    std::vector<std::vector<std::vector<double>>> ParametricLocation::getGeneralIntervalBoundNormedRight() const {
+        return this->generalIntervalBoundNormedRight;
+    }
+
+    void ParametricLocation::setGeneralIntervalBoundNormedRight(const std::vector<std::vector<std::vector<double>>> &normedBoundRight) {
+        this->generalIntervalBoundNormedRight = normedBoundRight;
     }
 
     Event ParametricLocation::getSourceEvent() const { return sourceEvent; }
@@ -463,7 +481,7 @@ namespace hpnmg {
      * If <code>transition</code> occurs multiple times, this represents multiple firings of that transition in chronological order.
      *
      * The vectors <code>lower</code> and <code>upper</code> represent the coefficients of linear (in)equations
-     * depending on other firing times, ordered as usual (that is, in global firing order [?]).
+     * depending on other firing times, ordered in local firing order [???]
      *
      * @param occurings
      * @param maxTime
@@ -471,56 +489,31 @@ namespace hpnmg {
      * @return
      */
     std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getRVIntervals(std::vector<int> occurings, int maxTime, int dim) {
-        const std::vector<std::vector<std::vector<double>>> leftBoundaries = this->getGeneralIntervalBoundLeft();
-        const std::vector<std::vector<std::vector<double>>> rightBoundaries = this->getGeneralIntervalBoundRight();
+        return this->boundsToRVIntervals(
+            this->getGeneralIntervalBoundLeft(),
+            this->getGeneralIntervalBoundRight(),
+            std::move(occurings),
+            maxTime,
+            dim
+        );
+    }
 
-        vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();
-        /*
-         * Initialization of the result vector.
-         */
-        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result;
-
-        vector<int> counter = vector<int>(occurings.size(), 0);
-
-        vector<double> bound(dim, 0);
-        vector<double> zero = bound;
-        vector<double> mTime = bound;
-        mTime[0] = maxTime;
-
-        /*
-         * First create all intervals for a RV that have already fired.
-         */
-        for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
-            int transitionId = generalTransitionsFired[realFiring];
-            result.push_back({transitionId, { fillVector(leftBoundaries[transitionId][counter[transitionId]], dim), fillVector(rightBoundaries[transitionId][counter[transitionId]], dim) } });
-            counter[transitionId]++;
-        }
-
-        /*
-         * Create all intervals for GTs that are currently enabled.
-         */
-        int lastFiring = 0;
-        for (int j = 0; j < occurings.size(); j++) {
-            for (int i = counter[j]; i < occurings[j]; i++) {
-                int firing = i;
-                if (j < this->getGeneralIntervalBoundLeft().size() && firing < this->getGeneralIntervalBoundLeft()[j].size()) {
-                    lastFiring = firing;
-                    bool enablingTimeGreaterZero = std::any_of(
-                            leftBoundaries[j][firing].begin(),
-                            leftBoundaries[j][firing].end(),
-                            [](const auto &bound) { return bound > 0; }
-                    );
-                    if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
-                        result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(
-                                fillVector(leftBoundaries[j][firing], dim),
-                                fillVector(rightBoundaries[j][firing], dim))});
-                        continue;
-                    }
-                }
-                //result.push_back({j, std::pair<std::vector<double>, std::vector<double>>(zero, mTime)});
-            }
-        }
-        return result;
+    /**
+     * Same as getRVIntervals() but the coefficients of the linear equations are sorted in global firing order [?]
+     *
+     * @param occurings
+     * @param maxTime
+     * @param dim
+     * @return
+     */
+    std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getRVIntervalsNormed(std::vector<int> occurings, int maxTime, int dim) {
+        return this->boundsToRVIntervals(
+            this->getGeneralIntervalBoundNormedLeft(),
+            this->getGeneralIntervalBoundNormedRight(),
+            std::move(occurings),
+            maxTime,
+            dim
+        );
     }
 
     /*
@@ -608,4 +601,54 @@ namespace hpnmg {
     std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> ParametricLocation::getIntegrationIntervals() const{
         return this->integrationIntervals;
     }
+
+    std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::boundsToRVIntervals(
+        std::vector<std::vector<std::vector<double>>> leftBoundaries,
+        std::vector<std::vector<std::vector<double>>> rightBoundaries,
+        std::vector<int> occurings, int maxTime, int dim
+    ) {
+        vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();
+        /*
+         * Initialization of the result vector.
+         */
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> result;
+
+        vector<int> counter = vector<int>(occurings.size(), 0);
+        /*
+         * First create all intervals for a RV that have already fired.
+         */
+        for (int realFiring=0; realFiring < generalTransitionsFired.size(); ++realFiring) {
+            int transitionId = generalTransitionsFired[realFiring];
+            result.push_back({transitionId, {
+                fillVector( leftBoundaries[transitionId][counter[transitionId]], dim),
+                fillVector(rightBoundaries[transitionId][counter[transitionId]], dim),
+            }});
+            counter[transitionId]++;
+        }
+
+        /*
+         * Create all intervals for GTs that are currently enabled.
+         */
+        for (int j = 0; j < occurings.size(); j++) {
+            for (int i = counter[j]; i < occurings[j]; i++) {
+                int firing = i;
+                if (j < leftBoundaries.size() && firing < leftBoundaries[j].size()) {
+                    bool enablingTimeGreaterZero = std::any_of(
+                        leftBoundaries[j][firing].begin(),
+                        leftBoundaries[j][firing].end(),
+                        [](const auto &bound) { return bound > 0; }
+                    );
+                    if (this->getGeneralTransitionsEnabled()[j] || enablingTimeGreaterZero) {
+                        result.emplace_back(j, std::pair<std::vector<double>, std::vector<double>>(
+                            fillVector(leftBoundaries[j][firing], dim),
+                            fillVector(rightBoundaries[j][firing], dim)
+                        ));
+                        continue;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
 }

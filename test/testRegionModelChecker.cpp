@@ -16,10 +16,13 @@
 using namespace hpnmg;
 
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest1GT) {
-    auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 10);
+    auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50);
     auto formula = Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 1));
 
-    EXPECT_DOUBLE_EQ(1.0, modelChecker.satisfies(formula, 1));
+    const auto result = modelChecker.satisfies(formula, 1);
+    // folded normal distribution with mu = 5 and sigma = 3
+    // (1 - cdf(1)) = 1 - (0.5 * (Erf((1 + 5) / sqrt(18)) + erf((1 - 5) / sqrt(18)))) ~ 0.931539
+    EXPECT_NEAR(0.931539, result.first, result.second);
 }
 
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest2GT) {

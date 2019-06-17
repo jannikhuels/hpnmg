@@ -18,6 +18,8 @@ namespace hpnmg {
         std::vector<std::vector<double>> generalClock;
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft;
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundNormedLeft;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundNormedRight;
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
 
@@ -27,6 +29,13 @@ namespace hpnmg {
         void setSplitConstraints(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &newIntegrationIntervals, int index, int splitIndex, std::vector<double> splitBound, bool upper);
         bool validBound(int index, int boundIndex, std::vector<double> newBound, bool upper);
 
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundsToRVIntervals(
+            std::vector<std::vector<std::vector<double>>> boundLeft,
+            std::vector<std::vector<std::vector<double>>> boundRight,
+            std::vector<int> occurings,
+            int maxTime,
+            int dim
+        );
 
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;
@@ -85,6 +94,14 @@ namespace hpnmg {
 
         void setGeneralIntervalBoundRight(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundRight);
 
+        std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundNormedLeft() const;
+
+        void setGeneralIntervalBoundNormedLeft(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundNormedLeft);
+
+        std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundNormedRight() const;
+
+        void setGeneralIntervalBoundNormedRight(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundNormedRight);
+
         Event getSourceEvent() const;
 
         void setSourceEvent(const Event &event);
@@ -119,5 +136,7 @@ namespace hpnmg {
         std::pair<std::vector<double>, std::vector<double>> compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index);
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervals(std::vector<int> occurings, int maxTime, int dim);
+
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervalsNormed(std::vector<int> occurings, int maxTime, int dim);
     };
 }
