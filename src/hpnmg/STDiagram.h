@@ -61,7 +61,13 @@ namespace hpnmg {
 
         static Region createRegionNoEvent(const Region &baseRegion, const Event &sourceEvent, std::vector<double> leftBounds, std::vector<double> rightBounds);
 
-        static Region intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate = false);
+        /**
+         * @TODO Can this be removed in favor of intersectRegionForContinuousLevel()? The linear equation seems to be
+         * calculated completely differently.
+         */
+        static Region legacyIntersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate = false);
+
+        static Region intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level);
 
         static Halfspace<double> createHalfspaceFromEvent(const Event &event, bool isSourceEvent);
 

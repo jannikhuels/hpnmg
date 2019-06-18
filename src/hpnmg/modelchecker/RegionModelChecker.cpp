@@ -90,7 +90,14 @@ namespace hpnmg {
         Region candidateRegion = node.getRegion();
 
         double drift = node.getParametricLocation().getDrift()[placeOffset];
-        Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(candidateRegion, node.getParametricLocation().getContinuousMarking()[placeOffset], drift, value);
+        Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(
+            candidateRegion,
+            node.getParametricLocation().getSourceEvent().getGeneralDependenciesNormed(),
+            node.getParametricLocation().getContinuousMarkingNormed()[placeOffset],
+            drift,
+            value
+        );
+
         return regionIntersected;
     }
 

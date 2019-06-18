@@ -115,10 +115,20 @@ namespace hpnmg {
         event.setGeneralDependenciesNormed(normalizeDependencyVector(event.getGeneralDependencies(), event.getTime()));
         loc.setSourceEvent(event);
 
-        const auto normalizeGeneralIntervals = [&normalizeDependencyVector](auto firings) {
-            std::transform(firings.begin(), firings.end(), firings.begin(), [&normalizeDependencyVector](auto dependencyVector) {
-                return normalizeDependencyVector(std::vector<double>(dependencyVector.begin() + 1, dependencyVector.end()), dependencyVector[0]);
-            });
+        //region normalize the dependency vectors with time at index 0
+        const auto normalizeDependencyVectorWithTime = [&normalizeDependencyVector](std::vector<double> dependencyVector) {
+            return normalizeDependencyVector(
+                std::vector<double>(dependencyVector.begin() + 1, dependencyVector.end()),
+                dependencyVector[0]
+            );
+        };
+
+        auto continuousMarking = loc.getContinuousMarking();
+        std::transform(continuousMarking.begin(), continuousMarking.end(), continuousMarking.begin(), normalizeDependencyVectorWithTime);
+        loc.setContinuousMarkingNormed(continuousMarking);
+
+        const auto normalizeGeneralIntervals = [&normalizeDependencyVectorWithTime](auto firings) {
+            std::transform(firings.begin(), firings.end(), firings.begin(), normalizeDependencyVectorWithTime);
             return firings;
         };
         auto leftBounds = loc.getGeneralIntervalBoundLeft();
@@ -127,6 +137,7 @@ namespace hpnmg {
         auto rightBounds = loc.getGeneralIntervalBoundRight();
         std::transform(rightBounds.begin(), rightBounds.end(), rightBounds.begin(), normalizeGeneralIntervals);
         loc.setGeneralIntervalBoundNormedRight(rightBounds);
+        //endregion normalize the dependency vectors with time at index 0
 
         startNode.setParametricLocation(loc);
 

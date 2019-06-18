@@ -257,7 +257,7 @@ namespace hpnmg {
     }
 
     //TODO Check of jannik0general example
-    Region STDiagram::intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate) {
+    Region STDiagram::legacyIntersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate) {
         Region intersectRegion(baseRegion);
         bool createVerticalHalfspace = false;
         double offset;
@@ -299,6 +299,31 @@ namespace hpnmg {
             fillLevelHsp = -fillLevelHsp;
 
         intersectRegion.hPolytope.insert(fillLevelHsp);
+        return intersectRegion;
+    }
+
+    Region STDiagram::intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level) {
+        assert(markingNormed.size() == entryTimeNormed.size());
+        vector_t<double> markingDirection = vector_t<double>::Zero(markingNormed.size());
+        vector_t<double> entryTimeDirection = vector_t<double>::Zero(entryTimeNormed.size());
+
+        // normed dependencies carry the time as first element so we have to copy all entries but that one
+        for (int i = 1; i < markingNormed.size(); i++) {
+            markingDirection[i - 1] = markingNormed[i];
+            entryTimeDirection[i - 1] = entryTimeNormed[i];
+        }
+
+
+        Region intersectRegion(baseRegion);
+        // The level dependent on the RV-valuation s and time t ("initial marking + drift * time since entry"):
+        // markingNormed(s) + drift * (t - entryTimeNormed(s))
+        // We transform the equation to something like:
+        // (markingNormed - drift * entryTimeNormed)(s) + drift * t
+        auto direction = vector_t<double>(markingDirection - (drift * entryTimeDirection));
+        // The hypro vectors have the time-coefficient at the last index
+        direction[direction.size() - 1] = drift;
+        // While the actual time-offsets are provided separately
+        intersectRegion.hPolytope.insert(Halfspace<double>(direction, level + (drift * entryTimeNormed[0]) - markingNormed[0]));
         return intersectRegion;
     }
 

@@ -32,7 +32,7 @@ namespace hpnmg {
             Region candidateRegion = candidateNode.getRegion();            
             double drift = candidateNode.getParametricLocation().getDrift()[placeIndex];
             try {
-                Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(candidateRegion, candidateNode.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
+                Region regionIntersected = STDiagram::legacyIntersectRegionForContinuousLevel(candidateRegion, candidateNode.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
                 if (regionIntersected.hPolytope.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree.getDimension()).first) {
                     ModelChecker::insertIntervalBoundariesForRegionAtTime(regionIntersected, time, parametricLocationTree.getDimension(), intervals);
                 }
@@ -67,7 +67,7 @@ namespace hpnmg {
             try {
                 Region candidateRegion = candidateNode.getRegion();            
                 double drift = candidateNode.getParametricLocation().getDrift()[placeIndex];
-                Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(candidateRegion, candidateNode.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
+                Region regionIntersected = STDiagram::legacyIntersectRegionForContinuousLevel(candidateRegion, candidateNode.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
                 if (regionIntersected.hPolytope.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree->getDimension()).first) {
                     regions.insert(regions.end(), candidateNode.getRegion());
                 }
@@ -95,7 +95,7 @@ namespace hpnmg {
     {
         Region candidateRegion = node.getRegion();            
         double drift = node.getParametricLocation().getDrift()[placeIndex];
-        Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(candidateRegion, node.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
+        Region regionIntersected = STDiagram::legacyIntersectRegionForContinuousLevel(candidateRegion, node.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
         return regionIntersected;
     }
 

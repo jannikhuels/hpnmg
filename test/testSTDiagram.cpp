@@ -234,36 +234,36 @@ TEST_F(STDiagramRegionTest, TestRegionNoEvent) {
 }
 
 TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersection) {
-    Region resultNoDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 5);
+    Region resultNoDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 5);
     ASSERT_EQ(resultNoDep.hPolytope.contains(Point<double>{2,2}), true);
     ASSERT_EQ(resultNoDep.hPolytope.contains(Point<double>{2,6}), false);
     
     
-    Region resultPosDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 1, 5);
+    Region resultPosDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 1, 5);
     ASSERT_EQ(resultPosDep.hPolytope.contains(Point<double>{1,2}), true);
     ASSERT_EQ(resultPosDep.hPolytope.contains(Point<double>{1,5}), false);
 
-    Region resultNegDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{1,2}, 1, 5);
+    Region resultNegDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{1,2}, 1, 5);
     ASSERT_EQ(resultNegDep.hPolytope.contains(Point<double>{2,2}), true);
     ASSERT_EQ(resultNegDep.hPolytope.contains(Point<double>{2,6}), false);
 }
 
 TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersectionZeroDrift) {
-    Region resultNoDep = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 0, 5);
+    Region resultNoDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 0, 5);
     ASSERT_EQ(resultNoDep.hPolytope.contains(Point<double>{2,2}), true);
     ASSERT_EQ(resultNoDep.hPolytope.contains(Point<double>{6,2}), false);
 
-    Region result = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 4);
+    Region result = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 4);
     ASSERT_EQ(result.hPolytope.contains(Point<double>{2,2}), true);
     ASSERT_EQ(result.hPolytope.contains(Point<double>{3,2}), true);
     ASSERT_EQ(result.hPolytope.contains(Point<double>{1,5}), false);
 
-    Region resultNeg = STDiagram::intersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,6}, -1, 4);
+    Region resultNeg = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,6}, -1, 4);
     ASSERT_EQ(resultNeg.hPolytope.contains(Point<double>{1,1}), false);
     ASSERT_EQ(resultNeg.hPolytope.contains(Point<double>{1,3}), true);
 
     Region region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
-    Region intersectedRegion = STDiagram::intersectRegionForContinuousLevel(region, std::vector<double>{0,2}, 0, 3);
+    Region intersectedRegion = STDiagram::legacyIntersectRegionForContinuousLevel(region, std::vector<double>{0,2}, 0, 3);
     ASSERT_EQ(intersectedRegion.hPolytope.empty(), true);
 }
 

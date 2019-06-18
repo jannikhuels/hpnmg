@@ -13,6 +13,7 @@ namespace hpnmg {
     private:
         std::vector<int> discreteMarking;
         std::vector<std::vector<double>> continuousMarking;
+        std::vector<std::vector<double>> continuousMarkingNormed;
         std::vector<double> drift;
         std::vector<std::vector<double>> deterministicClock;
         std::vector<std::vector<double>> generalClock;
@@ -73,6 +74,10 @@ namespace hpnmg {
         std::vector<std::vector<double>> getContinuousMarking() const;
 
         void setContinuousMarking(const std::vector<std::vector<double>> &continuousMarking);
+
+        std::vector<std::vector<double>> getContinuousMarkingNormed() const;
+
+        void setContinuousMarkingNormed(const std::vector<std::vector<double>> &continuousMarkingNormed);
 
         std::vector<double> getDrift() const;
 
