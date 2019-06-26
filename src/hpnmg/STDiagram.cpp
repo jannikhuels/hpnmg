@@ -434,13 +434,13 @@ namespace hpnmg {
         return r;
     }
 
-    std::vector<double> dependencies(int dimension, Halfspace<double> hsp) {
-        std::vector<double> dep = std::vector<double>(hsp.dimension()-1);
-        dep[0] = hsp.offset();
-        for (int i = 0; i < hsp.dimension()-1;i++) {
-
-        }
-    }
+//    std::vector<double> dependencies(int dimension, Halfspace<double> hsp) {
+//        std::vector<double> dep = std::vector<double>(hsp.dimension()-1);
+//        dep[0] = hsp.offset();
+//        for (int i = 0; i < hsp.dimension()-1;i++) {
+//
+//        }
+//    }
 
     void dimensionConstraints(int dimension, Region r) {
         //std::pair<std::vector<double>,std::vector<double>>

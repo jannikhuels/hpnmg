@@ -151,6 +151,15 @@ TEST(LinearDomain, EmptyIntersection) {
     ASSERT_EQ(valid, false);
 }
 
+TEST(LinearDomain, EmptyIntersection2) {
+    LinearDomain dom1 = LinearDomain({{{0,0,0},{24,0,0}},{{0,0,0},{0,1,0}}});
+    LinearDomain dom2 = LinearDomain({{{0,0,0},{24,0,0}},{{0,1,0},{24,0,0}}});
+
+    bool valid = dom1.intersect(dom2);
+
+    ASSERT_EQ(valid, false);
+}
+
 TEST(LinearDomain, BoundIntersection) {
     LinearEquation eq1 = LinearEquation({4,0,0}, true, 0);
     LinearEquation eq2 = LinearEquation({0,0,0}, false, 0);

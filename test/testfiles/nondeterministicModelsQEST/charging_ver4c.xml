@@ -31,7 +31,8 @@
   </transitions>
   <arcs>
     <discreteArc weight="1" fromNode="decision" toNode="take_petrol" id="decisiontotake_petrol"/>
-    <discreteArc weight="1" fromNode="stop" toNode="receiving" id="stoptocompleted"/>
+    <discreteArc weight="1" fromNode="stop" toNode="completed" id="stoptocompleted"/>
+    <discreteArc weight="1" fromNode="stop" toNode="receiving" id="stoptoreceiving"/>
     <discreteArc weight="1" fromNode="take_petrol" toNode="petrol" id="take_petroltopetrol"/>
     <discreteArc weight="1" fromNode="take_electric" toNode="electric" id="take_electrictoelectric"/>
     <discreteArc weight="1" fromNode="decision" toNode="take_electric" id="decisiontotake_electric"/>

@@ -35,7 +35,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic1a) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver1a.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver1a.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -47,7 +47,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic1a) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 1);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 1);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -65,7 +65,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic1b) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver1b.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver1b.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -77,7 +77,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic1b) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 1);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 1);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -95,7 +95,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic1c) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver1c.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver1c.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -107,7 +107,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic1c) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 1);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 1);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -125,7 +125,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic1d) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver1d.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver1d.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -137,7 +137,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic1d) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 1);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 1);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -157,7 +157,7 @@ TEST(ParametricLocationTreeXML, Prophetic1a) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver1a.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver1a.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -169,7 +169,7 @@ TEST(ParametricLocationTreeXML, Prophetic1a) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 1);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 1);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -187,7 +187,7 @@ TEST(ParametricLocationTreeXML, Prophetic1b) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver1b.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver1b.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -199,7 +199,7 @@ TEST(ParametricLocationTreeXML, Prophetic1b) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 1);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 1);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -217,7 +217,7 @@ TEST(ParametricLocationTreeXML, Prophetic1c) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver1c.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver1c.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -229,7 +229,7 @@ TEST(ParametricLocationTreeXML, Prophetic1c) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 1);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 1);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -247,7 +247,7 @@ TEST(ParametricLocationTreeXML, Prophetic1d) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver1d.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver1d.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -259,7 +259,7 @@ TEST(ParametricLocationTreeXML, Prophetic1d) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 1);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 1);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -279,7 +279,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic2a) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver2a.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver2a.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -291,7 +291,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic2a) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 2);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 2);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -309,7 +309,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic2b) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver2b.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver2b.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -321,7 +321,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic2b) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 2);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 2);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -339,7 +339,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic2c) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver2c.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver2c.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -351,7 +351,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic2c) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 2);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 2);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -369,7 +369,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic2d) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver2d.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver2d.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -381,7 +381,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic2d) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 2);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 2);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -401,7 +401,7 @@ TEST(ParametricLocationTreeXML, Prophetic2a) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver2a.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver2a.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -413,7 +413,7 @@ TEST(ParametricLocationTreeXML, Prophetic2a) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 2);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 2);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -430,7 +430,7 @@ TEST(ParametricLocationTreeXML, Prophetic2b) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver2b.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver2b.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -442,7 +442,7 @@ TEST(ParametricLocationTreeXML, Prophetic2b) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 2);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 2);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -460,7 +460,7 @@ TEST(ParametricLocationTreeXML, Prophetic2c) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver2c.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver2c.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -472,7 +472,7 @@ TEST(ParametricLocationTreeXML, Prophetic2c) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 2);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 2);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -490,7 +490,7 @@ TEST(ParametricLocationTreeXML, Prophetic2d) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver2d.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver2d.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -502,7 +502,7 @@ TEST(ParametricLocationTreeXML, Prophetic2d) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 2);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 2);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -524,7 +524,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic3a) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver3a.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver3a.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -536,7 +536,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic3a) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 3);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 3);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -556,7 +556,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic3b) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver3b.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver3b.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -568,7 +568,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic3b) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 3);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 3);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -588,7 +588,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic3c) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver3c.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver3c.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -600,7 +600,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic3c) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 3);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 3);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -620,7 +620,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic3d) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver3d.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver3d.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -632,7 +632,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic3d) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 3);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 3);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -652,7 +652,7 @@ TEST(ParametricLocationTreeXML, Prophetic3a) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver3a.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver3a.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -664,7 +664,7 @@ TEST(ParametricLocationTreeXML, Prophetic3a) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 3);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 3);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -682,7 +682,7 @@ TEST(ParametricLocationTreeXML, Prophetic3b) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver3b.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver3b.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -694,7 +694,7 @@ TEST(ParametricLocationTreeXML, Prophetic3b) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 3);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 3);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -712,7 +712,7 @@ TEST(ParametricLocationTreeXML, Prophetic3c) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver3c.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver3c.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -724,7 +724,7 @@ TEST(ParametricLocationTreeXML, Prophetic3c) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 3);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 3);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -742,7 +742,7 @@ TEST(ParametricLocationTreeXML, Prophetic3d) {
     double maxTime = 24.0;
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver3d.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver3d.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -754,7 +754,7 @@ TEST(ParametricLocationTreeXML, Prophetic3d) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 3);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 3);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -775,7 +775,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic4a) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver4a.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver4a.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -787,7 +787,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic4a) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 4);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 4);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -807,7 +807,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic4b) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver4b.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver4b.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -819,7 +819,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic4b) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 4);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 4);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -839,7 +839,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic4c) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver4c.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver4c.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -851,7 +851,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic4c) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 4);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 4);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -871,7 +871,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic4d) {
 
 
     ReadHybridPetrinet reader;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsQEST/charging_ver4d.xml");
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver4d.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
     auto writer = new PLTWriter();
@@ -883,7 +883,7 @@ TEST(ParametricLocationTreeXML, Nonprophetic4d) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 1000000, 128, false, false, error, 4);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, false, error, 4);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
@@ -893,3 +893,33 @@ TEST(ParametricLocationTreeXML, Nonprophetic4d) {
 
 }
 
+
+//Prophetic scheduling for Version 4c
+TEST(ParametricLocationTreeXML, Prophetic4c) {
+
+    cout << endl << "Nondeterministic computation started." << endl;
+    double maxTime = 24.0;
+
+
+    ReadHybridPetrinet reader;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("testfiles/nondeterministicModelsQEST/charging_ver4c.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, maxTime);
+
+    std::vector<ParametricLocationTree::Node> locations = plt->getAllLocations();
+    NondeterminismSolver solver;
+    double error;
+
+    clock_t begin0 = clock();
+
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000, 128, false, true, error, 4);
+
+    clock_t end0 = clock();
+    double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
+    cout << elapsed_secs << " seconds" << endl;
+
+    cout << "Max probability to take right decision: " << maxprob << " +- " << error << endl;
+
+}

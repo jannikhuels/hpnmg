@@ -48,16 +48,20 @@ namespace hpnmg {
 
         double recursivelySolveNondeterminismNonProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version);
 
-        double recursivelySolveNondeterminismProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version);
+        double recursivelySolveNondeterminismPartiallyProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version);
 
-        void recursivelyGetCandidateLocations(vector<ParametricLocation> &list, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates, int version);
+        double solveNondeterminismFullyProphetic(ParametricLocationTree::Node root, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version);
+
+        void recursivelyGetCandidateLocations(std::vector<ParametricLocation> &list, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates, int version);
+
+        double integrateOverIntersectionOfLocations(std::vector<ParametricLocation> currentLocations, int k, char algorithm, int functioncalls, int evaluations, bool minimum, double &error);
 
 
     public:
 
         NondeterminismSolver();
 
-        double solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic, double &error, int version);
+        double solveNondeterminism(shared_ptr<ParametricLocationTree> plt, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic, double &error, int version, bool partially = false);
 
         vector<vector<pair<int, string>>> getBestChildLocations();
 
