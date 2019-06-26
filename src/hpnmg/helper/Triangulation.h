@@ -17,8 +17,9 @@ namespace hpnmg {
         std::vector<Region> t;
         std::vector<Region> t_split;
     public:
-        Triangulation(const ParametricLocationTree::Node &node);
-        Triangulation(const Region &node);
+
+        static std::vector<Region> create(const Region &region);
+        static std::vector<Region> create(const ParametricLocationTree::Node &node);
 
         std::vector<Region> getObjects();
         std::vector<Region> getSplitVertical();

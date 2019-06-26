@@ -13,7 +13,7 @@ namespace hpnmg {
 
     }
 
-    Event::Event(const Event &event) : type(event.type), generalDependencies(event.generalDependencies), time(event.time) {
+    Event::Event(const Event &event) : type(event.type), generalDependencies(event.generalDependencies), generalDependenciesNormed(event.generalDependenciesNormed), time(event.time) {
 
     }
 
@@ -30,6 +30,9 @@ namespace hpnmg {
 
     std::vector<double> Event::getGeneralDependencies() const{return generalDependencies;}
     void Event::setGeneralDependencies(const std::vector<double> generalDependencies){this->generalDependencies = generalDependencies;}
+
+    std::vector<double> Event::getGeneralDependenciesNormed() const{return generalDependenciesNormed;}
+    void Event::setGeneralDependenciesNormed(const std::vector<double> generalDependenciesNormed){this->generalDependenciesNormed = generalDependenciesNormed;}
 
     double Event::getTime() const{return time;}
     void Event::setTime(double time){this->time = time;}

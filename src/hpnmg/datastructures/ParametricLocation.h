@@ -13,20 +13,30 @@ namespace hpnmg {
     private:
         std::vector<int> discreteMarking;
         std::vector<std::vector<double>> continuousMarking;
+        std::vector<std::vector<double>> continuousMarkingNormed;
         std::vector<double> drift;
         std::vector<std::vector<double>> deterministicClock;
         std::vector<std::vector<double>> generalClock;
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft;
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundNormedLeft;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundNormedRight;
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
 
         std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
-        std::vector<double> generalDependenciesNormed;
+
         void scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound, double boundValue, double splitValue, int boundIndex, int splitIndex, bool parent);
         void setSplitConstraints(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &newIntegrationIntervals, int index, int splitIndex, std::vector<double> splitBound, bool upper);
         bool validBound(int index, int boundIndex, std::vector<double> newBound, bool upper);
 
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundsToRVIntervals(
+            std::vector<std::vector<std::vector<double>>> boundLeft,
+            std::vector<std::vector<std::vector<double>>> boundRight,
+            std::vector<int> occurings,
+            int maxTime,
+            int dim
+        );
 
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;
@@ -39,12 +49,6 @@ namespace hpnmg {
         double conflictProbability;
         double accumulatedProbability;
         int dimension;
-    public:
-        vector<double> getGeneralDependenciesNormed();
-
-        void setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed);
-        // vector needed for STD is empty while parsing and set when PLT is computed
-
     public:
 
         ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces, int numberOfGeneralTransitions);
@@ -71,6 +75,10 @@ namespace hpnmg {
 
         void setContinuousMarking(const std::vector<std::vector<double>> &continuousMarking);
 
+        std::vector<std::vector<double>> getContinuousMarkingNormed() const;
+
+        void setContinuousMarkingNormed(const std::vector<std::vector<double>> &continuousMarkingNormed);
+
         std::vector<double> getDrift() const;
 
         void setDrift(const std::vector<double> &drift);
@@ -90,6 +98,14 @@ namespace hpnmg {
         std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundRight() const;
 
         void setGeneralIntervalBoundRight(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundRight);
+
+        std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundNormedLeft() const;
+
+        void setGeneralIntervalBoundNormedLeft(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundNormedLeft);
+
+        std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundNormedRight() const;
+
+        void setGeneralIntervalBoundNormedRight(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundNormedRight);
 
         Event getSourceEvent() const;
 
@@ -132,5 +148,6 @@ namespace hpnmg {
 
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervals(std::vector<int> occurings, int maxTime, int dim);
 
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervalsNormed(std::vector<int> occurings, int maxTime, int dim);
     };
 }

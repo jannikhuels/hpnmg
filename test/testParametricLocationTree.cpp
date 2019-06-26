@@ -99,35 +99,35 @@ TEST(ParametricLocationTreeTest, RegionTest)
 
     parametricLocationTree->updateRegions();
     ParametricLocationTree::Node rootNode = parametricLocationTree->getRootNode();
-    ASSERT_EQ(rootNode.getRegion().dimension(), 2);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.dimension(), 2);
 
     //parametricLocationTree.print(true);
 
     vector_t<double> point = vector_t<double>::Zero(2);
     point << 2,1;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
     point << 10,0;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
     point << 1,2;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), false);
+    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), false);
 
     vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree->getChildNodes(rootNode);
     vector<ParametricLocationTree::Node> stocChildNodes;
     for (ParametricLocationTree::Node node: rootChildNodes) {
         if (node.getParametricLocation().getSourceEvent().getEventType() == EventType::General) {
             point << 2,2;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), true);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), true);
             point << 1,2;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), true);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), true);
             point << 1,3;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), false);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), false);
             point << 1,0.5;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), false);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), false);
         } else {
             point << 8,6;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), true);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), true);
             point << 8,4;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), false);
+            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), false);
         }
     }
 }
@@ -167,29 +167,97 @@ TEST(ParametricLocationTreeTest, CandidateRegionsForTimeTest) {
     //ASSERT_EQ(parametricLocationTree->getCandidateLocationsForTime(21).size(), 0);
 }
 
-TEST(ParametricLocationTreeXML, CreateRegions) {
-    ReadHybridPetrinet reader;
-    //TODO Check impl. of reader. Create singletons!
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("example.xml");
-    ParseHybridPetrinet parser;
-    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 20);
+TEST(ParametricLocationTreeXML, CreateRegions2D) {
+    shared_ptr<hpnmg::ParametricLocationTree> plt = ParseHybridPetrinet{}.parseHybridPetrinet(
+        ReadHybridPetrinet{}.readHybridPetrinet("norep_1_1.xml"),
+        20
+    );
     plt->updateRegions();
 
+    // Each sample pair consists of a test point and the NODE_ID of the PLT node containing the point.
+    const vector<pair<Point<double>, NODE_ID>> samples{
+        {Point<double>{ 2,  1},  1},
+        {Point<double>{ 2,  3},  2},
+        {Point<double>{14, 13},  3},
+        {Point<double>{ 7, 13},  4},
+        {Point<double>{ 1,  3},  5},
+        {Point<double>{13, 14},  6},
+        {Point<double>{19, 18},  7},
+        {Point<double>{ 7, 18},  8},
+        {Point<double>{ 1, 13},  9},
+        {Point<double>{18, 19}, 10},
+    };
 
-    plt->print(false);
+    deque<ParametricLocationTree::Node> working_set{plt->getRootNode()};
+    while (!working_set.empty()) {
+        const ParametricLocationTree::Node node = working_set.front();
+        working_set.pop_front();
+        const vector<ParametricLocationTree::Node> children = plt->getChildNodes(node);
+        working_set.insert(working_set.end(), children.begin(), children.end());
 
-    ParametricLocationTree::Node rootNode = plt->getRootNode();
-    ASSERT_EQ(rootNode.getRegion().dimension(), 2);
+        const Region::PolytopeT &polytope = node.getRegion().hPolytope;
+        ASSERT_EQ(polytope.dimension(), 2);
 
-    vector_t<double> point = vector_t<double>::Zero(2);
-    point << 2,1;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
-    point << 20,0;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
-    point << 1,2;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), false);
+        for (const auto &sample : samples) {
+            const auto point = sample.first;
+            if (node.getNodeID() == sample.second)
+                EXPECT_TRUE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+            else
+                EXPECT_FALSE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+        }
+    }
+}
 
-    //TODO Extended checks for example.xml
+TEST(ParametricLocationTreeXML, CreateRegions3D) {
+    shared_ptr<hpnmg::ParametricLocationTree> plt = ParseHybridPetrinet{}.parseHybridPetrinet(
+        ReadHybridPetrinet{}.readHybridPetrinet("norep_1_2.xml"),
+        20
+    );
+    plt->updateRegions();
+
+    PLTWriter{}.writePLT(plt, 20);
+
+    // Each sample pair consists of a test point and the NODE_ID of the PLT node containing the point.
+    // Each point is the center of its region. This was the simplest way to get 17 example points generated by Mathematica.
+    const vector<pair<Point<double>, NODE_ID>> samples{
+        {Point<double>{  88/7.,       10.,     36/7.},  1},
+        {Point<double>{  17/4.,     47/4.,     31/4.},  2},
+        {Point<double>{ 154/9.,       10.,    128/9.},  3},
+        {Point<double>{   9/2.,        3.,        9.},  4},
+        {Point<double>{  36/5.,   212/15.,   232/15.},  5},
+        {Point<double>{677/48.,   727/64.,  1615/96.},  6},
+        {Point<double>{ 172/9.,       10.,    164/9.},  7},
+        {Point<double>{261/38.,    65/19.,   294/19.},  8},
+        {Point<double>{   3/2.,        3.,        9.},  9},
+        {Point<double>{107/17.,   144/17.,   294/17.}, 10},
+        {Point<double>{703/51.,    35/17.,   914/51.}, 11},
+        {Point<double>{169/10., 1331/120.,   229/12.}, 12},
+        {Point<double>{784/43., 1346/129., 2464/129.}, 13},
+        {Point<double>{ 63/16.,     43/8.,     69/4.}, 14},
+        {Point<double>{     2.,        4.,       16.}, 15},
+        {Point<double>{     1.,       12.,       18.}, 16},
+        {Point<double>{    17.,      5/3.,     58/3.}, 17},
+        {Point<double>{    18.,      2/3.,     58/3.}, 18},
+    };
+
+    deque<ParametricLocationTree::Node> working_set{plt->getRootNode()};
+    while (!working_set.empty()) {
+        const ParametricLocationTree::Node node = working_set.front();
+        working_set.pop_front();
+        const vector<ParametricLocationTree::Node> children = plt->getChildNodes(node);
+        working_set.insert(working_set.end(), children.begin(), children.end());
+
+        const Region::PolytopeT &polytope = node.getRegion().hPolytope;
+        ASSERT_EQ(polytope.dimension(), 3);
+
+        for (const auto &sample : samples) {
+            const auto point = sample.first;
+            if (node.getNodeID() == sample.second)
+                EXPECT_TRUE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+            else
+                EXPECT_FALSE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+        }
+    }
 }
 
 TEST(ParametricLocationTreeXML, CollectCandidatesWithPLT) {
@@ -293,15 +361,15 @@ TEST(ParametricLocationTreeXML, Normed) {
 
     // GeneralDependencies
     ASSERT_EQ(candidates.size(), 3);
-    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
-    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
-    ASSERT_EQ(candidates[0].getParametricLocation().getGeneralDependenciesNormed()[1], 0);
-    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
-    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
-    ASSERT_EQ(candidates[1].getParametricLocation().getGeneralDependenciesNormed()[1], 1);
-    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed().size(), 2);
-    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[0], 0);
-    ASSERT_EQ(candidates[2].getParametricLocation().getGeneralDependenciesNormed()[1], 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[0].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[0].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[1], 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[1].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[1].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[1], 1);
+    ASSERT_EQ(candidates[2].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed().size(), 2);
+    ASSERT_EQ(candidates[2].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[0], 0);
+    ASSERT_EQ(candidates[2].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()[1], 2);
 
 //    // Integration Intervals
 //    ASSERT_EQ(candidates[0].getParametricLocation().getIntegrationIntervals().size(), 1);

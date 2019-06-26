@@ -25,7 +25,7 @@ foreach(TEST_FILE ${TEST_SRC_FILES})
 	target_link_libraries(${TEST_NAME}
         	${PROJECT_NAME}
 			${GTEST_LIBRARIES}
-			${XercesC_LIBRARY}
+			${XercesC_LIBRARIES}
 		)
 
 	add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})

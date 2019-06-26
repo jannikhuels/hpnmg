@@ -17,6 +17,7 @@ namespace hpnmg {
     private:
         EventType type;
         std::vector<double> generalDependencies;
+        std::vector<double> generalDependenciesNormed;
         double time;
         std::string id;
 
@@ -31,6 +32,9 @@ namespace hpnmg {
 
         std::vector<double> getGeneralDependencies() const;
         void setGeneralDependencies(const std::vector<double> generalDependencies);
+
+        std::vector<double> getGeneralDependenciesNormed() const;
+        void setGeneralDependenciesNormed(const std::vector<double> generalDependencies);
 
         double getTime() const;
         void setTime(double time);

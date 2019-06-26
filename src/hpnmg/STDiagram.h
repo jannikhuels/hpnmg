@@ -17,6 +17,8 @@ namespace hpnmg {
 
         static Halfspace<double> createHalfspaceFromDependencies(std::vector<double> dependencies, double offset, bool isVertical);
 
+        static Halfspace<double> createHalfspaceFromDependenciesNormed(std::vector<double> dependenciesNormed);
+
         static std::vector<double> makeValidDependencies(std::vector<double> dependencies, int dimension);
 
         static Halfspace<double> createVerticalHalfspace(std::vector<double> bounds, bool isLeftBound);
@@ -33,9 +35,19 @@ namespace hpnmg {
         // TODO: Do not create a base region but instead try to read it from the PLT.
         static Region createBaseRegion(int dimension, int maxTime);
 
+        static Region createBaseRegion(int dimension, int maxTime, const std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> &rvIntervals);
+
         static Region createRegionForVertices(std::vector<Point<double>> vertices);
 
         static Halfspace<double> createHalfspaceForTime(const double &time, int dimension);
+
+        /**
+         * Creates a <code>dimension</code> dimensional hyperplane representing the gien point in time.
+         * @param time
+         * @param dimension
+         * @return
+         */
+        static Region::PolytopeT createHyperplaneForTime(const double &time, int dimension);
 
         static Region createRegion(const Region &baseRegion, const Event &sourceEvent, const std::vector<Event> &destinationEvents);
 
@@ -49,7 +61,13 @@ namespace hpnmg {
 
         static Region createRegionNoEvent(const Region &baseRegion, const Event &sourceEvent, std::vector<double> leftBounds, std::vector<double> rightBounds);
 
-        static Region intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate = false);
+        /**
+         * @TODO Can this be removed in favor of intersectRegionForContinuousLevel()? The linear equation seems to be
+         * calculated completely differently.
+         */
+        static Region legacyIntersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate = false);
+
+        static Region intersectRegionForContinuousLevel(const Region &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level);
 
         static Halfspace<double> createHalfspaceFromEvent(const Event &event, bool isSourceEvent);
 

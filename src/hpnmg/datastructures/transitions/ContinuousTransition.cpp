@@ -6,9 +6,10 @@ namespace hpnmg {
         : Transition(id), rate(rate), currentRate(rate)
     {}
 
-    double ContinuousTransition::getRate() { return currentRate; }
+    double ContinuousTransition::getRate() { return rate; }
 
     void ContinuousTransition::resetOriginalRate() { currentRate = rate; }
 
-    void ContinuousTransition::setCurrentRate(double newRate) { this->currentRate = newRate; };
+    double ContinuousTransition::getCurrentRate() { return currentRate; }
+    void ContinuousTransition::setCurrentRate(double newRate) { this->currentRate = newRate; }
 }

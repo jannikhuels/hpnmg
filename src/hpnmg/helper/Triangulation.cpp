@@ -18,32 +18,40 @@ namespace hpnmg {
         return dTPoints;
     }
 
-    /*std::vector<Point<double>> dTPointsToPoints(std::vector<DT::Point> dTPoints) {
+    std::vector<Point<double>> dTPointsToPoints(std::vector<DT::Point> dTPoints) {
         std::vector<Point<double>> points;
         for(DT::Point p : dTPoints) {
             points.push_back(Point<double>(p));
         }
         return points;
-    }*/
+    }
 
     std::vector<DT::Point> regionToDTPoints(Region r) {
-        vector<Point<double>> vertices = r.vertices();
+        vector<Point<double>> vertices = r.hPolytope.vertices();
         return pointsToDTPoints(vertices);
     }
 
-    /*Region dTPointsToRegion(std::vector<DT::Point> dTPoints) {
+    Region dTPointsToRegion(std::vector<DT::Point> dTPoints) {
         std::vector<Point<double>> points = dTPointsToPoints(dTPoints);
         return STDiagram::createRegionForVertices(points);
-    }*/
-
-    Triangulation::Triangulation(const ParametricLocationTree::Node &node) : Triangulation(node.getRegion()) {
-
     }
 
-    Triangulation::Triangulation(const Region &r) {
+//    Triangulation::Triangulation(const ParametricLocationTree::Node &node) : Triangulation(node.getRegion()) {
+//
+//    }
 
-        DT dt(r.dimension());
+    std::vector<Region> Triangulation::create(const ParametricLocationTree::Node &node) {
+        return Triangulation::create(node.getRegion());
+    }
+
+    std::vector<Region> Triangulation::create(const Region &r) {
+        const auto dimension = r.hPolytope.dimension();
         std::vector<DT::Point> points = regionToDTPoints(r);
+
+        if (points.size() < dimension + 1)
+            return {};
+
+        DT dt(dimension);
         dt.insert(points.begin(), points.end());
 
         std::vector<Region> regions;
@@ -56,7 +64,7 @@ namespace hpnmg {
             std::vector<Point<double>> points;
             for (auto vi = cit->vertices_begin(); vi != cit->vertices_end(); ++vi) {
                 DT::Vertex_handle t = *vi;
-                vector_t<double> p = vector_t<double>::Zero(r.dimension());
+                vector_t<double> p = vector_t<double>::Zero(r.hPolytope.dimension());
                 int index = 0;
                 for (auto i = t->point().begin(); i != t->point().end(); ++i) {
                     p[index] = (double)*i;
@@ -68,7 +76,7 @@ namespace hpnmg {
             Region tr(points);
             regions.push_back(tr);
         }
-        this->t = regions;
+        return regions;
     }
 
     std::vector<Region> Triangulation::getObjects() {
@@ -76,9 +84,9 @@ namespace hpnmg {
     }
 
     Point<double> getCentralPoint(Region r, int dim_index) {
-        r.project({(unsigned long)dim_index, (unsigned long)dim_index+1});
+        r.hPolytope.project({(unsigned long)dim_index, (unsigned long)dim_index+1});
 
-        std::vector<Point<double>> vertices = r.vertices();
+        std::vector<Point<double>> vertices = r.hPolytope.vertices();
 
         if (vertices[0][0] < vertices[1][0]) {
             if (vertices[1][0] < vertices[2][0]) {
@@ -101,18 +109,18 @@ namespace hpnmg {
 
         std::vector<Point<double>> points;
         points.insert(points.end(), base.begin(), base.end());
-        int dimension = rest.dimension();
+        int dimension = rest.hPolytope.dimension();
 
         std::vector<size_t> restDim;
-        for (int i = 0; i < rest.dimension(); i++){
+        for (int i = 0; i < rest.hPolytope.dimension(); i++){
             if (i==dim_index || i==dim_index+1) {
                 continue;
             }
             vector_t<double> dir = vector_t<double>::Zero(dimension);
             dir[i] = -1;
-            EvaluationResult<double> low = rest.evaluate(dir);
+            EvaluationResult<double> low = rest.hPolytope.evaluate(dir);
             dir[i] = 1;
-            EvaluationResult<double> up = rest.evaluate(dir);
+            EvaluationResult<double> up = rest.hPolytope.evaluate(dir);
 
             points.push_back((Point<double>)up.optimumValue);
             points.push_back((Point<double>)low.optimumValue);
@@ -123,7 +131,7 @@ namespace hpnmg {
     }
 
     std::vector<Region> splitRegion(Region r, Point<double> p, int dim_index) {
-        int dimension = r.dimension();
+        int dimension = r.hPolytope.dimension();
         vector_t<double> dir = vector_t<double>::Zero(dimension);
         dir[dim_index] = 1;
 
@@ -131,24 +139,24 @@ namespace hpnmg {
         Halfspace<double> h(dir, planeOffset);
 
         Region left(r);
-        left.insert(h);
+        left.hPolytope.insert(h);
 
         Region right(r);
-        right.insert(-h);
+        right.hPolytope.insert(-h);
 
-        if (left.vertices().size() == dimension || right.vertices().size() == dimension) {
+        if (left.hPolytope.vertices().size() == dimension || right.hPolytope.vertices().size() == dimension) {
             return {r};
         }
 
-        left = makeCompleteRegion(left.project({(unsigned long)dim_index, (unsigned long)(dim_index+1)}).vertices(), r, dim_index);
-        right = makeCompleteRegion(right.project({(unsigned long)dim_index, (unsigned long)(dim_index+1)}).vertices(), r, dim_index);
+        left = makeCompleteRegion(left.hPolytope.project({(unsigned long)dim_index, (unsigned long)(dim_index+1)}).vertices(), r, dim_index);
+        right = makeCompleteRegion(right.hPolytope.project({(unsigned long)dim_index, (unsigned long)(dim_index+1)}).vertices(), r, dim_index);
 
         return {left, right};
     }
 
     std::vector<Region> splitVertical(Region r) {
         // Do not split for the t coordinates
-        int max_dim = r.dimension() - 2;
+        int max_dim = r.hPolytope.dimension() - 2;
 
         std::vector<Region> res;
         res.push_back(r);
@@ -183,24 +191,6 @@ namespace hpnmg {
         return res;
     }
 
-//    std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>> bounds(Region r) {
-//        // Do not split for the t coordinates
-//        int max_dim = r.dimension() - 2;
-//
-//        std::vector<std::vector<double>> leftBounds;
-//        std::vector<std::vector<double>> rightBounds;
-//
-//        for (int i = 1; i < max_dim; i++) {
-//
-//        }
-//
-//        return res;
-//    }
-//
-//    std::vector<std::pair<std::vector<std::vector<double>>, std::vector<std::vector<double>>>> Triangulation::getBounds() {
-//        for (Region r : this->t) {
-//
-//        }
-//    }
+
 }
 

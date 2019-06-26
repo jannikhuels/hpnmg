@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "Computation.h"
 
 namespace hpnmg {
