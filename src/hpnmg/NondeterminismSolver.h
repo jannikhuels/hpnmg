@@ -52,9 +52,7 @@ namespace hpnmg {
 
         double solveNondeterminismFullyProphetic(ParametricLocationTree::Node root, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version);
 
-        void recursivelyGetCandidateLocations(std::vector<ParametricLocation> &list, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates, int version);
-
-        double integrateOverIntersectionOfLocations(std::vector<ParametricLocation> currentLocations, int k, char algorithm, int functioncalls, int evaluations, bool minimum, double &error);
+        void recursivelyGetGoalLocations(std::vector<ParametricLocation> &goalLocations, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, int version);
 
 
     public:

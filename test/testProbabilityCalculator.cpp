@@ -33,127 +33,127 @@ TEST(ProbabilityCalculator, example){
 
 }
 
-//TEST(ProbabilityCalculator, example2general){
-//
-//    cout << "Starting example2general\n";
-//
-//   auto reader= new ReadHybridPetrinet();
-//   auto parser = new ParseHybridPetrinet();
-//   auto hybridPetrinet0 = reader->readHybridPetrinet("example2general.xml");
-//   auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
-//   auto writer = new PLTWriter();
-//   writer->writePLT(plt0, 10);
-//
-//   auto calculator = new ProbabilityCalculator();
-//   vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(3.0);
-//
-//   //ASSERT_EQ (nodes.size(), 9);
-//
-//   double error=0.0;
-// //  double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 3.0, 50000, error);
-//   double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingGauss(nodes, *plt0, 3.0, 128);
-//
-//   ASSERT_EQ (((result - error <= 1) && (1 <= result+error)), true);
-//}
-//
-//TEST(ProbabilityCalculator, valuetools){
-//
-//   auto reader= new ReadHybridPetrinet();
-//   auto parser = new ParseHybridPetrinet();
-//   auto hybridPetrinet0 = reader->readHybridPetrinet("battery_simple.xml");
-//   auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
-//   //auto writer = new PLTWriter();
-//   //writer->writePLT(plt0, 10);
-//
-//   auto calculator = new ProbabilityCalculator();
-//   vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(4.0);
-//
-//   //ASSERT_EQ (nodes.size(), 9);
-//
-//   double error;
-//   double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 4.0, 50000, error);
-//
-//   ASSERT_EQ (((result - error <= 1) && (1 <= result+error)), true);
-//}
-//
-//TEST(ProbabilityCalculator, valuetools_v2){
-//
-//    auto reader= new ReadHybridPetrinet();
-//    auto parser = new ParseHybridPetrinet();
-//    auto hybridPetrinet0 = reader->readHybridPetrinet("battery_simple_v2.xml");
-//    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
-//    //auto writer = new PLTWriter();
-//    //writer->writePLT(plt0, 10);
-//
-//    auto calculator = new ProbabilityCalculator();
-//    vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(6.0);
-//
-//    //ASSERT_EQ (nodes.size(), 9);
-//
-//    double error;
-//    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 6.0, 50000, error);
-//
-//    ASSERT_EQ ((((double)(result - error) <= 1) && (1 <= (double)(result + error))), true);
-//}
-//
-//TEST(ProbabilityCalculator, valuetools_v3){
-//
-//    auto reader= new ReadHybridPetrinet();
-//    auto parser = new ParseHybridPetrinet();
-//    auto hybridPetrinet0 = reader->readHybridPetrinet("battery_simple_v3.xml");
-//    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
-//    auto writer = new PLTWriter();
-//    writer->writePLT(plt0, 10);
-//
-//    auto calculator = new ProbabilityCalculator();
-//    vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(7.0);
-//
-//    //ASSERT_EQ (nodes.size(), 9);
-//
-//    double error;
-//    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 7.0, 50000, error);
-//
-//    ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
-//
-//}
-//
-//TEST(ProbabilityCalculator, valuetools_1){
-//
-//    auto reader= new ReadHybridPetrinet();
-//    auto parser = new ParseHybridPetrinet();
-//    auto hybridPetrinet0 = reader->readHybridPetrinet("valuetools_1.xml");
-//
-//    cout << endl << "=========" << endl;
-//    //cout << "Computing startet for td=" << t[i] << endl;
-//    shared_ptr<DeterministicTransition> dt = dynamic_pointer_cast<DeterministicTransition>(hybridPetrinet0->getTransitionById("td0"));
-//    dt->setDiscTime(6);
-//    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
-//    auto calculator = new ProbabilityCalculator();
-//    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-//    vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(7.0);
-//    cout << "Number of Dimensions d=" << plt0->getDimension() << endl;
-//    cout << "Total number of locations n=" << plt0->numberOfLocations() << endl;
-//    cout << "Number of candidates c=" << nodes.size() << endl;
-//
-//    double error;
-//    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 7.0, 50000, error);
-//    std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-//
-//
-//    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
-//    cout << "The probability is: " << result << endl;
-//    cout << "It took " << duration << "ms." << endl;
-//
-//   ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
-//
-//    //auto writer = new PLTWriter();
-//    //writer->writePLT(plt0, 10);
-//
-//
-//
-//    //ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
-//
-//}
+TEST(ProbabilityCalculator, example2general){
+
+    cout << "Starting example2general\n";
+
+   auto reader= new ReadHybridPetrinet();
+   auto parser = new ParseHybridPetrinet();
+   auto hybridPetrinet0 = reader->readHybridPetrinet("example2general.xml");
+   auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
+   auto writer = new PLTWriter();
+   writer->writePLT(plt0, 10);
+
+   auto calculator = new ProbabilityCalculator();
+   vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(3.0);
+
+   //ASSERT_EQ (nodes.size(), 9);
+
+   double error=0.0;
+ //  double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 3.0, 50000, error);
+   double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingGauss(nodes, *plt0, 3.0, 128);
+
+   ASSERT_EQ (((result - error <= 1) && (1 <= result+error)), true);
+}
+
+TEST(ProbabilityCalculator, valuetools){
+
+   auto reader= new ReadHybridPetrinet();
+   auto parser = new ParseHybridPetrinet();
+   auto hybridPetrinet0 = reader->readHybridPetrinet("battery_simple.xml");
+   auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
+   //auto writer = new PLTWriter();
+   //writer->writePLT(plt0, 10);
+
+   auto calculator = new ProbabilityCalculator();
+   vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(4.0);
+
+   //ASSERT_EQ (nodes.size(), 9);
+
+   double error;
+   double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 4.0, 50000, error);
+
+   ASSERT_EQ (((result - error <= 1) && (1 <= result+error)), true);
+}
+
+TEST(ProbabilityCalculator, valuetools_v2){
+
+    auto reader= new ReadHybridPetrinet();
+    auto parser = new ParseHybridPetrinet();
+    auto hybridPetrinet0 = reader->readHybridPetrinet("battery_simple_v2.xml");
+    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
+    //auto writer = new PLTWriter();
+    //writer->writePLT(plt0, 10);
+
+    auto calculator = new ProbabilityCalculator();
+    vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(6.0);
+
+    //ASSERT_EQ (nodes.size(), 9);
+
+    double error;
+    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 6.0, 50000, error);
+
+    ASSERT_EQ ((((double)(result - error) <= 1) && (1 <= (double)(result + error))), true);
+}
+
+TEST(ProbabilityCalculator, valuetools_v3){
+
+    auto reader= new ReadHybridPetrinet();
+    auto parser = new ParseHybridPetrinet();
+    auto hybridPetrinet0 = reader->readHybridPetrinet("battery_simple_v3.xml");
+    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
+    auto writer = new PLTWriter();
+    writer->writePLT(plt0, 10);
+
+    auto calculator = new ProbabilityCalculator();
+    vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(7.0);
+
+    //ASSERT_EQ (nodes.size(), 9);
+
+    double error;
+    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 7.0, 50000, error);
+
+    ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
+
+}
+
+TEST(ProbabilityCalculator, valuetools_1){
+
+    auto reader= new ReadHybridPetrinet();
+    auto parser = new ParseHybridPetrinet();
+    auto hybridPetrinet0 = reader->readHybridPetrinet("valuetools_1.xml");
+
+    cout << endl << "=========" << endl;
+    //cout << "Computing startet for td=" << t[i] << endl;
+    shared_ptr<DeterministicTransition> dt = dynamic_pointer_cast<DeterministicTransition>(hybridPetrinet0->getTransitionById("td0"));
+    dt->setDiscTime(6);
+    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
+    auto calculator = new ProbabilityCalculator();
+    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+    vector<ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(7.0);
+    cout << "Number of Dimensions d=" << plt0->getDimension() << endl;
+    cout << "Total number of locations n=" << plt0->numberOfLocations() << endl;
+    cout << "Number of candidates c=" << nodes.size() << endl;
+
+    double error;
+    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(nodes, *plt0, 7.0, 50000, error);
+    std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+    cout << "The probability is: " << result << endl;
+    cout << "It took " << duration << "ms." << endl;
+
+   ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
+
+    //auto writer = new PLTWriter();
+    //writer->writePLT(plt0, 10);
+
+
+
+    //ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
+
+}
 
 // Tests Monte-Carlo Plain for a triangle "◣" with vertices (0,0), (1,0), (0,1). Each dimension is uniformly distributed over [0,1].
 TEST(ProbabilityCalculator, SimpleMonteCarloPlain) {
@@ -329,3 +329,156 @@ TEST(ProbabilityCalculator, ForRegion3D) {
             cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
     }
 }
+
+
+
+TEST(ProbabilityCalculator, ForRegionIntersection) {
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 1},
+        hypro::Point<double>{2, 0},
+        hypro::Point<double>{4, 2},
+        hypro::Point<double>{2, 4},
+    }))};
+
+    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 2},
+        hypro::Point<double>{6, 2},
+        hypro::Point<double>{6, 6},
+        hypro::Point<double>{0, 6},
+    }))};
+
+    auto calculator = ProbabilityCalculator();
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+    };
+
+
+    for (auto alg : {1, 2, 3}) {
+        double totalProb = 0.0;
+        double totalError = 0.0;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
+
+
+
+        totalProb += calculator.getProbabilityForIntersectionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+
+
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        if (totalError > 0)
+            EXPECT_NEAR((10.0/3.0) / 36.0, totalProb, totalError);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << totalProb << endl;
+        cout << "The error is:       " << totalError << endl;
+        cout << "It took " << duration << "ms." << endl;
+    }
+}
+
+
+TEST(ProbabilityCalculator, ForRegionIntersection2) {
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 1},
+        hypro::Point<double>{2, 0},
+        hypro::Point<double>{4, 2},
+        hypro::Point<double>{2, 4},
+    }))};
+
+    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{5, 5},
+        hypro::Point<double>{6, 5},
+        hypro::Point<double>{6, 6},
+        hypro::Point<double>{5, 6},
+    }))};
+
+    auto calculator = ProbabilityCalculator();
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+    };
+
+
+    for (auto alg : {1, 2, 3}) {
+        double totalProb = 0.0;
+        double totalError = 0.0;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
+
+
+
+        totalProb += calculator.getProbabilityForIntersectionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+
+
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        if (totalError > 0)
+            EXPECT_NEAR(0.0 / 36.0, totalProb, totalError);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << totalProb << endl;
+        cout << "The error is:       " << totalError << endl;
+        cout << "It took " << duration << "ms." << endl;
+    }
+}
+
+
+TEST(ProbabilityCalculator, ForRegionIntersection3) {
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{4, 5},
+        hypro::Point<double>{5, 5},
+        hypro::Point<double>{5, 6},
+        hypro::Point<double>{4, 6},
+    }))};
+
+    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{5, 5},
+        hypro::Point<double>{6, 5},
+        hypro::Point<double>{6, 6},
+        hypro::Point<double>{5, 6},
+    }))};
+
+    auto calculator = ProbabilityCalculator();
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+    };
+
+
+    for (auto alg : {1, 2, 3}) {
+        double totalProb = 0.0;
+        double totalError = 0.0;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
+
+
+
+        totalProb += calculator.getProbabilityForIntersectionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+
+
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        if (totalError > 0)
+            EXPECT_NEAR(0.0 / 36.0, totalProb, totalError);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << totalProb << endl;
+        cout << "The error is:       " << totalError << endl;
+        cout << "It took " << duration << "ms." << endl;
+    }
+}
+
+

@@ -461,6 +461,65 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
+    double ProbabilityCalculator::getProbabilityForIntersectionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error){
+
+            Region regionToIntegrate(regions[0]);
+
+           if (regions.size() > 1){
+
+               for(Region currentRegion : regions)
+                   regionToIntegrate.hPolytope = regionToIntegrate.hPolytope.intersect(currentRegion.hPolytope);
+
+           }
+
+           auto calculator = new ProbabilityCalculator();
+           return calculator->ProbabilityCalculator::getProbabilityForRegionUsingMonteCarlo(regionToIntegrate, distributionsNormalized, algorithm, functioncalls, error);
+    }
+
+
+
+    double ProbabilityCalculator::getProbabilityForUnionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error){
+
+        double probability = 0.0;
+        error = 0.0;
+        double currentError;
+        double currentProb;
+        double p = 1.0;
+        unsigned long n = regions.size();
+
+        for (int k = 1; k <= regions.size(); ++k){
+
+            vector<bool> v(n);
+            fill(v.begin(), v.begin() + k, true);
+
+            do {
+
+                vector<Region> regionsToIntegrate;
+
+                for (int i = 0; i < n; ++i) {
+                    if (v[i]) {
+                        regionsToIntegrate.push_back(regions[i]);
+                    }
+                }
+
+                currentError = 0.0;
+                currentProb = getProbabilityForIntersectionOfRegionsUsingMonteCarlo(regionsToIntegrate, distributionsNormalized, algorithm, functioncalls, currentError);
+
+                probability += p * currentProb;
+                error += currentError;
+
+            } while (std::prev_permutation(v.begin(), v.end()));
+
+            p *= -1.0;
+        }
+
+        return probability;
+
+
+    }
+
+
+
     double ProbabilityCalculator::computeMultivariateIntegralUsingMonteCarlo(int functioncalls, hpnmg::allDims all, hpnmg::allDims allPlus, hpnmg::allDims allMinus, char algorithm, double &error){
 
 
@@ -689,6 +748,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         return result;
     }
+
+
 
     double ProbabilityCalculator::transformedFunctionToIntegrateMonteCarlo(double *k, size_t dim, void* params){
         allDims all = *((allDims *)params);

@@ -114,15 +114,15 @@ namespace hpnmg {
 
 
 
-    void NondeterminismSolver::recursivelyGetCandidateLocations(vector<ParametricLocation> &list, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates, int version){
+    void NondeterminismSolver::recursivelyGetGoalLocations(vector<ParametricLocation> &goalLocations, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates, int version){
 
         if (isCandidateForProperty(node, candidates, version))
-            list.push_back(node.getParametricLocation());
+            goalLocations.push_back(node.getParametricLocation());
 
-        vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(node);
+        vector<ParametricLocationTree::Node> children = this->plt->getChildNodes(node);
 
         for (ParametricLocationTree::Node child : children)
-            recursivelyGetCandidateLocations(list, child, candidates, version);
+            recursivelyGetGoalLocations(goalLocations, child, candidates, version);
     }
 
 
@@ -328,7 +328,7 @@ namespace hpnmg {
 
             vector<vector<ParametricLocation>> currentLocationsVector;
             vector<ParametricLocation> currentLocations;
-            recursivelyGetCandidateLocations(currentLocations, conflictSet[0], candidates, version);
+            recursivelyGetGoalLocations(currentLocations, conflictSet[0], candidates, version);
             currentLocationsVector.push_back(currentLocations);
 
             //pairwise consideration
@@ -337,13 +337,12 @@ namespace hpnmg {
                 for (int j = k + 1; j < conflictSet.size(); j++) {
 
                     currentLocations.clear();
-                    recursivelyGetCandidateLocations(currentLocations, conflictSet[j], candidates, version);
+                    recursivelyGetGoalLocations(currentLocations, conflictSet[j], candidates, version);
                     currentLocationsVector.push_back(currentLocations);
 
                     vector<nondetParams> params;
 
                     //two ways for ordering
-//START AUSKOMMENTIEREN
                     for (int i = 0; i <= 1; i++) {
 
                         if (i == 0) {
@@ -393,7 +392,7 @@ namespace hpnmg {
                         params.push_back(currentParams);
 
                     }
-//ENDE AUSKOMMENTIEREN
+
 
                     int i;
                     if (params[0].prob >= params[1].prob) {
@@ -407,7 +406,7 @@ namespace hpnmg {
                      }
 
 
-//START AUSKOMMENTIEREN
+
                     params[i].functioncalls = functioncalls;
                     params[i].evaluations = evaluations;
                     params[i].prob = -1.0;
@@ -430,8 +429,6 @@ namespace hpnmg {
                         cout << "Main computation failed" << endl;
 
 
-
-//ENDE AUSKOMMENTIEREN
 
                     double a = params[i].result;
 
@@ -549,104 +546,26 @@ namespace hpnmg {
 
 
 
-    double NondeterminismSolver::integrateOverIntersectionOfLocations(std::vector<ParametricLocation> currentLocations, int k, char algorithm, int functioncalls, int evaluations, bool minimum, double &error){
-
-        ParametricLocation locationToIntegrate(currentLocations[0]);
-        bool valid = true;
-
-        if (k > 1){
-
-            vector<vector<pair<int,pair<vector<double>,vector<double>>>>> newIntegrationIntervals;
-            vector<vector<pair<int,pair<vector<double>,vector<double>>>>> currentIntegrationIntervals = currentLocations[0].getIntegrationIntervals();
-            DomainWithIndex domainWithIndex = currentIntegrationIntervals[0];
-            LinearDomain domain = LinearDomain::createDomain(domainWithIndex);
-
-
-            for (ParametricLocation currentLocation : currentLocations){
-
-                currentIntegrationIntervals = currentLocation.getIntegrationIntervals();
-
-                for (int j = 0;j < currentIntegrationIntervals.size();j++){
-
-                    DomainWithIndex currentDomainWithIndex = currentIntegrationIntervals[j];
-                    LinearDomain currentDomain = LinearDomain::createDomain(currentDomainWithIndex);
-                    if (!domain.intersect(currentDomain))
-                        valid = false;
-
-                }
-            }
-
-
-            newIntegrationIntervals.push_back(domain.toDomainWithIndex(domainWithIndex));
-            locationToIntegrate.overwriteIntegrationIntervals(newIntegrationIntervals);
-
-        }
-
-        if (valid) {
-
-            auto calculator = new ProbabilityCalculator();
-
-            if (algorithm == 0)
-                //Gauss Legendre
-                return calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(locationToIntegrate, (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
-            else
-                //Monte Carlo
-                return calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(locationToIntegrate, (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, error);
-
-        } else
-            return 0.0;
-
-
-    }
-
 
     double NondeterminismSolver::solveNondeterminismFullyProphetic(ParametricLocationTree::Node root, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version){
 
 
-        double maxOrMinProbability = 0.0;
         error = 0.0;
-        double currentError;
-        double prob;
-
-
-        //vector<vector<pair<int, pair<vector<double>, vector<double>>>>> goalDomains;
 
         vector<ParametricLocation> goalLocations;
-        recursivelyGetCandidateLocations(goalLocations, root, candidates, version);
+        recursivelyGetGoalLocations(goalLocations, root, candidates, version);
 
+        vector<Region> goalRegions;
+        for (ParametricLocation location : goalLocations) {
 
-
-        int p = 1.0;
-        int n = goalLocations.size();
-
-        for (int k = 1; k <= goalLocations.size(); ++k){
-
-
-            vector<bool> v(n);
-            fill(v.begin(), v.begin() + k, true);
-
-            do {
-
-                vector<ParametricLocation> currentLocations;
-
-                for (int i = 0; i < n; ++i) {
-                    if (v[i]) {
-                        currentLocations.push_back(goalLocations[i]);
-                    }
-                }
-
-                currentError = 0.0;
-                prob = integrateOverIntersectionOfLocations(currentLocations, k, algorithm, functioncalls, evaluations, minimum, currentError);
-
-                maxOrMinProbability += p * prob;
-                error += currentError;
-
-            } while (std::prev_permutation(v.begin(), v.end()));
-
-            p *= -1.0;
+            Region r = STDiagram::createBaseRegion(location.getIntegrationIntervals()[0].size(), this->plt->getMaxTime(), location.getIntegrationIntervals()[0]);
+            goalRegions.push_back(r);
         }
 
-        return maxOrMinProbability;
+        ProbabilityCalculator calculator;
+
+        return calculator.getProbabilityForUnionOfRegionsUsingMonteCarlo(goalRegions, this->plt->getDistributionsNormalized(), algorithm, functioncalls, error);
+
     }
 
 
@@ -676,6 +595,7 @@ namespace hpnmg {
     vector<vector<pair<int, string>>> NondeterminismSolver::getBestChildLocations(){
         return this->bestChildLocations;
     }
+
 
 
 

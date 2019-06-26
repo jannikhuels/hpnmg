@@ -459,7 +459,7 @@ namespace hpnmg {
      * @return std::vector where the i-th entry representes the probability distribution of the i-th random variable,
      *         that is the i-th firing in the normalized global firing order
      */
-    vector<pair<string, map<string, float>>> hpnmg::ParametricLocationTree::getDistrbutionsNormalized() {
+    vector<pair<string, map<string, float>>> hpnmg::ParametricLocationTree::getDistributionsNormalized() {
         auto distributionsNormalized = vector<pair<string, map<string, float>>>();
         distributionsNormalized.reserve(this->getDimension());
 
