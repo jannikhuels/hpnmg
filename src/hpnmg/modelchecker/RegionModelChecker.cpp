@@ -21,7 +21,12 @@ namespace hpnmg {
     }
 
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
-        const auto &sat = this->satisfiesHandler(formula, atTime);
+        auto sat = std::vector<Region>();
+
+        for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
+            const auto &result = this->satisfiesHandler(node, formula, atTime);
+            sat.insert(sat.end(), result.begin(), result.end());
+        }
 
         double probability = 0.0;
         double totalError = 0.0;
@@ -50,30 +55,26 @@ namespace hpnmg {
         return {probability, totalError};
     }
 
-    std::vector<Region> RegionModelChecker::satisfiesHandler(const Formula &formula, double atTime) {
+    std::vector<Region> RegionModelChecker::satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime) {
         switch (formula.getType()) {
             case Formula::Type::ContinuousAtomicProperty: {
                 auto result = std::vector<Region>();
-                for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
-                    auto region = this->cfml(node, formula.getContinuousAtomicProperty()->place, formula.getContinuousAtomicProperty()->value);
-                    if (!region.hPolytope.empty())
-                        result.push_back(region);
-                }
+                auto region = this->cfml(node, formula.getContinuousAtomicProperty()->place, formula.getContinuousAtomicProperty()->value);
+                if (!region.hPolytope.empty())
+                    result.push_back(region);
                 return result;
             }
             case Formula::Type::DiscreteAtomicProperty: {
                 auto result = std::vector<Region>();
-                for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
-                    auto region = this->dfml(node, formula.getDiscreteAtomicProperty()->place, formula.getDiscreteAtomicProperty()->value);
-                    if (!region.hPolytope.empty())
-                        result.push_back(region);
-                }
+                auto region = this->dfml(node, formula.getDiscreteAtomicProperty()->place, formula.getDiscreteAtomicProperty()->value);
+                if (!region.hPolytope.empty())
+                    result.push_back(region);
                 return result;
             }
             case Formula::Type::Conjunction: {
                 return this->conj(
-                    this->satisfiesHandler(formula.getConjunction()->left, atTime),
-                    this->satisfiesHandler(formula.getConjunction()->right, atTime)
+                    this->satisfiesHandler(node, formula.getConjunction()->left, atTime),
+                    this->satisfiesHandler(node, formula.getConjunction()->right, atTime)
                 );
             }
         }
