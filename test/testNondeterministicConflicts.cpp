@@ -694,7 +694,7 @@ TEST(ParametricLocationTreeXML, Prophetic3b) {
 
     clock_t begin0 = clock();
 
-    double maxprob = solver.solveNondeterminism(plt, locations, 3, 50000, 128, false, true, error, 3);
+    double maxprob = solver.solveNondeterminism(plt, locations, 3, 1000000, 128, false, true, error, 3);
 
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
