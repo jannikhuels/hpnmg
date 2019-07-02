@@ -1,9 +1,10 @@
 # Hybrid Petri nets with general transitions
 
-## Install
+## Installation 
 
 ### Ubuntu 18.04
 
+The provided source code can be compiled using CMake. 
 Almost all dependencies can be installed via `apt`. Only [CArL](https://smtrat.github.io/carl/) and
 [Hypro](https://hypro.github.io/hypro/html/) need to be compiled manually. However, they register themselves with CMake
 upon compilation so that no steps other than compiling them need to be taken.
@@ -81,9 +82,7 @@ Build HyPro's resources and HyPro itself with `make resources && make hypro`. Th
 
 
 
-## Instructions
+## Instructions to replicate experiments from iFM submission
 
-Nondetermnistic scheduling:
-
-There exist a number of googletest files in the folder "test". The The file "testNondeterministicConflicts.cpp" contains tests for all versions of the case study used in the paper, both for nonprophetic and prophetic scheduling. Using Google Test, these can be executed. The model files are available in the folder "test/testfiles/nondeterministicModelsQEST".
+There exist a number of googletest files in the folder "test", whereas the file "testNondeterministicConflicts.cpp" contains tests for all versions of the case study used in the iFM submission, both for nonprophetic and prophetic scheduling. Using Google Test, these can be executed after build. The model files are available as xml files inside the folder "test/testfiles/nondeterministicModelsIFM".
 
