@@ -32,7 +32,7 @@ namespace hpnmg {
         double totalError = 0.0;
 
         auto calculator = ProbabilityCalculator();
-        const auto &distributionsNormalized = this->plt.getDistrbutionsNormalized();
+        const auto &distributionsNormalized = this->plt.getDistributionsNormalized();
         const auto timeHyperplane = STDiagram::createHyperplaneForTime(atTime, this->plt.getDimension());
         for (const auto &region : sat) {
             auto intersectedRegion = region.hPolytope.intersect(timeHyperplane);

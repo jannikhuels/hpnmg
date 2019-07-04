@@ -105,6 +105,11 @@ namespace hpnmg {
 		 */
 		double getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error);
 
+
+        double getProbabilityForIntersectionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error);
+
+        double getProbabilityForUnionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error);
+
 		double computeMultivariateIntegralUsingGauss(int evaluations, hpnmg::allDims all, hpnmg::allDims allPlus, hpnmg::allDims allMinus);
 
 		double computeMultivariateIntegralUsingMonteCarlo(int functioncalls, hpnmg::allDims all, hpnmg::allDims allPlus, hpnmg::allDims allMinus, char algorithm, double &error);

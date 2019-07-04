@@ -326,3 +326,286 @@ TEST(ProbabilityCalculator, ForRegion3D) {
             cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
     }
 }
+
+TEST(ProbabilityCalculator, ForRegionIntersection) {
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 1},
+        hypro::Point<double>{2, 0},
+        hypro::Point<double>{4, 2},
+        hypro::Point<double>{2, 4},
+    }))};
+
+    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 2},
+        hypro::Point<double>{6, 2},
+        hypro::Point<double>{6, 6},
+        hypro::Point<double>{0, 6},
+    }))};
+
+    auto calculator = ProbabilityCalculator();
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+    };
+
+
+    for (auto alg : {1, 2, 3}) {
+        double totalProb = 0.0;
+        double totalError = 0.0;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
+
+
+
+        totalProb += calculator.getProbabilityForIntersectionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+
+
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        if (totalError > 0)
+            EXPECT_NEAR((10.0/3.0) / 36.0, totalProb, totalError);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << totalProb << endl;
+        cout << "The error is:       " << totalError << endl;
+        cout << "It took " << duration << "ms." << endl;
+    }
+}
+
+TEST(ProbabilityCalculator, ForRegionIntersection2) {
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 1},
+        hypro::Point<double>{2, 0},
+        hypro::Point<double>{4, 2},
+        hypro::Point<double>{2, 4},
+    }))};
+
+    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{5, 5},
+        hypro::Point<double>{6, 5},
+        hypro::Point<double>{6, 6},
+        hypro::Point<double>{5, 6},
+    }))};
+
+    auto calculator = ProbabilityCalculator();
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+    };
+
+
+    for (auto alg : {1, 2, 3}) {
+        double totalProb = 0.0;
+        double totalError = 0.0;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
+
+
+
+        totalProb += calculator.getProbabilityForIntersectionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+
+
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        if (totalError > 0)
+            EXPECT_NEAR(0.0 / 36.0, totalProb, totalError);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << totalProb << endl;
+        cout << "The error is:       " << totalError << endl;
+        cout << "It took " << duration << "ms." << endl;
+    }
+}
+
+TEST(ProbabilityCalculator, ForRegionIntersection3) {
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{4, 5},
+        hypro::Point<double>{5, 5},
+        hypro::Point<double>{5, 6},
+        hypro::Point<double>{4, 6},
+    }))};
+
+    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{5, 5},
+        hypro::Point<double>{6, 5},
+        hypro::Point<double>{6, 6},
+        hypro::Point<double>{5, 6},
+    }))};
+
+    auto calculator = ProbabilityCalculator();
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+    };
+
+
+    for (auto alg : {1, 2, 3}) {
+        double totalProb = 0.0;
+        double totalError = 0.0;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
+
+
+
+        totalProb += calculator.getProbabilityForIntersectionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+
+
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        if (totalError > 0)
+            EXPECT_NEAR(0.0 / 36.0, totalProb, totalError);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << totalProb << endl;
+        cout << "The error is:       " << totalError << endl;
+        cout << "It took " << duration << "ms." << endl;
+    }
+}
+
+TEST(ProbabilityCalculator, ForRegionUnion) {
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 1},
+        hypro::Point<double>{2, 0},
+        hypro::Point<double>{4, 2},
+        hypro::Point<double>{2, 4},
+    }))};
+
+    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 2},
+        hypro::Point<double>{6, 2},
+        hypro::Point<double>{6, 6},
+        hypro::Point<double>{0, 6},
+    }))};
+
+    auto calculator = ProbabilityCalculator();
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+    };
+
+
+    for (auto alg : {1, 2, 3}) {
+        double totalProb = 0.0;
+        double totalError = 0.0;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
+
+        totalProb += calculator.getProbabilityForUnionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 50000, totalError);
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        if (totalError > 0)
+            EXPECT_NEAR((86.0 / 3.0) / 36.0, totalProb, totalError);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << totalProb << endl;
+        cout << "The error is:       " << totalError << endl;
+        cout << "It took " << duration << "ms." << endl;
+    }
+}
+
+
+TEST(ProbabilityCalculator, ForRegionUnion2) {
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{0, 1},
+        hypro::Point<double>{2, 0},
+        hypro::Point<double>{4, 2},
+        hypro::Point<double>{2, 4},
+    }))};
+
+    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{5, 5},
+        hypro::Point<double>{6, 5},
+        hypro::Point<double>{6, 6},
+        hypro::Point<double>{5, 6},
+    }))};
+
+    auto calculator = ProbabilityCalculator();
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+    };
+
+
+    for (auto alg : {1, 2, 3}) {
+        double totalProb = 0.0;
+        double totalError = 0.0;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
+
+        totalProb += calculator.getProbabilityForUnionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 50000, totalError);
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        if (totalError > 0)
+            EXPECT_NEAR(9.0 / 36.0, totalProb, totalError);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << totalProb << endl;
+        cout << "The error is:       " << totalError << endl;
+        cout << "It took " << duration << "ms." << endl;
+    }
+}
+
+TEST(ProbabilityCalculator, ForRegionUnion3) {
+    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{4, 5},
+        hypro::Point<double>{5, 5},
+        hypro::Point<double>{5, 6},
+        hypro::Point<double>{4, 6},
+    }))};
+
+    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+        hypro::Point<double>{5, 5},
+        hypro::Point<double>{6, 5},
+        hypro::Point<double>{6, 6},
+        hypro::Point<double>{5, 6},
+    }))};
+
+    auto calculator = ProbabilityCalculator();
+    const auto distributions = vector<pair<string, map<string, float>>>{
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+        {"uniform", {{"a", 0.0}, {"b", 6.0}}},
+    };
+
+
+    for (auto alg : {1, 2, 3}) {
+        double totalProb = 0.0;
+        double totalError = 0.0;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
+
+        totalProb += calculator.getProbabilityForUnionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+
+        if (totalError > 0)
+            EXPECT_NEAR(2.0 / 36.0, totalProb, totalError);
+        else
+            cout << "SKIPPING ASSERTION BECAUSE THE RETURNED ERROR IS 0." << endl;
+
+        cout << "Algorithm: " << alg << endl;
+        cout << "The probability is: " << totalProb << endl;
+        cout << "The error is:       " << totalError << endl;
+        cout << "It took " << duration << "ms." << endl;
+    }
+}

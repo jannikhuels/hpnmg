@@ -15,7 +15,7 @@ namespace hpnmg {
         //TODO: createBaseRegion(int, int, rvIntervals) does not use the transition index of the rvIntervals, but is it
         // really okay to just put a fake value of 0 there?
         const auto rvIntervals = std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>(
-            dimension,
+            dimension - 1,
             {0, {lower, upper}}
         );
 
@@ -41,8 +41,8 @@ namespace hpnmg {
             const auto &upperBound = firing.second.second;
 
             assert(lowerBound.size() == upperBound.size());
-            // The dimension must be large enough to include all firings plus time
-            assert(dimension >= lowerBound.size());
+            // The dimension must be large enough to include all random variables
+            assert(dimension >= lowerBound.size() - 1);
             if (!lowerBound.empty()) {
                 hypro::vector_t<double> lowerDirection = hypro::vector_t<double>::Zero(dimension);
                 hypro::vector_t<double> upperDirection = hypro::vector_t<double>::Zero(dimension);

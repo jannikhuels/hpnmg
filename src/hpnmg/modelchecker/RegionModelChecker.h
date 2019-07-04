@@ -21,7 +21,7 @@ namespace hpnmg {
         Region cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value);
         Region dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
         std::vector<Region> conj(std::vector<Region> a, std::vector<Region> b);
-        std::vector<Region> satisfiesHandler(const Formula &formula, double atTime);
+        std::vector<Region> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
 
         std::shared_ptr<HybridPetrinet> hpng;
         ParametricLocationTree plt;
