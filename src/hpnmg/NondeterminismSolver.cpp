@@ -15,6 +15,10 @@ namespace hpnmg {
     vector<int> discreteMarking = node.getParametricLocation().getDiscreteMarking();
     vector<vector<double>> continuousMarking = node.getParametricLocation().getContinuousMarking();
 
+
+    if (version == 0 && node.getNodeID() >= 4)
+        return true;
+
 //    if (discreteMarking[5] > 0) //fig5prophetic + fig1prophetic
 //        return true;
 //
@@ -32,23 +36,23 @@ namespace hpnmg {
         if ((discreteMarking[2] > 0 && !empty && discreteMarking[1] == 0) || (discreteMarking[3] > 0 && empty && discreteMarking[1] > 0)) //right decision
             return true;
 
-    } else if (version == 3 ) {
+//    } else if (version == 3 ) {
+//
+//        vector<double> levelCar = continuousMarking[1]; //charging_ver3
+//        bool emptyCar = true;
+//        for (int p = 0; p < levelCar.size(); p++)
+//            if (levelCar[p] > 0)
+//                emptyCar = false;
+//        vector<double> levelDistance = continuousMarking[0];
+//        bool emptyDistance = true;
+//        for (int q = 0; q < levelDistance.size(); q++)
+//            if (levelDistance[q] > 0)
+//                emptyDistance = false;
+//
+//        if ((discreteMarking[6] > 0 && !emptyCar && emptyDistance) || (discreteMarking[7] > 0 && emptyCar && !emptyDistance)) //right decision
+//            return true;
 
-        vector<double> levelCar = continuousMarking[1]; //charging_ver3
-        bool emptyCar = true;
-        for (int p = 0; p < levelCar.size(); p++)
-            if (levelCar[p] > 0)
-                emptyCar = false;
-        vector<double> levelDistance = continuousMarking[0];
-        bool emptyDistance = true;
-        for (int q = 0; q < levelDistance.size(); q++)
-            if (levelDistance[q] > 0)
-                emptyDistance = false;
-
-        if ((discreteMarking[6] > 0 && !emptyCar && emptyDistance) || (discreteMarking[7] > 0 && emptyCar && !emptyDistance)) //right decision
-            return true;
-
-    } else if (version == 4) {
+    } else if (version >= 3) {
 
             vector<double> levelCar = continuousMarking[0]; //charging_ver4
             bool emptyCar = true;
@@ -582,7 +586,6 @@ namespace hpnmg {
             if (partially)
                 return recursivelySolveNondeterminismPartiallyProphetic(plt->getRootNode(), candidates, algorithm, functioncalls, evaluations, minimum, error, version);
             else{
-                //vector<vector<pair<int, pair<vector<double>, vector <double>>>>> goalDomains;
                 return solveNondeterminismFullyProphetic(plt->getRootNode(), candidates, algorithm, functioncalls, evaluations, minimum, error, version);
             }
         }
