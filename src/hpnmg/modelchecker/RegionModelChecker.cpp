@@ -7,6 +7,7 @@
 
 #include "datastructures/Region.h"
 #include "modelchecker/Conjunction.h"
+#include "modelchecker/Negation.h"
 #include "modelchecker/DiscreteAtomicProperty.h"
 #include "modelchecker/Formula.h"
 #include "ParseHybridPetrinet.h"
@@ -81,6 +82,9 @@ namespace hpnmg {
                     this->satisfiesHandler(node, formula.getConjunction()->right, atTime)
                 );
             }
+            case Formula::Type::Negation: {
+                return this->neg(node, this->satisfiesHandler(node, formula.getNegation()->formula, atTime));
+            }
         }
 
         return {};
@@ -128,6 +132,32 @@ namespace hpnmg {
                 }
             }
         }
+        return sat;
+    }
+
+    std::vector<Region> RegionModelChecker::neg(const ParametricLocationTree::Node &node, std::vector<Region> a) {
+        std::vector<Region> sat;
+        Region nodeRegion = node.getRegion();
+
+        if(a.size() == 0) {
+            //If sat is empty, return the whole region
+            sat.push_back(nodeRegion);
+        } else {
+            for (Region r : a) {
+                for (Halfspace<double> hsp : r.hPolytope.constraints()) {
+                    if (nodeRegion.hPolytope.dimension() == hsp.dimension()) {
+                        Region b(nodeRegion);
+                        b.hPolytope.insert(-hsp);
+
+                        if (!b.hPolytope.empty() &&
+                            b.hPolytope.vertices().size() > nodeRegion.hPolytope.dimension()) {
+                            sat.push_back(b);
+                        }
+                    }
+                }
+            }
+        }
+
         return sat;
     }
 }

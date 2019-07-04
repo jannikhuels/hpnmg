@@ -9,6 +9,7 @@
 
 namespace hpnmg {
     class Conjunction;
+    class Negation;
 
     class Formula {
     public:
@@ -23,16 +24,19 @@ namespace hpnmg {
         explicit Formula(std::shared_ptr<::hpnmg::ContinuousAtomicProperty> cap);
         explicit Formula(std::shared_ptr<::hpnmg::DiscreteAtomicProperty> dap);
         explicit Formula(std::shared_ptr<::hpnmg::Conjunction> conj);
+        explicit Formula(std::shared_ptr<::hpnmg::Negation> neg);
 
         std::shared_ptr<::hpnmg::Conjunction> getConjunction() const;
         std::shared_ptr<::hpnmg::ContinuousAtomicProperty> getContinuousAtomicProperty() const;
         std::shared_ptr<::hpnmg::DiscreteAtomicProperty> getDiscreteAtomicProperty() const;
+        std::shared_ptr<::hpnmg::Negation> getNegation() const;
         Type getType() const;
     private:
         Type type;
         std::shared_ptr<::hpnmg::Conjunction> conjunction = nullptr;
         std::shared_ptr<::hpnmg::ContinuousAtomicProperty> continuousAtomicProperty = nullptr;
         std::shared_ptr<::hpnmg::DiscreteAtomicProperty> discreteAtomicProperty = nullptr;
+        std::shared_ptr<::hpnmg::Negation> negation = nullptr;
     };
 }
 

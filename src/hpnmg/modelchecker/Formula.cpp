@@ -8,10 +8,12 @@
 
 namespace hpnmg {
     class Conjunction;
+    class Negation;
 
     Formula::Formula(std::shared_ptr<::hpnmg::ContinuousAtomicProperty> cap) : type(Type::ContinuousAtomicProperty), continuousAtomicProperty(std::move(cap)) {}
     Formula::Formula(std::shared_ptr<::hpnmg::DiscreteAtomicProperty> dap) : type(Type::DiscreteAtomicProperty), discreteAtomicProperty(std::move(dap)) {}
     Formula::Formula(std::shared_ptr<::hpnmg::Conjunction> conj) : type(Type::Conjunction), conjunction(std::move(conj)) {}
+    Formula::Formula(std::shared_ptr<::hpnmg::Negation> neg) : type(Type::Negation), negation(std::move(neg)) {}
 
     Formula::Type Formula::getType() const { return this->type; }
 
@@ -25,5 +27,9 @@ namespace hpnmg {
 
     std::shared_ptr<::hpnmg::DiscreteAtomicProperty> Formula::getDiscreteAtomicProperty() const {
         return this->discreteAtomicProperty;
+    }
+
+    std::shared_ptr<::hpnmg::Negation> Formula::getNegation() const {
+        return this->negation;
     }
 }
