@@ -23,36 +23,40 @@ namespace hpnmg {
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
         auto sat = std::vector<Region>();
 
+        const auto timeHyperplane = STDiagram::createHyperplaneForTime(atTime, this->plt.getDimension());
         for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
             const auto &result = this->satisfiesHandler(node, formula, atTime);
-            sat.insert(sat.end(), result.begin(), result.end());
+
+            // Add all result polytopes intersected with the check-time hyperplane to sat
+            std::transform(result.begin(), result.end(), std::back_inserter(sat), [&timeHyperplane](auto region) {
+                auto intersectedRegion = region.hPolytope.intersect(timeHyperplane);
+                auto reducedVertices = intersectedRegion.vertices();
+
+                if (reducedVertices.empty())
+                    return Region::Empty();
+
+                for (auto &vertex : reducedVertices)
+                    vertex.reduceDimension(vertex.dimension() - 1);
+
+                return Region(Region::PolytopeT(reducedVertices));
+            });
         }
+
+        sat.erase(std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.hPolytope.empty(); }), sat.end());
 
         double probability = 0.0;
-        double totalError = 0.0;
+        double error = 0.0;
 
         auto calculator = ProbabilityCalculator();
-        const auto &distributionsNormalized = this->plt.getDistributionsNormalized();
-        const auto timeHyperplane = STDiagram::createHyperplaneForTime(atTime, this->plt.getDimension());
-        for (const auto &region : sat) {
-            auto intersectedRegion = region.hPolytope.intersect(timeHyperplane);
-            auto reducedVertices = intersectedRegion.vertices();
-            for (auto &vertex : reducedVertices) {
-                vertex.reduceDimension(vertex.dimension() - 1);
-            }
+        probability += calculator.getProbabilityForUnionOfRegionsUsingMonteCarlo(
+            sat,
+            this->plt.getDistributionsNormalized(),
+            3,
+            50000,
+            error
+        );
 
-            double error = 0.0;
-            probability += calculator.getProbabilityForRegionUsingMonteCarlo(
-                Region::PolytopeT(reducedVertices),
-                distributionsNormalized,
-                3,
-                50000,
-                error
-            );
-            totalError += error;
-        }
-
-        return {probability, totalError};
+        return {probability, error};
     }
 
     std::vector<Region> RegionModelChecker::satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime) {
