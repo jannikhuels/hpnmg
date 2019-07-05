@@ -389,11 +389,16 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
-    double ProbabilityCalculator::getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributions,char algorithm, int functioncalls, double &error) {
-        if (region.hPolytope.empty() || region.hPolytope.dimension() == 0)
+    double ProbabilityCalculator::getProbabilityForPolytopeUsingMonteCarlo(
+        const hypro::HPolytope<double> &region,
+        const vector<pair<string, map<string, float>>> &distributions,
+        char algorithm, int functioncalls,
+        double &error
+    ) {
+        if (region.empty() || region.dimension() == 0)
             return 0.0;
 
-        assert(distributions.size() == region.hPolytope.dimension());
+        assert(distributions.size() == region.dimension());
         double result = 0.0;
 
         for(const auto &simplex : Triangulation::create(region))
@@ -462,49 +467,67 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
-    double ProbabilityCalculator::getProbabilityForIntersectionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error){
+    double ProbabilityCalculator::getProbabilityForIntersectionOfPolytopesUsingMonteCarlo(
+        const vector<HPolytope<double>> &polytopes,
+        const vector<pair<string, map<string, float>>> &distributionsNormalized,
+        char algorithm,
+        int functioncalls,
+        double &error
+    ){
+        HPolytope<double> regionToIntegrate{polytopes[0]};
 
-            Region regionToIntegrate(regions[0]);
+       if (polytopes.size() > 1)
+           for(HPolytope<double> currentRegion : polytopes)
+               regionToIntegrate = regionToIntegrate.intersect(currentRegion);
 
-           if (regions.size() > 1){
-
-               for(Region currentRegion : regions)
-                   regionToIntegrate.hPolytope = regionToIntegrate.hPolytope.intersect(currentRegion.hPolytope);
-
-           }
-
-           auto calculator = new ProbabilityCalculator();
-           return calculator->ProbabilityCalculator::getProbabilityForRegionUsingMonteCarlo(regionToIntegrate, distributionsNormalized, algorithm, functioncalls, error);
+       return ProbabilityCalculator::getProbabilityForPolytopeUsingMonteCarlo(
+           regionToIntegrate,
+           distributionsNormalized,
+           algorithm,
+           functioncalls,
+           error
+       );
     }
 
 
 
-    double ProbabilityCalculator::getProbabilityForUnionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error){
-
+    double ProbabilityCalculator::getProbabilityForUnionOfPolytopesUsingMonteCarlo(
+        const vector<HPolytope<double>> &polytopes,
+        const vector<pair<string, map<string, float>>> &distributionsNormalized,
+        char algorithm,
+        int functioncalls,
+        double &error
+    ){
         double probability = 0.0;
         error = 0.0;
         double currentError;
         double currentProb;
         double p = 1.0;
-        unsigned long n = regions.size();
+        unsigned long n = polytopes.size();
 
-        for (int k = 1; k <= regions.size(); ++k){
+        for (int k = 1; k <= polytopes.size(); ++k){
 
             vector<bool> v(n);
             fill(v.begin(), v.begin() + k, true);
 
             do {
 
-                vector<Region> regionsToIntegrate;
+                vector<hypro::HPolytope<double>> regionsToIntegrate;
 
                 for (int i = 0; i < n; ++i) {
                     if (v[i]) {
-                        regionsToIntegrate.push_back(regions[i]);
+                        regionsToIntegrate.push_back(polytopes[i]);
                     }
                 }
 
                 currentError = 0.0;
-                currentProb = getProbabilityForIntersectionOfRegionsUsingMonteCarlo(regionsToIntegrate, distributionsNormalized, algorithm, functioncalls, currentError);
+                currentProb = getProbabilityForIntersectionOfPolytopesUsingMonteCarlo(
+                    regionsToIntegrate,
+                    distributionsNormalized,
+                    algorithm,
+                    functioncalls,
+                    currentError
+                );
 
                 probability += p * currentProb;
                 error += currentError;

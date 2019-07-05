@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "datastructures/HybridPetrinet.h"
-#include "datastructures/Region.h"
+#include "datastructures/STDPolytope.h"
 #include "modelchecker/Formula.h"
 #include "ParametricLocationTree.h"
 
@@ -18,12 +18,12 @@ namespace hpnmg {
         std::pair<double, double> satisfies(const Formula &formula, double atTime);
 
     private:
-        Region cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value);
-        Region dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
-        std::vector<Region> conj(std::vector<Region> a, std::vector<Region> b);
-        std::vector<Region> neg(const ParametricLocationTree::Node & node, std::vector<Region> a);
+        STDPolytope cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value);
+        STDPolytope dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
+        std::vector<STDPolytope> conj(std::vector<STDPolytope> a, std::vector<STDPolytope> b);
+        std::vector<STDPolytope> neg(const ParametricLocationTree::Node & node, std::vector<STDPolytope> a);
 
-        std::vector<Region> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
+        std::vector<STDPolytope> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
 
         std::shared_ptr<HybridPetrinet> hpng;
         ParametricLocationTree plt;

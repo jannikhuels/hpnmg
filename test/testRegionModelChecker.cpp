@@ -21,11 +21,11 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTFoldedNormal) {
 
     auto result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 0)), 0);
     // Place is empty at t = 0
-    EXPECT_NEAR(1.0, result.first, result.second);
+    EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
 
     result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 3)), 3);
     // out-transition is deterministically disabled at t=5, so the place's level cannot exceed t' at time t'<=5
-    EXPECT_NEAR(1.0, result.first, result.second);
+    EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
 
     result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)), 3);
     // folded normal distribution with mu = 5 and sigma = 3
@@ -156,11 +156,11 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyNegationTest1GTFoldedNormal) {
 
     result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)))), 3);
     // folded normal distribution with mu = 5 and sigma = 3
-    // cdf(2.5) = 0.5 * (erf((2.5 + 5) / sqrt(18)) + erf((2.5 - 5) / sqrt(18))) ~ 1 - 0.196119
-    EXPECT_NEAR(0.8038812843621331097984445048619536726431367659338196, result.first, result.second);
+    // cdf(2.5) = 0.5 * (erf((2.5 + 5) / sqrt(18)) + erf((2.5 - 5) / sqrt(18))) ~ 1 - 0.1961
+    EXPECT_NEAR(0.8039, round(result.first * 10000) / 10000, result.second);
 
     result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 7)))), 10);
     // folded normal distribution with mu = 5 and sigma = 3
     // (1 - cdf(6)) = (1 - 0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 1 - 0.630436
-    EXPECT_NEAR(0.3695642065717287903337748836668860558514854317480592, result.first, result.second);
+    EXPECT_NEAR(0.369564, round(result.first * 1000000) / 1000000, result.second);
 }

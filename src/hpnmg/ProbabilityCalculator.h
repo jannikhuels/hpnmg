@@ -2,7 +2,7 @@
 
 #include "ParametricLocationTree.h"
 #include "datastructures/ParametricLocation.h"
-#include "datastructures/Region.h"
+#include "datastructures/STDPolytope.h"
 
 #include "Eigen/Geometry"
 
@@ -97,18 +97,24 @@ namespace hpnmg {
 		 * <code>getProbabilityForLocation...</code> functions.
 *
 		 * @param region
-		 * @param distributionsNormalized The probability distribution for each dimension of <code>region</code>.
+		 * @param distributions The probability distribution for each dimension of <code>region</code>.
 		 * @param algorithm
 		 * @param functioncalls
 		 * @param error
 		 * @return
 		 */
-		double getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error);
+		double getProbabilityForPolytopeUsingMonteCarlo(const hypro::HPolytope<double> &polytope,
+                                                        const vector<pair<string, map<string, float>>> &distributions,
+                                                        char algorithm, int functioncalls, double &error);
 
 
-        double getProbabilityForIntersectionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error);
+        double getProbabilityForIntersectionOfPolytopesUsingMonteCarlo(const vector<HPolytope<double>> &polytopes,
+                                                                       const vector<pair<string, map<string, float>>> &distributionsNormalized,
+                                                                       char algorithm, int functioncalls, double &error);
 
-        double getProbabilityForUnionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error);
+        double getProbabilityForUnionOfPolytopesUsingMonteCarlo(const vector<HPolytope<double>> &polytopes,
+                                                                const vector<pair<string, map<string, float>>> &distributionsNormalized,
+                                                                char algorithm, int functioncalls, double &error);
 
 		double computeMultivariateIntegralUsingGauss(int evaluations, hpnmg::allDims all, hpnmg::allDims allPlus, hpnmg::allDims allMinus);
 

@@ -213,7 +213,7 @@ TEST(ProbabilityCalculator, RotatetdMonteCarloPlain) {
 }
 
 TEST(ProbabilityCalculator, ForRegion2D) {
-    Region region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
+    STDPolytope region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
         hypro::Point<double>{1, 0},
         hypro::Point<double>{3, 0},
         hypro::Point<double>{2, 2},
@@ -231,7 +231,7 @@ TEST(ProbabilityCalculator, ForRegion2D) {
     for (auto alg : {1, 2, 3})
     {
         const auto t1 = std::chrono::high_resolution_clock::now();
-        probability = calculator.getProbabilityForRegionUsingMonteCarlo(region, distributions, alg, 50000, error);
+        probability = calculator.getProbabilityForPolytopeUsingMonteCarlo(region, distributions, alg, 50000, error);
         const auto t2 = std::chrono::high_resolution_clock::now();
 
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -249,7 +249,7 @@ TEST(ProbabilityCalculator, ForRegion2D) {
 }
 
 TEST(ProbabilityCalculator, ForRegionQuadrilateral) {
-    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
@@ -270,7 +270,7 @@ TEST(ProbabilityCalculator, ForRegionQuadrilateral) {
         const auto t1 = std::chrono::high_resolution_clock::now();
         for (auto &region : simplexes) {
             double error = 0;
-            totalProb += calculator.getProbabilityForRegionUsingMonteCarlo(region, distributions, alg, 50000, error);
+            totalProb += calculator.getProbabilityForPolytopeUsingMonteCarlo(region, distributions, alg, 50000, error);
             totalError += error;
 
         }
@@ -290,7 +290,7 @@ TEST(ProbabilityCalculator, ForRegionQuadrilateral) {
 }
 
 TEST(ProbabilityCalculator, ForRegion3D) {
-    Region region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
+    STDPolytope region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
         hypro::Point<double>{1, 0, 0},
         hypro::Point<double>{0, 1, 0},
         hypro::Point<double>{0, 0, 1},
@@ -310,7 +310,7 @@ TEST(ProbabilityCalculator, ForRegion3D) {
     for (auto alg : {1, 2, 3})
     {
         const auto t1 = std::chrono::high_resolution_clock::now();
-        probability = calculator.getProbabilityForRegionUsingMonteCarlo(region, distributions, alg, 50000, error);
+        probability = calculator.getProbabilityForPolytopeUsingMonteCarlo(region, distributions, alg, 50000, error);
         const auto t2 = std::chrono::high_resolution_clock::now();
 
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -328,14 +328,14 @@ TEST(ProbabilityCalculator, ForRegion3D) {
 }
 
 TEST(ProbabilityCalculator, ForRegionIntersection) {
-    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
         hypro::Point<double>{2, 4},
     }))};
 
-    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 2},
         hypro::Point<double>{6, 2},
         hypro::Point<double>{6, 6},
@@ -357,7 +357,9 @@ TEST(ProbabilityCalculator, ForRegionIntersection) {
 
 
 
-        totalProb += calculator.getProbabilityForIntersectionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+        totalProb += calculator.getProbabilityForIntersectionOfPolytopesUsingMonteCarlo({quadRegion, quadRegion2},
+                                                                                        distributions, alg, 100000,
+                                                                                        totalError);
 
 
 
@@ -377,14 +379,14 @@ TEST(ProbabilityCalculator, ForRegionIntersection) {
 }
 
 TEST(ProbabilityCalculator, ForRegionIntersection2) {
-    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
         hypro::Point<double>{2, 4},
     }))};
 
-    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{5, 5},
         hypro::Point<double>{6, 5},
         hypro::Point<double>{6, 6},
@@ -406,7 +408,9 @@ TEST(ProbabilityCalculator, ForRegionIntersection2) {
 
 
 
-        totalProb += calculator.getProbabilityForIntersectionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+        totalProb += calculator.getProbabilityForIntersectionOfPolytopesUsingMonteCarlo({quadRegion, quadRegion2},
+                                                                                        distributions, alg, 100000,
+                                                                                        totalError);
 
 
 
@@ -426,14 +430,14 @@ TEST(ProbabilityCalculator, ForRegionIntersection2) {
 }
 
 TEST(ProbabilityCalculator, ForRegionIntersection3) {
-    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{4, 5},
         hypro::Point<double>{5, 5},
         hypro::Point<double>{5, 6},
         hypro::Point<double>{4, 6},
     }))};
 
-    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{5, 5},
         hypro::Point<double>{6, 5},
         hypro::Point<double>{6, 6},
@@ -455,7 +459,9 @@ TEST(ProbabilityCalculator, ForRegionIntersection3) {
 
 
 
-        totalProb += calculator.getProbabilityForIntersectionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+        totalProb += calculator.getProbabilityForIntersectionOfPolytopesUsingMonteCarlo({quadRegion, quadRegion2},
+                                                                                        distributions, alg, 100000,
+                                                                                        totalError);
 
 
 
@@ -475,14 +481,14 @@ TEST(ProbabilityCalculator, ForRegionIntersection3) {
 }
 
 TEST(ProbabilityCalculator, ForRegionUnion) {
-    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
         hypro::Point<double>{2, 4},
     }))};
 
-    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 2},
         hypro::Point<double>{6, 2},
         hypro::Point<double>{6, 6},
@@ -502,7 +508,8 @@ TEST(ProbabilityCalculator, ForRegionUnion) {
 
         const auto t1 = std::chrono::high_resolution_clock::now();
 
-        totalProb += calculator.getProbabilityForUnionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 50000, totalError);
+        totalProb += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo({quadRegion, quadRegion2},
+                                                                                 distributions, alg, 50000, totalError);
 
         const auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -521,14 +528,14 @@ TEST(ProbabilityCalculator, ForRegionUnion) {
 
 
 TEST(ProbabilityCalculator, ForRegionUnion2) {
-    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
         hypro::Point<double>{2, 4},
     }))};
 
-    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{5, 5},
         hypro::Point<double>{6, 5},
         hypro::Point<double>{6, 6},
@@ -548,7 +555,8 @@ TEST(ProbabilityCalculator, ForRegionUnion2) {
 
         const auto t1 = std::chrono::high_resolution_clock::now();
 
-        totalProb += calculator.getProbabilityForUnionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 50000, totalError);
+        totalProb += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo({quadRegion, quadRegion2},
+                                                                                 distributions, alg, 50000, totalError);
 
         const auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -566,14 +574,14 @@ TEST(ProbabilityCalculator, ForRegionUnion2) {
 }
 
 TEST(ProbabilityCalculator, ForRegionUnion3) {
-    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{4, 5},
         hypro::Point<double>{5, 5},
         hypro::Point<double>{5, 6},
         hypro::Point<double>{4, 6},
     }))};
 
-    Region quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{5, 5},
         hypro::Point<double>{6, 5},
         hypro::Point<double>{6, 6},
@@ -593,7 +601,8 @@ TEST(ProbabilityCalculator, ForRegionUnion3) {
 
         const auto t1 = std::chrono::high_resolution_clock::now();
 
-        totalProb += calculator.getProbabilityForUnionOfRegionsUsingMonteCarlo({quadRegion, quadRegion2}, distributions, alg, 100000, totalError);
+        totalProb += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo({quadRegion, quadRegion2},
+                                                                                 distributions, alg, 100000, totalError);
 
         const auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();

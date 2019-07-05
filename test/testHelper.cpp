@@ -17,7 +17,7 @@ TEST(TriangulationTest, Test2D) {
     std::vector<ParametricLocationTree::Node> candidates = plt->getCandidateLocationsForTime(4);
 
     ASSERT_EQ(candidates.size(), 3);
-    vector<Region> triangles = Triangulation::create(candidates[0]);
+    vector<STDPolytope> triangles = Triangulation::create(candidates[0]);
     ASSERT_EQ(triangles.size(), 2);
 
     ASSERT_EQ(triangles[0].contains(Point<double>({0,0})), true);

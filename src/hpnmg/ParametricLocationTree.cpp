@@ -9,9 +9,9 @@ namespace hpnmg {
 
     NODE_ID ParametricLocationTree::Node::getNodeID() const {return id;}
     ParametricLocation ParametricLocationTree::Node::getParametricLocation() const {return parametricLocation;}
-    Region ParametricLocationTree::Node::getRegion() const {return region;}
+    STDPolytope ParametricLocationTree::Node::getRegion() const {return region;}
 
-    void ParametricLocationTree::Node::setRegion(const Region &region) {
+    void ParametricLocationTree::Node::setRegion(const STDPolytope &region) {
         this->region = region;
     }
 
@@ -219,7 +219,7 @@ namespace hpnmg {
             this->maxTime,
             dimension
         );
-        Region baseRegion = STDiagram::createBaseRegion(dimension, this->maxTime, rvIntervals);
+        STDPolytope baseRegion = STDiagram::createBaseRegion(dimension, this->maxTime, rvIntervals);
         std::vector<ParametricLocationTree::Node> childNodes = getChildNodes(startNode);
         if (!childNodes.empty()) {
             startNode.setRegion(STDiagram::createRegion(
@@ -234,7 +234,7 @@ namespace hpnmg {
             }
         } else {
             //TODO Change when a single general transitions fires more than one time
-            Region region = STDiagram::createRegionNoEvent(
+            STDPolytope region = STDiagram::createRegionNoEvent(
                 baseRegion,
                 startNode.getParametricLocation().getSourceEvent(),
                 startNode.getParametricLocation().getGeneralIntervalBoundNormedLeft()[0][0],
@@ -252,7 +252,7 @@ namespace hpnmg {
         return events;
     }
 
-    void ParametricLocationTree::recursivelyCollectRegions(const ParametricLocationTree::Node &startNode, vector<Region> &regions) {
+    void ParametricLocationTree::recursivelyCollectRegions(const ParametricLocationTree::Node &startNode, vector<STDPolytope> &regions) {
         regions.push_back(startNode.getRegion());
         for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
             recursivelyCollectRegions(node, regions);
@@ -260,7 +260,7 @@ namespace hpnmg {
     }
     
     void ParametricLocationTree::print(bool cummulative) {
-        vector<Region> regions;
+        vector<STDPolytope> regions;
         recursivelyCollectRegions(getRootNode(), regions);
         STDiagram::print(regions, cummulative);
     }
@@ -281,7 +281,7 @@ namespace hpnmg {
         recursivelyPrintRegions(getRootNode(),0);
     }
 
-    void ParametricLocationTree::recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, Region> (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension) {
+    void ParametricLocationTree::recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, STDPolytope> (*isCandidate)(const std::pair<double,double> &interval, const STDPolytope &region, int dimension), std::pair<double, double> interval, int dimension) {
         if (isCandidate(interval, startNode.getRegion(), dimension).first) {
             candidates.push_back(startNode);
         }

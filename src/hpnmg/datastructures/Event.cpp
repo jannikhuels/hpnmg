@@ -13,10 +13,6 @@ namespace hpnmg {
 
     }
 
-    Event::Event(const Event &event) : type(event.type), generalDependencies(event.generalDependencies), generalDependenciesNormed(event.generalDependenciesNormed), time(event.time) {
-
-    }
-
     void Event::print() const {
         printf("t=%f [ ", getTime());
         for (double d : getGeneralDependencies()) {
