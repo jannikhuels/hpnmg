@@ -3,10 +3,14 @@
 
 #include <iostream>
 #include <memory>
+#include <utility>
 
-#include "Eigen/Geometry"
-#include "representations/GeometricObject.h"
-#include "util/Plotter.h"
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/vector.hpp>
+#include <Eigen/Geometry>
+#include <representations/GeometricObject.h>
+#include <util/Plotter.h>
 
 namespace hpnmg {
     typedef std::vector<carl::Interval<double>> Intervals;
@@ -79,6 +83,46 @@ namespace hpnmg {
          */
         void printForWolframMathematica(std::ostream &os) const;
     private:
+        friend boost::serialization::access;
+        template<class Archive>
+        void save(Archive& ar, const unsigned int version) const {
+            const auto polyToData = [](const Polytope& polytope) {
+                const auto repr = polytope.inequalities();
+                auto matrixData = std::vector<double>(repr.first.size(), 0.0);
+                Eigen::VectorXd::Map(matrixData.data(), repr.first.size()) = repr.first;
+                auto offsetData = std::vector<double>(repr.second.size(), 0.0);
+                Eigen::VectorXd::Map(offsetData.data(), repr.second.size()) = repr.second;
+
+                return std::make_pair(matrixData, offsetData);
+            };
+
+            ar << polyToData(this->hPolytope);
+
+            auto openFacetsData = std::vector<std::pair<std::vector<double>, std::vector<double>>>();
+            openFacetsData.reserve(this->openFacets.size());
+            for (const auto& facet : this->openFacets)
+                openFacetsData.push_back(polyToData(facet));
+            ar << openFacetsData;
+        }
+        template<class Archive>
+        void load(Archive& ar, const unsigned int version) {
+            const auto dataToPoly = [](std::pair<std::vector<double>, std::vector<double>> data) {
+                return Polytope(
+                    Eigen::MatrixXd::Map(data.first.data(), data.first.size()),
+                    Eigen::VectorXd::Map(data.second.data(), data.second.size())
+                );
+            };
+
+            std::pair<std::vector<double>, std::vector<double>> hPolyData;
+            ar >> hPolyData;
+
+            std::vector<std::pair<std::vector<double>, std::vector<double>>> openFacetsData;
+            ar >> openFacetsData;
+            this->openFacets.reserve(openFacetsData.size());
+            for (const auto& facetData : openFacetsData)
+                this->openFacets.push_back(dataToPoly(facetData));
+        }
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
         STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets);
 
         mutable Polytope hPolytope = Polytope();

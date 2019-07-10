@@ -1,6 +1,5 @@
 #include "PLTWriter.h"
 
-
 using namespace xercesc;
 namespace hpnmg {
     PLTWriter::PLTWriter() {

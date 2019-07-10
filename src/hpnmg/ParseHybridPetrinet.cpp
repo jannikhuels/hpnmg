@@ -138,7 +138,7 @@ namespace hpnmg {
 
     void ParseHybridPetrinet::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet,
                                           double maxTime) {
-        int nodeMax = 5000;
+        int nodeMax = 100;
         ParametricLocation location = node.getParametricLocation();
         vector<int> discreteMarking = location.getDiscreteMarking();
         vector<vector<double>> continuousMarking = location.getContinuousMarking();

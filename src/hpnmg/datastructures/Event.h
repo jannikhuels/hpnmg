@@ -1,7 +1,10 @@
 #pragma once
 
 #include <vector>
-#include "representations/GeometricObject.h"
+
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/vector.hpp>
+#include <representations/GeometricObject.h>
 
 namespace hpnmg {
 
@@ -15,6 +18,15 @@ namespace hpnmg {
 
     class Event {
     private:
+        friend boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive& ar, const unsigned int version) {
+            ar & this->type;
+            ar & this->generalDependencies;
+            ar & this->generalDependenciesNormed;
+            ar & this->time;
+        }
+
         EventType type;
         std::vector<double> generalDependencies;
         std::vector<double> generalDependenciesNormed;

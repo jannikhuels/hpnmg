@@ -1,7 +1,12 @@
 #pragma once
 
 #include <map>
-#include <unordered_map>
+
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/vector.hpp>
 
 #include "datastructures/ParametricLocation.h"
 #include "exceptions/ParametricLocationTreeExceptions.h"
@@ -21,6 +26,13 @@ namespace hpnmg {
     public:
         class Node {
         private:
+            friend boost::serialization::access;
+            template<class Archive>
+            void serialize(Archive& ar, const unsigned int version) {
+                ar & this->id;
+                ar & this->region;
+                ar & this->parametricLocation;
+            }
             NODE_ID id;
             STDPolytope<double> region;
             ParametricLocation parametricLocation;
@@ -34,6 +46,17 @@ namespace hpnmg {
             void setParametricLocation(const ParametricLocation &location);
         };
     private:
+        friend boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive& ar, const unsigned int version) {
+            ar & this->currentId;
+            ar & this->parametricLocations;
+            ar & this->maxTime;
+            ar & this->dimension;
+            ar & this->distributions;
+            ar & this->baseRegion;
+        }
+
         NODE_ID currentId;
 
         std::multimap<PARENT_NODE_ID, Node> parametricLocations;

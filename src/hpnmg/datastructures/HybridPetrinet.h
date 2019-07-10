@@ -3,6 +3,10 @@
 #include <string>
 #include <memory>
 
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+
 #include "places/DiscretePlace.h"
 #include "places/ContinuousPlace.h"
 #include "places/Place.h"
@@ -22,6 +26,17 @@ namespace hpnmg {
     class HybridPetrinet {
 
     private:
+        friend boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive& ar, const unsigned int version) {
+            ar & this->discretePlaces;
+            ar & this->continuousPlaces;
+            ar & this->deterministicTransitions;
+            ar & this->continuousTransitions;
+            ar & this->generalTransitions;
+            ar & this->immediateTransitions;
+        }
+
         map<string, shared_ptr<DiscretePlace>> discretePlaces;
         map<string, shared_ptr<ContinuousPlace>> continuousPlaces;
         map<string, shared_ptr<DeterministicTransition>> deterministicTransitions;

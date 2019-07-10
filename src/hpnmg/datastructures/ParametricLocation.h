@@ -1,5 +1,9 @@
 #pragma once
 
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/vector.hpp>
+
 #include "Event.h"
 #include "STDPolytope.h"
 #include "helper/Computation.h"
@@ -11,6 +15,28 @@ namespace hpnmg {
     class ParametricLocation {
 
     private:
+        friend boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive& ar, const unsigned int version) {
+            ar & this->discreteMarking;
+            ar & this->continuousMarking;
+            ar & this->continuousMarkingNormed;
+            ar & this->drift;
+            ar & this->deterministicClock;
+            ar & this->generalClock;
+            ar & this->generalIntervalBoundLeft;
+            ar & this->generalIntervalBoundRight;
+            ar & this->generalIntervalBoundNormedLeft;
+            ar & this->generalIntervalBoundNormedRight;
+            ar & this->generalTransitionFired;
+            ar & this->generalTransitionsEnabled;
+            ar & this->integrationIntervals;
+            ar & this->sourceEvent;
+            ar & this->conflictProbability;
+            ar & this->accumulatedProbability;
+            ar & this->dimension;
+        }
+
         std::vector<int> discreteMarking;
         std::vector<std::vector<double>> continuousMarking;
         std::vector<std::vector<double>> continuousMarkingNormed;

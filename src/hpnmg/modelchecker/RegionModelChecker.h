@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/serialization/access.hpp>
+
 #include "datastructures/HybridPetrinet.h"
 #include "datastructures/STDPolytope.h"
 #include "modelchecker/Formula.h"
@@ -26,6 +28,13 @@ namespace hpnmg {
         std::vector<STDPolytope<double>> until(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
 
         std::vector<STDPolytope<double>> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
+
+        friend boost::serialization::access;
+        template<class Archive>
+        void serialize(Archive& ar, const unsigned int version) {
+            ar & this->hpng;
+            ar & this->plt;
+        }
 
         std::shared_ptr<HybridPetrinet> hpng;
         ParametricLocationTree plt;

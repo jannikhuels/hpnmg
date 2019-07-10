@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "datastructures/Simplex.h"
-#include "ParametricLocationTree.h"
 
 typedef CGAL::Triangulation<CGAL::Epick_d< CGAL::Dynamic_dimension_tag>> DT;
 
