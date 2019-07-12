@@ -20,8 +20,8 @@ namespace hpnmg {
     private:
         STDPolytope cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value);
         STDPolytope dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
-        std::vector<STDPolytope> conj(std::vector<STDPolytope> a, std::vector<STDPolytope> b);
-        std::vector<STDPolytope> neg(const ParametricLocationTree::Node & node, std::vector<STDPolytope> a);
+        std::vector<STDPolytope> conj(const std::vector<STDPolytope>& a, const std::vector<STDPolytope>& b);
+        std::vector<STDPolytope> neg(const ParametricLocationTree::Node & node, const std::vector<STDPolytope>& subSat);
 
         std::vector<STDPolytope> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
 

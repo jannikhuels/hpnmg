@@ -37,7 +37,7 @@ namespace hpnmg {
          * @param other The STDPolytope that is to be "subtracted" from this
          * @return The set difference <code>this \ other</code>. Represented as union of (overlapping) STDPolytopes.
          */
-        vector<STDPolytope> setDifference(const STDPolytope &other) const;
+        std::vector<STDPolytope> setDifference(const STDPolytope &other) const;
         Polytope timeSlice(double atTime) const;
 
         /**

@@ -8,9 +8,10 @@
 
 #include "datastructures/STDPolytope.h"
 #include "modelchecker/Conjunction.h"
-#include "modelchecker/Negation.h"
+#include "modelchecker/ContinuousAtomicProperty.h"
 #include "modelchecker/DiscreteAtomicProperty.h"
 #include "modelchecker/Formula.h"
+#include "modelchecker/Negation.h"
 #include "ParseHybridPetrinet.h"
 #include "ProbabilityCalculator.h"
 
@@ -82,9 +83,11 @@ namespace hpnmg {
     }
 
     //TODO this checks x_p <= u. Should I change this?
-    STDPolytope RegionModelChecker::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value)
-    {
+    STDPolytope RegionModelChecker::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value) {
         const auto &continuousPlaces = this->hpng->getContinuousPlaces();
+        if (continuousPlaces.count(placeId) == 0)
+            throw std::invalid_argument(std::string("no such continuous place in model: ") + placeId);
+
         auto placeOffset = std::distance(continuousPlaces.begin(), continuousPlaces.find(placeId));
 
         STDPolytope candidateRegion = node.getRegion();
@@ -103,8 +106,10 @@ namespace hpnmg {
 
     STDPolytope RegionModelChecker::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value) {
         const auto &discretePlaces = this->hpng->getDiscretePlaces();
-        auto placeOffset = std::distance(discretePlaces.begin(), discretePlaces.find(placeId));
+        if (discretePlaces.count(placeId) == 0)
+            throw std::invalid_argument(std::string("no such discrete place in model: ") + placeId);
 
+        auto placeOffset = std::distance(discretePlaces.begin(), discretePlaces.find(placeId));
         if (node.getParametricLocation().getDiscreteMarking().at(placeOffset) == value) {
             return node.getRegion();
         }
@@ -112,11 +117,10 @@ namespace hpnmg {
     }
 
 
-    std::vector<STDPolytope> RegionModelChecker::conj(std::vector<STDPolytope> a, std::vector<STDPolytope> b)
-    {
+    std::vector<STDPolytope> RegionModelChecker::conj(const std::vector<STDPolytope>& a, const std::vector<STDPolytope>& b) {
         std::vector<STDPolytope> sat;
-        for(STDPolytope ai : a) {
-            for (STDPolytope bi : b) {
+        for(const STDPolytope& ai : a) {
+            for (const STDPolytope& bi : b) {
                 STDPolytope res = ai.intersect(bi);
                 if (!res.empty()) {
                     sat.push_back(res);
@@ -126,17 +130,38 @@ namespace hpnmg {
         return sat;
     }
 
-    std::vector<STDPolytope> RegionModelChecker::neg(const ParametricLocationTree::Node &node, std::vector<STDPolytope> a) {
+    std::vector<STDPolytope> RegionModelChecker::neg(const ParametricLocationTree::Node& node, const std::vector<STDPolytope>& subSat) {
         const STDPolytope &nodeRegion = node.getRegion();
 
         // If the nested satisfaction set is empty, the whole region satisfies the negation
-        if (a.empty())
+        if (subSat.empty())
             return {nodeRegion};
 
         std::vector<STDPolytope> sat;
-        for (const auto& polytope : a) {
-            auto negated = nodeRegion.setDifference(polytope);
-            std::move(negated.begin(), negated.end(), std::back_inserter(sat));
+        for (const auto& polytope : subSat) {
+            auto negationResult = nodeRegion.setDifference(polytope);
+
+            // If the satisfaction set is empty, the negations make up the whole satisfaction set.
+            if (sat.empty()) {
+                std::move(negationResult.begin(), negationResult.end(), std::back_inserter(sat));
+                continue;
+            }
+
+            // In order to merge the satisfaction set with the new negations we need compute all pairwise intersections
+            auto intersections = std::vector<STDPolytope>();
+            intersections.reserve(sat.size() * negationResult.size());
+            for (const auto& negatedPolytope : negationResult) {
+                std::transform(sat.begin(), sat.end(), std::back_inserter(intersections), [&negatedPolytope](STDPolytope satPolytope) {
+                    return negatedPolytope.intersect(satPolytope);
+                });
+            }
+
+            // Get rid off empty polytopes
+            intersections.erase(
+                std::remove_if(intersections.begin(), intersections.end(), [](STDPolytope p) { return p.empty(); }),
+                intersections.end()
+            );
+            sat = intersections;
         }
 
         return sat;

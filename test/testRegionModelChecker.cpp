@@ -164,3 +164,63 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyNegationTest1GTFoldedNormal) {
     // (1 - cdf(6)) = (1 - 0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 1 - 0.630436
     EXPECT_NEAR(0.369564, round(result.first * 1000000) / 1000000, result.second);
 }
+
+TEST(RegionModelChecker, ConjunctionNegationTest) {
+    auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50);
+
+    auto result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<Conjunction>(
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 1)),
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd2", 1))
+    )))), 0);
+    EXPECT_NEAR(0.0, round(result.first * 10000) / 10000, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<Conjunction>(
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 1)),
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd2", 1))
+    )))), 2.5);
+    // folded normal distribution with mu = 5 and sigma = 3
+    // 1 - (1 - cdf(2.5)) = 1 - (1 - (0.5 * (erf((2.5 + 5) / sqrt(18)) + erf((2.5 - 5) / sqrt(18))))) ~ 1 - 0.803881
+    EXPECT_NEAR(0.1961, round(result.first * 10000) / 10000, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<Conjunction>(
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 0)),
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd2", 1))
+    )))), 2.5);
+    // folded normal distribution with mu = 5 and sigma = 3
+    // 1 - cdf(2.5) = 1 - (0.5 * (erf((2.5 + 5) / sqrt(18)) + erf((2.5 - 5) / sqrt(18)))) ~ 1 - 0.196119
+    EXPECT_NEAR(0.8039, round(result.first * 10000) / 10000, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<Conjunction>(
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 1)),
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd2", 1))
+    )))), 6);
+    EXPECT_NEAR(1.0, round(result.first * 10000) / 10000, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<Conjunction>(
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 0)),
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd2", 0))
+    )))), 6);
+    // folded normal distribution with mu = 5 and sigma = 3
+    // 1 - cdf(6) = 1 - (0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 1 - 0.630436
+    EXPECT_NEAR(0.3696, round(result.first * 10000) / 10000, result.second);
+}
+
+TEST(RegionModelChecker, DiscreteAtomicPropertyNegationTest2GT) {
+    auto hpng = ReadHybridPetrinet{}.readHybridPetrinet("norep_1_2.xml");
+    auto modelChecker = RegionModelChecker(*hpng, 20);
+
+    auto result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 2)))), 0);
+    EXPECT_NEAR(0.0, round(result.first*10)/10, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)))), 5);
+    EXPECT_NEAR(0.875, round(result.first*1000)/1000, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 1)))), 10);
+    EXPECT_NEAR(0.5, round(result.first*10)/10, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)))), 13);
+    EXPECT_NEAR(0.245, round(result.first*1000)/1000, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 1)))), 13);
+    EXPECT_NEAR(0.755, round(result.first*1000)/1000, result.second);
+}
