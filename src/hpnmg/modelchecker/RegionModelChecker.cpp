@@ -12,6 +12,7 @@
 #include "modelchecker/DiscreteAtomicProperty.h"
 #include "modelchecker/Formula.h"
 #include "modelchecker/Negation.h"
+#include "modelchecker/Until.h"
 #include "ParseHybridPetrinet.h"
 #include "ProbabilityCalculator.h"
 
@@ -24,30 +25,33 @@ namespace hpnmg {
     }
 
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
-        auto sat = std::vector<hypro::HPolytope<double>>();
-
-        for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
-            const auto &result = this->satisfiesHandler(node, formula, atTime);
-
-            // Add all result polytopes intersected with the check-time hyperplane to sat
-            std::transform(result.begin(), result.end(), std::back_inserter(sat), [atTime](const STDPolytope<double> &region) {
-                return region.timeSlice(atTime);
-            });
-        }
-
-        sat.erase(std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.empty(); }), sat.end());
-
         double probability = 0.0;
         double error = 0.0;
-
         auto calculator = ProbabilityCalculator();
-        probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
-            sat,
-            this->plt.getDistributionsNormalized(),
-            3,
-            50000,
-            error
-        );
+
+        for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
+            const auto& sat = this->satisfiesHandler(node, formula, atTime);
+
+            std::vector<hypro::HPolytope<double>> integrationDomains{};
+            // Add all result polytopes intersected with the check-time hyperplane to sat
+            std::transform(sat.begin(), sat.end(), std::back_inserter(integrationDomains), [atTime](const STDPolytope<double> &region) {
+                return region.timeSlice(atTime);
+            });
+            integrationDomains.erase(
+                std::remove_if(integrationDomains.begin(), integrationDomains.end(), [](const auto &region) { return region.empty(); }),
+                integrationDomains.end()
+            );
+
+            double nodeError = 0.0;
+            probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
+                integrationDomains,
+                this->plt.getDistributionsNormalized(),
+                3,
+                50000,
+                nodeError
+            );
+            error += nodeError;
+        }
 
         return {probability, error};
     }
@@ -77,9 +81,24 @@ namespace hpnmg {
             case Formula::Type::Negation: {
                 return this->neg(node, this->satisfiesHandler(node, formula.getNegation()->formula, atTime));
             }
+            case Formula::Type::Until: {
+                if (this->withinUntil)
+                    throw std::invalid_argument("RegionModelChecker encountered nested Until formulae.");
+
+                this->untilCache.erase(this->untilCache.begin(), this->untilCache.end());
+
+                this->withinUntil = true;
+                const auto result = this->until(node, *formula.getUntil(), atTime);
+                this->withinUntil = false;
+
+                return result;
+            }
         }
 
-        return {};
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCDFAInspection"
+        throw std::logic_error("unhandled formula type in RegionModelChecker::satisfiesHandler");
+#pragma clang diagnostic pop
     }
 
     //TODO this checks x_p <= u. Should I change this?
@@ -163,6 +182,74 @@ namespace hpnmg {
             );
             sat = intersections;
         }
+
+        return sat;
+    }
+
+    std::vector<STDPolytope<double>> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
+        auto cached = this->untilCache.find(node.getNodeID());
+        if (cached != this->untilCache.end())
+            return cached->second;
+
+        // Construct the upper and lower boundary halfspaces defined by the check-time and the check-time plus until-time.
+        hypro::vector_t<double> timeVectorUp = hypro::vector_t<double>::Zero(node.getRegion().dimension());
+        timeVectorUp[timeVectorUp.size() - 1] = 1;
+        const auto upperLimit = hypro::Halfspace<double>(timeVectorUp, atTime + formula.withinTime);
+        const auto lowerLimit = hypro::Halfspace<double>(-timeVectorUp, atTime);
+
+        // Make sure that this node is even reachable within the formula's time frame
+        auto fullRegion = node.getRegion();
+        fullRegion.insert(upperLimit);
+        fullRegion.insert(lowerLimit);
+        if (fullRegion.empty())
+            return {};
+
+        std::vector<STDPolytope<double>> eventualSat{};
+        //region Gather all polytopes that most certainly fulfill `formula`.
+        // 1. The polytopes resulting from recursively handled child locations
+        for (const auto& childNode : this->plt.getChildNodes(node)) {
+            auto childSat = this->until(childNode, formula, atTime);
+            std::move(childSat.begin(), childSat.end(), std::back_inserter(eventualSat));
+        }
+        // 2. The polytopes in the current region that fulfill `formula.goal`
+        auto regionSat = this->satisfiesHandler(node, formula.goal, atTime);
+        std::move(regionSat.begin(), regionSat.end(), std::back_inserter(eventualSat));
+        //endregion Gather all polytopes that most certainly fulfill `formula`.
+
+        // Get the polytopes where the until is "unfulfilled" immediately. The downward extension is needed multiple
+        // times, so it is calculated and cached here already.
+        auto deadFormula = Formula(std::make_shared<Conjunction>(
+            Formula(std::make_shared<Negation>(formula.pre)),
+            Formula(std::make_shared<Negation>(formula.goal))
+        ));
+        auto deadRegions = std::vector<std::pair<STDPolytope<double>, STDPolytope<double>::Polytope>>();
+        for (const auto& deadRegion : this->satisfiesHandler(node, deadFormula, atTime))
+            deadRegions.emplace_back(deadRegion, deadRegion.extendDownwards());
+
+        auto sat = std::vector<STDPolytope<double>>();
+        for (auto goalRegion : eventualSat) {
+            goalRegion = STDPolytope<double>(goalRegion.extendDownwards());
+
+            std::vector<STDPolytope<double>> regionsToRemove{};
+            regionsToRemove.reserve(deadRegions.size());
+            // Every dead region below the goal region must be subtracted from the extended goal region. More specific,
+            // the extended dead region needs to be subtracted.
+            for (const auto& otherRegion : deadRegions) {
+                // Since all satisfaction polytopes are convex and disjoint: if polytope A intersects with the
+                // downward-extension of polytope B, then A must be (at least partially) directly below B but nowhere
+                // directly above B.
+                if (!STDPolytope<double>(goalRegion).intersect(otherRegion.first).empty())
+                    regionsToRemove.emplace_back(STDPolytope<double>(otherRegion.second));
+            }
+
+            auto goalSat = goalRegion.setDifference(regionsToRemove);
+            std::move(goalSat.begin(), goalSat.end(), std::back_inserter(sat));
+        }
+
+        std::transform(sat.begin(), sat.end(), sat.begin(), [&fullRegion](auto&& region) { return region.intersect(fullRegion); });
+        sat.erase(std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.empty(); }), sat.end());
+
+        this->untilCache.insert({node.getNodeID(), sat});
 
         return sat;
     }

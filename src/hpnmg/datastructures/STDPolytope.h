@@ -40,6 +40,15 @@ namespace hpnmg {
          * @return The set difference <code>this \ other</code>. Represented as union of (overlapping) STDPolytopes.
          */
         std::vector<STDPolytope> setDifference(const STDPolytope &other) const;
+        /**
+         * Returns a vector of (possibly overlapping) STDPolytopes whose union represents all points of <code>this</code>
+         * that are not in any of <code>other</code>.
+         *
+         * @param other The STDPolytopes that are to be "subtracted" from this
+         * @return The set difference <code>this \ (union over others)</code>. Represented as union of (overlapping)
+         *         STDPolytopes.
+         */
+        std::vector<STDPolytope> setDifference(const std::vector<STDPolytope> &others) const;
         Polytope timeSlice(Numeric atTime) const;
 
         Polytope extendDownwards() const;
@@ -62,7 +71,7 @@ namespace hpnmg {
     private:
         STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets);
 
-        Polytope hPolytope = Polytope();
+        mutable Polytope hPolytope = Polytope();
         std::vector<Polytope> openFacets = {};
     };
 }
