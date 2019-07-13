@@ -45,6 +45,16 @@ namespace hpnmg {
         Polytope extendDownwards() const;
 
         /**
+         * Returns those facets of the STDPolytope that are at its bottom with respect to the time dimension.
+         *
+         * Note that some of those facets may be open. That is, do not assume that points lying on the facets are part
+         * of the STDPolytope.
+         *
+         * @return A vector of the first hit facets if you were to move from beneath the polytope upwards along the time-axis.
+         */
+        std::vector<Polytope> getBottomFacets() const;
+
+        /**
          * Add this region's vertices to the plot.
          *
          * Due to open facets, some plotted vertices may not actually be part of the region -- strictly speaking.
@@ -62,7 +72,7 @@ namespace hpnmg {
     private:
         STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets);
 
-        Polytope hPolytope = Polytope();
+        mutable Polytope hPolytope = Polytope();
         std::vector<Polytope> openFacets = {};
     };
 }

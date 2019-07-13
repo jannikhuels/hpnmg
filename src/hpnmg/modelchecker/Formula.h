@@ -10,6 +10,7 @@
 namespace hpnmg {
     class Conjunction;
     class Negation;
+    class Until;
 
     class Formula {
     public:
@@ -25,11 +26,13 @@ namespace hpnmg {
         explicit Formula(std::shared_ptr<::hpnmg::DiscreteAtomicProperty> dap);
         explicit Formula(std::shared_ptr<::hpnmg::Conjunction> conj);
         explicit Formula(std::shared_ptr<::hpnmg::Negation> neg);
+        explicit Formula(std::shared_ptr<::hpnmg::Until> until);
 
         std::shared_ptr<::hpnmg::Conjunction> getConjunction() const;
         std::shared_ptr<::hpnmg::ContinuousAtomicProperty> getContinuousAtomicProperty() const;
         std::shared_ptr<::hpnmg::DiscreteAtomicProperty> getDiscreteAtomicProperty() const;
         std::shared_ptr<::hpnmg::Negation> getNegation() const;
+        std::shared_ptr<::hpnmg::Until> getUntil() const;
         Type getType() const;
     private:
         Type type;
@@ -37,6 +40,7 @@ namespace hpnmg {
         std::shared_ptr<::hpnmg::ContinuousAtomicProperty> continuousAtomicProperty = nullptr;
         std::shared_ptr<::hpnmg::DiscreteAtomicProperty> discreteAtomicProperty = nullptr;
         std::shared_ptr<::hpnmg::Negation> negation = nullptr;
+        std::shared_ptr<::hpnmg::Until> until = nullptr;
     };
 }
 

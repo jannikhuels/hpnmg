@@ -135,6 +135,31 @@ namespace hpnmg {
     }
 
     template<typename Numeric>
+    vector<typename STDPolytope<Numeric>::Polytope> STDPolytope<Numeric>::getBottomFacets() const {
+        // Ensure that the polytope is represented by only the facet supporting halfspaces
+        this->hPolytope.reduceRepresentation();
+
+        // Get all the halfspaces supporting a bottom-facet of the polytope. That is, those halfspaces with a negative
+        // coefficient for the time-dimension.
+        auto bottomFacetSupports = this->hPolytope.constraints();
+        bottomFacetSupports.erase(
+            std::remove_if(bottomFacetSupports.begin(), bottomFacetSupports.end(), [](hypro::Halfspace<Numeric> halfspace) {
+                return halfspace.normal()[halfspace.normal().size() - 1] >= 0;
+            }),
+            bottomFacetSupports.end()
+        );
+
+        // Construct the actual facets by intersecting its inverted supporting halfspace with the polytope
+        auto bottomFacets = std::vector<Polytope>();
+        bottomFacets.reserve(bottomFacetSupports.size());
+        std::transform(bottomFacetSupports.begin(), bottomFacetSupports.end(), std::back_inserter(bottomFacets), [&poly = this->hPolytope](hypro::Halfspace<Numeric> bottomSupport) {
+           return poly.intersectHalfspace(-bottomSupport);
+        });
+
+        return bottomFacets;
+    }
+
+    template<typename Numeric>
     typename STDPolytope<Numeric>::Polytope STDPolytope<Numeric>::extendDownwards() const {
         auto vertices = this->hPolytope.vertices();
         if (vertices.empty())

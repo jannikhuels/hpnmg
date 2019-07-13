@@ -14,6 +14,7 @@ namespace hpnmg {
     Formula::Formula(std::shared_ptr<::hpnmg::DiscreteAtomicProperty> dap) : type(Type::DiscreteAtomicProperty), discreteAtomicProperty(std::move(dap)) {}
     Formula::Formula(std::shared_ptr<::hpnmg::Conjunction> conj) : type(Type::Conjunction), conjunction(std::move(conj)) {}
     Formula::Formula(std::shared_ptr<::hpnmg::Negation> neg) : type(Type::Negation), negation(std::move(neg)) {}
+    Formula::Formula(std::shared_ptr<::hpnmg::Until> until) : type(Type::Until), until(std::move(until)) {}
 
     Formula::Type Formula::getType() const { return this->type; }
 
@@ -31,5 +32,9 @@ namespace hpnmg {
 
     std::shared_ptr<::hpnmg::Negation> Formula::getNegation() const {
         return this->negation;
+    }
+
+    std::shared_ptr<::hpnmg::Until> Formula::getUntil() const {
+        return this->until;
     }
 }
