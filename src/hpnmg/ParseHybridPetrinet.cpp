@@ -154,7 +154,7 @@ namespace hpnmg {
           */
 
 
-        int nodeMax = 5000;
+        int nodeMax = 5000it status;
         ParametricLocation location = node.getParametricLocation();
         vector<int> discreteMarking = location.getDiscreteMarking();
         vector<vector<double>> continuousMarking = location.getContinuousMarking();
@@ -790,30 +790,54 @@ namespace hpnmg {
                 if ((marking >= arc->weight && arc->getIsInhibitor()) || ((marking < arc->weight && !arc->getIsInhibitor())))
                     return false;
             }  else { // place is continuous
-                shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[arc->place->id];
+                shared_ptr <ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[arc->place->id];
                 long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), place->id) -
                            continuousPlaceIDs.begin();
 
                 vector<double> level = continousMarking[pos];
                 double drift = getDrift(discreteMarking, continousMarking, hybridPetrinet,
-                                                lowerBounds,
-                                                upperBounds, generalTransitionsFired )[pos];
+                                        lowerBounds,
+                                        upperBounds, generalTransitionsFired)[pos];
 
                 if (arc->getIsInhibitor()) {
-                    if (drift >= 0) {
-                        return false;
-                    }
+
                     double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
-                    //double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
-                    if (minLevel > arc->weight)
-                        return false;
-                } else {
-                    if (drift <= 0) {
-                        return false;
+
+                    if (arc->weight > 0.0) {
+
+                        if (drift >= 0.0 && minLevel >= arc->weight)
+                            return false;
+
+                        if (minLevel > arc->weight)
+                            return false;
+
+                    } else {
+
+                        if (drift > 0.0)
+                            return false;
+
+                        if (drift >= 0.0 && minLevel > 0.0)
+                            return false;
                     }
+
+                } else {
+
                     double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
-                    if (maxLevel < arc->weight)
-                        return false;
+
+                    if (arc->weight > 0.0){
+
+                        if (drift < 0.0 && maxLevel <= arc->weight)
+                            return false;
+
+                        if (maxLevel < arc->weight)
+                            return false;
+
+                    } else {
+
+                        if (drift <= 0.0 && maxLevel <= 0.0)
+                            return false;
+
+                    }
                 }
             }
         }
