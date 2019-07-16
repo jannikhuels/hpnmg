@@ -134,7 +134,24 @@ namespace hpnmg {
         return {reducedVertices};
     }
 
-    void STDPolytope::addToPlot(hypro::Plotter<double> &plotter) const {
+    template<typename Numeric>
+    typename STDPolytope<Numeric>::Polytope STDPolytope<Numeric>::extendDownwards() const {
+        auto vertices = this->hPolytope.vertices();
+        if (vertices.empty())
+            return Polytope::Empty();
+
+        // The vector must not reallocate (and thus invalidate its iterators) while we duplicate it
+        vertices.reserve(vertices.size() * 2);
+        std::transform(vertices.begin(), vertices.end(), std::back_inserter(vertices), [](hypro::Point<Numeric> vertex) {
+            vertex[vertex.dimension() - 1] = 0;
+            return vertex;
+        });
+
+        return hypro::HPolytope<Numeric>(vertices);
+    }
+
+    template<typename Numeric>
+    void STDPolytope<Numeric>::addToPlot(hypro::Plotter<Numeric> &plotter) const {
         plotter.addObject(this->hPolytope.vertices());
     }
 

@@ -42,6 +42,8 @@ namespace hpnmg {
         std::vector<STDPolytope> setDifference(const STDPolytope &other) const;
         Polytope timeSlice(Numeric atTime) const;
 
+        Polytope extendDownwards() const;
+
         /**
          * Add this region's vertices to the plot.
          *
