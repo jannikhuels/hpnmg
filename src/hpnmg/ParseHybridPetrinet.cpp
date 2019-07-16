@@ -154,7 +154,7 @@ namespace hpnmg {
           */
 
 
-        int nodeMax = 5000it status;
+        int nodeMax = 5000;
         ParametricLocation location = node.getParametricLocation();
         vector<int> discreteMarking = location.getDiscreteMarking();
         vector<vector<double>> continuousMarking = location.getContinuousMarking();
