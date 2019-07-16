@@ -213,7 +213,7 @@ TEST(ProbabilityCalculator, RotatetdMonteCarloPlain) {
 }
 
 TEST(ProbabilityCalculator, ForRegion2D) {
-    STDPolytope region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
+    STDPolytope<double> region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
         hypro::Point<double>{1, 0},
         hypro::Point<double>{3, 0},
         hypro::Point<double>{2, 2},
@@ -249,7 +249,7 @@ TEST(ProbabilityCalculator, ForRegion2D) {
 }
 
 TEST(ProbabilityCalculator, ForRegionQuadrilateral) {
-    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
@@ -290,7 +290,7 @@ TEST(ProbabilityCalculator, ForRegionQuadrilateral) {
 }
 
 TEST(ProbabilityCalculator, ForRegion3D) {
-    STDPolytope region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
+    STDPolytope<double> region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>({
         hypro::Point<double>{1, 0, 0},
         hypro::Point<double>{0, 1, 0},
         hypro::Point<double>{0, 0, 1},
@@ -328,14 +328,14 @@ TEST(ProbabilityCalculator, ForRegion3D) {
 }
 
 TEST(ProbabilityCalculator, ForRegionIntersection) {
-    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
         hypro::Point<double>{2, 4},
     }))};
 
-    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 2},
         hypro::Point<double>{6, 2},
         hypro::Point<double>{6, 6},
@@ -379,14 +379,14 @@ TEST(ProbabilityCalculator, ForRegionIntersection) {
 }
 
 TEST(ProbabilityCalculator, ForRegionIntersection2) {
-    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
         hypro::Point<double>{2, 4},
     }))};
 
-    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{5, 5},
         hypro::Point<double>{6, 5},
         hypro::Point<double>{6, 6},
@@ -430,14 +430,14 @@ TEST(ProbabilityCalculator, ForRegionIntersection2) {
 }
 
 TEST(ProbabilityCalculator, ForRegionIntersection3) {
-    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{4, 5},
         hypro::Point<double>{5, 5},
         hypro::Point<double>{5, 6},
         hypro::Point<double>{4, 6},
     }))};
 
-    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{5, 5},
         hypro::Point<double>{6, 5},
         hypro::Point<double>{6, 6},
@@ -481,14 +481,14 @@ TEST(ProbabilityCalculator, ForRegionIntersection3) {
 }
 
 TEST(ProbabilityCalculator, ForRegionUnion) {
-    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
         hypro::Point<double>{2, 4},
     }))};
 
-    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 2},
         hypro::Point<double>{6, 2},
         hypro::Point<double>{6, 6},
@@ -528,14 +528,14 @@ TEST(ProbabilityCalculator, ForRegionUnion) {
 
 
 TEST(ProbabilityCalculator, ForRegionUnion2) {
-    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
         hypro::Point<double>{2, 0},
         hypro::Point<double>{4, 2},
         hypro::Point<double>{2, 4},
     }))};
 
-    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{5, 5},
         hypro::Point<double>{6, 5},
         hypro::Point<double>{6, 6},
@@ -574,14 +574,14 @@ TEST(ProbabilityCalculator, ForRegionUnion2) {
 }
 
 TEST(ProbabilityCalculator, ForRegionUnion3) {
-    STDPolytope quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{4, 5},
         hypro::Point<double>{5, 5},
         hypro::Point<double>{5, 6},
         hypro::Point<double>{4, 6},
     }))};
 
-    STDPolytope quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
+    STDPolytope<double> quadRegion2{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(std::vector<hypro::Point<double>>{
         hypro::Point<double>{5, 5},
         hypro::Point<double>{6, 5},
         hypro::Point<double>{6, 6},

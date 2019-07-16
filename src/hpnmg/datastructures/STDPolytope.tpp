@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "datastructures/Point.h"
+#include "representations/GeometricObject.h"
 #include "Eigen/Geometry"
 #include "util/Plotter.h"
 
@@ -18,13 +18,17 @@
 #include "Simplex.h"
 
 namespace hpnmg {
-    STDPolytope STDPolytope::Empty() { return STDPolytope(Polytope::Empty()); }
+    template<typename Numeric>
+    STDPolytope<Numeric> STDPolytope<Numeric>::Empty() { return STDPolytope(Polytope::Empty()); }
 
-    STDPolytope::STDPolytope(const Polytope& polytope) : STDPolytope(polytope, {}) {}
+    template<typename Numeric>
+    STDPolytope<Numeric>::STDPolytope(const Polytope& polytope) : STDPolytope(polytope, {}) {}
 
-    STDPolytope::STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets) : hPolytope(polytope), openFacets(openFacets) {}
+    template<typename Numeric>
+    STDPolytope<Numeric>::STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets) : hPolytope(polytope), openFacets(openFacets) {}
 
-    void STDPolytope::insert(const hypro::Halfspace<double> &plane) {
+    template<typename Numeric>
+    void STDPolytope<Numeric>::insert(const hypro::Halfspace<Numeric> &plane) {
         this->hPolytope.insert(plane);
 
         for (auto &facet : this->openFacets)
@@ -39,7 +43,8 @@ namespace hpnmg {
         );
     }
 
-    auto STDPolytope::contains(const hypro::Point<double> &point) const {
+    template<typename Numeric>
+    auto STDPolytope<Numeric>::contains(const hypro::Point<Numeric> &point) const {
         // Check if the point is contained in our polytope at all
         if (!this->hPolytope.contains(point))
             return false;
@@ -50,7 +55,8 @@ namespace hpnmg {
         });
     }
 
-    STDPolytope STDPolytope::intersect(const STDPolytope &other) const {
+    template<typename Numeric>
+    STDPolytope<Numeric> STDPolytope<Numeric>::intersect(const STDPolytope &other) const {
         auto intersection = this->hPolytope.intersect(other.hPolytope);
 
         auto newFacets = std::vector<Polytope>();
@@ -65,12 +71,13 @@ namespace hpnmg {
         return STDPolytope(intersection, newFacets);
     }
 
-    vector<STDPolytope> STDPolytope::setDifference(const STDPolytope &other) const {
+    template<typename Numeric>
+    vector<STDPolytope<Numeric>> STDPolytope<Numeric>::setDifference(const STDPolytope &other) const {
         assert(this->hPolytope.dimension() == other.hPolytope.dimension());
         auto differences = vector<STDPolytope>();
         differences.reserve(other.hPolytope.constraints().size());
 
-        for (const Halfspace<double>& hsp : other.hPolytope.constraints()) {
+        for (const hypro::Halfspace<Numeric>& hsp : other.hPolytope.constraints()) {
             auto negated = STDPolytope(*this);
             negated.insert(-hsp);
 
@@ -96,11 +103,14 @@ namespace hpnmg {
         return differences;
     }
 
-    STDPolytope::Polytope STDPolytope::timeSlice(double atTime) const {
+    template<typename Numeric>
+    typename STDPolytope<Numeric>::Polytope STDPolytope<Numeric>::timeSlice(Numeric atTime) const {
         auto timeSlice = STDPolytope::Polytope(this->hPolytope);
 
         // Intersect the time-hyperplane with our polytope to create the time-slice
-        const auto timeHalfspace = STDiagram::createHalfspaceForTime(atTime, this->hPolytope.dimension());
+        hypro::vector_t<Numeric> direction = hypro::vector_t<Numeric>::Zero(this->hPolytope.dimension());
+        direction[this->hPolytope.dimension() - 1] = 1;
+        const auto timeHalfspace = hypro::Halfspace<Numeric>(direction, atTime);
         timeSlice.insert(timeHalfspace);
         timeSlice.insert(-timeHalfspace);
 
@@ -112,7 +122,7 @@ namespace hpnmg {
         //    before the intersection, they must be equal.
         for (const auto& openFacet : this->openFacets)
             if (openFacet.intersect(timeSlice).vertices().size() == timeSlice.vertices().size())
-                return hpnmg::STDPolytope::Polytope::Empty();
+                return STDPolytope::Polytope::Empty();
 
         auto reducedVertices = timeSlice.vertices();
         if (reducedVertices.empty())
@@ -128,7 +138,8 @@ namespace hpnmg {
         plotter.addObject(this->hPolytope.vertices());
     }
 
-    void STDPolytope::printForWolframMathematica(std::ostream &os) const {
+    template<typename Numeric>
+    void STDPolytope<Numeric>::printForWolframMathematica(std::ostream &os) const {
         os << "{";
         bool firstHalfspace = true;
         for (const auto &halfspace : this->hPolytope.constraints()) {
@@ -152,7 +163,8 @@ namespace hpnmg {
 
 }
 
-std::ostream& operator<<(std::ostream &os, const hpnmg::STDPolytope &region) {
+template<typename Numeric>
+std::ostream& operator<<(std::ostream &os, const hpnmg::STDPolytope<Numeric> &region) {
     region.printForWolframMathematica(os);
     return os;
 }

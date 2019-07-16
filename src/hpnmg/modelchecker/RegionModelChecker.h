@@ -18,12 +18,12 @@ namespace hpnmg {
         std::pair<double, double> satisfies(const Formula &formula, double atTime);
 
     private:
-        STDPolytope cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value);
-        STDPolytope dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
-        std::vector<STDPolytope> conj(const std::vector<STDPolytope>& a, const std::vector<STDPolytope>& b);
-        std::vector<STDPolytope> neg(const ParametricLocationTree::Node & node, const std::vector<STDPolytope>& subSat);
+        STDPolytope<double> cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value);
+        STDPolytope<double> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
+        std::vector<STDPolytope<double>> conj(const std::vector<STDPolytope<double>>& a, const std::vector<STDPolytope<double>>& b);
+        std::vector<STDPolytope<double>> neg(const ParametricLocationTree::Node & node, const std::vector<STDPolytope<double>>& subSat);
 
-        std::vector<STDPolytope> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
+        std::vector<STDPolytope<double>> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
 
         std::shared_ptr<HybridPetrinet> hpng;
         ParametricLocationTree plt;

@@ -7,7 +7,7 @@ using namespace hpnmg;
 
 class STDiagramRegionTest : public ::testing::Test {
 protected:
-    STDPolytope baseRegion;
+    STDPolytope<double> baseRegion;
     Event sourceEvent;
     vector<Event> destinationEvents;
 
@@ -35,23 +35,23 @@ protected:
 
 TEST(STDiagramTest, DimensionTest)
 {
-    STDPolytope baseRegion = STDiagram::createBaseRegion(2,10);
+    STDPolytope<double> baseRegion = STDiagram::createBaseRegion(2,10);
     EXPECT_EQ(baseRegion.dimension(), 2);
 
-    STDPolytope highDimRegion = STDiagram::createBaseRegion(24,10);
+    STDPolytope<double> highDimRegion = STDiagram::createBaseRegion(24,10);
     EXPECT_EQ(highDimRegion.dimension(), 24);
 }
 
 TEST(STDiagramTest, VertexTest)
 {
-    STDPolytope baseRegion = STDiagram::createBaseRegion(2,10);
+    STDPolytope<double> baseRegion = STDiagram::createBaseRegion(2,10);
     EXPECT_TRUE(baseRegion.contains(Point<double>{0, 0}));
 }
 
 TEST(STDiagramTest, MaxTimeErrorTest)
 {
     try {
-        STDPolytope baseRegion = STDiagram::createBaseRegion(2,0);
+        STDPolytope<double> baseRegion = STDiagram::createBaseRegion(2,0);
         FAIL() << "MaxTime of 0 not allowed. (MaxTime must be >= 1)";
     } catch (IllegalMaxTimeException e) {
         SUCCEED();
@@ -62,7 +62,7 @@ TEST(STDiagramTest, RegionFromVerticesTest) {
     Point<double> p1({0,0});
     Point<double> p2({5,5});
     Point<double> p3({20,0});
-    STDPolytope region = STDiagram::createRegionForVertices({p1,p2,p3});
+    STDPolytope<double> region = STDiagram::createRegionForVertices({p1,p2,p3});
 
     EXPECT_EQ(region.contains(Point<double>({0,0})), true);
     EXPECT_EQ(region.contains(Point<double>({1,1})), true);
@@ -71,7 +71,7 @@ TEST(STDiagramTest, RegionFromVerticesTest) {
 
 TEST_F(STDiagramRegionTest, CreateRegionTest)
 {
-    STDPolytope region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
+    STDPolytope<double> region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
     ASSERT_EQ(region.dimension(), 2);
     
     vector_t<double> containedPoint = vector_t<double>::Zero(2);
@@ -100,43 +100,43 @@ TEST_F(STDiagramRegionTest, CreateRegionOnlySourceEvent)
     testEvent.setTime(0);
 
     std::vector<Event> noDestEvents(0);
-    STDPolytope region = STDiagram::createRegion(baseRegion, testEvent, noDestEvents);
+    STDPolytope<double> region = STDiagram::createRegion(baseRegion, testEvent, noDestEvents);
 
     EXPECT_EQ(region.contains(Point<double>{5,2}),false);
     EXPECT_EQ(region.contains(Point<double>{5,6}),true);
 }
 
 TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersection) {
-    STDPolytope resultNoDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 5);
+    STDPolytope<double> resultNoDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 5);
     EXPECT_EQ(resultNoDep.contains(Point<double>{2,2}), true);
     EXPECT_EQ(resultNoDep.contains(Point<double>{2,6}), false);
     
     
-    STDPolytope resultPosDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 1, 5);
+    STDPolytope<double> resultPosDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 1, 5);
     EXPECT_EQ(resultPosDep.contains(Point<double>{1,2}), true);
     EXPECT_EQ(resultPosDep.contains(Point<double>{1,5}), false);
 
-    STDPolytope resultNegDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{1,2}, 1, 5);
+    STDPolytope<double> resultNegDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{1,2}, 1, 5);
     EXPECT_EQ(resultNegDep.contains(Point<double>{2,2}), true);
     EXPECT_EQ(resultNegDep.contains(Point<double>{2,6}), false);
 }
 
 TEST_F(STDiagramRegionTest, TestRegionContinuousLevelIntersectionZeroDrift) {
-    STDPolytope resultNoDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 0, 5);
+    STDPolytope<double> resultNoDep = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{-1,2}, 0, 5);
     EXPECT_EQ(resultNoDep.contains(Point<double>{2,2}), true);
     EXPECT_EQ(resultNoDep.contains(Point<double>{6,2}), false);
 
-    STDPolytope result = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 4);
+    STDPolytope<double> result = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,0}, 1, 4);
     EXPECT_EQ(result.contains(Point<double>{2,2}), true);
     EXPECT_EQ(result.contains(Point<double>{3,2}), true);
     EXPECT_EQ(result.contains(Point<double>{1,5}), false);
 
-    STDPolytope resultNeg = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,6}, -1, 4);
+    STDPolytope<double> resultNeg = STDiagram::legacyIntersectRegionForContinuousLevel(baseRegion, std::vector<double>{0,6}, -1, 4);
     EXPECT_EQ(resultNeg.contains(Point<double>{1,1}), false);
     EXPECT_EQ(resultNeg.contains(Point<double>{1,3}), true);
 
-    STDPolytope region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
-    STDPolytope intersectedRegion = STDiagram::legacyIntersectRegionForContinuousLevel(region, std::vector<double>{0,2}, 0, 3);
+    STDPolytope<double> region = STDiagram::createRegion(baseRegion, sourceEvent, destinationEvents);
+    STDPolytope<double> intersectedRegion = STDiagram::legacyIntersectRegionForContinuousLevel(region, std::vector<double>{0,2}, 0, 3);
     EXPECT_EQ(intersectedRegion.empty(), true);
 }
 

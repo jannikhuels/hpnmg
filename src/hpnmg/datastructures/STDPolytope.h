@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HPNMG_STDPOLYTOPE_H
+#define HPNMG_STDPOLYTOPE_H
 
 #include <iostream>
 #include <memory>
@@ -10,9 +11,10 @@
 namespace hpnmg {
     typedef std::vector<carl::Interval<double>> Intervals;
 
+    template<typename Numeric>
     class STDPolytope {
     public:
-        using Polytope = hypro::HPolytope<double>;
+        using Polytope = hypro::HPolytope<Numeric>;
 
         static STDPolytope Empty();
         STDPolytope() = default;
@@ -24,11 +26,11 @@ namespace hpnmg {
         STDPolytope(STDPolytope&&) = default;
         STDPolytope& operator=(STDPolytope&&) = default;
 
-        auto contains(const hypro::Point<double> &point) const;
+        auto contains(const hypro::Point<Numeric> &point) const;
         auto dimension() const { return this->hPolytope.dimension(); }
         auto empty() const { return this->hPolytope.empty(); }
 
-        void insert(const hypro::Halfspace<double> &halfspace);
+        void insert(const hypro::Halfspace<Numeric> &halfspace);
         STDPolytope intersect(const STDPolytope& other) const;
         /**
          * Returns a vector of (possibly overlapping) STDPolytopes whose union represents all points of <code>this</code>
@@ -38,7 +40,7 @@ namespace hpnmg {
          * @return The set difference <code>this \ other</code>. Represented as union of (overlapping) STDPolytopes.
          */
         std::vector<STDPolytope> setDifference(const STDPolytope &other) const;
-        Polytope timeSlice(double atTime) const;
+        Polytope timeSlice(Numeric atTime) const;
 
         /**
          * Add this region's vertices to the plot.
@@ -47,7 +49,7 @@ namespace hpnmg {
          *
          * @param plotter
          */
-        void addToPlot(hypro::Plotter<double> &plotter) const;
+        void addToPlot(hypro::Plotter<Numeric> &plotter) const;
 
         /**
          * Print a somewhat Wolfram-Mathematica compatible representation of this region's polytope to the provided ostream.
@@ -63,4 +65,8 @@ namespace hpnmg {
     };
 }
 
-std::ostream& operator<<(std::ostream &os, const hpnmg::STDPolytope &region);
+template<typename Numeric>
+std::ostream& operator<<(std::ostream &os, const hpnmg::STDPolytope<Numeric> &region);
+
+#include "datastructures/STDPolytope.tpp"
+#endif //HPNMG_STDPOLYTOPE_H

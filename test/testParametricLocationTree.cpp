@@ -195,7 +195,7 @@ TEST(ParametricLocationTreeXML, CreateRegions2D) {
         const vector<ParametricLocationTree::Node> children = plt->getChildNodes(node);
         working_set.insert(working_set.end(), children.begin(), children.end());
 
-        const STDPolytope &polytope = node.getRegion();
+        const STDPolytope<double> &polytope = node.getRegion();
         ASSERT_EQ(polytope.dimension(), 2);
 
         for (const auto &sample : samples) {
@@ -247,7 +247,7 @@ TEST(ParametricLocationTreeXML, CreateRegions3D) {
         const vector<ParametricLocationTree::Node> children = plt->getChildNodes(node);
         working_set.insert(working_set.end(), children.begin(), children.end());
 
-        const STDPolytope &polytope = node.getRegion();
+        const STDPolytope<double> &polytope = node.getRegion();
         ASSERT_EQ(polytope.dimension(), 3);
 
         for (const auto &sample : samples) {

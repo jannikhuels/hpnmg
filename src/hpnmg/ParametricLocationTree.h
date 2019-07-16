@@ -22,14 +22,14 @@ namespace hpnmg {
         class Node {
         private:
             NODE_ID id;
-            STDPolytope region;
+            STDPolytope<double> region;
             ParametricLocation parametricLocation;
 
         public:
             Node(NODE_ID id, const ParametricLocation &parametricLocation);
             NODE_ID getNodeID() const;
-            STDPolytope getRegion() const;
-            void setRegion(const STDPolytope &region);
+            STDPolytope<double> getRegion() const;
+            void setRegion(const STDPolytope<double> &region);
             ParametricLocation getParametricLocation() const;
             void setParametricLocation(const ParametricLocation &location);
         };
@@ -59,13 +59,13 @@ namespace hpnmg {
 
     private:
 
-        STDPolytope baseRegion;
+        STDPolytope<double> baseRegion;
 
         void recursivelySetRegions(Node &startNode);
 
-        void recursivelyCollectRegions(const Node &startNode, vector<STDPolytope> &regions);
+        void recursivelyCollectRegions(const Node &startNode, vector<STDPolytope<double>> &regions);
 
-        void recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, STDPolytope> (*isCandidate)(const std::pair<double,double> &interval, const STDPolytope &region, int dimension), std::pair<double, double> interval, int dimension);
+        void recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, STDPolytope<double>> (*isCandidate)(const std::pair<double,double> &interval, const STDPolytope<double> &region, int dimension), std::pair<double, double> interval, int dimension);
 
         void recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability, std::vector<int> occurings);
 

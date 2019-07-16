@@ -9,7 +9,7 @@ namespace hpnmg {
      * @param maxTime At least 1
      * @return The <code>dimension</code>-fold cartesian product of <code>[0, maxTime]</code>
      */
-    STDPolytope STDiagram::createBaseRegion(int dimension, int maxTime) {
+    STDPolytope<double> STDiagram::createBaseRegion(int dimension, int maxTime) {
         return createBaseRegion(dimension, maxTime, {});
     }
 
@@ -28,13 +28,13 @@ namespace hpnmg {
      *                    May contain fewer elements than there are dimensions.
      * @return
      */
-    STDPolytope STDiagram::createBaseRegion(int dimension, int maxTime, const std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> &rvIntervals) {
+    STDPolytope<double> STDiagram::createBaseRegion(int dimension, int maxTime, const std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> &rvIntervals) {
         if (maxTime < 1)
             throw IllegalMaxTimeException(maxTime);
         if (dimension < 1 || dimension < rvIntervals.size())
             throw IllegalDimensionException(dimension);
 
-        STDPolytope::Polytope polytope{};
+        STDPolytope<double>::Polytope polytope{};
 
         // Ensure that the polytope is properly limited by the time in every dimension
         for (int currentDimension = 0; currentDimension < dimension; ++currentDimension)
@@ -74,11 +74,11 @@ namespace hpnmg {
             }
         }
 
-        return STDPolytope(polytope);
+        return STDPolytope<double>(polytope);
     }
 
-    STDPolytope STDiagram::createRegion(const STDPolytope &baseRegion, const Event &sourceEvent, const std::vector<Event> &destinationEvents) {
-        STDPolytope region(baseRegion);
+    STDPolytope<double> STDiagram::createRegion(const STDPolytope<double> &baseRegion, const Event &sourceEvent, const std::vector<Event> &destinationEvents) {
+        STDPolytope<double> region(baseRegion);
 
         /*if (!isValidEvent(sourceEvent, baseRegion)) {
             throw IllegalArgumentException("sourceEvent");
@@ -141,7 +141,7 @@ namespace hpnmg {
         return gdependencies;
     }
 
-    Event STDiagram::makeValidEvent(const Event &event, const STDPolytope &baseRegion) {
+    Event STDiagram::makeValidEvent(const Event &event, const STDPolytope<double> &baseRegion) {
         Event e(event);
         if (!(e.getGeneralDependencies().size() == baseRegion.dimension()-1)) {
             auto gdependencies = STDiagram::makeValidDependencies(event.getGeneralDependencies(), baseRegion.dimension());
@@ -150,13 +150,13 @@ namespace hpnmg {
         return e;
     }
 
-    void STDiagram::print(const vector<STDPolytope> &regionsToPrint, bool cummulative, std::string filename) {
+    void STDiagram::print(const vector<STDPolytope<double>> &regionsToPrint, bool cummulative, std::string filename) {
         Plotter<double>& plt = Plotter<double>::getInstance();
         plt.clear();
         plt.setFilename(filename);
         plt.rSettings().cummulative = cummulative;
 
-        for (STDPolytope region : regionsToPrint)
+        for (STDPolytope<double> region : regionsToPrint)
             region.addToPlot(plt);
 
         plt.plot2d();
@@ -186,8 +186,8 @@ namespace hpnmg {
         return std::pair<matrix_t<double>,vector_t<double>>(lineMat, lineVec);
     }
 
-    STDPolytope STDiagram::createRegionNoEvent(const STDPolytope &r, const Event &sourceEvent, std::vector<double> leftBounds, std::vector<double> rightBounds) {
-        STDPolytope region(r);
+    STDPolytope<double> STDiagram::createRegionNoEvent(const STDPolytope<double> &r, const Event &sourceEvent, std::vector<double> leftBounds, std::vector<double> rightBounds) {
+        STDPolytope<double> region(r);
 
         /*if (!isValidEvent(sourceEvent, baseRegion)) {
             throw IllegalArgumentException("sourceEvent");
@@ -242,8 +242,8 @@ namespace hpnmg {
     }
 
     //TODO Check of jannik0general example
-    STDPolytope STDiagram::legacyIntersectRegionForContinuousLevel(const STDPolytope &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate) {
-        STDPolytope intersectRegion(baseRegion);
+    STDPolytope<double> STDiagram::legacyIntersectRegionForContinuousLevel(const STDPolytope<double> &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate) {
+        STDPolytope<double> intersectRegion(baseRegion);
         bool createVerticalHalfspace = false;
         double offset;
         double currentLevel = continuousDependencies[continuousDependencies.size()-1];
@@ -272,7 +272,7 @@ namespace hpnmg {
 
         if (hasDependency == false) {
             if (drift == 0) {
-                return STDPolytope::Empty();
+                return STDPolytope<double>::Empty();
             }
         }
 
@@ -287,7 +287,7 @@ namespace hpnmg {
         return intersectRegion;
     }
 
-    STDPolytope STDiagram::intersectRegionForContinuousLevel(const STDPolytope &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level) {
+    STDPolytope<double> STDiagram::intersectRegionForContinuousLevel(const STDPolytope<double> &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level) {
         assert(markingNormed.size() == entryTimeNormed.size());
         vector_t<double> markingDirection = vector_t<double>::Zero(markingNormed.size());
         vector_t<double> entryTimeDirection = vector_t<double>::Zero(entryTimeNormed.size());
@@ -299,7 +299,7 @@ namespace hpnmg {
         }
 
 
-        STDPolytope intersectRegion(baseRegion);
+        STDPolytope<double> intersectRegion(baseRegion);
         // The level dependent on the RV-valuation s and time t ("initial marking + drift * time since entry"):
         // markingNormed(s) + drift * (t - entryTimeNormed(s))
         // We transform the equation to something like:
@@ -450,18 +450,18 @@ namespace hpnmg {
         return result;
     }
 
-    std::vector<STDPolytope> STDiagram::boundRegionByIntervals(STDPolytope reg, int maxTime, std::vector<Intervals> intervals, Halfspace<double> timeHsp)
+    std::vector<STDPolytope<double>> STDiagram::boundRegionByIntervals(STDPolytope<double> reg, int maxTime, std::vector<Intervals> intervals, Halfspace<double> timeHsp)
     {
-        std::vector<STDPolytope> regions;
-        STDPolytope r = reg;
+        std::vector<STDPolytope<double>> regions;
+        STDPolytope<double> r = reg;
         for (Intervals i : intervals) {
             i.push_back(carl::Interval<double>((double)0,(double)maxTime));
             Box<double> box(i);
-            STDPolytope boxRegion(box.constraints());
+            STDPolytope<double> boxRegion(box.constraints());
             for (Halfspace<double> h: box.constraints()) {
                 r.insert(h);
             }
-            //STDPolytope boxRegion(box.constraints());
+            //STDPolytope<double> boxRegion(box.constraints());
             //r.intersect(boxRegion);
             r.insert(timeHsp);
             regions.push_back(r);
@@ -469,8 +469,8 @@ namespace hpnmg {
         return regions;
     }
 
-    STDPolytope STDiagram::createRegionForVertices(std::vector<Point<double>> vertices) {
-        STDPolytope r(vertices);
+    STDPolytope<double> STDiagram::createRegionForVertices(std::vector<Point<double>> vertices) {
+        STDPolytope<double> r(vertices);
         return r;
     }
 
