@@ -241,14 +241,6 @@ TEST(RegionModelChecker, UntilUniform) {
     )), 0);
     EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
 
-    // Input transition is disabled until the place's level finally exceeds 2
-    result = modelChecker.satisfies(Formula(std::make_shared<Until>(
-        Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)),
-        Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)))),
-        maxTime
-    )), 4);
-    EXPECT_NEAR(0.6, round(result.first * 10) / 10, result.second);
-
     // The place's level does not exceed 2 until the input transition is finally disabled with the level still being low
     result = modelChecker.satisfies(Formula(std::make_shared<Until>(
         Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)),
@@ -279,4 +271,35 @@ TEST(RegionModelChecker, UntilUniform) {
         maxTime
     )), 6);
     EXPECT_NEAR(0.5, round(result.first * 10) / 10, result.second);
+
+    // The place is actively being emptied by two pumps below level 2
+    result = modelChecker.satisfies(Formula(std::make_shared<Until>(
+        Formula(std::make_shared<Conjunction>(
+            Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)), // input disabled
+            Formula(std::make_shared<DiscreteAtomicProperty>("pout1", 1)) // no output disabled
+        )),
+        Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)),
+        maxTime
+    )), 6);
+    EXPECT_NEAR(0.6, round(result.first * 10) / 10, result.second);
+    // The place is actively being emptied by two pumps below level 2
+    result = modelChecker.satisfies(Formula(std::make_shared<Until>(
+        Formula(std::make_shared<Conjunction>(
+            Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)), // input disabled
+            Formula(std::make_shared<DiscreteAtomicProperty>("pout1", 1)) // no output disabled
+        )),
+        Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)),
+        maxTime
+    )), 7);
+    EXPECT_NEAR(0.7, round(result.first * 10) / 10, result.second);
+    // The place is actively being emptied by two pumps below level 2
+    result = modelChecker.satisfies(Formula(std::make_shared<Until>(
+        Formula(std::make_shared<Conjunction>(
+            Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)), // input disabled
+            Formula(std::make_shared<DiscreteAtomicProperty>("pout1", 1)) // no output disabled
+        )),
+        Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)),
+        maxTime
+    )), 8);
+    EXPECT_NEAR(0.8, round(result.first * 10) / 10, result.second);
 }

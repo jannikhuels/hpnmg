@@ -25,29 +25,35 @@ namespace hpnmg {
     }
 
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
-        auto sat = std::vector<hypro::HPolytope<double>>();
-
-        for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
-            const auto &result = this->satisfiesHandler(node, formula, atTime);
-
-            // Add all result polytopes intersected with the check-time hyperplane to sat
-            std::transform(result.begin(), result.end(), std::back_inserter(sat), [atTime](const STDPolytope<double> &region) {
-                return region.timeSlice(atTime);
-            });
-        }
-        sat.erase(std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.empty(); }), sat.end());
+        this->untilCache.erase(this->untilCache.begin(), this->untilCache.end());
 
         double probability = 0.0;
         double error = 0.0;
-
         auto calculator = ProbabilityCalculator();
-        probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
-            sat,
-            this->plt.getDistributionsNormalized(),
-            3,
-            50000,
-            error
-        );
+
+        for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
+            const auto& sat = this->satisfiesHandler(node, formula, atTime);
+
+            std::vector<hypro::HPolytope<double>> integrationDomains{};
+            // Add all result polytopes intersected with the check-time hyperplane to sat
+            std::transform(sat.begin(), sat.end(), std::back_inserter(integrationDomains), [atTime](const STDPolytope<double> &region) {
+                return region.timeSlice(atTime);
+            });
+            integrationDomains.erase(
+                std::remove_if(integrationDomains.begin(), integrationDomains.end(), [](const auto &region) { return region.empty(); }),
+                integrationDomains.end()
+            );
+
+            double nodeError = 0.0;
+            probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
+                integrationDomains,
+                this->plt.getDistributionsNormalized(),
+                3,
+                50000,
+                nodeError
+            );
+            error += nodeError;
+        }
 
         return {probability, error};
     }
@@ -174,6 +180,10 @@ namespace hpnmg {
     }
 
     std::vector<STDPolytope<double>> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
+        auto cached = this->untilCache.find(node.getNodeID());
+        if (cached != this->untilCache.end())
+            return cached->second;
+
         // Construct the upper and lower boundary halfspaces defined by the check-time and the check-time plus until-time.
         hypro::vector_t<double> timeVectorUp = hypro::vector_t<double>::Zero(node.getRegion().dimension());
         timeVectorUp[timeVectorUp.size() - 1] = 1;
@@ -228,6 +238,11 @@ namespace hpnmg {
             auto goalSat = goalRegion.setDifference(regionsToRemove);
             std::move(goalSat.begin(), goalSat.end(), std::back_inserter(sat));
         }
+
+        std::transform(sat.begin(), sat.end(), sat.begin(), [&fullRegion](auto&& region) { return region.intersect(fullRegion); });
+        sat.erase(std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.empty(); }), sat.end());
+
+        this->untilCache.insert({node.getNodeID(), sat});
 
         return sat;
     }

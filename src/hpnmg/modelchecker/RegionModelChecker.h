@@ -29,6 +29,8 @@ namespace hpnmg {
 
         std::shared_ptr<HybridPetrinet> hpng;
         ParametricLocationTree plt;
+
+        std::unordered_map<NODE_ID, std::vector<STDPolytope<double>>> untilCache;
     };
 }
 
