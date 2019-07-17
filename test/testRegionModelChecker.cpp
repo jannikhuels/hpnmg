@@ -228,21 +228,24 @@ TEST(RegionModelChecker, DiscreteAtomicPropertyNegationTest2GT) {
 }
 
 TEST(RegionModelChecker, UntilUniform) {
+    const double maxTime = 20;
     // TG1: uniform distribution over [0, 10]
     auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("norep_1_1.xml");
-    auto modelChecker = RegionModelChecker(*hpn, 20);
+    auto modelChecker = RegionModelChecker(*hpn, maxTime);
 
     // Place is empty until it finally is not empty anymore.
     auto result = modelChecker.satisfies(Formula(std::make_shared<Until>(
         Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 0)),
-        Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 0))))
+        Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 0)))),
+        maxTime
     )), 0);
     EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
 
     // Input transition is disabled until the place's level finally exceeds 2
     result = modelChecker.satisfies(Formula(std::make_shared<Until>(
         Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)),
-        Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2))))
+        Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)))),
+        maxTime
     )), 4);
     EXPECT_NEAR(0.6, round(result.first * 10) / 10, result.second);
 
@@ -252,8 +255,9 @@ TEST(RegionModelChecker, UntilUniform) {
         Formula(std::make_shared<Conjunction>(
             Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)),
             Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0))
-        )
-    ))), 2);
+        )),
+        maxTime
+    )), 2);
     EXPECT_NEAR(0.4, round(result.first * 10) / 10, result.second);
     // The place's level does not exceed 2 until the input transition is finally disabled
     result = modelChecker.satisfies(Formula(std::make_shared<Until>(
@@ -261,8 +265,9 @@ TEST(RegionModelChecker, UntilUniform) {
         Formula(std::make_shared<Conjunction>(
             Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)),
             Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0))
-        )
-    ))), 4);
+        )),
+        maxTime
+    )), 4);
     EXPECT_NEAR(0.4, round(result.first * 10) / 10, result.second);
     // The place's level does not exceed 2 until the input transition is finally disabled
     result = modelChecker.satisfies(Formula(std::make_shared<Until>(
@@ -270,7 +275,8 @@ TEST(RegionModelChecker, UntilUniform) {
         Formula(std::make_shared<Conjunction>(
             Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)),
             Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0))
-        )
-    ))), 6);
+        )),
+        maxTime
+    )), 6);
     EXPECT_NEAR(0.5, round(result.first * 10) / 10, result.second);
 }

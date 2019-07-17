@@ -72,7 +72,7 @@ namespace hpnmg {
     }
 
     template<typename Numeric>
-    vector<STDPolytope<Numeric>> STDPolytope<Numeric>::setDifference(const STDPolytope &other) const {
+    std::vector<STDPolytope<Numeric>> STDPolytope<Numeric>::setDifference(const STDPolytope &other) const {
         assert(this->hPolytope.dimension() == other.hPolytope.dimension());
         auto differences = vector<STDPolytope>();
         differences.reserve(other.hPolytope.constraints().size());
@@ -97,7 +97,25 @@ namespace hpnmg {
                 negated.openFacets.end()
             );
             differences.push_back(negated);
+        }
 
+        return differences;
+    }
+
+    template<typename Numeric>
+    std::vector<STDPolytope<Numeric>> STDPolytope<Numeric>::setDifference(const std::vector<STDPolytope> &others) const {
+        auto differences = vector<STDPolytope>{*this};
+        for (const auto& other : others) {
+            auto combinedDifferences = vector<STDPolytope>();
+            for (const auto& difference : differences) {
+                auto newDifferences = difference.setDifference(other);
+                combinedDifferences.insert(combinedDifferences.end(), newDifferences.begin(), newDifferences.end());
+            }
+            differences = std::move(combinedDifferences);
+            differences.erase(
+              std::remove_if(differences.begin(), differences.end(), [](const STDPolytope& poly) { return poly.empty(); }),
+              differences.end()
+            );
         }
 
         return differences;
