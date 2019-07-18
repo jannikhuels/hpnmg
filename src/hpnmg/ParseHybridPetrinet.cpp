@@ -222,7 +222,8 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (!timeDelta.empty())
+                //If timeDelta is zero, the guard arc condition event is source event of the current location (or condition was fulfilled at root).
+                if (!timeDelta.empty() && (std::any_of(timeDelta.begin(), timeDelta.end(), [](double coefficient){ return coefficient != 0.0;})))
                     timeDeltas.push_back(timeDelta);
             }
         }
@@ -232,7 +233,8 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (!timeDelta.empty())
+                //If timeDelta is zero, the guard arc condition event is source event of the current location (or condition was fulfilled at root).
+                if (!timeDelta.empty() && (std::any_of(timeDelta.begin(), timeDelta.end(), [](double coefficient){ return coefficient != 0.0;})))
                     timeDeltas.push_back(timeDelta);
             }
         }
@@ -242,7 +244,8 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (!timeDelta.empty())
+                //If timeDelta is zero, the guard arc condition event is source event of the current location (or condition was fulfilled at root).
+                if (!timeDelta.empty() && (std::any_of(timeDelta.begin(), timeDelta.end(), [](double coefficient){ return coefficient != 0.0;})))
                     timeDeltas.push_back(timeDelta);
             }
         }
@@ -252,7 +255,8 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (!timeDelta.empty())
+                //If timeDelta is zero, the guard arc condition event is source event of the current location (or condition was fulfilled at root).
+                if (!timeDelta.empty() && (std::any_of(timeDelta.begin(), timeDelta.end(), [](double coefficient){ return coefficient != 0.0;})))
                     timeDeltas.push_back(timeDelta);
             }
         }
@@ -687,7 +691,7 @@ namespace hpnmg {
 
 
         // drift is negative and level is over arc weight
-        if (drift < 0 && weight < minimumLevel) {
+        if (drift < 0 && weight <= minimumLevel) {
             // remaining time is (level - arc) / abs(drift)
             vector<double> levelDelta = level;
 
@@ -698,7 +702,7 @@ namespace hpnmg {
             }
             return timeDelta;
         // drift is positive and level is under arc weight
-        } else if (drift > 0 && weight > maximumLevel) {
+        } else if (drift > 0 && weight >= maximumLevel) {
             // remaining time is (arc - level) / drift
             vector<double> timeDelta;
             for (int i = 0; i < level.size(); ++i) {
@@ -799,16 +803,18 @@ namespace hpnmg {
                                         lowerBounds,
                                         upperBounds, generalTransitionsFired)[pos];
 
-                if (arc->getIsInhibitor()) {
 
-                    double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
+                double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
+                double minLevel = getBoundedTime(generalTransitionsFired, lowerBounds, upperBounds, level);
+
+                if (arc->getIsInhibitor()) {
 
                     if (arc->weight > 0.0) {
 
-                        if (drift >= 0.0 && minLevel >= arc->weight)
+                        if (drift >= 0.0 && (maxLevel >= arc->weight || minLevel >= arc->weight))
                             return false;
 
-                        if (minLevel > arc->weight)
+                        if (maxLevel > arc->weight || minLevel > arc->weight)
                             return false;
 
                     } else {
@@ -816,25 +822,24 @@ namespace hpnmg {
                         if (drift > 0.0)
                             return false;
 
-                        if (drift >= 0.0 && minLevel > 0.0)
+                        if (drift >= 0.0 && (maxLevel > 0.0 || minLevel > 0.0))
                             return false;
                     }
 
                 } else {
 
-                    double maxLevel = getBoundedTime(generalTransitionsFired, upperBounds, lowerBounds, level);
 
                     if (arc->weight > 0.0){
 
-                        if (drift < 0.0 && maxLevel <= arc->weight)
+                        if (drift < 0.0 && (minLevel <= arc->weight || maxLevel <= arc->weight))
                             return false;
 
-                        if (maxLevel < arc->weight)
+                        if (minLevel < arc->weight || maxLevel < arc->weight)
                             return false;
 
                     } else {
 
-                        if (drift <= 0.0 && maxLevel <= 0.0)
+                        if (drift <= 0.0 && (minLevel <= 0.0 || maxLevel <= 0.0))
                             return false;
 
                     }
