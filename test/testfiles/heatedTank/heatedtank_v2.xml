@@ -50,8 +50,8 @@
     <generalTransition id="P1_Off_SOff" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
       <parameter name="mean" value="2.19"/> <!--mean = 438/200=2.19 -->
     </generalTransition>
-    <immediateTransition id="P1_Off_On" priority="0" weight="1.0"/>
-    <immediateTransition id="P1_On_Off" priority="0" weight="1.0"/>
+    <immediateTransition id="P1_Off_On" priority="3" weight="1.0"/>
+    <immediateTransition id="P1_On_Off" priority="3" weight="1.0"/>
     <!--Pump 2-->
     <generalTransition id="P2_On_SOn" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
       <parameter name="mean" value="17.5"/><!--mean = 350/20=17.5 -->
@@ -65,13 +65,13 @@
    <generalTransition id="P2_Off_SOff" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
       <parameter name="mean" value="350"/><!--mean = 350 -->
     </generalTransition>
-    <immediateTransition id="P2_Off_On" priority="0" weight="1.0"/>
-    <immediateTransition id="P2_On_Off" priority="0" weight="1.0"/>
+    <immediateTransition id="P2_Off_On" priority="2" weight="1.0"/>
+    <immediateTransition id="P2_On_Off" priority="2" weight="1.0"/>
     <!--Pump Counter-->
-    <immediateTransition id="Add_Pump1" priority="0" weight="1.0"/>
-    <immediateTransition id="Add_Pump2" priority="0" weight="1.0"/>
-    <immediateTransition id="Reduce_Pump1" priority="0" weight="1.0"/>
-    <immediateTransition id="Reduce_Pump2" priority="0" weight="1.0"/>
+    <immediateTransition id="Add_Pump1" priority="2" weight="1.0"/>
+    <immediateTransition id="Add_Pump2" priority="2" weight="1.0"/>
+    <immediateTransition id="Reduce_Pump1" priority="2" weight="1.0"/>
+    <immediateTransition id="Reduce_Pump2" priority="2" weight="1.0"/>
     <!--Valve-->
    <generalTransition id="V_On_SOn" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
       <parameter name="mean" value="640"/><!--mean = 640-->
@@ -85,8 +85,8 @@
    <generalTransition id="V_Off_SOff" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
       <parameter name="mean" value="3.2"/><!--mean = 640/200=3.2 -->
     </generalTransition>
-    <immediateTransition id="V_Off_On" priority="0" weight="1.0"/>
-    <immediateTransition id="V_On_Off" priority="0" weight="1.0"/>
+    <immediateTransition id="V_Off_On" priority="1" weight="1.0"/>
+    <immediateTransition id="V_On_Off" priority="1" weight="1.0"/>
     <!--Controller-->
    <immediateTransition id="Normal_Decrease" priority="0" weight="1.0"/>
    <immediateTransition id="Normal_Increase" priority="0" weight="1.0"/>
