@@ -9,11 +9,46 @@
 
 using namespace hpnmg;
 
+template<typename Numeric>
+std::vector<hypro::Point<Numeric>> createUnitSimplex(int dim) {
+    // Allocate a vector with exactly the space we need for all the points. Initialize vertices to (0,...,0)
+    auto unitSimplex = std::vector<hypro::Point<Numeric>>(dim + 1, hypro::Point<Numeric>::Zero(dim));
+
+    // Now turn the vertices into (1,0,...,0), (0,1,0,...,0), ..., (0,...,0,1) but leave the first as (0,...,0)
+    std::for_each(
+        unitSimplex.begin() + 1,
+        unitSimplex.end(),
+        [i = 0](auto &vertex) mutable {
+            vertex.at(i) = 1;
+            ++i;
+        }
+    );
+
+    return unitSimplex;
+}
+
 template <typename T>
 class STDPolytopeTest : public ::testing::Test {};
 
 using STDPolytopeTypes = ::testing::Types<mpq_class, double>;
 TYPED_TEST_CASE(STDPolytopeTest, STDPolytopeTypes);
+
+TYPED_TEST(STDPolytopeTest, TimeSlices)
+{
+    for (int dim = 2; dim < 20; ++dim) {
+        auto vertices = createUnitSimplex<TypeParam>(dim);
+
+        const auto stdpoly = STDPolytope<TypeParam>(hypro::HPolytope<TypeParam>(vertices));
+
+        std::vector<hypro::Point<TypeParam>> timeSliceVertices = stdpoly.timeSlice(0).vertices();
+        std::vector<hypro::Point<TypeParam>> expectedVertices = createUnitSimplex<TypeParam>(dim - 1);
+
+        std::sort(timeSliceVertices.begin(), timeSliceVertices.end());
+        std::sort(expectedVertices.begin(), expectedVertices.end());
+
+        EXPECT_EQ(expectedVertices, timeSliceVertices);
+    }
+}
 
 TYPED_TEST(STDPolytopeTest, ExtendDownwardsTwoDimensionsNothingToDo)
 {
