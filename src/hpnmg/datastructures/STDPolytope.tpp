@@ -1,3 +1,5 @@
+#ifndef HPNMG_STDPOLYTOPE_TPP
+#define HPNMG_STDPOLYTOPE_TPP
 #include <utility>
 
 #include "STDPolytope.h"
@@ -44,7 +46,7 @@ namespace hpnmg {
     }
 
     template<typename Numeric>
-    auto STDPolytope<Numeric>::contains(const hypro::Point<Numeric> &point) const {
+    bool STDPolytope<Numeric>::contains(const hypro::Point<Numeric> &point) const {
         // Check if the point is contained in our polytope at all
         if (!this->hPolytope.contains(point))
             return false;
@@ -203,3 +205,4 @@ std::ostream& operator<<(std::ostream &os, const hpnmg::STDPolytope<Numeric> &re
     region.printForWolframMathematica(os);
     return os;
 }
+#endif //HPNMG_STDPOLYTOPE_TPP

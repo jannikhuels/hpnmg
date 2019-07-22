@@ -26,9 +26,9 @@ namespace hpnmg {
         STDPolytope(STDPolytope&&) = default;
         STDPolytope& operator=(STDPolytope&&) = default;
 
-        auto contains(const hypro::Point<Numeric> &point) const;
-        auto dimension() const { return this->hPolytope.dimension(); }
-        auto empty() const { return this->hPolytope.empty(); }
+        bool contains(const hypro::Point<Numeric> &point) const;
+        size_t dimension() const { return this->hPolytope.dimension(); }
+        bool empty() const { return this->hPolytope.empty(); }
 
         void insert(const hypro::Halfspace<Numeric> &halfspace);
         STDPolytope intersect(const STDPolytope& other) const;
@@ -79,5 +79,11 @@ namespace hpnmg {
 template<typename Numeric>
 std::ostream& operator<<(std::ostream &os, const hpnmg::STDPolytope<Numeric> &region);
 
-#include "datastructures/STDPolytope.tpp"
+// If we want users of the library to be able to choose the <code>Numeric</code> type for STDPolytpe, the template
+// definitions *need* to be in this header.
+// However, this will greatly increase compilation time during development of hpnmg because for every change to the
+// implementation, i.e. the template definitions, every file including the header needs to be recompiled.
+// Instead, the template file is commented out and the template is explicitly instantiated in STDPolytope.cpp for the
+// types we actually use during development.
+//#include "datastructures/STDPolytope.tpp"
 #endif //HPNMG_STDPOLYTOPE_H
