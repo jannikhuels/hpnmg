@@ -1,7 +1,8 @@
 #pragma once
 
-#include "util/Plotter.h"
 #include <gmpxx.h>
+#include <util/plotting/Plotter.h>
+
 #include "datastructures/Event.h"
 #include "datastructures/STDPolytope.h"
 #include "exceptions/STDiagramExceptions.h"

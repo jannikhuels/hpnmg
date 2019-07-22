@@ -4,9 +4,9 @@
 #include <iostream>
 #include <memory>
 
-#include "Eigen/Geometry"
-#include "representations/GeometricObject.h"
-#include "util/Plotter.h"
+#include <Eigen/Geometry>
+#include <representations/GeometricObject.h>
+#include <util/plotting/Plotter.h>
 
 namespace hpnmg {
     typedef std::vector<carl::Interval<double>> Intervals;

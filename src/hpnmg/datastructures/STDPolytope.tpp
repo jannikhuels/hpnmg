@@ -10,9 +10,9 @@
 #include <utility>
 #include <vector>
 
-#include "representations/GeometricObject.h"
-#include "Eigen/Geometry"
-#include "util/Plotter.h"
+#include <Eigen/Geometry>
+#include <representations/GeometricObject.h>
+#include <util/plotting/Plotter.h>
 
 #include "STDiagram.h"
 #include "Simplex.h"
@@ -87,7 +87,7 @@ namespace hpnmg {
 
             // Check if the hsp is the support of an open facet in the new polytope
             const auto& satisfaction = negated.hPolytope.satisfiesHalfspace(hsp);
-            if (satisfaction.first)
+            if (satisfaction.first != hypro::CONTAINMENT::NO)
                 negated.openFacets.push_back(satisfaction.second);
 
             negated.openFacets.erase(
