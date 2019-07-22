@@ -11,12 +11,13 @@ upon compilation so that no steps other than compiling them need to be taken.
 ##### A note on CArL and HyPro versions
 Not all versions of CArl and HyPro work with each other or with HPnmG. Unfortunately, it is not always so clear which
 *do*. Symptoms of bad versions include:
-- HyPro refusing to compile because of C++17 features in CArl. CArl offers a C++14 branch: `master14`
+- HyPro refusing to compile because of C++17 features in CArl. CArl offers a C++14 branch `master14`, HyPro offers
+  `c++14-support`.
 - HPnmG or targets thereof refusing to compile because of changed include paths, classes or signatures in HyPro
 - Some targets of HPnmG refusing to *link* because of undefined symbols from `libgmp` in `libhypro.so`
 
-As of now (2018-11-04), you should be able to use [this revision](https://github.com/smtrat/carl/commit/ace90eb5daad)
-for CArl and [this one](https://github.com/hypro/hypro/commit/9a19fa931ade) for HyPro.
+As of now (2019-07-22), you should be able to use [this revision](https://github.com/smtrat/carl/commit/ace90eb5daad)
+for CArl and [this one](https://github.com/hypro/hypro/commit/9d26f57b5f62) for HyPro.
 
 #### Dependencies
 1. These are needed for both CArl and HyPro
