@@ -63,7 +63,8 @@ int main (int argc, char *argv[]) {
 //            Formula(std::make_shared<ContinuousAtomicProperty>("H", 100)),
 //            Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("H", 100))))
 //        )),
-        Formula(std::make_shared<DiscreteAtomicProperty>("P1_On", 1)),
+//        Formula(std::make_shared<DiscreteAtomicProperty>("P1_On", 1)),
+        Formula(std::make_shared<ContinuousAtomicProperty>("H", 97)),
         checkTime
     );
     const auto endSatisfy = std::chrono::high_resolution_clock::now();

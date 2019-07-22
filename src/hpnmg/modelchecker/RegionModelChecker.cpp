@@ -29,9 +29,10 @@ namespace hpnmg {
 
         for (auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
             node.computeRegion(this->plt);
-
+            std::cout << "[Location " << node.getNodeID() << "]: Computing sat." << std::endl;
             const auto& sat = this->satisfiesHandler(node, formula, atTime);
 
+            std::cout << "[Location " << node.getNodeID() << "]: Computing time slice of " << sat.size() << " polytopes." << std::endl;
             std::vector<hypro::HPolytope<double>> integrationDomains{};
             // Add all result polytopes intersected with the check-time hyperplane to sat
             std::transform(sat.begin(), sat.end(), std::back_inserter(integrationDomains), [atTime](const STDPolytope<mpq_class> &region) {
@@ -42,6 +43,7 @@ namespace hpnmg {
                 integrationDomains.end()
             );
 
+            std::cout << "[Location " << node.getNodeID() << "]: Integrating over " << integrationDomains.size() << " time slices." << std::endl;
             double nodeError = 0.0;
             probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
                 integrationDomains,
@@ -50,6 +52,7 @@ namespace hpnmg {
                 50000,
                 nodeError
             );
+            std::cout << "[Location " << node.getNodeID() << "]: Running total probability: " << probability << std::endl;
             error += nodeError;
         }
 
