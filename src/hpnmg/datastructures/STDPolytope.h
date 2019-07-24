@@ -4,12 +4,17 @@
 #include <iostream>
 #include <memory>
 
+#include <gmpxx.h>
+
 #include <Eigen/Geometry>
 #include <representations/GeometricObject.h>
 #include <util/plotting/Plotter.h>
 
 namespace hpnmg {
     typedef std::vector<carl::Interval<double>> Intervals;
+
+    hypro::HPolytope<double> convertHPolytope(const hypro::HPolytope<mpq_class>& from);
+    hypro::HPolytope<mpq_class> convertHPolytope(const hypro::HPolytope<double>& from);
 
     template<typename Numeric>
     class STDPolytope {
@@ -19,12 +24,16 @@ namespace hpnmg {
         static STDPolytope Empty();
         STDPolytope() = default;
         explicit STDPolytope(const Polytope& polytope);
+        STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets);
 
         ~STDPolytope() = default;
         STDPolytope(const STDPolytope&) = default;
         STDPolytope& operator=(const STDPolytope&) = default;
         STDPolytope(STDPolytope&&) = default;
         STDPolytope& operator=(STDPolytope&&) = default;
+
+        template<typename ToNumeric>
+        explicit operator STDPolytope<ToNumeric>() const;
 
         bool contains(const hypro::Point<Numeric> &point) const;
         size_t dimension() const { return this->hPolytope.dimension(); }
@@ -69,8 +78,6 @@ namespace hpnmg {
          */
         void printForWolframMathematica(std::ostream &os) const;
     private:
-        STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets);
-
         mutable Polytope hPolytope = Polytope();
         std::vector<Polytope> openFacets = {};
     };

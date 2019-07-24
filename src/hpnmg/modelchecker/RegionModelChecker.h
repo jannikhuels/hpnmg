@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include <gmpxx.h>
+
 #include "datastructures/HybridPetrinet.h"
 #include "datastructures/STDPolytope.h"
 #include "modelchecker/Formula.h"
@@ -37,13 +39,13 @@ namespace hpnmg {
         std::pair<double, double> satisfies(const Formula &formula, double atTime);
 
     private:
-        STDPolytope<double> cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value);
-        STDPolytope<double> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
-        std::vector<STDPolytope<double>> conj(const std::vector<STDPolytope<double>>& a, const std::vector<STDPolytope<double>>& b);
-        std::vector<STDPolytope<double>> neg(const ParametricLocationTree::Node & node, const std::vector<STDPolytope<double>>& subSat);
-        std::vector<STDPolytope<double>> until(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
+        STDPolytope<mpq_class> cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value);
+        STDPolytope<mpq_class> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
+        std::vector<STDPolytope<mpq_class>> conj(const std::vector<STDPolytope<mpq_class>>& a, const std::vector<STDPolytope<mpq_class>>& b);
+        std::vector<STDPolytope<mpq_class>> neg(const ParametricLocationTree::Node & node, const std::vector<STDPolytope<mpq_class>>& subSat);
+        std::vector<STDPolytope<mpq_class>> until(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
 
-        std::vector<STDPolytope<double>> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
+        std::vector<STDPolytope<mpq_class>> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
 
         std::shared_ptr<HybridPetrinet> hpng;
         ParametricLocationTree plt;
@@ -54,7 +56,7 @@ namespace hpnmg {
          * Currently, the RegionModelChecker does not support nested untils so we need a way to detect such formulae.
          */
         bool withinUntil = false;
-        std::unordered_map<NODE_ID, std::vector<STDPolytope<double>>> untilCache;
+        std::unordered_map<NODE_ID, std::vector<STDPolytope<mpq_class>>> untilCache;
     };
 }
 

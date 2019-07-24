@@ -34,8 +34,8 @@ namespace hpnmg {
 
             std::vector<hypro::HPolytope<double>> integrationDomains{};
             // Add all result polytopes intersected with the check-time hyperplane to sat
-            std::transform(sat.begin(), sat.end(), std::back_inserter(integrationDomains), [atTime](const STDPolytope<double> &region) {
-                return region.timeSlice(atTime);
+            std::transform(sat.begin(), sat.end(), std::back_inserter(integrationDomains), [atTime](const STDPolytope<mpq_class> &region) {
+                return convertHPolytope(region.timeSlice(atTime));
             });
             integrationDomains.erase(
                 std::remove_if(integrationDomains.begin(), integrationDomains.end(), [](const auto &region) { return region.empty(); }),
@@ -56,17 +56,17 @@ namespace hpnmg {
         return {probability, error};
     }
 
-    std::vector<STDPolytope<double>> RegionModelChecker::satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime) {
+    std::vector<STDPolytope<mpq_class>> RegionModelChecker::satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime) {
         switch (formula.getType()) {
             case Formula::Type::ContinuousAtomicProperty: {
-                auto result = std::vector<STDPolytope<double>>();
+                auto result = std::vector<STDPolytope<mpq_class>>();
                 auto region = this->cfml(node, formula.getContinuousAtomicProperty()->place, formula.getContinuousAtomicProperty()->value);
                 if (!region.empty())
                     result.push_back(region);
                 return result;
             }
             case Formula::Type::DiscreteAtomicProperty: {
-                auto result = std::vector<STDPolytope<double>>();
+                auto result = std::vector<STDPolytope<mpq_class>>();
                 auto region = this->dfml(node, formula.getDiscreteAtomicProperty()->place, formula.getDiscreteAtomicProperty()->value);
                 if (!region.empty())
                     result.push_back(region);
@@ -102,7 +102,7 @@ namespace hpnmg {
     }
 
     //TODO this checks x_p <= u. Should I change this?
-    STDPolytope<double> RegionModelChecker::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value) {
+    STDPolytope<mpq_class> RegionModelChecker::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value) {
         const auto &continuousPlaces = this->hpng->getContinuousPlaces();
         if (continuousPlaces.count(placeId) == 0)
             throw std::invalid_argument(std::string("no such continuous place in model: ") + placeId);
@@ -120,27 +120,27 @@ namespace hpnmg {
             value
         );
 
-        return regionIntersected;
+        return STDPolytope<mpq_class>(regionIntersected);
     }
 
-    STDPolytope<double> RegionModelChecker::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value) {
+    STDPolytope<mpq_class> RegionModelChecker::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value) {
         const auto &discretePlaces = this->hpng->getDiscretePlaces();
         if (discretePlaces.count(placeId) == 0)
             throw std::invalid_argument(std::string("no such discrete place in model: ") + placeId);
 
         auto placeOffset = std::distance(discretePlaces.begin(), discretePlaces.find(placeId));
         if (node.getParametricLocation().getDiscreteMarking().at(placeOffset) == value) {
-            return node.getRegion();
+            return STDPolytope<mpq_class>(node.getRegion());
         }
-        return STDPolytope<double>::Empty();
+        return STDPolytope<mpq_class>::Empty();
     }
 
 
-    std::vector<STDPolytope<double>> RegionModelChecker::conj(const std::vector<STDPolytope<double>>& a, const std::vector<STDPolytope<double>>& b) {
-        std::vector<STDPolytope<double>> sat;
-        for(const STDPolytope<double>& ai : a) {
-            for (const STDPolytope<double>& bi : b) {
-                STDPolytope<double> res = ai.intersect(bi);
+    std::vector<STDPolytope<mpq_class>> RegionModelChecker::conj(const std::vector<STDPolytope<mpq_class>>& a, const std::vector<STDPolytope<mpq_class>>& b) {
+        std::vector<STDPolytope<mpq_class>> sat;
+        for(const STDPolytope<mpq_class>& ai : a) {
+            for (const STDPolytope<mpq_class>& bi : b) {
+                STDPolytope<mpq_class> res = ai.intersect(bi);
                 if (!res.empty()) {
                     sat.push_back(res);
                 }
@@ -149,14 +149,14 @@ namespace hpnmg {
         return sat;
     }
 
-    std::vector<STDPolytope<double>> RegionModelChecker::neg(const ParametricLocationTree::Node& node, const std::vector<STDPolytope<double>>& subSat) {
-        const STDPolytope<double> &nodeRegion = node.getRegion();
+    std::vector<STDPolytope<mpq_class>> RegionModelChecker::neg(const ParametricLocationTree::Node& node, const std::vector<STDPolytope<mpq_class>>& subSat) {
+        const STDPolytope<mpq_class>& nodeRegion = STDPolytope<mpq_class>(node.getRegion());
 
         // If the nested satisfaction set is empty, the whole region satisfies the negation
         if (subSat.empty())
             return {nodeRegion};
 
-        std::vector<STDPolytope<double>> sat;
+        std::vector<STDPolytope<mpq_class>> sat;
         for (const auto& polytope : subSat) {
             auto negationResult = nodeRegion.setDifference(polytope);
 
@@ -167,17 +167,17 @@ namespace hpnmg {
             }
 
             // In order to merge the satisfaction set with the new negations we need compute all pairwise intersections
-            auto intersections = std::vector<STDPolytope<double>>();
+            auto intersections = std::vector<STDPolytope<mpq_class>>();
             intersections.reserve(sat.size() * negationResult.size());
             for (const auto& negatedPolytope : negationResult) {
-                std::transform(sat.begin(), sat.end(), std::back_inserter(intersections), [&negatedPolytope](STDPolytope<double> satPolytope) {
+                std::transform(sat.begin(), sat.end(), std::back_inserter(intersections), [&negatedPolytope](STDPolytope<mpq_class> satPolytope) {
                     return negatedPolytope.intersect(satPolytope);
                 });
             }
 
             // Get rid off empty polytopes
             intersections.erase(
-                std::remove_if(intersections.begin(), intersections.end(), [](STDPolytope<double> p) { return p.empty(); }),
+                std::remove_if(intersections.begin(), intersections.end(), [](STDPolytope<mpq_class> p) { return p.empty(); }),
                 intersections.end()
             );
             sat = intersections;
@@ -186,25 +186,25 @@ namespace hpnmg {
         return sat;
     }
 
-    std::vector<STDPolytope<double>> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
+    std::vector<STDPolytope<mpq_class>> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
         auto cached = this->untilCache.find(node.getNodeID());
         if (cached != this->untilCache.end())
             return cached->second;
 
         // Construct the upper and lower boundary halfspaces defined by the check-time and the check-time plus until-time.
-        hypro::vector_t<double> timeVectorUp = hypro::vector_t<double>::Zero(node.getRegion().dimension());
+        hypro::vector_t<mpq_class> timeVectorUp = hypro::vector_t<mpq_class>::Zero(node.getRegion().dimension());
         timeVectorUp[timeVectorUp.size() - 1] = 1;
-        const auto upperLimit = hypro::Halfspace<double>(timeVectorUp, atTime + formula.withinTime);
-        const auto lowerLimit = hypro::Halfspace<double>(-timeVectorUp, atTime);
+        const auto upperLimit = hypro::Halfspace<mpq_class>(timeVectorUp, atTime + formula.withinTime);
+        const auto lowerLimit = hypro::Halfspace<mpq_class>(-timeVectorUp, atTime);
 
         // Make sure that this node is even reachable within the formula's time frame
-        auto fullRegion = node.getRegion();
+        auto fullRegion = STDPolytope<mpq_class>(node.getRegion());
         fullRegion.insert(upperLimit);
         fullRegion.insert(lowerLimit);
         if (fullRegion.empty())
             return {};
 
-        std::vector<STDPolytope<double>> eventualSat{};
+        std::vector<STDPolytope<mpq_class>> eventualSat{};
         //region Gather all polytopes that most certainly fulfill `formula`.
         // 1. The polytopes resulting from recursively handled child locations
         for (const auto& childNode : this->plt.getChildNodes(node)) {
@@ -222,15 +222,15 @@ namespace hpnmg {
             Formula(std::make_shared<Negation>(formula.pre)),
             Formula(std::make_shared<Negation>(formula.goal))
         ));
-        auto deadRegions = std::vector<std::pair<STDPolytope<double>, STDPolytope<double>::Polytope>>();
+        auto deadRegions = std::vector<std::pair<STDPolytope<mpq_class>, STDPolytope<mpq_class>::Polytope>>();
         for (const auto& deadRegion : this->satisfiesHandler(node, deadFormula, atTime))
             deadRegions.emplace_back(deadRegion, deadRegion.extendDownwards());
 
-        auto sat = std::vector<STDPolytope<double>>();
+        auto sat = std::vector<STDPolytope<mpq_class>>();
         for (auto goalRegion : eventualSat) {
-            goalRegion = STDPolytope<double>(goalRegion.extendDownwards());
+            goalRegion = STDPolytope<mpq_class>(goalRegion.extendDownwards());
 
-            std::vector<STDPolytope<double>> regionsToRemove{};
+            std::vector<STDPolytope<mpq_class>> regionsToRemove{};
             regionsToRemove.reserve(deadRegions.size());
             // Every dead region below the goal region must be subtracted from the extended goal region. More specific,
             // the extended dead region needs to be subtracted.
@@ -238,8 +238,8 @@ namespace hpnmg {
                 // Since all satisfaction polytopes are convex and disjoint: if polytope A intersects with the
                 // downward-extension of polytope B, then A must be (at least partially) directly below B but nowhere
                 // directly above B.
-                if (!STDPolytope<double>(goalRegion).intersect(otherRegion.first).empty())
-                    regionsToRemove.emplace_back(STDPolytope<double>(otherRegion.second));
+                if (!STDPolytope<mpq_class>(goalRegion).intersect(otherRegion.first).empty())
+                    regionsToRemove.emplace_back(STDPolytope<mpq_class>(otherRegion.second));
             }
 
             auto goalSat = goalRegion.setDifference(regionsToRemove);

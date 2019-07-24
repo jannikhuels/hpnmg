@@ -30,6 +30,20 @@ namespace hpnmg {
     STDPolytope<Numeric>::STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets) : hPolytope(polytope), openFacets(openFacets) {}
 
     template<typename Numeric>
+    template<typename ToNumeric>
+    STDPolytope<Numeric>::operator STDPolytope<ToNumeric>() const {
+        const auto& fromFacets = this->openFacets;
+        auto toFacets = std::vector<typename STDPolytope<ToNumeric>::Polytope>();
+        toFacets.reserve(fromFacets.size());
+
+        std::transform(fromFacets.begin(), fromFacets.end(), std::back_inserter(toFacets), [](STDPolytope<Numeric>::Polytope poly) {
+            return convertHPolytope(poly);
+        });
+
+        return STDPolytope<ToNumeric>(convertHPolytope(this->hPolytope), toFacets);
+    }
+
+    template<typename Numeric>
     void STDPolytope<Numeric>::insert(const hypro::Halfspace<Numeric> &plane) {
         this->hPolytope.insert(plane);
 

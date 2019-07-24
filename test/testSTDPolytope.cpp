@@ -247,3 +247,63 @@ TYPED_TEST(STDPolytopeTest, ExtendDownwardsThreeDimensionsComplexShape)
             EXPECT_EQ(expectedVertices[i][j], extendedVertices[i][j]) << "Vertices at index " << i << " differ in dimension " << j;
     }
 }
+
+TEST(ExtendDownwards, AssertionFailure)
+{
+    auto vertices = std::vector<hypro::Point<double>>{
+        hypro::Point<double>{2, 3, 5},
+        hypro::Point<double>{4, 3, 5},
+        hypro::Point<double>{7, 5, 5},
+        hypro::Point<double>{6, 7, 5},
+        hypro::Point<double>{4, 8, 5},
+        hypro::Point<double>{2, 4, 5},
+
+        hypro::Point<double>{3, 5, 3},
+        hypro::Point<double>{5, 7, 3},
+
+        hypro::Point<double>{5, 5, 7},
+    };
+
+    const auto stdpoly = hypro::HPolytope<double>(vertices);
+
+    //region Extracted from a member function that "extends" a polytope downwards in the last dimension
+        auto newVertices = stdpoly.vertices();
+        // The vector must not reallocate (and thus invalidate its iterators) while we duplicate it
+        newVertices.reserve(newVertices.size() * 2);
+        std::transform(newVertices.begin(), newVertices.end(), std::back_inserter(newVertices), [](hypro::Point<double> vertex) {
+            vertex[vertex.dimension() - 1] = 0;
+            return vertex;
+        });
+
+        auto extendedPoly = hypro::HPolytope<double>(newVertices);
+    //endregion Extracted from a member function that "extends" a polytope downwards in the last dimension
+
+    auto extendedVertices = extendedPoly.vertices();
+
+    auto expectedVertices = std::vector<hypro::Point<double>>{
+        hypro::Point<double>{2, 3, 5},
+        hypro::Point<double>{4, 3, 5},
+        hypro::Point<double>{7, 5, 5},
+        hypro::Point<double>{6, 7, 5},
+        hypro::Point<double>{4, 8, 5},
+        hypro::Point<double>{2, 4, 5},
+
+        hypro::Point<double>{2, 3, 0},
+        hypro::Point<double>{4, 3, 0},
+        hypro::Point<double>{7, 5, 0},
+        hypro::Point<double>{6, 7, 0},
+        hypro::Point<double>{4, 8, 0},
+        hypro::Point<double>{2, 4, 0},
+
+        hypro::Point<double>{5, 5, 7},
+    };
+    std::sort(expectedVertices.begin(), expectedVertices.end());
+    std::sort(extendedVertices.begin(), extendedVertices.end());
+
+    ASSERT_EQ(expectedVertices.size(), extendedVertices.size());
+    for (int i = 0; i < expectedVertices.size(); ++i) {
+        ASSERT_EQ(expectedVertices[i].dimension(), extendedVertices[i].dimension());
+        for (int j = 0; i < expectedVertices[i].dimension(); ++i)
+            EXPECT_EQ(expectedVertices[i][j], extendedVertices[i][j]) << "Vertices at index " << i << " differ in dimension " << j;
+    }
+}
