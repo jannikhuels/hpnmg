@@ -22,6 +22,7 @@ namespace hpnmg {
         class Node {
         private:
             NODE_ID id;
+            bool regionComputed = false;
             STDPolytope<double> region;
             ParametricLocation parametricLocation;
 
@@ -29,7 +30,7 @@ namespace hpnmg {
             Node(NODE_ID id, const ParametricLocation &parametricLocation);
             NODE_ID getNodeID() const;
             STDPolytope<double> getRegion() const;
-            void setRegion(const STDPolytope<double> &region);
+            void computeRegion(ParametricLocationTree &tree);
             ParametricLocation getParametricLocation() const;
             void setParametricLocation(const ParametricLocation &location);
         };

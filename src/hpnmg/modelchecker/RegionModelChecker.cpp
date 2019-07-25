@@ -20,16 +20,16 @@ namespace hpnmg {
     RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :
         hpng(std::make_shared<HybridPetrinet>(hpng)),
         plt(*ParseHybridPetrinet{}.parseHybridPetrinet(this->hpng, maxTime))
-    {
-        plt.updateRegions();
-    }
+    {}
 
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
         double probability = 0.0;
         double error = 0.0;
         auto calculator = ProbabilityCalculator();
 
-        for (const auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
+        for (auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
+            node.computeRegion(this->plt);
+
             const auto& sat = this->satisfiesHandler(node, formula, atTime);
 
             std::vector<hypro::HPolytope<double>> integrationDomains{};
@@ -207,7 +207,8 @@ namespace hpnmg {
         std::vector<STDPolytope<mpq_class>> eventualSat{};
         //region Gather all polytopes that most certainly fulfill `formula`.
         // 1. The polytopes resulting from recursively handled child locations
-        for (const auto& childNode : this->plt.getChildNodes(node)) {
+        for (auto& childNode : this->plt.getChildNodes(node)) {
+            childNode.computeRegion(this->plt);
             auto childSat = this->until(childNode, formula, atTime);
             std::move(childSat.begin(), childSat.end(), std::back_inserter(eventualSat));
         }

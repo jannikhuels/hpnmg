@@ -11,8 +11,36 @@ namespace hpnmg {
     ParametricLocation ParametricLocationTree::Node::getParametricLocation() const {return parametricLocation;}
     STDPolytope<double> ParametricLocationTree::Node::getRegion() const {return region;}
 
-    void ParametricLocationTree::Node::setRegion(const STDPolytope<double> &region) {
-        this->region = region;
+    void ParametricLocationTree::Node::computeRegion(ParametricLocationTree &tree) {
+        if (this->regionComputed)
+            return;
+
+        const auto dimension = tree.getDimension();
+        const auto &rvIntervals = this->getParametricLocation().getRVIntervalsNormed(
+            tree.getDimensionRecursively(tree.getRootNode(), this->getParametricLocation().getGeneralClock().size()),
+            tree.getMaxTime(),
+            dimension
+        );
+        STDPolytope<double> baseRegion = STDiagram::createBaseRegion(dimension, tree.getMaxTime(), rvIntervals);
+
+        std::vector<ParametricLocationTree::Node> childNodes = tree.getChildNodes(*this);
+        if (!childNodes.empty()) {
+            this->region = STDiagram::createRegion(
+                baseRegion,
+                this->getParametricLocation().getSourceEvent(),
+                tree.getSourceEventsFromNodes(childNodes)
+            );
+        } else {
+            //TODO Change when a single general transitions fires more than one time
+            this->region = STDiagram::createRegionNoEvent(
+                baseRegion,
+                this->getParametricLocation().getSourceEvent(),
+                this->getParametricLocation().getGeneralIntervalBoundNormedLeft()[0][0],
+                this->getParametricLocation().getGeneralIntervalBoundNormedRight()[0][0]
+            );
+        }
+
+        this->regionComputed = true;
     }
 
     void ParametricLocationTree::Node::setParametricLocation(const ParametricLocation &parametricLocation) {
@@ -213,35 +241,11 @@ namespace hpnmg {
     }
     
     void ParametricLocationTree::recursivelySetRegions(ParametricLocationTree::Node &startNode) {
-        const auto dimension = this->getDimension();
-        const auto &rvIntervals = startNode.getParametricLocation().getRVIntervalsNormed(
-            getDimensionRecursively(getRootNode(), startNode.getParametricLocation().getGeneralClock().size()),
-            this->maxTime,
-            dimension
-        );
-        STDPolytope<double> baseRegion = STDiagram::createBaseRegion(dimension, this->maxTime, rvIntervals);
-        std::vector<ParametricLocationTree::Node> childNodes = getChildNodes(startNode);
-        if (!childNodes.empty()) {
-            startNode.setRegion(STDiagram::createRegion(
-                baseRegion,
-                startNode.getParametricLocation().getSourceEvent(),
-                getSourceEventsFromNodes(childNodes)
-            ));
+        startNode.computeRegion(*this);
 
-            const auto &ret = parametricLocations.equal_range(startNode.getNodeID());
-            for (auto it=ret.first; it!=ret.second; ++it) {
-                recursivelySetRegions(it->second);
-            }
-        } else {
-            //TODO Change when a single general transitions fires more than one time
-            STDPolytope<double> region = STDiagram::createRegionNoEvent(
-                baseRegion,
-                startNode.getParametricLocation().getSourceEvent(),
-                startNode.getParametricLocation().getGeneralIntervalBoundNormedLeft()[0][0],
-                startNode.getParametricLocation().getGeneralIntervalBoundNormedRight()[0][0]
-            );
-            startNode.setRegion(region);
-        }
+        auto childNodeRange = parametricLocations.equal_range(startNode.getNodeID());
+        for (auto iterator = childNodeRange.first; iterator != childNodeRange.second; ++iterator)
+            this->recursivelySetRegions(iterator->second);
     }
 
     std::vector<Event> ParametricLocationTree::getSourceEventsFromNodes(const std::vector<ParametricLocationTree::Node> &nodes) {

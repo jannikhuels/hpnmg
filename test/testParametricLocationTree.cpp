@@ -97,37 +97,36 @@ TEST(ParametricLocationTreeTest, RegionTest)
     shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree = parser.parseHybridPetrinet(hybridPetrinet, 20);
     parametricLocationTree->updateRegions();
 
-    parametricLocationTree->updateRegions();
     ParametricLocationTree::Node rootNode = parametricLocationTree->getRootNode();
-    ASSERT_EQ(rootNode.getRegion().dimension(), 2);
+    ASSERT_EQ(2, rootNode.getRegion().dimension());
 
     //parametricLocationTree.print(true);
 
     vector_t<double> point = vector_t<double>::Zero(2);
     point << 2,1;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
+    EXPECT_TRUE(rootNode.getRegion().contains(Point<double>(point)));
     point << 10,0;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), true);
+    EXPECT_TRUE(rootNode.getRegion().contains(Point<double>(point)));
     point << 1,2;
-    ASSERT_EQ(rootNode.getRegion().contains(Point<double>(point)), false);
+    EXPECT_FALSE(rootNode.getRegion().contains(Point<double>(point)));
 
     vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree->getChildNodes(rootNode);
     vector<ParametricLocationTree::Node> stocChildNodes;
     for (ParametricLocationTree::Node node: rootChildNodes) {
         if (node.getParametricLocation().getSourceEvent().getEventType() == EventType::General) {
             point << 2,2;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), true);
+            EXPECT_TRUE(node.getRegion().contains(Point<double>(point)));
             point << 1,2;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), true);
+            EXPECT_TRUE(node.getRegion().contains(Point<double>(point)));
             point << 1,3;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), false);
+            EXPECT_FALSE(node.getRegion().contains(Point<double>(point)));
             point << 1,0.5;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), false);
+            EXPECT_FALSE(node.getRegion().contains(Point<double>(point)));
         } else {
             point << 8,6;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), true);
+            EXPECT_TRUE(node.getRegion().contains(Point<double>(point)));
             point << 8,4;
-            ASSERT_EQ(node.getRegion().contains(Point<double>(point)), false);
+            EXPECT_FALSE(node.getRegion().contains(Point<double>(point)));
         }
     }
 }
