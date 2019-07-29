@@ -63,6 +63,22 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTUniform) {
     EXPECT_NEAR(0.675, round(result.first*1000)/1000, result.second);
 }
 
+TEST(RegionModelChecker, ContinuousAtomicPropertyTest2ConflictGTUniform) {
+    // TG1 and TG2: uniform distribution over [0, 100]
+    auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("heated_tank_minimized.xml");
+    auto modelChecker = RegionModelChecker(*hpn, 1000);
+
+    auto result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("H", 100)), 0);
+    // Place is at level 100 at time 0
+    EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("H", 97)), 10);
+    EXPECT_NEAR(0.00202083, round(result.first*100000000)/100000000, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("H", 103)))), 10);
+    EXPECT_NEAR(0.0, round(result.first*10)/10, result.second);
+}
+
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest1GT) {
     auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50);
     auto formula = Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 1));
