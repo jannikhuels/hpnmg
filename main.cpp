@@ -42,15 +42,10 @@ int main (int argc, char *argv[]) {
     const auto endRead = std::chrono::high_resolution_clock::now();
     std::cout << "Reading took " << std::chrono::duration_cast<std::chrono::milliseconds>(endRead - startRead).count() << "ms." << std::endl;
 
-    const auto startParse = std::chrono::high_resolution_clock::now();
-    const auto plt = ParseHybridPetrinet{}.parseHybridPetrinet(hpng, maxTime);
-    const auto endParse = std::chrono::high_resolution_clock::now();
-    std::cout << "Parsing took " << std::chrono::duration_cast<std::chrono::milliseconds>(endParse - startParse).count() << "ms." << std::endl;
-
-    const auto startWrite = std::chrono::high_resolution_clock::now();
-    PLTWriter{}.writePLT(plt, maxTime);
-    const auto endWrite = std::chrono::high_resolution_clock::now();
-    std::cout << "Writing took " << std::chrono::duration_cast<std::chrono::milliseconds>(endWrite - startWrite).count() << "ms." << std::endl;
+//    const auto startWrite = std::chrono::high_resolution_clock::now();
+//    PLTWriter{}.writePLT(plt, maxTime);
+//    const auto endWrite = std::chrono::high_resolution_clock::now();
+//    std::cout << "Writing took " << std::chrono::duration_cast<std::chrono::milliseconds>(endWrite - startWrite).count() << "ms." << std::endl;
 
     const auto startChecker = std::chrono::high_resolution_clock::now();
     auto checker = RegionModelChecker(*hpng, maxTime);

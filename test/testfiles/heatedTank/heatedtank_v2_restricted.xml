@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+[Location 51]: Computing STD region.
+[Location 51]: Computing sat.
+[Location 51]: Computing time slice of 1 polytopes.
+[Location 51]: Integrating over 1 time slices.
+Monte Carlo MISER integral result: 8.45771e-60, error estimate: 8.45771e-60
+[Location 51]: Running total probability: -nan
+-->
 <HPnG>
   <places>
     <!--Heated Tank-->
@@ -41,8 +49,9 @@
   	<generalTransition id="P1_On_SOn" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
       <parameter name="mean" value="438"/><!--mean = 438 -->
     </generalTransition>
-    <generalTransition id="P1_On_SOff" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
-      <parameter name="mean" value="438"/><!--mean = 438 -->
+    <generalTransition id="P1_On_SOff" cdf="uniform" priority="0" weight="1.0" policy="repeatdifferent">
+      <parameter name="a" value="0.0"/>
+      <parameter name="b" value="10.0"/><!--mean = 438 -->
     </generalTransition>
     <generalTransition id="P1_Off_SOff" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
       <parameter name="mean" value="2.19"/> <!--mean = 438/200=2.19 -->
@@ -53,8 +62,9 @@
     <generalTransition id="P2_On_SOn" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
       <parameter name="mean" value="17.5"/><!--mean = 350/20=17.5 -->
     </generalTransition>
-   <generalTransition id="P2_Off_SOff" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
-      <parameter name="mean" value="350"/><!--mean = 350 -->
+   <generalTransition id="P2_Off_SOff" cdf="uniform" priority="0" weight="1.0" policy="repeatdifferent">
+     <parameter name="a" value="0.0"/>
+     <parameter name="b" value="10.0"/><!--mean = 350 -->
     </generalTransition>
     <immediateTransition id="P2_Off_On" priority="2" weight="1.0"/>
     <immediateTransition id="P2_On_Off" priority="2" weight="1.0"/>
@@ -64,8 +74,9 @@
     <immediateTransition id="Reduce_Pump1" priority="2" weight="1.0"/>
     <immediateTransition id="Reduce_Pump2" priority="2" weight="1.0"/>
     <!--Valve-->
-   <generalTransition id="V_On_SOn" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
-      <parameter name="mean" value="640"/><!--mean = 640-->
+   <generalTransition id="V_On_SOn" cdf="uniform" priority="0" weight="1.0" policy="repeatdifferent">
+     <parameter name="a" value="0.0"/>
+     <parameter name="b" value="10.0"/><!--mean = 640-->
     </generalTransition>
    <generalTransition id="V_Off_SOff" cdf="exp" priority="0" weight="1.0" policy="repeatdifferent">
       <parameter name="mean" value="3.2"/><!--mean = 640/200=3.2 -->

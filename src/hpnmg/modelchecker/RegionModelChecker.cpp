@@ -28,7 +28,11 @@ namespace hpnmg {
         auto calculator = ProbabilityCalculator();
 
         for (auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
+            std::cout << "[Location " << node.getNodeID() << "]: Computing STD region." << std::endl;
             node.computeRegion(this->plt);
+
+            std::cout << "Done. Dimensions: (vertex dim, effective dim) = (" << node.getRegion().dimension() << ", " << node.getRegion().effectiveDimension() << ")" << std::endl;
+
             std::cout << "[Location " << node.getNodeID() << "]: Computing sat." << std::endl;
             const auto& sat = this->satisfiesHandler(node, formula, atTime);
 
@@ -122,6 +126,8 @@ namespace hpnmg {
             value,
             negate
         );
+
+        std::cout << "post level intersection: (vertex dim, effective dim) = (" << regionIntersected.dimension() << ", " << regionIntersected.effectiveDimension() << ")" << std::endl;
 
         return STDPolytope<mpq_class>(regionIntersected);
     }

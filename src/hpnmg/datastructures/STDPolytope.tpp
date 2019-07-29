@@ -204,6 +204,18 @@ namespace hpnmg {
         for (auto &vertex : reducedVertices)
             vertex.reduceDimension(vertex.dimension() - 1);
 
+        for (const auto& vertices : {this->hPolytope.vertices(), timeSlice.vertices(), reducedVertices}) {
+            long maxDim = vertices.begin()->rawCoordinates().rows();
+            hypro::matrix_t<Numeric> matr = matrix_t<Numeric>(vertices.size()-1, maxDim);
+            // use first vertex as origin, start at second vertex
+            long rowIndex = 0;
+            for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
+                matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+            }
+            auto effectiveDimension = int(matr.fullPivLu().rank());
+            std::cout << "(vertex dim, effective dim) = (" << vertices[0].dimension() << ", " << effectiveDimension << ")" << std::endl;
+        }
+
         return {reducedVertices};
     }
 

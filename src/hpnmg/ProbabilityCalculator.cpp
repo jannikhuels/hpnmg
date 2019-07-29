@@ -403,11 +403,14 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
         // use first vertex as origin, start at second vertex
         long rowIndex = 0;
-        for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex)
+        for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
             matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+        }
         auto effectiveDimension = int(matr.fullPivLu().rank());
-        if (effectiveDimension < region.dimension())
+        if (effectiveDimension < region.dimension()) {
+            std::cout << "Polytope with zero volume since effective dimension < space dimension (" << effectiveDimension << " < " << region.dimension() << ")" << std::endl;
             return 0.0;
+        }
 
         assert(distributions.size() == region.dimension());
         double result = 0.0;
