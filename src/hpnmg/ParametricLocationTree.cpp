@@ -18,8 +18,7 @@ namespace hpnmg {
         const auto dimension = tree.getDimension();
         const auto &rvIntervals = this->getParametricLocation().getRVIntervalsNormed(
             tree.getDimensionRecursively(tree.getRootNode(), this->getParametricLocation().getGeneralClock().size()),
-            tree.getMaxTime(),
-            dimension
+            tree.getMaxTime()
         );
         STDPolytope<double> baseRegion = STDiagram::createBaseRegion(dimension, tree.getMaxTime(), rvIntervals);
 
@@ -154,6 +153,9 @@ namespace hpnmg {
         auto continuousMarking = loc.getContinuousMarking();
         std::transform(continuousMarking.begin(), continuousMarking.end(), continuousMarking.begin(), normalizeDependencyVectorWithTime);
         loc.setContinuousMarkingNormed(continuousMarking);
+
+        const size_t numOfAllFirings = std::accumulate(genTransOccurings.begin(), genTransOccurings.end(), 0);
+
 
         const auto normalizeGeneralIntervals = [&normalizeDependencyVectorWithTime](auto firings) {
             std::transform(firings.begin(), firings.end(), firings.begin(), normalizeDependencyVectorWithTime);
