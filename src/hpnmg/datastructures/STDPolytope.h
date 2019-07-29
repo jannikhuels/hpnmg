@@ -37,6 +37,7 @@ namespace hpnmg {
 
         bool contains(const hypro::Point<Numeric> &point) const;
         size_t dimension() const { return this->hPolytope.dimension(); }
+        size_t effectiveDimension() const;
         bool empty() const { return this->hPolytope.empty(); }
 
         void insert(const hypro::Halfspace<Numeric> &halfspace);

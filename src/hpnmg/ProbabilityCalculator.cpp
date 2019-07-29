@@ -398,6 +398,17 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         if (region.empty() || region.dimension() == 0)
             return 0.0;
 
+        auto vertices = region.vertices();
+        long maxDim = vertices.begin()->rawCoordinates().rows();
+        hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
+        // use first vertex as origin, start at second vertex
+        long rowIndex = 0;
+        for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex)
+            matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+        auto effectiveDimension = int(matr.fullPivLu().rank());
+        if (effectiveDimension < region.dimension())
+            return 0.0;
+
         assert(distributions.size() == region.dimension());
         double result = 0.0;
 

@@ -72,6 +72,23 @@ namespace hpnmg {
     }
 
     template<typename Numeric>
+    size_t STDPolytope<Numeric>::effectiveDimension() const {
+        const auto& vertices = this->hPolytope.vertices();
+        if (vertices.empty())
+            return 0;
+
+        // taken from hypro::effectiveDimension(). calling it directly gave me linker errors.
+        long maxDim = vertices.begin()->rawCoordinates().rows();
+        hypro::matrix_t<Numeric> matr = matrix_t<Numeric>(vertices.size()-1, maxDim);
+        // use first vertex as origin, start at second vertex
+        long rowIndex = 0;
+        for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
+            matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+        }
+        return int(matr.fullPivLu().rank());
+    }
+
+    template<typename Numeric>
     STDPolytope<Numeric> STDPolytope<Numeric>::intersect(const STDPolytope &other) const {
         auto intersection = this->hPolytope.intersect(other.hPolytope);
 
