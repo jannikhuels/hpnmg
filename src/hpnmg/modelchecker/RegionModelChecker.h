@@ -10,6 +10,7 @@
 #include "datastructures/HybridPetrinet.h"
 #include "datastructures/STDPolytope.h"
 #include "modelchecker/Formula.h"
+#include "modelchecker/Negation.h"
 #include "modelchecker/Until.h"
 #include "ParametricLocationTree.h"
 
@@ -39,10 +40,10 @@ namespace hpnmg {
         std::pair<double, double> satisfies(const Formula &formula, double atTime);
 
     private:
-        STDPolytope<mpq_class> cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value);
-        STDPolytope<mpq_class> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value);
+        STDPolytope<mpq_class> cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value, bool negate = false);
+        STDPolytope<mpq_class> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value, bool negate = false);
         std::vector<STDPolytope<mpq_class>> conj(const std::vector<STDPolytope<mpq_class>>& a, const std::vector<STDPolytope<mpq_class>>& b);
-        std::vector<STDPolytope<mpq_class>> neg(const ParametricLocationTree::Node & node, const std::vector<STDPolytope<mpq_class>>& subSat);
+        std::vector<STDPolytope<mpq_class>> neg(const ParametricLocationTree::Node & node, const Negation& formula, double atTime);
         std::vector<STDPolytope<mpq_class>> until(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
 
         std::vector<STDPolytope<mpq_class>> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);

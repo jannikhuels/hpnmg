@@ -79,7 +79,7 @@ namespace hpnmg {
                 );
             }
             case Formula::Type::Negation: {
-                return this->neg(node, this->satisfiesHandler(node, formula.getNegation()->formula, atTime));
+                return this->neg(node, formula.getNegation()->formula, atTime);
             }
             case Formula::Type::True: {
                 return {STDPolytope<mpq_class>(node.getRegion())};
@@ -105,7 +105,7 @@ namespace hpnmg {
     }
 
     //TODO this checks x_p <= u. Should I change this?
-    STDPolytope<mpq_class> RegionModelChecker::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value) {
+    STDPolytope<mpq_class> RegionModelChecker::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value, bool negate) {
         const auto &continuousPlaces = this->hpng->getContinuousPlaces();
         if (continuousPlaces.count(placeId) == 0)
             throw std::invalid_argument(std::string("no such continuous place in model: ") + placeId);
@@ -120,22 +120,24 @@ namespace hpnmg {
             node.getParametricLocation().getSourceEvent().getGeneralDependenciesNormed(),
             node.getParametricLocation().getContinuousMarkingNormed()[placeOffset],
             drift,
-            value
+            value,
+            negate
         );
 
         return STDPolytope<mpq_class>(regionIntersected);
     }
 
-    STDPolytope<mpq_class> RegionModelChecker::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value) {
+    STDPolytope<mpq_class> RegionModelChecker::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value, bool negate) {
         const auto &discretePlaces = this->hpng->getDiscretePlaces();
         if (discretePlaces.count(placeId) == 0)
             throw std::invalid_argument(std::string("no such discrete place in model: ") + placeId);
 
         auto placeOffset = std::distance(discretePlaces.begin(), discretePlaces.find(placeId));
-        if (node.getParametricLocation().getDiscreteMarking().at(placeOffset) == value) {
+        const bool satisfied = node.getParametricLocation().getDiscreteMarking().at(placeOffset) == value;
+        if (satisfied != negate)
             return STDPolytope<mpq_class>(node.getRegion());
-        }
-        return STDPolytope<mpq_class>::Empty();
+        else
+            return STDPolytope<mpq_class>::Empty();
     }
 
 
@@ -152,9 +154,35 @@ namespace hpnmg {
         return sat;
     }
 
-    std::vector<STDPolytope<mpq_class>> RegionModelChecker::neg(const ParametricLocationTree::Node& node, const std::vector<STDPolytope<mpq_class>>& subSat) {
+    std::vector<STDPolytope<mpq_class>> RegionModelChecker::neg(const ParametricLocationTree::Node& node, const Negation& formula, double atTime) {
         const STDPolytope<mpq_class>& nodeRegion = STDPolytope<mpq_class>(node.getRegion());
 
+        const auto innerFormula = formula.formula;
+        switch (innerFormula.getType()) {
+            case Formula::Type::ContinuousAtomicProperty: {
+                const auto cap = innerFormula.getContinuousAtomicProperty();
+                return {this->cfml(node, cap->place, cap->value, true)};
+            }
+            case Formula::Type::DiscreteAtomicProperty: {
+                const auto dap = innerFormula.getDiscreteAtomicProperty();
+                return {this->dfml(node, dap->place, dap->value, true)};
+            }
+            case Formula::Type::Negation: {
+                return this->satisfiesHandler(node, innerFormula.getNegation()->formula, atTime);
+            }
+            case Formula::Type::True: {
+                return {};
+            }
+
+            // These formulae cannot be negated easily in general:
+            case Formula::Type::Conjunction:
+            case Formula::Type::Until:
+                break;
+            default:
+                throw std::logic_error("unhandled formula type in RegionModelChecker::neg");
+        }
+
+        const auto subSat = this->satisfiesHandler(node, innerFormula, atTime);
         // If the nested satisfaction set is empty, the whole region satisfies the negation
         if (subSat.empty())
             return {nodeRegion};

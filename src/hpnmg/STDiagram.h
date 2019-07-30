@@ -62,7 +62,7 @@ namespace hpnmg {
          */
         static STDPolytope<double> legacyIntersectRegionForContinuousLevel(const STDPolytope<double> &baseRegion, std::vector<double> continuousDependencies, double drift, double level, bool negate = false);
 
-        static STDPolytope<double> intersectRegionForContinuousLevel(const STDPolytope<double> &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level);
+        static STDPolytope<double> intersectRegionForContinuousLevel(const STDPolytope<double> &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level, bool negate = false);
 
         static Halfspace<double> createHalfspaceFromEvent(const Event &event, bool isSourceEvent);
 

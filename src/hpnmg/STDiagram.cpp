@@ -287,7 +287,7 @@ namespace hpnmg {
         return intersectRegion;
     }
 
-    STDPolytope<double> STDiagram::intersectRegionForContinuousLevel(const STDPolytope<double> &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level) {
+    STDPolytope<double> STDiagram::intersectRegionForContinuousLevel(const STDPolytope<double> &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level, bool negate) {
         assert(markingNormed.size() == entryTimeNormed.size());
         vector_t<double> markingDirection = vector_t<double>::Zero(markingNormed.size());
         vector_t<double> entryTimeDirection = vector_t<double>::Zero(entryTimeNormed.size());
@@ -308,7 +308,11 @@ namespace hpnmg {
         // The hypro vectors have the time-coefficient at the last index
         direction[direction.size() - 1] = drift;
         // While the actual time-offsets are provided separately
-        intersectRegion.insert(Halfspace<double>(direction, level + (drift * entryTimeNormed[0]) - markingNormed[0]));
+        const auto satHalfspace = Halfspace<double>(direction, level + (drift * entryTimeNormed[0]) - markingNormed[0]);
+        if (!negate)
+            intersectRegion.insert(satHalfspace);
+        else
+            intersectRegion.insertOpen(-satHalfspace);
         return intersectRegion;
     }
 

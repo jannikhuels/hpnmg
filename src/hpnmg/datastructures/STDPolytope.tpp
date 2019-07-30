@@ -60,6 +60,18 @@ namespace hpnmg {
     }
 
     template<typename Numeric>
+    void STDPolytope<Numeric>::insertOpen(const hypro::Halfspace<Numeric> &plane) {
+        // First, insert as usual
+        this->insert(plane);
+
+        // Then turn the plane into an open facet
+        auto facet = STDPolytope::Polytope(this->hPolytope);
+        facet.insert(-plane);
+        if (!facet.empty())
+            this->openFacets.push_back(facet);
+    }
+
+    template<typename Numeric>
     bool STDPolytope<Numeric>::contains(const hypro::Point<Numeric> &point) const {
         // Check if the point is contained in our polytope at all
         if (!this->hPolytope.contains(point))

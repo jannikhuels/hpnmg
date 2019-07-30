@@ -40,7 +40,21 @@ namespace hpnmg {
         size_t effectiveDimension() const;
         bool empty() const { return this->hPolytope.empty(); }
 
+        /**
+         * Inserts a new half space into the polytope. That is, intersects the underlying polytope and all open facets
+         * with the halfspace.
+         *
+         * @param halfspace
+         */
         void insert(const hypro::Halfspace<Numeric> &halfspace);
+
+        /**
+         * Like STDPolytope::insert(), but the provided half space is considered to be open. That is, intersects the
+         * underlying polytope and all open facets with the halfspace and the halfspace as open facet.
+         *
+         * @param halfspace
+         */
+        void insertOpen(const hypro::Halfspace<Numeric> &halfspace);
         STDPolytope intersect(const STDPolytope& other) const;
         /**
          * Returns a vector of (possibly overlapping) STDPolytopes whose union represents all points of <code>this</code>
