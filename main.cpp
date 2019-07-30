@@ -43,9 +43,21 @@ int main (int argc, char *argv[]) {
     std::cout << "Reading took " << std::chrono::duration_cast<std::chrono::milliseconds>(endRead - startRead).count() << "ms." << std::endl;
 
 //    const auto startWrite = std::chrono::high_resolution_clock::now();
+//    auto plt = ParseHybridPetrinet{}.parseHybridPetrinet(hpng, maxTime);
+//    plt->updateRegions();
 //    PLTWriter{}.writePLT(plt, maxTime);
 //    const auto endWrite = std::chrono::high_resolution_clock::now();
-//    std::cout << "Writing took " << std::chrono::duration_cast<std::chrono::milliseconds>(endWrite - startWrite).count() << "ms." << std::endl;
+//    std::cout << "Parsing and writing took " << std::chrono::duration_cast<std::chrono::milliseconds>(endWrite - startWrite).count() << "ms." << std::endl;
+//
+//    auto ws = std::vector<ParametricLocationTree::Node>{plt->getRootNode()};
+//    while (!ws.empty()) {
+//        const auto node = ParametricLocationTree::Node(ws.back());
+//        ws.pop_back();
+//        auto childNodes = plt->getChildNodes(node);
+//        ws.insert(ws.end(), childNodes.begin(), childNodes.end());
+//
+//        std::cout << "node: " << node.getNodeID() << STDPolytope<mpq_class>(STDPolytope<mpq_class>(node.getRegion()).timeSlice(checkTime)) << std::endl;
+//    }
 
     const auto startChecker = std::chrono::high_resolution_clock::now();
     auto checker = RegionModelChecker(*hpng, maxTime);
@@ -58,8 +70,13 @@ int main (int argc, char *argv[]) {
 //            Formula(std::make_shared<ContinuousAtomicProperty>("H", 100)),
 //            Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("H", 100))))
 //        )),
+        Formula(std::make_shared<Until>(
+            Formula(std::make_shared<True>()),
+            Formula(std::make_shared<ContinuousAtomicProperty>("H", 97)),
+            maxTime
+        )),
 //        Formula(std::make_shared<DiscreteAtomicProperty>("P1_On", 1)),
-        Formula(std::make_shared<ContinuousAtomicProperty>("H", 97)),
+//        Formula(std::make_shared<ContinuousAtomicProperty>("H", 97)),
         checkTime
     );
     const auto endSatisfy = std::chrono::high_resolution_clock::now();

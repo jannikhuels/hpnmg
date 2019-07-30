@@ -48,6 +48,10 @@ namespace hpnmg {
             );
 
             std::cout << "[Location " << node.getNodeID() << "]: Integrating over " << integrationDomains.size() << " time slices." << std::endl;
+
+            if (integrationDomains.size())
+                std::cout << STDPolytope<double>(integrationDomains[0]) << std::endl;
+
             double nodeError = 0.0;
             probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
                 integrationDomains,
@@ -297,11 +301,15 @@ namespace hpnmg {
         //region Gather all polytopes that most certainly fulfill `formula` within the time frame.
         // 1. The polytopes resulting from recursively handled child locations
         for (auto& childNode : this->plt.getChildNodes(node)) {
+            std::cout << "Until @ Node " << node.getNodeID() << ": Recursively checking Node " << childNode.getNodeID() << std::endl;
             childNode.computeRegion(this->plt);
             // untilHandler returns downwards extended polytopes
             auto childSat = this->untilHandler(childNode, formula, atTime);
             std::move(childSat.begin(), childSat.end(), std::back_inserter(eventualSat));
         }
+
+        std::cout << "Until @ Node " << node.getNodeID() << ": Recursion terminated. Computing sat(goal). " << std::endl;
+
         // 2. The polytopes in the current region that fulfill `formula.goal`
         auto regionSat = this->satisfiesHandler(node, formula.goal, atTime);
         std::transform(regionSat.begin(), regionSat.end(), regionSat.begin(), [&upperLimit](STDPolytope<mpq_class> sat) {
@@ -344,10 +352,12 @@ namespace hpnmg {
                 // Since all satisfaction polytopes are convex and disjoint: if polytope A intersects with the
                 // downward-extension of polytope B, then A must be (at least partially) directly below B but nowhere
                 // directly above B.
+                std::cout << "Checking if member of sat(dead) needs to be removed from extended member of sat(goal)." << std::endl;
                 if (!STDPolytope<mpq_class>(goalRegion).intersect(otherRegion.first).empty())
                     regionsToRemove.emplace_back(STDPolytope<mpq_class>(otherRegion.second));
             }
 
+            std::cout << "Removing all " << regionsToRemove.size() << " dead members from extended goal member." << std::endl;
             auto goalSat = goalRegion.setDifference(regionsToRemove);
             goalSat.erase(std::remove_if(goalSat.begin(), goalSat.end(), [](const auto& region) { return region.empty(); }), goalSat.end());
             std::move(goalSat.begin(), goalSat.end(), std::back_inserter(sat));
