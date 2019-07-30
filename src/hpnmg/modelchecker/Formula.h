@@ -6,6 +6,7 @@
 
 #include "modelchecker/ContinuousAtomicProperty.h"
 #include "modelchecker/DiscreteAtomicProperty.h"
+#include "modelchecker/True.h"
 
 namespace hpnmg {
     class Conjunction;
@@ -19,6 +20,7 @@ namespace hpnmg {
             ContinuousAtomicProperty,
             DiscreteAtomicProperty,
             Negation,
+            True,
             Until,
         };
 
@@ -26,6 +28,7 @@ namespace hpnmg {
         explicit Formula(std::shared_ptr<::hpnmg::DiscreteAtomicProperty> dap);
         explicit Formula(std::shared_ptr<::hpnmg::Conjunction> conj);
         explicit Formula(std::shared_ptr<::hpnmg::Negation> neg);
+        explicit Formula(std::shared_ptr<::hpnmg::True>);
         explicit Formula(std::shared_ptr<::hpnmg::Until> until);
 
         std::shared_ptr<::hpnmg::Conjunction> getConjunction() const;

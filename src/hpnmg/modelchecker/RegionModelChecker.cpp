@@ -81,6 +81,9 @@ namespace hpnmg {
             case Formula::Type::Negation: {
                 return this->neg(node, this->satisfiesHandler(node, formula.getNegation()->formula, atTime));
             }
+            case Formula::Type::True: {
+                return {STDPolytope<mpq_class>(node.getRegion())};
+            }
             case Formula::Type::Until: {
                 if (this->withinUntil)
                     throw std::invalid_argument("RegionModelChecker encountered nested Until formulae.");
