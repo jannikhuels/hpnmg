@@ -261,6 +261,8 @@ namespace hpnmg {
     std::vector<STDPolytope<mpq_class>> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
         auto sat = this->untilHandler(node, formula, atTime);
 
+        std::cout << "sat(until) computed. Intersecting it with the node's region." << std::endl;
+
         // Construct the upper and lower boundary halfspaces defined by the check-time and the check-time plus until-time.
         hypro::vector_t<mpq_class> timeVectorUp = hypro::vector_t<mpq_class>::Zero(node.getRegion().dimension());
         timeVectorUp[timeVectorUp.size() - 1] = 1;
@@ -314,11 +316,14 @@ namespace hpnmg {
         auto regionSat = this->satisfiesHandler(node, formula.goal, atTime);
         std::transform(regionSat.begin(), regionSat.end(), regionSat.begin(), [&upperLimit](STDPolytope<mpq_class> sat) {
             sat.insert(upperLimit);
+            std::cout << "Extending member of sat(goal) downwards." << std::endl;
             return STDPolytope<mpq_class>(sat.extendDownwards());
         });
         regionSat.erase(std::remove_if(regionSat.begin(), regionSat.end(), [](const auto& region) { return region.empty(); }), regionSat.end());
         std::move(regionSat.begin(), regionSat.end(), std::back_inserter(eventualSat));
         //endregion Gather all polytopes that most certainly fulfill `formula`.
+
+        std::cout << "Until @ Node " << node.getNodeID() << ": Done." << std::endl;
 
         // Get the polytopes where the until is "unfulfilled" immediately. The downward extension is needed multiple
         // times, so it is calculated and cached here already.
@@ -326,20 +331,27 @@ namespace hpnmg {
         const auto& preTrivial = formula.pre.isTrivial();
         if (preTrivial.first) {
             if (preTrivial.second.getType() == Formula::Type::True) {
+                std::cout << "Until @ Node " << node.getNodeID() << ": Precondition is trivially true. No need to compute dead regions." << std::endl;
                 deadRegions = {};
             } else {
+                std::cout << "Until @ Node " << node.getNodeID() << ": Precondition is trivially false. Returning early with sat(goal)." << std::endl;
                 this->untilCache.insert({node.getNodeID(), regionSat});
                 return regionSat;
             }
         } else {
+            std::cout << "Until @ Node " << node.getNodeID() << ": Precondition is non-trivial. Computing sat(dead)." << std::endl;
+
             auto deadFormula = Formula(std::make_shared<Conjunction>(
                 Formula(std::make_shared<Negation>(formula.pre)),
                 Formula(std::make_shared<Negation>(formula.goal))
             ));
 
             for (const auto& deadRegion : this->satisfiesHandler(node, deadFormula, atTime)) {
+                std::cout << "Done. Extending member of sat(dead) downwards." << std::endl;
                 deadRegions.emplace_back(deadRegion, deadRegion.extendDownwards());
             }
+
+            std::cout << "Done." << std::endl;
         }
 
         auto sat = std::vector<STDPolytope<mpq_class>>();
@@ -362,6 +374,8 @@ namespace hpnmg {
             goalSat.erase(std::remove_if(goalSat.begin(), goalSat.end(), [](const auto& region) { return region.empty(); }), goalSat.end());
             std::move(goalSat.begin(), goalSat.end(), std::back_inserter(sat));
         }
+
+        std::cout << "Computed " << sat.size() << " sat regions.";
 
         this->untilCache.insert({node.getNodeID(), sat});
         return sat;
