@@ -58,6 +58,8 @@ namespace hpnmg {
 
     std::vector<STDPolytope<mpq_class>> RegionModelChecker::satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime) {
         switch (formula.getType()) {
+            case Formula::Type::Conjunction:
+                return this->conj(node, *formula.getConjunction(), atTime);
             case Formula::Type::ContinuousAtomicProperty: {
                 auto result = std::vector<STDPolytope<mpq_class>>();
                 auto region = this->cfml(node, formula.getContinuousAtomicProperty()->place, formula.getContinuousAtomicProperty()->value);
@@ -72,18 +74,12 @@ namespace hpnmg {
                     result.push_back(region);
                 return result;
             }
-            case Formula::Type::Conjunction: {
-                return this->conj(
-                    this->satisfiesHandler(node, formula.getConjunction()->left, atTime),
-                    this->satisfiesHandler(node, formula.getConjunction()->right, atTime)
-                );
-            }
-            case Formula::Type::Negation: {
+            case Formula::Type::False:
+                return {};
+            case Formula::Type::Negation:
                 return this->neg(node, formula.getNegation()->formula, atTime);
-            }
-            case Formula::Type::True: {
+            case Formula::Type::True:
                 return {STDPolytope<mpq_class>(node.getRegion())};
-            }
             case Formula::Type::Until: {
                 if (this->withinUntil)
                     throw std::invalid_argument("RegionModelChecker encountered nested Until formulae.");
@@ -140,17 +136,44 @@ namespace hpnmg {
             return STDPolytope<mpq_class>::Empty();
     }
 
+    std::vector<STDPolytope<mpq_class>> RegionModelChecker::conj(const ParametricLocationTree::Node& node, const Conjunction& conj, double atTime) {
+         // In general, sat(psi AND phi) equals to the pairwise intersection of sat(psi) and sat(phi). However, for
+         // trivial sub-formulae we can skip the intersection:
+         //    - sat(true AND phi) -> sat(phi)
+         //    - sat(false AND phi) -> empty set
+        const auto lhsTrivial = conj.left.isTrivial();
+        const auto rhsTrivial = conj.right.isTrivial();
 
-    std::vector<STDPolytope<mpq_class>> RegionModelChecker::conj(const std::vector<STDPolytope<mpq_class>>& a, const std::vector<STDPolytope<mpq_class>>& b) {
         std::vector<STDPolytope<mpq_class>> sat;
-        for(const STDPolytope<mpq_class>& ai : a) {
-            for (const STDPolytope<mpq_class>& bi : b) {
-                STDPolytope<mpq_class> res = ai.intersect(bi);
-                if (!res.empty()) {
-                    sat.push_back(res);
+        if (lhsTrivial.first && rhsTrivial.first) { // Both formulae are trivial -> return full region or empty region
+            if (lhsTrivial.second.getType() == Formula::Type::True && rhsTrivial.second.getType() == Formula::Type::True)
+                sat = {STDPolytope<mpq_class>(node.getRegion())};
+            else
+                sat = {};
+        } else if(!lhsTrivial.first && !rhsTrivial.first) { // Neither formula is trivial -> evaluate both and intersect
+            const auto leftSat = this->satisfiesHandler(node, conj.left, atTime);
+            const auto rightSat = this->satisfiesHandler(node, conj.right, atTime);
+            sat = {};
+            sat.reserve(leftSat.size() * rightSat.size());
+            for(const STDPolytope<mpq_class>& ai : leftSat) {
+                for (const STDPolytope<mpq_class>& bi : rightSat) {
+                    STDPolytope<mpq_class> res = ai.intersect(bi);
+                    if (!res.empty()) {
+                        sat.push_back(res);
+                    }
                 }
             }
+            sat.shrink_to_fit();
+        } else { // One is trivial -> return sat(other) or empty region
+            const auto& trivialFormula = lhsTrivial.first ? lhsTrivial : rhsTrivial;
+            const auto& nonTrivialFormula = lhsTrivial.first ? rhsTrivial : lhsTrivial;
+
+            if (trivialFormula.second.getType() == Formula::Type::True)
+                sat = this->satisfiesHandler(node, nonTrivialFormula.second, atTime);
+            else
+                sat = {};
         }
+
         return sat;
     }
 
@@ -158,6 +181,15 @@ namespace hpnmg {
         const STDPolytope<mpq_class>& nodeRegion = STDPolytope<mpq_class>(node.getRegion());
 
         const auto innerFormula = formula.formula;
+        const auto innerTrivial = innerFormula.isTrivial();
+        if (innerTrivial.first) {
+            if (innerTrivial.second.getType() == Formula::Type::True)
+                return {};
+            else
+                return {nodeRegion};
+        }
+
+        // Even if the formula is non-trivial, we might still skip the expensive computation of the set-differences.
         switch (innerFormula.getType()) {
             case Formula::Type::ContinuousAtomicProperty: {
                 const auto cap = innerFormula.getContinuousAtomicProperty();
@@ -170,16 +202,12 @@ namespace hpnmg {
             case Formula::Type::Negation: {
                 return this->satisfiesHandler(node, innerFormula.getNegation()->formula, atTime);
             }
-            case Formula::Type::True: {
-                return {};
-            }
-
             // These formulae cannot be negated easily in general:
             case Formula::Type::Conjunction:
             case Formula::Type::Until:
                 break;
             default:
-                throw std::logic_error("unhandled formula type in RegionModelChecker::neg");
+                throw std::logic_error("unhandled non-trivial formula type in RegionModelChecker::neg");
         }
 
         const auto subSat = this->satisfiesHandler(node, innerFormula, atTime);
@@ -201,7 +229,7 @@ namespace hpnmg {
             auto intersections = std::vector<STDPolytope<mpq_class>>();
             intersections.reserve(sat.size() * negationResult.size());
             for (const auto& negatedPolytope : negationResult) {
-                std::transform(sat.begin(), sat.end(), std::back_inserter(intersections), [&negatedPolytope](STDPolytope<mpq_class> satPolytope) {
+                std::transform(sat.begin(), sat.end(), std::back_inserter(intersections), [&negatedPolytope](const STDPolytope<mpq_class>& satPolytope) {
                     return negatedPolytope.intersect(satPolytope);
                 });
             }

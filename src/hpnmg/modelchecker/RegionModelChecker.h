@@ -42,7 +42,7 @@ namespace hpnmg {
     private:
         STDPolytope<mpq_class> cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value, bool negate = false);
         STDPolytope<mpq_class> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value, bool negate = false);
-        std::vector<STDPolytope<mpq_class>> conj(const std::vector<STDPolytope<mpq_class>>& a, const std::vector<STDPolytope<mpq_class>>& b);
+        std::vector<STDPolytope<mpq_class>> conj(const ParametricLocationTree::Node &node, const Conjunction& conj, double atTime);
         std::vector<STDPolytope<mpq_class>> neg(const ParametricLocationTree::Node & node, const Negation& formula, double atTime);
         std::vector<STDPolytope<mpq_class>> until(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
 
