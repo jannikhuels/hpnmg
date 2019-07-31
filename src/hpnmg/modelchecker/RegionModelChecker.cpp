@@ -246,6 +246,25 @@ namespace hpnmg {
     }
 
     std::vector<STDPolytope<mpq_class>> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
+        auto sat = this->untilHandler(node, formula, atTime);
+
+        // Construct the upper and lower boundary halfspaces defined by the check-time and the check-time plus until-time.
+        hypro::vector_t<mpq_class> timeVectorUp = hypro::vector_t<mpq_class>::Zero(node.getRegion().dimension());
+        timeVectorUp[timeVectorUp.size() - 1] = 1;
+        const auto upperLimit = hypro::Halfspace<mpq_class>(timeVectorUp, atTime + formula.withinTime);
+        const auto lowerLimit = hypro::Halfspace<mpq_class>(-timeVectorUp, atTime);
+        // Construct the proper bounding box from the node's region and the time planes.
+        auto fullRegion = STDPolytope<mpq_class>(node.getRegion());
+        fullRegion.insert(upperLimit);
+        fullRegion.insert(lowerLimit);
+
+        std::transform(sat.begin(), sat.end(), sat.begin(), [&fullRegion](auto&& region) { return region.intersect(fullRegion); });
+        sat.erase(std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.empty(); }), sat.end());
+
+        return sat;
+    }
+
+    std::vector<STDPolytope<mpq_class>> RegionModelChecker::untilHandler(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
         auto cached = this->untilCache.find(node.getNodeID());
         if (cached != this->untilCache.end())
             return cached->second;
@@ -260,36 +279,54 @@ namespace hpnmg {
         auto fullRegion = STDPolytope<mpq_class>(node.getRegion());
         fullRegion.insert(upperLimit);
         fullRegion.insert(lowerLimit);
-        if (fullRegion.empty())
+        if (fullRegion.empty()){
+            this->untilCache.insert({node.getNodeID(), {}});
             return {};
+        }
 
         std::vector<STDPolytope<mpq_class>> eventualSat{};
-        //region Gather all polytopes that most certainly fulfill `formula`.
+        //region Gather all polytopes that most certainly fulfill `formula` within the time frame.
         // 1. The polytopes resulting from recursively handled child locations
         for (auto& childNode : this->plt.getChildNodes(node)) {
             childNode.computeRegion(this->plt);
-            auto childSat = this->until(childNode, formula, atTime);
+            // untilHandler returns downwards extended polytopes
+            auto childSat = this->untilHandler(childNode, formula, atTime);
             std::move(childSat.begin(), childSat.end(), std::back_inserter(eventualSat));
         }
         // 2. The polytopes in the current region that fulfill `formula.goal`
         auto regionSat = this->satisfiesHandler(node, formula.goal, atTime);
+        std::transform(regionSat.begin(), regionSat.end(), regionSat.begin(), [&upperLimit](STDPolytope<mpq_class> sat) {
+            sat.insert(upperLimit);
+            return STDPolytope<mpq_class>(sat.extendDownwards());
+        });
+        regionSat.erase(std::remove_if(regionSat.begin(), regionSat.end(), [](const auto& region) { return region.empty(); }), regionSat.end());
         std::move(regionSat.begin(), regionSat.end(), std::back_inserter(eventualSat));
         //endregion Gather all polytopes that most certainly fulfill `formula`.
 
         // Get the polytopes where the until is "unfulfilled" immediately. The downward extension is needed multiple
         // times, so it is calculated and cached here already.
-        auto deadFormula = Formula(std::make_shared<Conjunction>(
-            Formula(std::make_shared<Negation>(formula.pre)),
-            Formula(std::make_shared<Negation>(formula.goal))
-        ));
         auto deadRegions = std::vector<std::pair<STDPolytope<mpq_class>, STDPolytope<mpq_class>::Polytope>>();
-        for (const auto& deadRegion : this->satisfiesHandler(node, deadFormula, atTime))
-            deadRegions.emplace_back(deadRegion, deadRegion.extendDownwards());
+        const auto& preTrivial = formula.pre.isTrivial();
+        if (preTrivial.first) {
+            if (preTrivial.second.getType() == Formula::Type::True) {
+                deadRegions = {};
+            } else {
+                this->untilCache.insert({node.getNodeID(), regionSat});
+                return regionSat;
+            }
+        } else {
+            auto deadFormula = Formula(std::make_shared<Conjunction>(
+                Formula(std::make_shared<Negation>(formula.pre)),
+                Formula(std::make_shared<Negation>(formula.goal))
+            ));
+
+            for (const auto& deadRegion : this->satisfiesHandler(node, deadFormula, atTime)) {
+                deadRegions.emplace_back(deadRegion, deadRegion.extendDownwards());
+            }
+        }
 
         auto sat = std::vector<STDPolytope<mpq_class>>();
-        for (auto goalRegion : eventualSat) {
-            goalRegion = STDPolytope<mpq_class>(goalRegion.extendDownwards());
-
+        for (const auto& goalRegion : eventualSat) {
             std::vector<STDPolytope<mpq_class>> regionsToRemove{};
             regionsToRemove.reserve(deadRegions.size());
             // Every dead region below the goal region must be subtracted from the extended goal region. More specific,
@@ -303,14 +340,11 @@ namespace hpnmg {
             }
 
             auto goalSat = goalRegion.setDifference(regionsToRemove);
+            goalSat.erase(std::remove_if(goalSat.begin(), goalSat.end(), [](const auto& region) { return region.empty(); }), goalSat.end());
             std::move(goalSat.begin(), goalSat.end(), std::back_inserter(sat));
         }
 
-        std::transform(sat.begin(), sat.end(), sat.begin(), [&fullRegion](auto&& region) { return region.intersect(fullRegion); });
-        sat.erase(std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.empty(); }), sat.end());
-
         this->untilCache.insert({node.getNodeID(), sat});
-
         return sat;
     }
 }

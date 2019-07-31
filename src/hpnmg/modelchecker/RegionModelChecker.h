@@ -44,7 +44,39 @@ namespace hpnmg {
         STDPolytope<mpq_class> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value, bool negate = false);
         std::vector<STDPolytope<mpq_class>> conj(const ParametricLocationTree::Node &node, const Conjunction& conj, double atTime);
         std::vector<STDPolytope<mpq_class>> neg(const ParametricLocationTree::Node & node, const Negation& formula, double atTime);
+
+        /**
+         * Computes the satisfaction set `sat(formula.pre Until formula.goal, atTime)` for the given node.
+         *
+         * Each element of the satisfaction set has its time dimension already limited to [atTime, atTime + formula.withinTime]
+         *
+         * @param node
+         * @param formula
+         * @param atTime
+         * @return A vector of polytopes whose union represents the satisfaction set `sat(formula, atTime)` in the
+         *         provided node's region. Each polytope has been intersected with the time-halfspaces induced by
+         *         `atTime` and `atTime + formula.withinTime`.
+         */
         std::vector<STDPolytope<mpq_class>> until(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
+
+        /**
+         * Recursive utility function for the until-computation.
+         *
+         * Most notably, the returned polytopes are still extended downwards, that is, they are not necessarily within
+         * their respective region but instead may extend below that. If the polytopes were constrained before returning
+         * them, the caller would have to extend them immediately anyway which is an expensive operation.
+         *
+         * Utilizes RegionModelChecker::untilCache to memoize the satisfaction sets for each location.
+         *
+         * @param node
+         * @param formula
+         * @param atTime
+         * @return A vector of polytopes whose union represents the satisfaction set `sat(formula, atTime)` for the
+         *         provided node's region. However, each polytope is extended downwards (see STDPolytope::extendDownwards()).
+         *         So in order to get the actual satisfaction polytopes for the node, you need to intersect them with
+         *         the node's region.
+         */
+        std::vector<STDPolytope<mpq_class>> untilHandler(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
 
         std::vector<STDPolytope<mpq_class>> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
 
