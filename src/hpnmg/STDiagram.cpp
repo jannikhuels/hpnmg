@@ -298,17 +298,25 @@ namespace hpnmg {
             entryTimeDirection[i - 1] = entryTimeNormed[i];
         }
 
-
-        STDPolytope<double> intersectRegion(baseRegion);
         // The level dependent on the RV-valuation s and time t ("initial marking + drift * time since entry"):
         // markingNormed(s) + drift * (t - entryTimeNormed(s))
         // We transform the equation to something like:
         // (markingNormed - drift * entryTimeNormed)(s) + drift * t
         auto direction = vector_t<double>(markingDirection - (drift * entryTimeDirection));
-        // The hypro vectors have the time-coefficient at the last index
+        // The hypro vectors have the time-coefficient at the last index.
         direction[direction.size() - 1] = drift;
         // While the actual time-offsets are provided separately
         const auto satHalfspace = Halfspace<double>(direction, level + (drift * entryTimeNormed[0]) - markingNormed[0]);
+
+        if (direction.isZero()) {
+            // The level is independent of RVs and time, thus constant in the region. Check if it satisfies the level.
+            if ((markingNormed[0] <= level) != negate)
+                return baseRegion;
+            else
+                return STDPolytope<double>::Empty();
+        }
+
+        STDPolytope<double> intersectRegion(baseRegion);
         if (!negate)
             intersectRegion.insert(satHalfspace);
         else
