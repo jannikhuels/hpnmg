@@ -72,6 +72,16 @@ namespace hpnmg {
     }
 
     template<typename Numeric>
+    bool STDPolytope<Numeric>::empty() const {
+        if(this->hPolytope.empty())
+            return true;
+
+        return std::any_of(this->openFacets.begin(), this->openFacets.end(), [this](const STDPolytope::Polytope& facet) {
+            return facet == this->hPolytope;
+        });
+    }
+
+    template<typename Numeric>
     bool STDPolytope<Numeric>::contains(const hypro::Point<Numeric> &point) const {
         // Check if the point is contained in our polytope at all
         if (!this->hPolytope.contains(point))

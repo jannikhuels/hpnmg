@@ -38,7 +38,7 @@ namespace hpnmg {
         bool contains(const hypro::Point<Numeric> &point) const;
         size_t dimension() const { return this->hPolytope.dimension(); }
         size_t effectiveDimension() const;
-        bool empty() const { return this->hPolytope.empty(); }
+        bool empty() const;
 
         /**
          * Inserts a new half space into the polytope. That is, intersects the underlying polytope and all open facets
