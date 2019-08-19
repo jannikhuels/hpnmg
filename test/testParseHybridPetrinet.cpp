@@ -618,11 +618,11 @@ TEST(ParseHybridPetrinet, GuardDiscreteConflict)
     ASSERT_EQ(0.5, children[0].getParametricLocation().getConflictProbability());
 }
 
-/*TEST(ParseHybridPetrinet, Example5General) {
+TEST(ParseHybridPetrinet, RateAdaptionNew) {
     auto reader= new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("jannik5general.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("exampleperformanceeval.xml");
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto writer = new PLTWriter();
-    writer->writePLT(plt, 20);
-}*/
+    writer->writePLT(plt, 10);
+}
