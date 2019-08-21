@@ -301,18 +301,9 @@ namespace hpnmg {
 
         std::vector<STDPolytope<mpq_class>> eventualSat{};
         //region Gather all polytopes that most certainly fulfill `formula` within the time frame.
-        // 1. The polytopes resulting from recursively handled child locations
-        for (auto& childNode : this->plt.getChildNodes(node)) {
             std::cout << "Until @ Node " << node.getNodeID() << ": Recursively checking Node " << childNode.getNodeID() << std::endl;
-            childNode.computeRegion(this->plt);
-            // untilHandler returns downwards extended polytopes
-            auto childSat = this->untilHandler(childNode, formula, atTime);
-            std::move(childSat.begin(), childSat.end(), std::back_inserter(eventualSat));
-        }
-
         std::cout << "Until @ Node " << node.getNodeID() << ": Recursion terminated. Computing sat(goal). " << std::endl;
-
-        // 2. The polytopes in the current region that fulfill `formula.goal`
+        // The polytopes in the current region that fulfill `formula.goal`
         auto regionSat = this->satisfiesHandler(node, formula.goal, atTime);
         std::transform(regionSat.begin(), regionSat.end(), regionSat.begin(), [&upperLimit](STDPolytope<mpq_class> sat) {
             sat.insert(upperLimit);
@@ -325,6 +316,8 @@ namespace hpnmg {
 
         std::cout << "Until @ Node " << node.getNodeID() << ": Done." << std::endl;
 
+        // All polytopes that do satisfy or do not satisfy the until formula inside this region
+        std::vector<STDPolytope<mpq_class>> knownSat(eventualSat);
         // Get the polytopes where the until is "unfulfilled" immediately. The downward extension is needed multiple
         // times, so it is calculated and cached here already.
         auto deadRegions = std::vector<std::pair<STDPolytope<mpq_class>, STDPolytope<mpq_class>::Polytope>>();
@@ -348,10 +341,23 @@ namespace hpnmg {
 
             for (const auto& deadRegion : this->satisfiesHandler(node, deadFormula, atTime)) {
                 std::cout << "Done. Extending member of sat(dead) downwards." << std::endl;
-                deadRegions.emplace_back(deadRegion, deadRegion.extendDownwards());
+                const auto deadRegionDownwardsExtension = deadRegion.extendDownwards();
+                deadRegions.emplace_back(deadRegion, deadRegionDownwardsExtension);
+                knownSat.push_back(STDPolytope<mpq_class>(deadRegionDownwardsExtension));
             }
 
             std::cout << "Done." << std::endl;
+        }
+
+        // Check if there is a part of the region left, which needs the processing in the child locations.
+        if (!fullRegion.setDifference(knownSat).empty()) {
+            // The polytopes resulting from recursively handled child locations
+            for (auto& childNode : this->plt.getChildNodes(node)) {
+                childNode.computeRegion(this->plt);
+                // untilHandler returns downwards extended polytopes
+                auto childSat = this->untilHandler(childNode, formula, atTime);
+                std::move(childSat.begin(), childSat.end(), std::back_inserter(eventualSat));
+            }
         }
 
         auto sat = std::vector<STDPolytope<mpq_class>>();
