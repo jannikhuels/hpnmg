@@ -112,7 +112,7 @@ namespace hpnmg {
                                                                        const vector<pair<string, map<string, float>>> &distributionsNormalized,
                                                                        char algorithm, int functioncalls, double &error);
 
-        double getProbabilityForUnionOfPolytopesUsingMonteCarlo(const vector<HPolytope<double>> &polytopes,
+        double getProbabilityForUnionOfPolytopesUsingMonteCarlo(vector<HPolytope<double>> polytopes,
                                                                 const vector<pair<string, map<string, float>>> &distributionsNormalized,
                                                                 char algorithm, int functioncalls, double &error);
 

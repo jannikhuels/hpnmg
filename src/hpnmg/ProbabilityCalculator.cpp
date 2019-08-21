@@ -506,12 +506,28 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
     double ProbabilityCalculator::getProbabilityForUnionOfPolytopesUsingMonteCarlo(
-        const vector<HPolytope<double>> &polytopes,
+        std::vector<HPolytope<double>> polytopes,
         const vector<pair<string, map<string, float>>> &distributionsNormalized,
         char algorithm,
         int functioncalls,
         double &error
     ){
+        polytopes.erase(
+                std::remove_if(polytopes.begin(), polytopes.end(), [](HPolytope<double> region) {
+                    auto vertices = region.vertices();
+                    long maxDim = vertices.begin()->rawCoordinates().rows();
+                    hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
+                    // use first vertex as origin, start at second vertex
+                    long rowIndex = 0;
+                    for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
+                        matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+                    }
+                    auto effectiveDimension = int(matr.fullPivLu().rank());
+                    return effectiveDimension < region.dimension();
+                }),
+                polytopes.end()
+        );
+
         double probability = 0.0;
         error = 0.0;
         double currentError;
