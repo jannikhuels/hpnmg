@@ -272,7 +272,7 @@ namespace hpnmg {
 
         if (hasDependency == false) {
             if (drift == 0) {
-                return STDPolytope<double>::Empty();
+                return STDPolytope<double>::Empty(baseRegion.dimension());
             }
         }
 
@@ -313,7 +313,7 @@ namespace hpnmg {
             if ((markingNormed[0] <= level) != negate)
                 return baseRegion;
             else
-                return STDPolytope<double>::Empty();
+                return STDPolytope<double>::Empty(baseRegion.dimension());
         }
 
         STDPolytope<double> intersectRegion(baseRegion);

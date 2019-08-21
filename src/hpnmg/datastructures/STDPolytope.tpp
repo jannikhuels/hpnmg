@@ -21,7 +21,16 @@
 
 namespace hpnmg {
     template<typename Numeric>
-    STDPolytope<Numeric> STDPolytope<Numeric>::Empty() { return STDPolytope(Polytope::Empty()); }
+    STDPolytope<Numeric> STDPolytope<Numeric>::Empty(size_t dimension) {
+        vector_t<Numeric> direction = vector_t<Numeric>::Zero(dimension);
+        direction(0) = Numeric(1);
+        Halfspace<Numeric> a(direction, Numeric(-1));
+        direction(0) = Numeric(-1);
+        Halfspace<Numeric> b(direction, Numeric(-1));
+        STDPolytope::Polytope res(std::vector<Halfspace<Numeric>>{a,b});
+        assert(res.empty() == true);
+        return STDPolytope<Numeric>(res);
+    }
 
     template<typename Numeric>
     STDPolytope<Numeric>::STDPolytope(const Polytope& polytope) : STDPolytope(polytope, {}) {}
@@ -195,11 +204,11 @@ namespace hpnmg {
         //    before the intersection, they must be equal.
         for (const auto& openFacet : this->openFacets)
             if (openFacet.intersect(timeSlice).vertices().size() == timeSlice.vertices().size())
-                return STDPolytope::Polytope::Empty();
+                return STDPolytope::Empty(this->dimension()).hPolytope;
 
         auto reducedVertices = timeSlice.vertices();
         if (reducedVertices.empty())
-            return STDPolytope::Polytope::Empty();
+            return STDPolytope::Empty(this->dimension()).hPolytope;
 
         for (auto &vertex : reducedVertices)
             vertex.reduceDimension(vertex.dimension() - 1);
@@ -223,7 +232,7 @@ namespace hpnmg {
     typename STDPolytope<Numeric>::Polytope STDPolytope<Numeric>::extendDownwards() const {
         auto vertices = this->hPolytope.vertices();
         if (vertices.empty())
-            return Polytope::Empty();
+            return STDPolytope<Numeric>::Empty(this->dimension()).hPolytope;
 
         // The vector must not reallocate (and thus invalidate its iterators) while we duplicate it
         vertices.reserve(vertices.size() * 2);

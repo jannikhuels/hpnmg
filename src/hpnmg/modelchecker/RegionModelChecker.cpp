@@ -146,7 +146,7 @@ namespace hpnmg {
         if (satisfied != negate)
             return STDPolytope<mpq_class>(node.getRegion());
         else
-            return STDPolytope<mpq_class>::Empty();
+            return STDPolytope<mpq_class>::Empty(node.getRegion().dimension());
     }
 
     std::vector<STDPolytope<mpq_class>> RegionModelChecker::conj(const ParametricLocationTree::Node& node, const Conjunction& conj, double atTime) {

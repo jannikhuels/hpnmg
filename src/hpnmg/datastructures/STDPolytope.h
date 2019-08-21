@@ -21,7 +21,7 @@ namespace hpnmg {
     public:
         using Polytope = hypro::HPolytope<Numeric>;
 
-        static STDPolytope Empty();
+        static STDPolytope Empty(size_t dimension);
         STDPolytope() = default;
         explicit STDPolytope(const Polytope& polytope);
         STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets);
