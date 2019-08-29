@@ -37,7 +37,7 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTFoldedNormal) {
     result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 7)), 10);
     // folded normal distribution with mu = 5 and sigma = 3
     // (1 - cdf(6)) = (0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 0.630436
-    EXPECT_NEAR(0.6304357934282712096662251163331139441485145682519407, result.first, result.second);
+     EXPECT_NEAR(0.6304357934282712096662251163331139441485145682519407, result.first, result.second);
 }
 
 TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTUniform) {

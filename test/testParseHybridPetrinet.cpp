@@ -409,38 +409,6 @@ TEST(ParseHybridPetrinet, Example2General) {
     }
 }
 
-TEST(ParseHybridPetrinet, DynamicTransitions)
-{
-    ReadHybridPetrinet reader;
-    ParseHybridPetrinet parser;
-    PLTWriter writer;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("exampleDynamic.xml");
-    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
-    writer.writePLT(plt,20);
-
-    shared_ptr<ContinuousTransition> transition = hybridPetrinet->getContinuousTransitions()["td0"];
-    EXPECT_EQ(2,transition->currentRate);
-    EXPECT_EQ(5,transition->getRate());
-
-
-}
-
-/*TEST(ParseHybridPetrinet, DynamicTransitions2)
-{
-    ReadHybridPetrinet reader;
-    ParseHybridPetrinet parser;
-    PLTWriter writer;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("battery.xml");
-    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
-    writer.writePLT(plt,20);
-
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet2 = reader.readHybridPetrinet("battery_simple.xml");
-    shared_ptr<hpnmg::ParametricLocationTree> plt2 = parser.parseHybridPetrinet(hybridPetrinet, 18);
-    writer.writePLT(plt2,20);
-
-
-}*/
-
 TEST(ParseHybridPetrinet, GuardArcContinuous)
 {
     auto reader = new ReadHybridPetrinet();
@@ -617,15 +585,6 @@ TEST(ParseHybridPetrinet, GuardDiscreteConflict)
     ASSERT_NEAR(7, children[0].getParametricLocation().getSourceEvent().getTime(), 0.01);
     ASSERT_EQ(0.5, children[0].getParametricLocation().getConflictProbability());
 }
-
-/*TEST(ParseHybridPetrinet, Example5General) {
-    auto reader= new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("jannik5general.xml");
-    auto parser = new ParseHybridPetrinet();
-    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
-    auto writer = new PLTWriter();
-    writer->writePLT(plt, 20);
-}*/
 
 TEST(ParseHybridPetrinet, GeneralActivatingAnotherGeneral) {
     auto reader = new ReadHybridPetrinet();
