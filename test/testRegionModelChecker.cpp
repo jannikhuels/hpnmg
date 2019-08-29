@@ -435,3 +435,18 @@ TEST(RegionModelChecker, ChecktimeMeetsTwoDeterministicEvents) {
     EXPECT_NEAR(0.0, round(result.first * 10) / 10, result.second);
 }
 
+TEST(RegionModelChecker, ChecktimeMeetsOneDeterministicEventWithTwoGT) {
+    const double maxTime = 40;
+    // Use a well chosen probablity distribution. Here folded normal for all gts.
+    auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("grid_independent_2gt.xml");
+    auto modelChecker = RegionModelChecker(*hpn, maxTime);
+
+    auto plt = ParseHybridPetrinet{}.parseHybridPetrinet(hpn, maxTime);
+
+    PLTWriter{}.writePLT(plt, maxTime);
+
+    // Adding more general transitions that are independent from the property to check
+    // resulted in a too small proability.
+    auto result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("grid_failed", 1)), 18);
+    EXPECT_NEAR(1.0, round(result.first * 10) / 10, result.second);
+}

@@ -626,3 +626,22 @@ TEST(ParseHybridPetrinet, GuardDiscreteConflict)
     auto writer = new PLTWriter();
     writer->writePLT(plt, 20);
 }*/
+
+TEST(ParseHybridPetrinet, GeneralActivatingAnotherGeneral) {
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("one_gt_enabling_another_gt.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto jumpChild = plt->getChildNodes(plt->getRootNode())[0];
+    auto childOfInterest = plt->getChildNodes(jumpChild)[1];
+
+    EXPECT_EQ(5, childOfInterest.getNodeID());
+
+    vector<vector<vector<double>>> expectedLeftBound{{{0}, {0,0}},
+                                                     {{3,-1}}};
+    vector<vector<vector<double>>> expectedRightBound{{{3}, {20,0}},
+                                                      {{20}}};
+
+    EXPECT_EQ(expectedLeftBound, childOfInterest.getParametricLocation().getGeneralIntervalBoundLeft());
+    EXPECT_EQ(expectedRightBound, childOfInterest.getParametricLocation().getGeneralIntervalBoundRight());
+}

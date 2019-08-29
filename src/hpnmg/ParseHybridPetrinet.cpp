@@ -857,8 +857,13 @@ namespace hpnmg {
                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet,
                                     parentLocation.getGeneralIntervalBoundLeft(), parentLocation
                                                                                          .getGeneralIntervalBoundRight(), parentLocation.getGeneralTransitionsFired())) {
-                for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
-                    generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+                for (int j = 0; j < timeDelta.size(); ++j) {
+                    if (j >= generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].size())
+                        generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].push_back(timeDelta[j]);
+                    else
+                        generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+                }
+
             }
         }
         // adjust general bounds for every other timeDelta, than timeDelta
@@ -1007,8 +1012,12 @@ namespace hpnmg {
                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet,
                                     parentLocation.getGeneralIntervalBoundLeft(), parentLocation.getGeneralIntervalBoundRight(), parentLocation.getGeneralTransitionsFired()
             )) {
-                for (int j = 0; j < generalIntervalBoundLeft[i].size() && j < timeDelta.size(); ++j)
-                    generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+                for (int j = 0; j < timeDelta.size(); ++j) {
+                    if (j >= generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].size())
+                        generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].push_back(timeDelta[j]);
+                    else
+                        generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1][j] += timeDelta[j];
+                }
             }
         }
         // adjust general bounds for every other timeDelta, than timeDelta
