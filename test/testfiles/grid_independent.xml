@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='ASCII'?>
+<HPnG>
+  <places>
+    <discretePlace marking="1" id="grid_available"/>
+    <discretePlace marking="0" id="grid_failed"/>
+    <discretePlace marking="1" id="number_of_failures"/>
+    <discretePlace marking="0" id="p2"/>
+    <discretePlace marking="1" id="p1"/>
+  </places>
+  <transitions>
+    <deterministicTransition id="failed" discTime="5" priority="0" weight="1"/>
+    <deterministicTransition id="t1" discTime="5" priority="0" weight="1"/>
+    <generalTransition id="grid_repair" cdf="uniform" priority="0" weight="1" policy="resume">
+        <parameter name="a" value="0"/>
+        <parameter name="b" value="10"/>
+    </generalTransition>
+  </transitions>
+  <arcs>
+    <discreteArc weight="1" fromNode="grid_failed" toNode="grid_repair" id="grid_failedtogrid_repair"/>
+    <discreteArc weight="1" fromNode="grid_repair" toNode="grid_available" id="grid_repairtogrid_available"/>
+    <discreteArc weight="1" fromNode="grid_available" toNode="failed" id="grid_availabletofailed"/>
+    <discreteArc weight="1" fromNode="failed" toNode="grid_failed" id="failedtogrid_failed"/>
+    <discreteArc weight="1" fromNode="number_of_failures" toNode="failed" id="number_of_failurestofailed"/>
+    <discreteArc weight="1" fromNode="p1" toNode="t1" id="p1tot1"/>
+    <discreteArc weight="1" fromNode="t1" toNode="p2" id="t1top2"/>
+  </arcs>
+</HPnG>

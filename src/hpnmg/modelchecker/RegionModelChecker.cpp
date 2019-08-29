@@ -59,7 +59,7 @@ namespace hpnmg {
                 3,
                 50000,
                 nodeError
-            );
+            ) * node.getParametricLocation().getAccumulatedProbability();
             std::cout << "[Location " << node.getNodeID() << "]: Running total probability: " << probability << std::endl;
             error += nodeError;
         }

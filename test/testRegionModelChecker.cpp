@@ -413,3 +413,25 @@ TEST(RegionModelChecker, DeterministicTransitionConflict) {
     )), 1);
     EXPECT_NEAR(1.0, round(result.first * 10) / 10, result.second);
 }
+
+TEST(RegionModelChecker, ChecktimeMeetsTwoDeterministicEvents) {
+    const double maxTime = 20;
+    // TG: uniform distribution over [0, 10]
+    auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("grid_independent.xml");
+    auto modelChecker = RegionModelChecker(*hpn, maxTime);
+
+    auto plt = ParseHybridPetrinet{}.parseHybridPetrinet(hpn, maxTime);
+
+    // There was the problem that two conflicting determinstic transitions created two independent regions
+    // and the Probability calculator did not incorporated the accumulated probability
+    auto result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("grid_failed", 1)), 5);
+    EXPECT_NEAR(1.0, round(result.first * 10) / 10, result.second);
+
+    // Check that the relative time (since enabling) is used for general transitions
+    result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("grid_failed", 1)), 7);
+    EXPECT_NEAR(0.8, round(result.first * 10) / 10, result.second);
+
+    result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("grid_failed", 1)), 18);
+    EXPECT_NEAR(0.0, round(result.first * 10) / 10, result.second);
+}
+
