@@ -292,6 +292,23 @@ namespace hpnmg {
 
         // Make sure that this node is even reachable within the formula's time frame
         auto fullRegion = STDPolytope<mpq_class>(node.getRegion());
+
+        cout << "Dimension: [" << fullRegion.effectiveDimension() << ", " << fullRegion.dimension() << "]" << endl;
+
+        // Check if the current region is a vanishing region, and only consider the children
+        if (fullRegion.effectiveDimension() < fullRegion.dimension()) {
+            std::vector<STDPolytope<mpq_class>> childrenSat{};
+            for (auto& childNode : this->plt.getChildNodes(node)) {
+                std::cout << "Until @ Node " << node.getNodeID() << ": Recursively checking Node " << childNode.getNodeID() << std::endl;
+                childNode.computeRegion(this->plt);
+                // untilHandler returns downwards extended polytopes
+                auto childSat = this->untilHandler(childNode, formula, atTime);
+                std::move(childSat.begin(), childSat.end(), std::back_inserter(childrenSat));
+            }
+            this->untilCache.insert({node.getNodeID(), childrenSat});
+            return childrenSat;
+        }
+
         fullRegion.insert(upperLimit);
         fullRegion.insert(lowerLimit);
         if (fullRegion.empty()){
@@ -301,8 +318,6 @@ namespace hpnmg {
 
         std::vector<STDPolytope<mpq_class>> eventualSat{};
         //region Gather all polytopes that most certainly fulfill `formula` within the time frame.
-            std::cout << "Until @ Node " << node.getNodeID() << ": Recursively checking Node " << childNode.getNodeID() << std::endl;
-        std::cout << "Until @ Node " << node.getNodeID() << ": Recursion terminated. Computing sat(goal). " << std::endl;
         // The polytopes in the current region that fulfill `formula.goal`
         auto regionSat = this->satisfiesHandler(node, formula.goal, atTime);
         std::transform(regionSat.begin(), regionSat.end(), regionSat.begin(), [&upperLimit](STDPolytope<mpq_class> sat) {

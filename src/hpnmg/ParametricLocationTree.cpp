@@ -343,7 +343,17 @@ namespace hpnmg {
                 valid = true;
                 bounds.push_back(parametricLocation.getRVIntervals(occurings, this->maxTime, dimension));
             }
+
+            bool markingIsVanishing = false;
+
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+
+                // Check if any of the childNodes are an immediate event. This would make the current marking
+                // vanishing and the location must not be added to the candidate set.
+                if (startNode.getParametricLocation().getSourceEvent().getGeneralDependenciesNormed() == node.getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()) {
+                    markingIsVanishing = true;
+                    break;
+                }
 
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
                 if (latestEntryTime >= interval.first) {
@@ -384,7 +394,7 @@ namespace hpnmg {
             std::vector<std::vector<double>> unsortedEntryTimes = entryTimes;
             std::sort(entryTimes.begin(), entryTimes.end(),  wayToSortTimes);
 
-            if(valid) {
+            if(valid && !markingIsVanishing) {
                 parametricLocation.setIntegrationIntervals(unsortedEntryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);

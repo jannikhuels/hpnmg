@@ -319,3 +319,41 @@ TEST(RegionModelChecker, UntilUniform) {
     )), 8);
     EXPECT_NEAR(0.8, round(result.first * 10) / 10, result.second);
 }
+
+TEST(RegionModelChecker, VanishingMarking) {
+    const double maxTime = 20;
+    // TG: uniform distribution over [0, 10]
+    auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("immediate.xml");
+    auto modelChecker = RegionModelChecker(*hpn, maxTime);
+
+    auto plt = ParseHybridPetrinet{}.parseHybridPetrinet(hpn, maxTime);
+
+    // Place p1 initially contains one token
+    auto result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("p1", 1)), 1);
+    EXPECT_NEAR(0.9, round(result.first*10)/10, result.second);
+
+    // After the firing of td at t=5, the immediate transition ti has concession, so a token resides in p2 for zero time
+    result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("p2", 1)), 5);
+    EXPECT_NEAR(0.0, round(result.first * 10) / 10, result.second);
+
+    // The token should immediately move to p2 after firing of td and ti
+    result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("p3", 1)), 5);
+    EXPECT_NEAR(0.5, round(result.first * 10) / 10, result.second);
+
+    // No vanishing marking should be eventually reached
+    result = modelChecker.satisfies(Formula(std::make_shared<Until>(
+            Formula(std::make_shared<DiscreteAtomicProperty>("p1", 1)),
+            Formula(std::make_shared<DiscreteAtomicProperty>("p2", 1)),
+            maxTime
+    )), 1);
+    EXPECT_NEAR(0.0, round(result.first * 10) / 10, result.second);
+
+    // Do not consider a vanishing marking at all, but all child locations
+    result = modelChecker.satisfies(Formula(std::make_shared<Until>(
+            Formula(std::make_shared<DiscreteAtomicProperty>("p1", 1)),
+            Formula(std::make_shared<DiscreteAtomicProperty>("p3", 1)),
+            maxTime
+    )), 1);
+    EXPECT_NEAR(0.5, round(result.first * 10) / 10, result.second);
+}
+
