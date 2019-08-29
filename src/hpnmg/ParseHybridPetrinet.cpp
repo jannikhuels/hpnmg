@@ -512,7 +512,8 @@ namespace hpnmg {
             if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
                 continue;
             // timedelta was used with higher order
-            if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end())
+            if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end() ||
+            find(newConsideredPlace.begin(), newConsideredPlace.end(), timeDelta) != newConsideredPlace.end())
                 continue;
             double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                 generalIntervalBoundRight, timeDelta);
@@ -533,7 +534,8 @@ namespace hpnmg {
                     if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
                         continue;
                     // timedelta was used with higher order
-                    if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end())
+                    if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end()||
+                        find(newConsideredPlace.begin(), newConsideredPlace.end(), timeDelta) != newConsideredPlace.end())
                         continue;
                     double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                         generalIntervalBoundRight, timeDelta);
@@ -568,6 +570,7 @@ namespace hpnmg {
                 double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                     generalIntervalBoundRight, timeDelta);
                 if (minimumTime <= minimalMaximum) {
+                    alreadyConsidered.push_back(timeDelta);
                     addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                 }
             }
@@ -588,6 +591,7 @@ namespace hpnmg {
                 double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
                                                     generalIntervalBoundRight, timeDelta);
                 if (minimumTime <= minimalMaximum) {
+                    alreadyConsidered.push_back(timeDelta);
                     addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet);
                 }
             }

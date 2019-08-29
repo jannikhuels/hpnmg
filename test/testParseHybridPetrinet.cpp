@@ -604,3 +604,23 @@ TEST(ParseHybridPetrinet, GeneralActivatingAnotherGeneral) {
     EXPECT_EQ(expectedLeftBound, childOfInterest.getParametricLocation().getGeneralIntervalBoundLeft());
     EXPECT_EQ(expectedRightBound, childOfInterest.getParametricLocation().getGeneralIntervalBoundRight());
 }
+
+TEST(ParseHybridPetrinet, ContinuousConflict) {
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("continuous_conflict.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+
+    // Two continuous places that get drained at the exact same time resulted in two locations in the plt.
+    // These events should be consolidated.
+
+    auto continuousChilds = plt->getChildNodes(plt->getRootNode());
+
+    EXPECT_EQ(1, continuousChilds.size());
+    EXPECT_EQ(Continuous, continuousChilds[0].getParametricLocation().getSourceEvent().getEventType());
+
+    auto discreteChilds = plt->getChildNodes(continuousChilds[0]);
+
+    EXPECT_EQ(1, discreteChilds.size());
+    EXPECT_EQ(Timed, discreteChilds[0].getParametricLocation().getSourceEvent().getEventType());
+}
