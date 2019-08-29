@@ -356,6 +356,14 @@ namespace hpnmg {
                 }
 
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
+                double earliestEntryTime = node.getParametricLocation().getEarliestEntryTime();
+
+                // Check if the entry time is constant and exactly meets the checktime.
+                if (latestEntryTime == earliestEntryTime && latestEntryTime == interval.first) {
+                    valid = false;
+                    break;
+                }
+
                 if (latestEntryTime >= interval.first) {
                     valid = true;
 

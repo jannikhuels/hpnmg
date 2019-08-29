@@ -357,3 +357,59 @@ TEST(RegionModelChecker, VanishingMarking) {
     EXPECT_NEAR(0.5, round(result.first * 10) / 10, result.second);
 }
 
+TEST(RegionModelChecker, ChecktimeMeetsAnDeterministicEvent) {
+    const double maxTime = 20;
+    // TG: uniform distribution over [0, 10]
+    auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("immediate.xml");
+    auto modelChecker = RegionModelChecker(*hpn, maxTime);
+
+    auto plt = ParseHybridPetrinet{}.parseHybridPetrinet(hpn, maxTime);
+
+    // Ensure that only the latest possible location is used when the checktime meets the border of regions
+    auto result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("p4", 0)), 5);
+    EXPECT_NEAR(0.5, round(result.first * 10) / 10, result.second);
+}
+
+TEST(RegionModelChecker, DeterministicTransitionConflict) {
+    const double maxTime = 20;
+    auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("deterministic_same_time.xml");
+    auto modelChecker = RegionModelChecker(*hpn, maxTime);
+
+    auto plt = ParseHybridPetrinet{}.parseHybridPetrinet(hpn, maxTime);
+
+    // Two conflicting deterministic transitions fire at the exact same time.
+    // We want to check that no vanishing marking is considered.
+
+    // There is no marking m_p1=0 and m_p2=1 that is eventually reached, this is vanishing
+    auto result = modelChecker.satisfies(Formula(std::make_shared<Until>(
+            Formula(std::make_shared<True>()),
+            Formula(std::make_shared<Conjunction>(
+                    Formula(std::make_shared<DiscreteAtomicProperty>("p1", 0)),
+                    Formula(std::make_shared<DiscreteAtomicProperty>("p2", 1))
+            )),
+            maxTime
+    )), 1);
+    EXPECT_NEAR(0.0, round(result.first * 10) / 10, result.second);
+
+    // There is no marking m_p1=1 and m_p2=0 that is eventually reached, this is vanishing
+    result = modelChecker.satisfies(Formula(std::make_shared<Until>(
+            Formula(std::make_shared<True>()),
+            Formula(std::make_shared<Conjunction>(
+                    Formula(std::make_shared<DiscreteAtomicProperty>("p1", 1)),
+                    Formula(std::make_shared<DiscreteAtomicProperty>("p2", 0))
+            )),
+            maxTime
+    )), 1);
+    EXPECT_NEAR(0.0, round(result.first * 10) / 10, result.second);
+
+    // There is a marking m_p1=0 and m_p2=0 reached eventually
+    result = modelChecker.satisfies(Formula(std::make_shared<Until>(
+            Formula(std::make_shared<True>()),
+            Formula(std::make_shared<Conjunction>(
+                    Formula(std::make_shared<DiscreteAtomicProperty>("p1", 0)),
+                    Formula(std::make_shared<DiscreteAtomicProperty>("p2", 0))
+            )),
+            maxTime
+    )), 1);
+    EXPECT_NEAR(1.0, round(result.first * 10) / 10, result.second);
+}
