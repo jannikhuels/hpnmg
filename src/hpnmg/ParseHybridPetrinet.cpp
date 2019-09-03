@@ -702,10 +702,12 @@ namespace hpnmg {
 
             // add boundaries multiplicated with value to time vector
             for (int i = 0; i < time.size(); ++i)
-                if (value >= 0)
-                    time[i] += value * boundaries[i];
-                else
-                    time[i] += value * oppositeBoundaries[i];
+                if (value >= 0) {
+                    time[i] += i < boundaries.size() ? value * boundaries[i] : 0;
+                }
+                else {
+                    time[i] += i < oppositeBoundaries.size() ? value * oppositeBoundaries[i] : 0;
+                }
 
         }
         return time[0];

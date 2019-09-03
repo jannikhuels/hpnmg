@@ -205,9 +205,9 @@ namespace hpnmg {
 
             for (int i = 1; i <= dependencies.size(); ++i) {
                 if (value >= 0) {
-                    dependencies[i-1] += value * lowerBounds[i];
+                    dependencies[i-1] += i < lowerBounds.size() ? value * lowerBounds[i] : 0;
                 } else {
-                    dependencies[i-1] += value * upperBounds[i];
+                    dependencies[i-1] += i < upperBounds.size() ? value * upperBounds[i] : 0;
                 }
             }
         }
