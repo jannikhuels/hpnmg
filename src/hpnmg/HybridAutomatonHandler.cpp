@@ -11,7 +11,7 @@ namespace hpnmg {
     HybridAutomatonHandler::HybridAutomatonHandler() {}
 
 
-    HybridAutomaton<Number> HybridAutomatonHandler::convertAutomaton(shared_ptr<SingularAutomaton> singular) {
+    HybridAutomaton<Number> HybridAutomatonHandler::convertAutomaton(shared_ptr<SingularAutomaton> singular, double maxTime) {
 
         singularAutomaton = singular;
         automaton = HybridAutomaton<Number>();
@@ -31,7 +31,7 @@ namespace hpnmg {
 
         for (shared_ptr<SingularAutomaton::Location> originalLocation : singularAutomaton->getLocations()) {
 
-            addLocation(originalLocation);
+            addLocation(originalLocation, maxTime);
 
             if (originalLocation->getLocationId() == id)
                 initial = locations.size() - 1;
@@ -61,7 +61,7 @@ namespace hpnmg {
     }
 
 
-    void HybridAutomatonHandler::addLocation(shared_ptr<SingularAutomaton::Location> originalLocation) {
+    void HybridAutomatonHandler::addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime) {
 
         hypro::Location<Number> newLocation = hypro::Location<Number>();
 
@@ -76,14 +76,18 @@ namespace hpnmg {
                 countX++;
         }
 
-        int countC = 0;
-        for (int i = 0; i < invariantsC.size(); i++) {
-            if (invariantsC[i].first != UNLIMITED)
-                countC++;
-        }
+        vector_t<Number> invariantVec = vector_t<Number>::Zero(2 * g + countX + 2 * c);
+        matrix_t<Number> invariantMat = matrix_t<Number>::Zero(2 * g + countX + 2 * c, v);
 
-        vector_t<Number> invariantVec = vector_t<Number>::Zero(countX + countC);
-        matrix_t<Number> invariantMat = matrix_t<Number>::Zero(countX + countC, v);
+
+        //constraints for general variables
+        for (int i = 0; i < g; i++) {
+            invariantVec(i) = Number(maxTime);
+            invariantVec(i + 1) = Number(0);
+            invariantMat(2 * i, i) = Number(1);
+            invariantMat(2 * i + 1, i) = Number(-1);
+            cout << " | Constraint g" << (i + 1) << " in [0," << maxTime << "]";
+        }
 
         //constraints for continuous variables
         countX = 0;
@@ -92,36 +96,39 @@ namespace hpnmg {
             if (invariantsX[i].first != UNLIMITED) {
 
                 if (invariantsX[i].first == GREATER_EQUAL) {
-                    invariantMat(countX, g + i) = Number(-1);
-                    invariantVec(countX) = Number(-1 * carl::rationalize<Number>(invariantsX[i].second));
-                    cout << " | Constraint x" << (i + 1) << ">=" << invariantVec(countX) * (-1);
+                    invariantMat(2 * g + countX, g + i) = Number(-1);
+                    invariantVec(2 * g + countX) = Number(-1 * carl::rationalize<Number>(invariantsX[i].second));
+                    cout << " | Constraint x" << (i + 1) << ">=" << invariantVec(2 * g +countX) * (-1);
                 } else {
-                    invariantMat(countX, g + i) = Number(1);
-                    invariantVec(countX) = Number(carl::rationalize<Number>(invariantsX[i].second));
-                    cout << " | Constraint x" << (i + 1) << "<=" << invariantVec(countX);
+                    invariantMat(2 * g + countX, g + i) = Number(1);
+                    invariantVec(2 * g + countX) = Number(carl::rationalize<Number>(invariantsX[i].second));
+                    cout << " | Constraint x" << (i + 1) << "<=" << invariantVec(2 * g +countX);
                 }
                 countX++;
             }
         }
 
         //constraints for deterministic clocks
-        countC = 0;
-        for (int i = 0; i < invariantsC.size(); i++) {
+        for (int i = 0; i < g; i++) {
+            invariantVec(2 * g + countX + i) = Number(maxTime);
+            invariantVec(2 * g + countX + i + 1) = Number(0);
+            invariantMat(2 * g + countX + 2 * i, i) = Number(1);
+            invariantMat(2 * g + countX + 2 * i + 1, i) = Number(-1);
 
             if (invariantsC[i].first != UNLIMITED) {
 
-                if (invariantsC[i].first == GREATER_EQUAL) {
-                    invariantMat(countX + countC, g + x + i) = Number(-1);
-                    invariantVec(countX + countC) = Number(-1 * carl::rationalize<Number>(invariantsC[i].second));
-                    cout << " | Constraint c" << (i + 1) << ">=" << invariantVec(countX + countC) * (-1);
-                } else {
-                    invariantMat(countX + countC, g + x + i) = Number(1);
-                    invariantVec(countX + countC) = Number(carl::rationalize<Number>(invariantsC[i].second));
-                    cout << " | Constraint c" << (i + 1) << "<=" << invariantVec(countX + countC);
-                }
-                countC++;
-            }
+                if (invariantsC[i].first == GREATER_EQUAL)
+                    invariantVec(2 * g + countX + i + 1) = Number(-1 * carl::rationalize<Number>(invariantsC[i].second));
+                else
+                    invariantVec(2 * g + countX + i) = Number(carl::rationalize<Number>(invariantsC[i].second));
+
+           }
+
+            cout << " | Constraint c" << (i + 1) << " in [" << invariantVec(2 * g + countX + i + 1) << "," << invariantVec(2 * g + countX + i) << "]";
         }
+
+
+
 
         Condition<Number> inv(invariantMat, invariantVec);
         newLocation.setInvariant(inv);
@@ -209,7 +216,7 @@ namespace hpnmg {
             guardVec(0) = Number(-1 * carl::rationalize<Number>(originalTransition->getValuePreCompare()));
             guardMat(0, varIndex) = Number(-1);
 
-            cout << " | Guard " << type << "(" << varIndex << ") >=" << -1 * guardVec(0);
+            cout << " | Guard " << type << "(" << varIndex << ") =" << -1 * guardVec(0);
 
             guard.setMatrix(guardMat);
             guard.setVector(guardVec);
@@ -222,6 +229,7 @@ namespace hpnmg {
 
         Reset<Number> reset;
         vector_t<Number> constantReset = vector_t<Number>::Zero(v);
+
         matrix_t<Number> linearReset = matrix_t<Number>::Identity(v, v);
 
         if (type == General || type == Timed) {
@@ -230,11 +238,11 @@ namespace hpnmg {
             cout << " | Reset " << type << "(" << varIndex << ") =" << 0;
         }
 
+        cout << endl;
+
         reset.setVector(constantReset);
         reset.setMatrix(linearReset);
         newTransition.setReset(reset);
-
-        cout << endl;
 
         // -- Connecting locations --
         newTransition.setSource(&locations[source]);
@@ -257,11 +265,14 @@ namespace hpnmg {
         matrix_t<Number> boxMat = matrix_t<Number>::Zero(2 * v, v);
         vector_t<Number> boxVec = vector_t<Number>::Zero(2 * v);
 
+        cout << "Initial state index: " << initial;
+
         for (int i = 0; i < initG.size(); i++) {
             boxVec(i) = Number(carl::rationalize<Number>(initG[i]));
             boxVec(i + 1) = Number(carl::rationalize<Number>(initG[i]));
             boxMat(2 * i, i) = Number(1);
             boxMat(2 * i + 1, i) = Number(-1);
+            cout << " | g" << i + 1 << " = " << initG[i];
         }
 
         for (int i = 0; i < initX.size(); i++) {
@@ -269,14 +280,18 @@ namespace hpnmg {
             boxVec(2 * g + i + 1) = Number(carl::rationalize<Number>(initX[i]));
             boxMat(2 * g + 2 * i, g + i) = Number(1);
             boxMat(2 * g + 2 * i + 1, g + i) = Number(-1);
+            cout << " | x" << i  + 1 << " = " << initX[i];
         }
 
-        for (int i = 0; i < initG.size(); i++) {
-            boxVec(2 * g + 2 * x + i) = Number(carl::rationalize<Number>(initG[i]));
-            boxVec(2 * g + 2 * x + i + 1) = Number(carl::rationalize<Number>(initG[i]));
+        for (int i = 0; i < initC.size(); i++) {
+            boxVec(2 * g + 2 * x + i) = Number(carl::rationalize<Number>(initC[i]));
+            boxVec(2 * g + 2 * x + i + 1) = Number(carl::rationalize<Number>(initC[i]));
             boxMat(2 * g + 2 * x + 2 * i, g + x + i) = Number(1);
             boxMat(2 * g + 2 * x + 2 * i + 1, g + x + i) = Number(-1);
+            cout << " | c" << i  + 1 << " = " << initC[i];
         }
+
+        cout << endl;
 
         // create initial state.
         State_t<Number> initialState;
@@ -332,7 +347,7 @@ namespace hpnmg {
                 std::vector<Point<Number>> points = set.vertices();
                 if (!points.empty() && points.size() >= 0) {
                     for (auto &point : points) {
-                        cout << point;
+                        //cout << point;
                         point.reduceDimension(2);
                     }
                     plotter.addObject(points);

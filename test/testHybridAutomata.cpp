@@ -292,6 +292,7 @@ TEST(HybridAutomaton, exampleAutomaton) {
         plotter.plotTex();
 }
 
+
 TEST(HybridAutomaton, converter) {
 
     using namespace hypro;
@@ -301,26 +302,28 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonCreator transformer;
     SingularAutomatonWriter automatonWriter;
 
-
 // setup
-    string filePath = "../../test/testfiles/example.xml";
-    double tMax = 15.0;
+    string filePath = "../../test/testfiles/exampleeasy.xml";
+    double tMax = 10.0;
 
 // read
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
 
-    auto parser = new ParseHybridPetrinet();
-    auto plt0 = parser->parseHybridPetrinet(hybridPetriNet, tMax);
+
 
 // transform
     auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
+
     shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, tMax);
+
     shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
     HybridAutomatonHandler handler ;
-    HybridAutomaton<Number> exampleAutomaton = handler.convertAutomaton(automaton);
+    HybridAutomaton<Number> exampleAutomaton = handler.convertAutomaton(automaton, tMax);
 
 //compute flowpipes
-    auto flowpipes = handler.computeFlowpipes(tMax, 0.05, 5);
+    auto flowpipes = handler.computeFlowpipes(tMax, 0.1, 5);
 
     handler.plotTex("example", flowpipes);
 }
@@ -478,14 +481,14 @@ TEST(HybridAutomaton, FlowParser){
     typedef mpq_class Number;
     typedef HPolytope<Number> Representation;
 
-    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/example.model"));
+    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/exampleeasy.model"));
 
 
     reachability::Reach<Number, reachability::ReachSettings> reacher(ha.first, ha.second);
 
 
     ReachabilitySettings settings = reacher.settings();
-    settings.timeBound = Number(20); //time bound
+    settings.timeBound = Number(24); //time bound
     settings.jumpDepth = 5;
     reacher.setSettings(settings);
     reacher.setRepresentationType(Representation::type());

@@ -37,7 +37,7 @@ namespace hpnmg {
 
         HybridAutomatonHandler();
 
-        HybridAutomaton<Number> convertAutomaton(shared_ptr<SingularAutomaton> singular);
+        HybridAutomaton<Number> convertAutomaton(shared_ptr<SingularAutomaton> singular, double maxTime);
 
         std::vector<std::pair<unsigned, hypro::reachability::flowpipe_t<Number>>> computeFlowpipes(double maxTime, double timestep, int jumpDepth);
 
@@ -45,7 +45,7 @@ namespace hpnmg {
 
     private:
 
-        void addLocation(shared_ptr<SingularAutomaton::Location> originalLocation);
+        void addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime);
 
         void addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition);
 
