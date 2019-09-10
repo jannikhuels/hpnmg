@@ -85,7 +85,7 @@ namespace hpnmg {
             for (shared_ptr<SingularAutomaton::Transition> secondTransition : other->outgoingTransitions) {
                 if (firstTransition->getType() == secondTransition->getType() &&
                         firstTransition->getVariableIndex() == secondTransition->getVariableIndex() &&
-                        firstTransition->getValuePreCompare() == secondTransition->getValuePreCompare() &&
+                        firstTransition->getValueGuardCompare() == secondTransition->getValueGuardCompare() &&
                         firstTransition->getSuccessorLocation()->getLocationId()
                         == secondTransition->getSuccessorLocation()->getLocationId()) {
                     foundMatch = true;
@@ -102,7 +102,7 @@ namespace hpnmg {
             for (shared_ptr<SingularAutomaton::Transition> secondTransition : this->outgoingTransitions) {
                 if (firstTransition->getType() == secondTransition->getType() &&
                     firstTransition->getVariableIndex() == secondTransition->getVariableIndex() &&
-                    firstTransition->getValuePreCompare() == secondTransition->getValuePreCompare() &&
+                        firstTransition->getValueGuardCompare() == secondTransition->getValueGuardCompare() &&
                     firstTransition->getSuccessorLocation()->getLocationId()
                     == secondTransition->getSuccessorLocation()->getLocationId()) {
                     foundMatch = true;
@@ -118,12 +118,12 @@ namespace hpnmg {
 
     SingularAutomaton::Transition::Transition(shared_ptr<SingularAutomaton::Location> predecessorLocation,
                                               const TransitionType type, const long variableIndex,
-                                              const double valuePreCompare,
+                                              const double valueGuardCompare,
                                               shared_ptr<SingularAutomaton::Location> successorLocation) :
             predecessorLocation(predecessorLocation),
             type(type),
             variableIndex(variableIndex),
-            valuePreCompare(valuePreCompare),
+            valueGuardCompare(valueGuardCompare),
             successorLocation(successorLocation) {}
 
     const shared_ptr<SingularAutomaton::Location> SingularAutomaton::Transition::getPredecessorLocation() const {return predecessorLocation; }
@@ -132,7 +132,7 @@ namespace hpnmg {
 
     const long SingularAutomaton::Transition::getVariableIndex() const { return variableIndex; }
 
-    const double SingularAutomaton::Transition::getValuePreCompare() const { return valuePreCompare; }
+    const double SingularAutomaton::Transition::getValueGuardCompare() const { return valueGuardCompare; }
 
     const shared_ptr<SingularAutomaton::Location>
     SingularAutomaton::Transition::getSuccessorLocation() const { return successorLocation; }

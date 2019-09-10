@@ -70,61 +70,54 @@ namespace hpnmg {
         vector<pair<invariantOperator, double>> invariantsX = originalLocation->getInvariantsContinuous();
         vector<pair<invariantOperator, double>> invariantsC = originalLocation->getInvariantsDeterministic();
 
-        int countX = 0;
-        for (int i = 0; i < invariantsX.size(); i++) {
-            if (invariantsX[i].first != UNLIMITED)
-                countX++;
-        }
-
-        vector_t<Number> invariantVec = vector_t<Number>::Zero(2 * g + countX + 2 * c);
-        matrix_t<Number> invariantMat = matrix_t<Number>::Zero(2 * g + countX + 2 * c, v);
-
+        vector_t<Number> invariantVec = vector_t<Number>::Zero(2 * v);
+        matrix_t<Number> invariantMat = matrix_t<Number>::Zero(2 * v, v);
 
         //constraints for general variables
         for (int i = 0; i < g; i++) {
-            invariantVec(i) = Number(maxTime);
-            invariantVec(i + 1) = Number(0);
-            invariantMat(2 * i, i) = Number(1);
-            invariantMat(2 * i + 1, i) = Number(-1);
+            invariantVec(2 * i) = Number(0);
+            invariantVec(2 * i + 1) = Number(maxTime);
+            invariantMat(2 * i, i) = Number(-1);
+            invariantMat(2 * i + 1, i) = Number(1);
             cout << " | Constraint g" << (i + 1) << " in [0," << maxTime << "]";
         }
 
         //constraints for continuous variables
-        countX = 0;
-        for (int i = 0; i < invariantsX.size(); i++) {
+        for (int i = 0; i < x; i++) {
+
+            invariantVec(2 * g + 2 * i) = Number(0);
+            invariantVec(2 * g + 2 * i + 1) = Number(10 * maxTime);
+            invariantMat(2 * g + 2 * i, g + i) = Number(-1);
+            invariantMat(2 * g + 2 * i + 1, g + i) = Number(1);
 
             if (invariantsX[i].first != UNLIMITED) {
 
                 if (invariantsX[i].first == GREATER_EQUAL) {
-                    invariantMat(2 * g + countX, g + i) = Number(-1);
-                    invariantVec(2 * g + countX) = Number(-1 * carl::rationalize<Number>(invariantsX[i].second));
-                    cout << " | Constraint x" << (i + 1) << ">=" << invariantVec(2 * g +countX) * (-1);
+                    invariantVec(2 * g + 2 * i) = Number(-1 * carl::rationalize<Number>(invariantsX[i].second));
                 } else {
-                    invariantMat(2 * g + countX, g + i) = Number(1);
-                    invariantVec(2 * g + countX) = Number(carl::rationalize<Number>(invariantsX[i].second));
-                    cout << " | Constraint x" << (i + 1) << "<=" << invariantVec(2 * g +countX);
+                    invariantVec(2 * g + 2 * i + 1) = Number(carl::rationalize<Number>(invariantsX[i].second));
                 }
-                countX++;
+
+                cout << " | Constraint x" << (i + 1) << " in [" << invariantVec(2 * g + 2 * i) << "," << invariantVec(2 * g + 2 * i + 1) << "]";
             }
         }
 
         //constraints for deterministic clocks
-        for (int i = 0; i < g; i++) {
-            invariantVec(2 * g + countX + i) = Number(maxTime);
-            invariantVec(2 * g + countX + i + 1) = Number(0);
-            invariantMat(2 * g + countX + 2 * i, i) = Number(1);
-            invariantMat(2 * g + countX + 2 * i + 1, i) = Number(-1);
+        for (int i = 0; i < c; i++) {
+            invariantVec(2 * g + 2 * x + 2 * i) = Number(0);
+            invariantVec(2 * g + 2 * x + 2 * i + 1) = Number(maxTime);
+            invariantMat(2 * g + 2 * x + 2 * i, g + x + i) = Number(-1);
+            invariantMat(2 * g + 2 * x + 2 * i + 1, g + x + i) = Number(1);
 
             if (invariantsC[i].first != UNLIMITED) {
 
                 if (invariantsC[i].first == GREATER_EQUAL)
-                    invariantVec(2 * g + countX + i + 1) = Number(-1 * carl::rationalize<Number>(invariantsC[i].second));
+                    invariantVec(2 * g + 2 * x + 2 * i) = Number(-1 * carl::rationalize<Number>(invariantsC[i].second));
                 else
-                    invariantVec(2 * g + countX + i) = Number(carl::rationalize<Number>(invariantsC[i].second));
+                    invariantVec(2 * g + 2 * x + 2 * i + 1) = Number(carl::rationalize<Number>(invariantsC[i].second));
 
            }
 
-            cout << " | Constraint c" << (i + 1) << " in [" << invariantVec(2 * g + countX + i + 1) << "," << invariantVec(2 * g + countX + i) << "]";
         }
 
 
@@ -213,10 +206,10 @@ namespace hpnmg {
             Condition<Number> guard;
             matrix_t<Number> guardMat = matrix_t<Number>::Zero(1, v);
             vector_t<Number> guardVec = vector_t<Number>(1);
-            guardVec(0) = Number(-1 * carl::rationalize<Number>(originalTransition->getValuePreCompare()));
+            guardVec(0) = Number(-1 * carl::rationalize<Number>(originalTransition->getValueGuardCompare()));
             guardMat(0, varIndex) = Number(-1);
 
-            cout << " | Guard " << type << "(" << varIndex << ") =" << -1 * guardVec(0);
+            cout << " | Guard " << type << "(" << varIndex << ") >=" << -1 * guardVec(0);
 
             guard.setMatrix(guardMat);
             guard.setVector(guardVec);
@@ -268,26 +261,26 @@ namespace hpnmg {
         cout << "Initial state index: " << initial;
 
         for (int i = 0; i < initG.size(); i++) {
-            boxVec(i) = Number(carl::rationalize<Number>(initG[i]));
+            boxVec(i) = Number(-1 * carl::rationalize<Number>(initG[i]));
             boxVec(i + 1) = Number(carl::rationalize<Number>(initG[i]));
-            boxMat(2 * i, i) = Number(1);
-            boxMat(2 * i + 1, i) = Number(-1);
+            boxMat(2 * i, i) = Number(-1);
+            boxMat(2 * i + 1, i) = Number(1);
             cout << " | g" << i + 1 << " = " << initG[i];
         }
 
         for (int i = 0; i < initX.size(); i++) {
-            boxVec(2 * g + i) = Number(carl::rationalize<Number>(initX[i]));
+            boxVec(2 * g + i) = Number(-1 * carl::rationalize<Number>(initX[i]));
             boxVec(2 * g + i + 1) = Number(carl::rationalize<Number>(initX[i]));
-            boxMat(2 * g + 2 * i, g + i) = Number(1);
-            boxMat(2 * g + 2 * i + 1, g + i) = Number(-1);
+            boxMat(2 * g + 2 * i, g + i) = Number(-1);
+            boxMat(2 * g + 2 * i + 1, g + i) = Number(1);
             cout << " | x" << i  + 1 << " = " << initX[i];
         }
 
         for (int i = 0; i < initC.size(); i++) {
-            boxVec(2 * g + 2 * x + i) = Number(carl::rationalize<Number>(initC[i]));
+            boxVec(2 * g + 2 * x + i) = Number(-1 * carl::rationalize<Number>(initC[i]));
             boxVec(2 * g + 2 * x + i + 1) = Number(carl::rationalize<Number>(initC[i]));
-            boxMat(2 * g + 2 * x + 2 * i, g + x + i) = Number(1);
-            boxMat(2 * g + 2 * x + 2 * i + 1, g + x + i) = Number(-1);
+            boxMat(2 * g + 2 * x + 2 * i, g + x + i) = Number(-1);
+            boxMat(2 * g + 2 * x + 2 * i + 1, g + x + i) = Number(1);
             cout << " | c" << i  + 1 << " = " << initC[i];
         }
 
@@ -325,6 +318,22 @@ namespace hpnmg {
            flowpipes = reacher.computeForwardReachability();
 
            flowpipesComputed = true;
+
+           cout << "Points: " << endl;
+
+        for (auto &indexPair : flowpipes) {
+            std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
+            // Plot single flowpipe
+            for (auto &set : flowpipe) {
+                std::vector<Point<Number>> points = set.vertices();
+                if (!points.empty() && points.size() >= 0) {
+                    for (auto &point : points) {
+                        cout << point << endl;
+                    }
+                    points.clear();
+                }
+            }
+        }
 
            return flowpipes;
        }

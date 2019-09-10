@@ -298,13 +298,12 @@ TEST(HybridAutomaton, converter) {
     using namespace hypro;
 
     ReadHybridPetrinet reader;
-    PLTWriter PLTwriter;
     SingularAutomatonCreator transformer;
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/exampleeasy.xml";
-    double tMax = 10.0;
+    string filePath = "../../test/testfiles/example.xml";
+    double tMax = 15.0;
 
 // read
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
@@ -481,14 +480,14 @@ TEST(HybridAutomaton, FlowParser){
     typedef mpq_class Number;
     typedef HPolytope<Number> Representation;
 
-    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/exampleeasy.model"));
+    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/exampleeasier.model"));
 
 
     reachability::Reach<Number, reachability::ReachSettings> reacher(ha.first, ha.second);
 
 
     ReachabilitySettings settings = reacher.settings();
-    settings.timeBound = Number(24); //time bound
+    settings.timeBound = Number(15); //time bound
     settings.jumpDepth = 5;
     reacher.setSettings(settings);
     reacher.setRepresentationType(Representation::type());
@@ -497,13 +496,13 @@ TEST(HybridAutomaton, FlowParser){
 
     // plot flowpipes.
         Plotter<Number>& plotter = Plotter<Number>::getInstance();
-        plotter.setFilename("simpleexample");
+        plotter.setFilename("example");
         for(auto& indexPair : flowpipeIndices){
             std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
             // Plot single flowpipe
             for(auto& set : flowpipe) {
                 std::vector<Point<Number>> points = set.vertices();
-                if(!points.empty() && points.size() >= 2) {
+                if(!points.empty() && points.size() >= 0) {
                     for(auto& point : points) {
                         point.reduceDimension(2);
                     }

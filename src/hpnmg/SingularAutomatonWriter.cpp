@@ -153,7 +153,7 @@ namespace hpnmg {
                    << "\t\t\t\t\t\t\"exp\": {\n";
 
         string var = (transition->getType() == Continuous ? "\"x" : "\"c") + to_string(transition->getVariableIndex()+1) + "\"";
-        double value = transition->getValuePreCompare();
+        double value = transition->getValueGuardCompare();
         for (const string& line : op_bin(EQUAL, var, to_string(value))) {
             outputFile << "\t\t\t\t\t\t\t" << line << "\n";
         }

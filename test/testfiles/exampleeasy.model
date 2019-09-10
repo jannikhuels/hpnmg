@@ -1,0 +1,187 @@
+hybrid reachability
+{
+ state var g, x, c1, c2
+
+ setting
+ {
+  fixed steps 0.1
+  time 10
+  remainder estimation 1e-5
+  identity precondition
+  gnuplot octagon g, x, c1, c2
+  fixed orders 5
+  cutoff 1e-15
+  precision 128
+  output exampleeasy
+  max jumps 5
+  print on
+ }
+
+ modes
+ {
+  l1
+  {
+   linear ode
+   {
+    g' = 1
+    x' = 0
+    c1' = 1
+    c2' = 0
+   }
+
+   inv
+   {
+   g in [0.0,15.0]
+   x in [0.0,150.0]
+   c1 in [0.0,2.0]
+    c2 in [0.0,15.0]
+   }
+  }
+
+
+  l2
+   {
+    linear ode
+    {
+    g' = 0
+    x' = 0
+    c1' = 1
+    c2' = 0
+    }
+
+    inv
+    {
+   g in [0.0,15.0]
+   x in [0.0,150.0]
+   c1 in [0.0,2.0]
+    c2 in [0.0,15.0]
+    }
+   }
+
+
+   l3
+     {
+      linear ode
+      {
+    g' = 1
+    x' = 0
+    c1' = 0
+    c2' = 1
+      }
+
+      inv
+      {
+   g in [0.0,15.0]
+   x in [0.0,150.0]
+   c1 in [0.0,15.0]
+    c2 in [0.0,1.0]
+      }
+     }
+
+ l4
+   {
+    linear ode
+    {
+    g' = 0
+    x' = 0
+    c1' = 0
+    c2' = 1
+    }
+
+    inv
+    {
+   g in [0.0,15.0]
+  x in [0.0,150.0]
+   c1 in [0.0,15.0]
+    c2 in [0.0,1.0]
+    }
+   }
+
+    l6
+      {
+       linear ode
+       {
+       g' = 1
+       x' = 1
+       c1' = 0
+       c2' = 0
+       }
+
+           inv
+           {
+          g in [0.0,15.0]
+          x in [0.0,150.0]
+          c1 in [0.0,15.0]
+           c2 in [0.0,15.0]
+           }
+      }
+
+      l7
+        {
+         linear ode
+         {
+         g' = 1
+         x' = 1
+         c1' = 0
+         c2' = 0
+         }
+
+         inv
+         {
+        g in [0.0,15.0]
+        x in [0.0,150.0]
+        c1 in [0.0,15.0]
+         c2 in [0.0,15.0]
+         }
+        }
+}
+
+ jumps
+ {
+  l1 -> l2
+  reset { g' := 0}
+  parallelotope aggregation {}
+
+  l1 -> l3
+  guard { c1 >= 2.0 }
+  reset { c1' := 0}
+  parallelotope aggregation {}
+
+    l2 -> l4
+    guard { c1 >= 2.0 }
+    reset { c1' := 0}
+    parallelotope aggregation {}
+
+      l3 -> l4
+      reset { g' := 0}
+      parallelotope aggregation {}
+
+      l3 -> l6
+      guard { c2 >= 1.0 }
+      reset { c2' := 0}
+      parallelotope aggregation {}
+
+       l4 -> l7
+       guard { c2 >= 1.0 }
+       reset { c2' := 0}
+       parallelotope aggregation {}
+
+     l6 -> l7
+     reset { g' := 0}
+     parallelotope aggregation {}
+ }
+
+ init
+ {
+  l1
+  {
+    g in [0.0,0.0]
+    x in [5.0,5.0]
+    c1 in [0.0,0.0]
+    c2 in [0.0,0.0]
+
+  }
+ }
+}
+
+

@@ -115,11 +115,11 @@ namespace hpnmg {
                                                            shared_ptr<SingularAutomaton::Location> locationForParent,
                                                            PetriNetState stateOfParent) {
 
-        // every time a leaf is reached, print an information
-        if (parametricLocationTree->getChildNodes(*parentNode).empty()) {
-            cout << "Location with no outgoing transition added to singular automaton. "
-                 << "You might increase the time horizon. (This does not necessarily help.)" << endl;
-        }
+//        // every time a leaf is reached, print an information
+//        if (parametricLocationTree->getChildNodes(*parentNode).empty()) {
+//            cout << "Location with no outgoing transition added to singular automaton. "
+//                 << "You might increase the time horizon. (This does not necessarily help.)" << endl;
+//        }
 
         // variable to check whether non-leaf parametric locations are considered, in which only non-stochastic events occur
         bool allEventsAreGeneral = true;
@@ -196,6 +196,7 @@ namespace hpnmg {
 
         SingularAutomaton::Transition::TransitionType type = childSourceEventType;
         long variableIndex = -1;
+        long guardIndex = -1;
         double valuePreCompare = -1; // the value to compare to
         invariantOperator invOperator = UNLIMITED; // indicates whether the relational operator is <= or >=
 
@@ -276,6 +277,9 @@ namespace hpnmg {
             default:
                 break; // do nothing
         }
+
+
+
 
         // insert transition in automaton
         singularAutomaton->insertTransition(move(locationForParent), type, variableIndex, valuePreCompare, invOperator,

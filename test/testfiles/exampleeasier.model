@@ -1,0 +1,123 @@
+hybrid reachability
+{
+ state var g, x, c1
+
+ setting
+ {
+  fixed steps 0.1
+  time 15
+  remainder estimation 1e-5
+  identity precondition
+  gnuplot octagon g, x, c1
+  fixed orders 5
+  cutoff 1e-15
+  precision 128
+  output exampleeasier
+  max jumps 5
+  print on
+ }
+
+ modes
+ {
+  l1
+  {
+   poly ode 1
+   {
+    g' = 1
+    x' = 0
+    c1' = 1
+   }
+
+   inv
+   {
+   g in [0.0,15.0]
+   c1 in [0.0,2.0]
+   }
+  }
+
+
+  l2
+   {
+    poly ode 1
+    {
+    g' = 0
+    x' = 0
+    c1' = 1
+    }
+
+    inv
+    {
+   g in [0.0,15.0]
+   c1 in [0.0,2.0]
+    }
+   }
+
+
+   l3
+     {
+      poly ode 1
+      {
+    g' = 1
+    x' = 1
+    c1' = 0
+      }
+
+      inv
+      {
+   g in [0.0,15.0]
+   c1 in [0.0,15.0]
+      }
+     }
+
+ l4
+   {
+    poly ode 1
+    {
+    g' = 0
+    x' = 1
+    c1' = 0
+    }
+
+    inv
+    {
+   g in [0.0,15.0]
+  x in [0.0,150.0]
+   c1 in [0.0,15.0]
+    }
+   }
+}
+
+ jumps
+ {
+  l1 -> l2
+  reset { g' := 0}
+  parallelotope aggregation {}
+
+  l1 -> l3
+  guard { c1 = 2.0 }
+  reset { c1' := 0}
+  parallelotope aggregation {}
+
+    l2 -> l4
+    guard { c1 = 2.0 }
+    reset { c1' := 0}
+    parallelotope aggregation {}
+
+      l3 -> l4
+      reset { g' := 0}
+      parallelotope aggregation {}
+
+ }
+
+ init
+ {
+  l1
+  {
+   g in [0,0]
+   x in [5,5]
+   c1 in [0,0]
+  }
+ }
+}
+
+
