@@ -103,16 +103,16 @@ namespace hpnmg {
     }
 
     std::pair<bool, Region> STDiagram::regionIsCandidateForTimeInterval(const std::pair<double,double> &interval, const Region &region, int dimension) {
-        std::pair<matrix_t<double>,vector_t<double>> ihspRepresentations = createHalfspacesFromTimeInterval(interval, dimension);
-        std::pair<bool, Region> intersectionPair = region.satisfiesHalfspaces(ihspRepresentations.first, ihspRepresentations.second);
-        return intersectionPair;
+//        std::pair<matrix_t<double>,vector_t<double>> ihspRepresentations = createHalfspacesFromTimeInterval(interval, dimension);
+//        std::pair<bool, Region> intersectionPair = region.satisfiesHalfspaces(ihspRepresentations.first, ihspRepresentations.second);
+//        return intersectionPair;
     }
 
     Region STDiagram::createTimeRegion(const Region &region, double time, int dimension) {
-        Region timeRegion(region);
-        std::pair<matrix_t<double>,vector_t<double>> timeHalfspaceRepresentation = createHalfspacesFromTimeInterval(std::pair<double,double>(time,time), dimension);
-        std::pair<bool, HPolytope<double>> intersectionPair = region.satisfiesHalfspaces(timeHalfspaceRepresentation.first, timeHalfspaceRepresentation.second);
-        return intersectionPair.second;
+//        Region timeRegion(region);
+//        std::pair<matrix_t<double>,vector_t<double>> timeHalfspaceRepresentation = createHalfspacesFromTimeInterval(std::pair<double,double>(time,time), dimension);
+//        std::pair<bool, HPolytope<double>> intersectionPair = region.satisfiesHalfspaces(timeHalfspaceRepresentation.first, timeHalfspaceRepresentation.second);
+//        return intersectionPair.second;
     }
 
     Halfspace<double> STDiagram::createHalfspaceForTime(const double &time, int dimension) {
@@ -246,22 +246,22 @@ namespace hpnmg {
 
     Intervals STDiagram::createIntervals(const Region &baseInterval)
     {
-        //Region base = STDiagram::createBaseRegion(baseInterval.dimension(), time);
-        Box<double> boundingBox = Converter<double>::toBox(baseInterval, CONV_MODE::ALTERNATIVE);
-        std::vector<carl::Interval<double>> boundaries = boundingBox.boundaries();
-        /*printf("Number of intervals: %lu\n", boundaries.size());
-        printf("Intervals:\n");
-        for (carl::Interval<double> i : boundaries) {
-            printf("[%f,%f]\n", i.lower(), i.upper());
-        }*/
-        if(boundingBox.dimension() == baseInterval.dimension()) {
-            boundaries.pop_back();
-        }
-        //carl::Interval<double> timeInterval = carl::Interval<double>((double)0,time);
-        //boundaries.push_back(timeInterval);
-        //printf("New boundaries size: %lu\n", boundaries.size());
-        //TODO intersect Region with lower halfspace.
-        return boundaries;
+//        //Region base = STDiagram::createBaseRegion(baseInterval.dimension(), time);
+//        Box<double> boundingBox = Converter<double>::toBox(baseInterval, CONV_MODE::ALTERNATIVE);
+//        std::vector<carl::Interval<double>> boundaries = boundingBox.boundaries();
+//        /*printf("Number of intervals: %lu\n", boundaries.size());
+//        printf("Intervals:\n");
+//        for (carl::Interval<double> i : boundaries) {
+//            printf("[%f,%f]\n", i.lower(), i.upper());
+//        }*/
+//        if(boundingBox.dimension() == baseInterval.dimension()) {
+//            boundaries.pop_back();
+//        }
+//        //carl::Interval<double> timeInterval = carl::Interval<double>((double)0,time);
+//        //boundaries.push_back(timeInterval);
+//        //printf("New boundaries size: %lu\n", boundaries.size());
+//        //TODO intersect Region with lower halfspace.
+//        return boundaries;
     }
 
     std::vector<Intervals> duplicate(std::vector<Intervals> intervals, carl::Interval<double> res1, carl::Interval<double> res2) {
@@ -302,104 +302,107 @@ namespace hpnmg {
     //TODO Check if the empty interval is needed
     std::vector<Intervals> STDiagram::differenceOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2) 
     {
-        std::vector<Intervals> result;
-        for (Intervals l : i1) {
-            if (i2.size() == 0) {
-                return i1;
-            }
-            for (Intervals r : i2) {
-                if (l.size() != r.size()) {
-                    //TODO THis is an error
-                }
-
-                double size = l.size();
-                std::vector<Intervals> res(1); 
-                for (int i = 0; i < size; i++) {
-                    carl::Interval<double> left;
-                    carl::Interval<double> right;
-                    //TODO Fix it. This is a workaround due to a bug in carl library
-                    if(l[i].upper() == r[i].upper()) {
-                        r[i] = carl::Interval<double>(r[i].lower(), r[i].upper()+1);
-                    }
-                    bool twofold = l[i].difference(r[i], left, right);
-                    if (twofold) {
-                        res = duplicate(res, left, right);                 
-                    } else {
-                        res[0].push_back(left);
-                        for (int i = 1; i < res.size();i++) {
-                            res[i].push_back(left);
-                        }
-                    }                   
-                }
-                result.insert(result.end(), res.begin(), res.end());
-            }             
-        } 
-        result = STDiagram::removeEmptyIntervals(result);         
-        return result;
+//        std::vector<Intervals> result;
+//        for (Intervals l : i1) {
+//            if (i2.size() == 0) {
+//                return i1;
+//            }
+//            for (Intervals r : i2) {
+//                if (l.size() != r.size()) {
+//                    //TODO THis is an error
+//                }
+//
+//                double size = l.size();
+//                std::vector<Intervals> res(1);
+//                for (int i = 0; i < size; i++) {
+//                    carl::Interval<double> left;
+//                    carl::Interval<double> right;
+//                    //TODO Fix it. This is a workaround due to a bug in carl library
+//                    if(l[i].upper() == r[i].upper()) {
+//                        r[i] = carl::Interval<double>(r[i].lower(), r[i].upper()+1);
+//                    }
+//                    bool twofold = l[i].difference(r[i], left, right);
+//                    if (twofold) {
+//                        res = duplicate(res, left, right);
+//                    } else {
+//                        res[0].push_back(left);
+//                        for (int i = 1; i < res.size();i++) {
+//                            res[i].push_back(left);
+//                        }
+//                    }
+//                }
+//                result.insert(result.end(), res.begin(), res.end());
+//            }
+//        }
+//        result = STDiagram::removeEmptyIntervals(result);
+//        return result;
+return{};
     }
 
     std::vector<Intervals> STDiagram::intersectionOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2)
     {
-        std::vector<Intervals> result;
-        for (Intervals l : i1) {
-            if (i2.size() == 0) {
-                return result;
-            }
-            for (Intervals r : i2) {
-                if (l.size() != r.size()) {
-                    //TODO This is an error
-                }
-
-                double size = l.size();
-                Intervals res;
-                for (int i = 0; i < size; i++) {
-                    carl::Interval<double> intersection;
-
-                    intersection = l[i].intersect(r[i]);                    
-                    res.push_back(intersection);                
-                }
-                result.push_back(res);              
-            } 
-        }  
-        result = STDiagram::removeEmptyIntervals(result);
-        return result;
+//        std::vector<Intervals> result;
+//        for (Intervals l : i1) {
+//            if (i2.size() == 0) {
+//                return result;
+//            }
+//            for (Intervals r : i2) {
+//                if (l.size() != r.size()) {
+//                    //TODO This is an error
+//                }
+//
+//                double size = l.size();
+//                Intervals res;
+//                for (int i = 0; i < size; i++) {
+//                    carl::Interval<double> intersection;
+//
+//                    intersection = l[i].intersect(r[i]);
+//                    res.push_back(intersection);
+//                }
+//                result.push_back(res);
+//            }
+//        }
+//        result = STDiagram::removeEmptyIntervals(result);
+//        return result;
+return {};
     }
 
     std::vector<Intervals> STDiagram::unionOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2)
     {
-        std::vector<Intervals> result;
-        if (i1.size() == 0) {
-            return i2;        
-        }
-        for (Intervals l : i1) {
-            if (i2.size() == 0) {
-                return i1;
-            }
-            for (Intervals r : i2) {
-                if (l.size() != r.size()) {
-                    //TODO THis is an error
-                }
-
-                double size = l.size();
-                std::vector<Intervals> res(1);
-                for (int i = 0; i < size; i++) {
-                    carl::Interval<double> left;
-                    carl::Interval<double> right;
-                    bool twofold = l[i].unite(r[i], left, right);
-                    if (twofold) {
-                        res = duplicate(res, left, right);
-                    } else {
-                        res[0].push_back(left);
-                        for (int i = 1; i < res.size();i++) {
-                            res[i].push_back(left);
-                        }
-                    }                   
-                }
-                result.insert(result.end(), res.begin(), res.end());
-            } 
-        }  
-        result = STDiagram::removeEmptyIntervals(result);  
-        return result;
+//        std::vector<Intervals> result;
+//        if (i1.size() == 0) {
+//            return i2;
+//        }
+//        for (Intervals l : i1) {
+//            if (i2.size() == 0) {
+//                return i1;
+//            }
+//            for (Intervals r : i2) {
+//                if (l.size() != r.size()) {
+//                    //TODO THis is an error
+//                }
+//
+//                double size = l.size();
+//                std::vector<Intervals> res(1);
+//                for (int i = 0; i < size; i++) {
+//                    carl::Interval<double> left;
+//                    carl::Interval<double> right;
+//                    bool twofold = l[i].unite(r[i], left, right);
+//                    if (twofold) {
+//                        res = duplicate(res, left, right);
+//                    } else {
+//                        res[0].push_back(left);
+//                        for (int i = 1; i < res.size();i++) {
+//                            res[i].push_back(left);
+//                        }
+//                    }
+//                }
+//                result.insert(result.end(), res.begin(), res.end());
+//            }
+//        }
+//        result = STDiagram::removeEmptyIntervals(result);
+//        return result;
+return{};
     }
 
     std::vector<Region> STDiagram::boundRegionByIntervals(Region reg, int maxTime, std::vector<Intervals> intervals, Halfspace<double> timeHsp) 

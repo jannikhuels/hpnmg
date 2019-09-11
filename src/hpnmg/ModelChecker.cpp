@@ -6,12 +6,12 @@ namespace hpnmg {
     }
 
     std::vector<carl::Interval<double>> ModelChecker::insertIntervalBoundariesForRegionAtTime(const Region &region, double time, double dimension, std::vector<carl::Interval<double>> &intervals) {
-        Region timeRegion = STDiagram::createTimeRegion(region,time,dimension);
-        Box<double> boundingBox = Converter<double>::toBox(timeRegion, CONV_MODE::ALTERNATIVE);
-        std::vector<carl::Interval<double>> boundaries = boundingBox.boundaries();
-        boundaries.pop_back();
-        intervals.insert(intervals.end(), boundaries.begin(), boundaries.end());
-        return boundaries;
+//        Region timeRegion = STDiagram::createTimeRegion(region,time,dimension);
+//        Box<double> boundingBox = Converter<double>::toBox(timeRegion, CONV_MODE::ALTERNATIVE);
+//        std::vector<carl::Interval<double>> boundaries = boundingBox.boundaries();
+//        boundaries.pop_back();
+//        intervals.insert(intervals.end(), boundaries.begin(), boundaries.end());
+//        return boundaries;
     }
 
     std::vector<carl::Interval<double>> ModelChecker::discreteFormulaIntervalSetsAtTime(ParametricLocationTree &parametricLocationTree, int placeIndex, int value, double time) {
@@ -121,41 +121,41 @@ namespace hpnmg {
     std::vector<Region> ModelChecker::neg(std::vector<Region> regions, Region nodeRegion) 
     {   
         std::vector<Region> negregions;
-        std::vector<std::vector<Halfspace<double>>> hsps;
-
-        for(Region r : regions) 
-        {
-            std::vector<Halfspace<double>> region_hsps;
-            for (Halfspace<double> hsp : r.constraints()) {
-                if (nodeRegion.dimension() != hsp.dimension()) {
-                    continue;
-                }
-                region_hsps.push_back(hsp);
-            }    
-            hsps.push_back(region_hsps);                    
-        }
-
-        int dimension = nodeRegion.dimension();
-        for(int i = 0; i < hsps.size(); i++) {
-            for (Halfspace<double> creatorHsp : hsps[i]) {
-                Region b(nodeRegion);                
-                b.insert(-creatorHsp);
-                for (int j = 0; j < hsps.size(); j++) {
-                    if (j == i) {
-                        continue;
-                    } 
-                    for (Halfspace<double> constraint : hsps[j]) {
-                        std::pair<bool, Region> satisfies = b.satisfiesHalfspace(-constraint);
-                        if (satisfies.first && satisfies.second.vertices().size() > dimension) {
-                            b = satisfies.second;
-                        }
-                    }
-                }
-                if (b.vertices().size() > dimension) {
-                    negregions.push_back(b);
-                }                 
-            }                       
-        }        
+//        std::vector<std::vector<Halfspace<double>>> hsps;
+//
+//        for(Region r : regions)
+//        {
+//            std::vector<Halfspace<double>> region_hsps;
+//            for (Halfspace<double> hsp : r.constraints()) {
+//                if (nodeRegion.dimension() != hsp.dimension()) {
+//                    continue;
+//                }
+//                region_hsps.push_back(hsp);
+//            }
+//            hsps.push_back(region_hsps);
+//        }
+//
+//        int dimension = nodeRegion.dimension();
+//        for(int i = 0; i < hsps.size(); i++) {
+//            for (Halfspace<double> creatorHsp : hsps[i]) {
+//                Region b(nodeRegion);
+//                b.insert(-creatorHsp);
+//                for (int j = 0; j < hsps.size(); j++) {
+//                    if (j == i) {
+//                        continue;
+//                    }
+//                    for (Halfspace<double> constraint : hsps[j]) {
+//                         std::pair<bool, Region> satisfies = b.satisfiesHalfspace(-constraint);
+//                        if (satisfies.first && satisfies.second.vertices().size() > dimension) {
+//                            b = satisfies.second;
+//                        }
+//                    }
+//                }
+//                if (b.vertices().size() > dimension) {
+//                    negregions.push_back(b);
+//                }
+//            }
+//        }
         return negregions;
     }
 }

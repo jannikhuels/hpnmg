@@ -13,7 +13,7 @@
 #include <chrono>
 
 #include "config.h"
-#include "datastructures/HybridAutomaton/LocationManager.h"
+#include "datastructures/HybridAutomaton/Location.h"
 #include "datastructures/HybridAutomaton/Transition.h"
 #include "datastructures/HybridAutomaton/HybridAutomaton.h"
 #include "datastructures/Point.h"
@@ -105,7 +105,7 @@ TEST(HybridAutomaton, exampleAutomaton) {
     // create the discrete structure of the automaton and the automaton itself.
     unique_ptr<Location<Number>> loc1 = make_unique<Location<Number>>();
     unique_ptr<Location<Number>> loc3 = make_unique<Location<Number>>();
-    unique_ptr<Transition<Number>> trans = make_unique<Transition<Number>>();
+    unique_ptr<hypro::Transition<Number>> trans = make_unique<hypro::Transition<Number>>();
     HybridAutomaton<Number> exampleAutomaton = HybridAutomaton<Number>();
 
 
@@ -219,7 +219,7 @@ TEST(HybridAutomaton, exampleAutomaton) {
     trans->setReset(reset);
 
     // add defined location and transition to the automaton.
-    loc1->addTransition(trans.get());
+    loc1->addTransition(move(trans));
 
     // create Box holding the initial set.
     matrix_t<Number> boxMat = matrix_t<Number>(6,3);
@@ -250,17 +250,13 @@ TEST(HybridAutomaton, exampleAutomaton) {
     boxMat(5,2) = Number(-1);
 
     // create initial state.
-    State_t<Number> initialState;
-    initialState.setLocation(loc1.get());
-    initialState.setSet(ConstraintSet<Number>(boxMat, boxVec));
-    exampleAutomaton.addInitialState(initialState);
+    exampleAutomaton.addInitialState(loc1.get(), Condition<Number>(boxMat, boxVec));
 
     exampleAutomaton.addLocation(move(loc1));
     exampleAutomaton.addLocation(move(loc3));
-    exampleAutomaton.addTransition(move(trans));
 
     // instanciate reachability analysis algorithm.
-    reachability::Reach<Number, reachability::ReachSettings> reacher(exampleAutomaton);
+    hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>> reacher(exampleAutomaton);
     ReachabilitySettings settings = reacher.settings();
     settings.timeStep = carl::convert<double,Number>(0.01);
     settings.timeBound = Number(10); //time bound
@@ -303,7 +299,7 @@ TEST(HybridAutomaton, converter) {
 
 // setup
     string filePath = "../../test/testfiles/example.xml";
-    double tMax = 15.0;
+    double tMax = 10.0;
 
 // read
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
@@ -338,7 +334,7 @@ TEST(HybridAutomaton, Bouncingball) {
 
     // create the discrete structure of the automaton and the automaton itself.
     unique_ptr<Location<Number>> loc1 = make_unique<Location<Number>>();
-    unique_ptr<Transition<Number>> trans = make_unique<Transition<Number>>();
+    unique_ptr<hypro::Transition<Number>> trans = make_unique<hypro::Transition<Number>>();
     HybridAutomaton<Number> bBallAutomaton = HybridAutomaton<Number>();
 
     // matrix defining the flow (note: 3rd dimension for constant parts).
@@ -408,7 +404,7 @@ TEST(HybridAutomaton, Bouncingball) {
     trans->setReset(reset);
 
     // add defined location and transition to the automaton.
-    loc1->addTransition(trans.get());
+    loc1->addTransition(move(trans));
 
 
     // create Box holding the initial set.
@@ -429,17 +425,12 @@ TEST(HybridAutomaton, Bouncingball) {
     boxMat(3,1) = Number(-1);
 
     // create initial state.
-    State_t<Number> initialState;
-    initialState.setLocation(loc1.get());
-    initialState.setSet(ConstraintSet<Number>(boxMat, boxVec));
-    //bBallAutomaton.addInitialState(loc1.get(), Condition<Number>(boxMat,boxVec));
-    bBallAutomaton.addInitialState(initialState);
+    bBallAutomaton.addInitialState(loc1.get(), Condition<Number>(boxMat,boxVec));
     bBallAutomaton.addLocation(move(loc1));
-    bBallAutomaton.addTransition(move(trans));
 
 
     // instanciate reachability analysis algorithm.
-    reachability::Reach<Number, reachability::ReachSettings> reacher(bBallAutomaton);
+    hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>> reacher(bBallAutomaton);
     ReachabilitySettings settings = reacher.settings();
     settings.timeStep = carl::convert<double,Number>(0.01);
     settings.timeBound = Number(3); //time bound
@@ -472,6 +463,7 @@ TEST(HybridAutomaton, Bouncingball) {
 }
 
 
+
 TEST(HybridAutomaton, FlowParser){
 
     using namespace hypro;
@@ -480,14 +472,14 @@ TEST(HybridAutomaton, FlowParser){
     typedef mpq_class Number;
     typedef HPolytope<Number> Representation;
 
-    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/exampleeasier.model"));
+    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/example_success.model"));
 
 
-    reachability::Reach<Number, reachability::ReachSettings> reacher(ha.first, ha.second);
+    hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>> reacher(ha.first, ha.second);
 
 
     ReachabilitySettings settings = reacher.settings();
-    settings.timeBound = Number(15); //time bound
+    settings.timeBound = Number(20); //time bound
     settings.jumpDepth = 5;
     reacher.setSettings(settings);
     reacher.setRepresentationType(Representation::type());

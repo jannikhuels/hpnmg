@@ -3,7 +3,7 @@
 #include <datastructures/SingularAutomaton.h>
 
 #include "config.h"
-#include "datastructures/HybridAutomaton/LocationManager.h"
+#include "datastructures/HybridAutomaton/Location.h"
 #include "datastructures/HybridAutomaton/Transition.h"
 #include "datastructures/HybridAutomaton/HybridAutomaton.h"
 #include "representations/GeometricObject.h"
@@ -35,13 +35,15 @@ namespace hpnmg {
 
     public:
 
+        using flowpipe_t = hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>>::flowpipe_t;
+
         HybridAutomatonHandler();
 
         HybridAutomaton<Number> convertAutomaton(shared_ptr<SingularAutomaton> singular, double maxTime);
 
-        std::vector<std::pair<unsigned, hypro::reachability::flowpipe_t<Number>>> computeFlowpipes(double maxTime, double timestep, int jumpDepth);
+        std::vector<std::pair<unsigned, flowpipe_t>> computeFlowpipes(double maxTime, double timestep, int jumpDepth);
 
-        void plotTex(string outputfile, std::vector<std::pair<unsigned, hypro::reachability::flowpipe_t<Number>>> flowpipes);
+        void plotTex(string outputfile, std::vector<std::pair<unsigned, flowpipe_t>> flowpipes);
 
     private:
 

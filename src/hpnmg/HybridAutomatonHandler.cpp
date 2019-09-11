@@ -53,9 +53,6 @@ namespace hpnmg {
         for (int i = 0; i < locations.size(); i++) {
             automaton.addLocation((locations[i]));
         }
-        for (int i = 0; i < transitions.size(); i++) {
-            automaton.addTransition((transitions[i]));
-        }
 
         return automaton;
     }
@@ -242,7 +239,7 @@ namespace hpnmg {
         newTransition.setTarget(&locations[target]);
 
         transitions.push_back(newTransition);
-        locations[source].addTransition(&transitions[transitions.size() - 1]);
+        locations[source].addTransition(std::make_unique<hypro::Transition<Number>>(transitions[transitions.size() - 1]));
     }
 
 
@@ -287,17 +284,14 @@ namespace hpnmg {
         cout << endl;
 
         // create initial state.
-        State_t<Number> initialState;
-        initialState.setLocation(&locations[initial]);
-        initialState.setSet(ConstraintSet<Number>(boxMat, boxVec));
-        automaton.addInitialState(initialState);
+        automaton.addInitialState(&locations[initial], Condition<Number>(boxMat, boxVec));
         automatonExists = true;
     }
 
 
-    std::vector<std::pair<unsigned, hypro::reachability::flowpipe_t<Number>>> HybridAutomatonHandler::computeFlowpipes(double maxTime, double timestep, int jumpDepth) {
+    std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> HybridAutomatonHandler::computeFlowpipes(double maxTime, double timestep, int jumpDepth) {
 
-            std::vector<std::pair<unsigned, hypro::reachability::flowpipe_t<Number>>> flowpipes ;
+           std::vector<std::pair<unsigned, flowpipe_t>> flowpipes;
            if (!automatonExists) {
                cout << "No automaton exists to compute flow pipes for. Empty vector returned.";
                return flowpipes;
@@ -306,7 +300,7 @@ namespace hpnmg {
            typedef HPolytope<Number> Representation;
 
            // instanciate reachability analysis algorithm
-           reachability::Reach<Number, reachability::ReachSettings> reacher(automaton);
+           reachability::Reach<Number, reachability::ReachSettings, hypro::State_t<Number>> reacher(automaton);
            ReachabilitySettings settings = reacher.settings();
            settings.timeStep = carl::convert<double, Number>(timestep);
            settings.timeBound = Number(maxTime);
@@ -339,7 +333,7 @@ namespace hpnmg {
        }
 
 
-    void HybridAutomatonHandler::plotTex(string outputfile, std::vector<std::pair<unsigned, hypro::reachability::flowpipe_t<Number>>> flowpipes) {
+    void HybridAutomatonHandler::plotTex(string outputfile, std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes) {
 
         if (!flowpipesComputed) {
             cout << "No flowpipes exist to plot.";
