@@ -189,7 +189,7 @@ namespace hpnmg {
                 value = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
             }
         }
-        return std::pair(place, value);
+        return std::pair<string,double>(place, value);
     }
 
     Formula ReadFormula::parseFormula(xercesc::DOMElement *formulaNode) {
