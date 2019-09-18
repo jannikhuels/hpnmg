@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STLFormula>
+    <Formula>
+        <Conjunction>
+            <Formula>
+                <DiscreteAtomicProperty place="disc1" value="13" />
+            </Formula>
+            <Formula>
+                <DiscreteAtomicProperty place="disc2" value="27" />
+            </Formula>
+        </Conjunction>
+    </Formula>
+</STLFormula>
