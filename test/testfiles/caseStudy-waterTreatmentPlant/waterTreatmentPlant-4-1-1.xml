@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="pd0" marking="1"/>
+        <discretePlace id="pd1" marking="0"/>
+        <discretePlace id="pd2" marking="0"/>
+        <discretePlace id="pd3" marking="0"/>
+        <discretePlace id="pd4" marking="1"/>
+
+        <continuousPlace id="pc1" capacity="1.2" infiniteCapacity="0" level="0.9"/>
+        <continuousPlace id="pc2" capacity="1.2" infiniteCapacity="0" level="0.0"/>
+        <continuousPlace id="pc3" capacity="1.2" infiniteCapacity="0" level="0.0"/>
+        <continuousPlace id="pc4" capacity="1.2" infiniteCapacity="0" level="0.0"/>
+    </places>
+    <transitions>
+
+        <generalTransition id="tg1" cdf="normal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="9.0"/>
+            <parameter name="sigma" value="1.0"/>
+        </generalTransition>
+
+        <continuousTransition id="tf1" rate="0.9"/>
+        <continuousTransition id="tf2" rate="0.9"/>
+        <continuousTransition id="tf3" rate="0.9"/>
+        <continuousTransition id="tf4" rate="0.9"/>
+        <deterministicTransition id="td1" discTime="0.5" priority="1" weight="1"/>
+        <immediateTransition id="ti0" priority="2" weight="1"/>
+        <immediateTransition id="ti1" priority="1" weight="1"/>
+        <immediateTransition id="ti2" priority="1" weight="1"/>
+        <immediateTransition id="ti3" priority="1" weight="1"/>
+    </transitions>
+    <arcs>
+        <discreteArc id="ad0" fromNode="ti0" toNode="pd0" weight="1.0E0"/>
+
+        <discreteArc id="ad1" fromNode="td1" toNode="pd1" weight="1.0E0"/>
+        <discreteArc id="ad2" fromNode="pd1" toNode="ti1" weight="1.0E0"/>
+        <discreteArc id="ad3" fromNode="ti1" toNode="pd2" weight="1.0E0"/>
+        <discreteArc id="ad4" fromNode="pd2" toNode="ti2" weight="1.0E0"/>
+        <discreteArc id="ad5" fromNode="ti2" toNode="pd3" weight="1.0E0"/>
+        <discreteArc id="ad6" fromNode="pd3" toNode="ti3" weight="1.0E0"/>
+        <discreteArc id="ad7" fromNode="ti3" toNode="pd4" weight="1.0E0"/>
+        <discreteArc id="ad8" fromNode="pd4" toNode="td1" weight="1.0E0"/>
+
+        <discreteArc id="ad9"  fromNode="pd0" toNode="tg1" weight="1.0E0"/>
+        <discreteArc id="ad10" fromNode="pd1" toNode="tg1" weight="1.0E0"/>
+        <discreteArc id="ad11" fromNode="tg1" toNode="pd4" weight="1.0E0"/>
+
+        <continuousArc id="af1" fromNode="pc1" toNode="tf1" priority="1" share="1.0E0" weight="1.0E0"/>
+        <continuousArc id="af2" fromNode="tf1" toNode="pc2" priority="1" share="1.0E0" weight="1.0E0"/>
+        <continuousArc id="af3" fromNode="pc2" toNode="tf2" priority="1" share="1.0E0" weight="1.0E0"/>
+        <continuousArc id="af4" fromNode="tf2" toNode="pc3" priority="1" share="1.0E0" weight="1.0E0"/>
+        <continuousArc id="af5" fromNode="pc3" toNode="tf3" priority="1" share="1.0E0" weight="1.0E0"/>
+        <continuousArc id="af6" fromNode="tf3" toNode="pc4" priority="1" share="1.0E0" weight="1.0E0"/>
+        <continuousArc id="af7" fromNode="pc4" toNode="tf4" priority="1" share="1.0E0" weight="1.0E0"/>
+        <continuousArc id="af8" fromNode="tf4" toNode="pc1" priority="1" share="1.0E0" weight="1.0E0"/>
+
+        <guardArc id="at0" fromNode="pd3" toNode="ti0" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ai0" fromNode="pd0" toNode="ti0" isInhibitor="1" weight="1.0E0"/>
+
+        <guardArc id="at1" fromNode="pd1" toNode="tf1" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="at2" fromNode="pd2" toNode="tf2" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="at3" fromNode="pd3" toNode="tf3" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="at4" fromNode="pd4" toNode="tf4" isInhibitor="0" weight="1.0E0"/>
+        <guardArc id="ai1" fromNode="pc1" toNode="ti1" isInhibitor="1" weight="0.0E0"/>
+        <guardArc id="ai2" fromNode="pc2" toNode="ti2" isInhibitor="1" weight="0.0E0"/>
+        <guardArc id="ai3" fromNode="pc3" toNode="ti3" isInhibitor="1" weight="0.0E0"/>
+        <guardArc id="ai4" fromNode="pc4" toNode="td1" isInhibitor="1" weight="0.0E0"/>
+    </arcs>
+</HPnG>

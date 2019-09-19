@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <hpnmg/ReadHybridPetrinet.h>
 #include <hpnmg/ParseHybridPetrinet.h>
+#include <hpnmg/STDiagram.h>
 #include "helper/Triangulation.h"
 #include "helper/Computation.h"
 
@@ -19,6 +20,7 @@ TEST(TriangulationTest, Test2D) {
     ASSERT_EQ(candidates.size(), 3);
     vector<STDPolytope> triangles = Triangulation::create(candidates[0]);
     ASSERT_EQ(triangles.size(), 2);
+    ASSERT_EQ(triangles[0].dimension(), 2);
 
     ASSERT_EQ(triangles[0].contains(Point<double>({0,0})), true);
     ASSERT_EQ(triangles[0].contains(Point<double>({20,0})), true);
@@ -276,6 +278,7 @@ TEST(ComputationTest, getMinimiumTime) {
     double t = Computation::getTime({{1,{{1,0,0},{2,0,0}}},{1,{{1,1,0},{2,1,0}}}}, {3,1,2}, 1);
     ASSERT_EQ(8,t);
 }
+
 
 /*TEST(ComputationTest, isValidBound) {
     ASSERT_EQ(true, Computation::isValidBound({{1,{{0,0,0},{10,0,0}}},{1,{{0,0,0},{4,-2,0}}}, {1,{{12,-3,-2},{8,-1,-1}}}}, 1, {2,-2,0}).first);

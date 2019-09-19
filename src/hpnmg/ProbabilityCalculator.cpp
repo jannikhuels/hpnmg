@@ -103,14 +103,14 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             allPlus.current_index = 0;
             allMinus.current_index = 0;
 
-            cout << "Max time: " << maxTime << " - ";
+          //  cout << "Max time: " << maxTime << " - ";
 
             //std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
             vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
             int dimension = location.getDimension();
 
-            cout << "GTF: " << generalTransitionsFired << " - ";
-            cout << "Accumulated Probability: " << location.getAccumulatedProbability() << endl << endl;
+          //  cout << "GTF: " << generalTransitionsFired << " - ";
+          //  cout << "Accumulated Probability: " << location.getAccumulatedProbability() << endl << endl;
 
             for (int i = 0; i < integrationIntervals.size(); i++) {
                 singleDim sAll;
@@ -164,7 +164,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             result = computeMultivariateIntegralUsingGauss(evaluations, all, allPlus, allMinus);
 
             completeResult += result;
-            cout << "Local Result " << result << endl;
+            //cout << "Local Result " << result << endl;
 
         }
 
@@ -317,14 +317,14 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             allPlus.current_index = 0;
             allMinus.current_index = 0;
 
-            cout << "Max time: " << maxTime << " - ";
+          //  cout << "Max time: " << maxTime << " - ";
 
             //std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
             vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
             int dimension = location.getDimension();
 
-            cout << "GTF: " << generalTransitionsFired << " - ";
-            cout << "Accumulated Probability: " << location.getAccumulatedProbability() << endl << endl;
+            //cout << "GTF: " << generalTransitionsFired << " - ";
+            //cout << "Accumulated Probability: " << location.getAccumulatedProbability() << endl << endl;
 
             for (int i = 0; i < integrationIntervals.size(); i++) {
                 singleDim sAll;
@@ -371,8 +371,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                        fill(allMinus.lowerBounds[last].begin(), allMinus.lowerBounds[last].end(), 0.0);
                    }
 
-               cout << "TransitionID:" << integrationIntervals[i].first << " in [ " << integrationIntervals[i].second
-                        .first << " ; " << integrationIntervals[i].second.second << " ] " << endl;
+             //  cout << "TransitionID:" << integrationIntervals[i].first << " in [ " << integrationIntervals[i].second.first << " ; " << integrationIntervals[i].second.second << " ] " << endl;
             }
 
 
@@ -380,7 +379,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
             completeResult += result;
-            cout << "Local Result " << result << endl;
+            //cout << "Local Result " << result << endl;
         }
 
 
@@ -715,8 +714,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     gsl_monte_miser_state *z = gsl_monte_miser_alloc(dimension1);
                     gsl_monte_miser_integrate(&GPlus, xl, xu, dimension1, calls, r, z, &resultPlus, &errorPlus);
                     gsl_monte_miser_free(z);
-                    cout << "Monte Carlo MISER integral result: " << resultPlus << ", " << "error estimate: "
-                         << errorPlus << endl;
+                 //   cout << "Monte Carlo MISER integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
                 } //else
                 //cout << "Monte Carlo VEGAS final integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
             }

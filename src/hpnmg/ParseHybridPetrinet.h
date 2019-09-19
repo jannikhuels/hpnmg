@@ -29,7 +29,7 @@ namespace hpnmg {
         // @param maxTime           maximal time for resulting parametric location tree
         // @return                  resulting parametric location tree
         shared_ptr<ParametricLocationTree>
-        parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
+        parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, int mode = 0);
 
         // Generates the root parametric location
         //
@@ -43,8 +43,9 @@ namespace hpnmg {
         // @param node              node that should be processed
         // @param hybridPetrinet    hybrid petrinet
         // @param maxTime           maximal time for resulting parametric location tree
+        // @param mode              mode to handle nondterministic choices
         // @return                  resulting parametric location tree
-        void processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
+        void processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, int mode);
 
         vector<double> getTimeDelta(shared_ptr<GuardArc> arc, vector<int> generalTransitionsFired,
                                     vector<vector<vector<double>>> generalIntervalBoundLeft,
@@ -89,12 +90,23 @@ namespace hpnmg {
                                               ParametricLocationTree::Node parentNode,
                                               shared_ptr<HybridPetrinet> hybridPetrinet);
 
-        void addLocationForBoundaryEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode,
-                                         shared_ptr<HybridPetrinet> hybridPetrinet);
 
-        vector<double> getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking,
-                                shared_ptr<HybridPetrinet> hybridPetrinet,
-                                vector<vector<vector<double>>> lowerBounds,
-                                vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired);
+        void addLocationForBoundaryEventByArcMember(shared_ptr<GuardArc> arcMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet);
+        void addLocationForBoundaryEventByContinuousPlaceMember(shared_ptr<ContinuousPlace> placeMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet);
+        //void addLocationForBoundaryEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet, std::string);
+
+
+        long getIndexOfModelMember(string id, vector<string> vectorOfIDs) const;
+
+        long getIndexOfDiscretePlace(shared_ptr<DiscretePlace> discretePlace) const;
+
+        long getIndexOfContinuousPlace(shared_ptr<ContinuousPlace> continuousPlace) const;
+
+        long getIndexOfDeterministicTransition(shared_ptr<DeterministicTransition> deterministicTransition) const;
+
+        long getIndexOfGeneralTransition(shared_ptr<GeneralTransition> generalTransition) const;
+
+        vector<double> getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking, shared_ptr<HybridPetrinet> hybridPetrinet, vector<vector<vector<double>>> lowerBounds, vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired);
+
     };
 }

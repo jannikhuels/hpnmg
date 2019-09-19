@@ -23,7 +23,7 @@ namespace hpnmg {
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundNormedRight;
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
-
+        std::vector<bool> deterministicTransitionsEnabled;
         std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
 
         void scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound, double boundValue, double splitValue, int boundIndex, int splitIndex, bool parent);
@@ -34,6 +34,10 @@ namespace hpnmg {
         const vector<bool> &getGeneralTransitionsEnabled() const;
 
         void setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled);
+
+        const vector<bool> &getDeterministicTransitionsEnabled() const;
+
+        void setDeterministicTransitionsEnabled(const vector<bool> &deterministicTransitionsEnabled);
 
     private:
         // enabling status in this loc for all general transitions
@@ -103,6 +107,10 @@ namespace hpnmg {
 
         void setSourceEvent(const Event &event);
 
+        std::string getSourceEventId() const;
+
+        void setSourceEventId(const std::string &id);
+
         double getConflictProbability() const;
 
         void setConflictProbability(double conflictProbability);
@@ -117,6 +125,7 @@ namespace hpnmg {
 
         void setGeneralTransitionsFired(std::vector<int> generalTransitionsFired);
 
+        // TODO not defined and never used
         int getId() const;
 
         double getEarliestEntryTime();
@@ -129,6 +138,8 @@ namespace hpnmg {
 
         void setIntegrationIntervals(std::vector<std::vector<double>> time, std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds, double value, std::vector<int> occurings,
                                      int dimension, int maxTime);
+
+        void overwriteIntegrationIntervals(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals);
 
         std::pair<std::vector<double>, std::vector<double>> compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index);
 

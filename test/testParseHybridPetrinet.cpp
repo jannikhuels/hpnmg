@@ -586,6 +586,15 @@ TEST(ParseHybridPetrinet, GuardDiscreteConflict)
     ASSERT_EQ(0.5, children[0].getParametricLocation().getConflictProbability());
 }
 
+TEST(ParseHybridPetrinet, RateAdaptionNew) {
+    auto reader= new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("exampleperformanceeval.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, 10);
+}
+
 TEST(ParseHybridPetrinet, GeneralActivatingAnotherGeneral) {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("one_gt_enabling_another_gt.xml");

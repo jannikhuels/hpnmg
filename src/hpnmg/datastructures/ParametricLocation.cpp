@@ -66,9 +66,10 @@ namespace hpnmg {
             accumulatedProbability(parametricLocation.accumulatedProbability),
             dimension(parametricLocation.dimension),
             generalTransitionFired(parametricLocation.generalTransitionFired),
-            generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
             sourceEvent(parametricLocation.sourceEvent),
-            integrationIntervals(parametricLocation.integrationIntervals)
+            integrationIntervals(parametricLocation.integrationIntervals),
+            generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
+            deterministicTransitionsEnabled(parametricLocation.deterministicTransitionsEnabled)
     {
 
     }
@@ -162,6 +163,14 @@ namespace hpnmg {
 
     void ParametricLocation::setGeneralTransitionsEnabled(const vector<bool> &generalTransitionsEnabled) {
         this->generalTransitionsEnabled = generalTransitionsEnabled;
+    }
+
+    const vector<bool> &ParametricLocation::getDeterministicTransitionsEnabled() const {
+        return deterministicTransitionsEnabled;
+    }
+
+    void ParametricLocation::setDeterministicTransitionsEnabled(const vector<bool> &deterministicTransitionsEnabled) {
+        ParametricLocation::deterministicTransitionsEnabled = deterministicTransitionsEnabled;
     }
 
     double ParametricLocation::getEarliestEntryTime() {
@@ -482,7 +491,18 @@ namespace hpnmg {
         }*/
     }
 
+
+    void ParametricLocation::overwriteIntegrationIntervals(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals) {
+        this->integrationIntervals = integrationIntervals;
+    }
+
+    /*
+     * Create the integration intervals for this location, ordered by the firings, i.e. starting with the first firing.
+     */
+   // void ParametricLocation::setIntegrationIntervals(std::vector<std::vector<double>> time, double value,                                              std::vector<int> occurings, int dimension, int maxTime) {
+
     std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> ParametricLocation::getRVIntervals(std::vector<int> occurings, int maxTime, int dim) {
+
         const auto leftBoundaries = this->getGeneralIntervalBoundLeft();
         const auto rightBoundaries = this->getGeneralIntervalBoundRight();
         vector<int> generalTransitionsFired = this->getGeneralTransitionsFired();

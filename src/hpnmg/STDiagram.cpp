@@ -198,47 +198,12 @@ namespace hpnmg {
         return region;
     }
 
-    vector_t<double> STDiagram::vectorFromBound(double bound, int boundIndex, int dimension) {
-        vector_t<double> vector = vector_t<double>::Zero(dimension);
-        vector[boundIndex] = bound;
-        return vector;
-    }
-
-    std::vector<vector_t<double>> STDiagram::hspVectorsFromBounds(std::vector<double> bounds) {
-        std::vector<vector_t<double>> hspVectors;
-        int dimension = bounds.size() + 1;
-        for (int i = 0; i < bounds.size() ; i++) {
-            vector_t<double> vectorBottom = vectorFromBound(bounds.at(i), i, dimension);
-            vector_t<double> vectorTop = vectorFromBound(bounds.at(i), i, dimension);
-            vectorTop[dimension-1] = 1;
-            hspVectors.push_back(vectorBottom);
-            hspVectors.push_back(vectorTop);
-        }
-        return hspVectors;
-    }
-
     std::vector<vector_t<double>> STDiagram::directionVectorsFromHspVectors(std::vector<vector_t<double>> hspVectors) {
         std::vector<vector_t<double>> directionVectors;
         for(int i = 1; i < hspVectors.size(); i++) {
             directionVectors.push_back(hspVectors.at(i) - hspVectors.at(0));
         }
         return directionVectors;
-    }
-
-    Halfspace<double> STDiagram::createVerticalHalfspace(std::vector<double> bounds, bool isLeftBound) {
-        int dimension = bounds.size() + 1;
-
-        std::vector<vector_t<double>> directionVectors = directionVectorsFromHspVectors(hspVectorsFromBounds(bounds));
-        vector_t<double> planeNormal = Halfspace<double>::computePlaneNormal(directionVectors);
-
-        vector_t<double> planePointVector = vectorFromBound(bounds.at(0), 0, dimension);
-        double planeOffset = Halfspace<double>::computePlaneOffset(planeNormal, Point<double>(planePointVector));
-
-        Halfspace<double> hsp(planeNormal,planeOffset);
-
-        if (isLeftBound)
-            return -hsp;
-        return hsp;
     }
 
     //TODO Check of jannik0general example
