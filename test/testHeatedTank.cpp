@@ -14,7 +14,7 @@ using namespace std;
 
 TEST(HeatedTank, example){
 
-   double maxTime = 500.0;
+   double maxTime = 100.0;
 
    auto reader= new ReadHybridPetrinet();
    auto parser = new ParseHybridPetrinet();
