@@ -6,10 +6,10 @@
 
 namespace hpnmg {
     struct ContinuousAtomicProperty {
-        ContinuousAtomicProperty(std::string place, int value) : place(std::move(place)), value(value) {};
+        ContinuousAtomicProperty(std::string place, double value) : place(std::move(place)), value(value) {};
 
         std::string place;
-        int value;
+        double value;
     };
 }
 
