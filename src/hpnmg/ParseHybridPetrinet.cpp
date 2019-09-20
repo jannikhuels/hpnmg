@@ -337,8 +337,10 @@ namespace hpnmg {
                 for (int k = 0; k < timeDelta.size(); ++k)
                     if (timeDelta[k] != timeDelta2[k])
                         duplicate = false;
-                if (duplicate)
+                if (duplicate) {
                     timeDeltas.erase(timeDeltas.begin() + i);
+                    i--;
+                }
             }
         }
 
@@ -1692,7 +1694,7 @@ namespace hpnmg {
 
                             if (sumSharedRate > 0.0 && rateLeft > 0.0 && (arc->getShare() / sumSharedRate < 1 / rateLeft)) {
                                 double newRate = transition->getRate() * arc->getShare() * rateLeft / sumSharedRate;
-
+                                rateLeft -= newRate;
                                 if (transition->getRate() != newRate) {
                                     double rateDiff = transition->getRate() - newRate;
                                     if (outputDriftNeeded.find(transition->id) == outputDriftNeeded.end())

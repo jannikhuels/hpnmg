@@ -70,7 +70,7 @@ TEST(ParseHybridPetrinet, RateAdaption) {
     ParametricLocation initLocation = initState.getParametricLocation();
 
     std::vector<std::vector<double>> expectedContRootMarking = {{0},{0},{0},{0},{0}};
-    std::vector<double> expectedRootDrift = {0,1,2,1,0};
+    std::vector<double> expectedRootDrift = {0,0,2,1,1};
     ASSERT_EQ(1, plt->getChildNodes(initState).size());
     ASSERT_EQ(expectedContRootMarking, initLocation.getContinuousMarking());
     ASSERT_EQ(expectedRootDrift, initLocation.getDrift());
@@ -78,7 +78,7 @@ TEST(ParseHybridPetrinet, RateAdaption) {
     auto nextState = plt->getChildNodes(initState)[0];
     ParametricLocation nextLocation = nextState.getParametricLocation();
 
-    std::vector<std::vector<double>> expectedContMarking1 = {{0},{0.5},{1},{0.5},{0}};
+    std::vector<std::vector<double>> expectedContMarking1 = {{0},{0},{1},{0.5},{0.5}};
     std::vector<double> expectedDrift1 = {0,1,0,2,1};
 //    ASSERT_EQ(2, plt->getChildNodes(nextState).size());
     ASSERT_EQ(0.5, nextState.getParametricLocation().getSourceEvent().getTime());
