@@ -30,3 +30,27 @@ foreach(TEST_FILE ${TEST_SRC_FILES})
 
 	add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
 endforeach()
+
+# Add Target for all tests
+# -----------------------------------------------------------------
+
+# Exclude some specific tests from being run all time
+list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testHeatedTank.cpp$")
+list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testNondeterministicConflicts.cpp$")
+list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testSingularAutomaton.cpp$")
+list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testValuetools.cpp$")
+
+add_executable(
+		testAll
+		${TEST_SRC_FILES}
+)
+
+add_dependencies(testAll googletest)
+
+target_link_libraries(testAll
+		${PROJECT_NAME}
+		${GTEST_LIBRARIES}
+		${XercesC_LIBRARIES}
+		)
+
+add_test(NAME testAll COMMAND testAll)
