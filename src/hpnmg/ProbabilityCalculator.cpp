@@ -398,6 +398,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             return 0.0;
 
         auto vertices = region.vertices();
+        if (vertices.empty())
+            return 0.0;
+
         long maxDim = vertices.begin()->rawCoordinates().rows();
         hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
         // use first vertex as origin, start at second vertex
@@ -513,7 +516,12 @@ ProbabilityCalculator::ProbabilityCalculator(){}
     ){
         polytopes.erase(
                 std::remove_if(polytopes.begin(), polytopes.end(), [](HPolytope<double> region) {
+                    if (region.empty() || region.dimension() == 0)
+                        return true;
+
                     auto vertices = region.vertices();
+                    if (vertices.empty())
+                        return true;
                     long maxDim = vertices.begin()->rawCoordinates().rows();
                     hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
                     // use first vertex as origin, start at second vertex

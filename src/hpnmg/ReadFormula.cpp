@@ -210,6 +210,10 @@ namespace hpnmg {
                     auto firstFormula = this->parseFormula(firstElement);
                     auto secondFormula = this->parseFormula(secondElement);
                     return Formula(std::make_shared<Conjunction>(firstFormula, secondFormula));
+                } else if(XMLString::equals(currentElement->getTagName(), XMLString::transcode("True"))) {
+                    return Formula(std::make_shared<True>());
+                } else if(XMLString::equals(currentElement->getTagName(), XMLString::transcode("False"))) {
+                    return Formula(std::make_shared<False>());
                 } else {
                     auto element = this->nextChildElement(currentElement, "Formula");
                     auto formula = this->parseFormula(element);
