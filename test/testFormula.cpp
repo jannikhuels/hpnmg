@@ -85,3 +85,13 @@ TEST(Until, UntilWithNegation) {
     EXPECT_EQ("disc2", goal->place);
     EXPECT_EQ(2, goal->value);
 }
+
+TEST(TrueFormula, TrueProperty) {
+    Formula formula = ReadFormula{}.readFormula("TrueFormula.xml");
+    EXPECT_EQ(Formula::Type::True, formula.getType());
+}
+
+TEST(FalseFormula, FalseProperty) {
+    Formula formula = ReadFormula{}.readFormula("FalseFormula.xml");
+    EXPECT_EQ(Formula::Type::False, formula.getType());
+}
