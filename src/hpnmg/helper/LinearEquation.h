@@ -17,7 +17,7 @@ namespace hpnmg {
 
         LinearEquation(LinEq left, LinEq right);
 
-        LinearEquation(const LinearEquation &equation);
+        LinearEquation(const LinearEquation &equation) = default;
 
         LinearEquation();
 

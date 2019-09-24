@@ -20,7 +20,9 @@ namespace hpnmg {
     RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :
         hpng(std::make_shared<HybridPetrinet>(hpng)),
         plt(*ParseHybridPetrinet{}.parseHybridPetrinet(this->hpng, maxTime))
-    {}
+    {
+        std::cout << "[Number of Model dimensions]:" << this->plt.getDimension() << std::endl;
+    }
 
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
         double probability = 0.0;
