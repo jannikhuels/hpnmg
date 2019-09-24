@@ -45,12 +45,13 @@ int process_command_line(int argc, char **argv, std::string& model, std::string&
 
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
-        po::notify(vm);
 
         if (vm.count("help")) {
             cout << desc << endl;
             return 2;
         }
+
+        po::notify(vm);
 
         if (vm.count("stateonly")) {
             return 1;
@@ -94,6 +95,7 @@ int main (int argc, char *argv[]) {
     auto readTime = std::chrono::duration_cast<std::chrono::milliseconds>(endRead - startRead).count();
 
     cout << "[Reading]: " << readTime << "ms" << endl;
+    cout << "[Start parsing for maxtime]: " << maxtime << endl;
 
     const auto startChecker = std::chrono::high_resolution_clock::now();
     auto checker = hpnmg::RegionModelChecker(*hpng, maxtime);
@@ -141,12 +143,14 @@ int main (int argc, char *argv[]) {
 
         hpnmg::Formula formula = hpnmg::ReadFormula{}.readFormula(formulafile);
 
+        cout << "[Start model checking for checktime]: " << checktime << endl;
+
         const auto checkResult = checker.satisfies(formula, checktime);
         const auto endSatisfy = std::chrono::high_resolution_clock::now();
         const auto modelCheckingTime = std::chrono::duration_cast<std::chrono::milliseconds>(endSatisfy - startSatisfy).count();
         cout << "[Probability]: " << checkResult.first << endl;
         cout << "[Error]: " << checkResult.second << endl;
-        cout << "[ModelChecking]: " << resultfile << endl;
+        cout << "[ModelChecking]: " << modelCheckingTime << endl;
 
         prob = checkResult.first;
         err = checkResult.second;
