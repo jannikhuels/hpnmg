@@ -27,8 +27,11 @@ namespace hpnmg {
         double error = 0.0;
         auto calculator = ProbabilityCalculator();
 
-        for (auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
-            std::cout << "[Location " << node.getNodeID() << "]: Computing STD region." << std::endl;
+        auto candidates = this->plt.getCandidateLocationsForTime(atTime);
+
+        #pragma omp parallel for default(none) reduction(+: probability) reduction(+:error) shared(candidates, atTime, calculator)
+        for (int candidate_index = 0; candidate_index < candidates.size(); candidate_index++) {
+            auto node = candidates[candidate_index];
             node.computeRegion(this->plt);
 
             std::cout << "Done. Dimensions: (vertex dim, effective dim) = (" << node.getRegion().dimension() << ", " << node.getRegion().effectiveDimension() << ")" << std::endl;

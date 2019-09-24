@@ -99,6 +99,7 @@ endif()
 
 if(USE_OpenMP)
 	find_package(OpenMP REQUIRED CXX)
+	set(OMP_NUM_THREADS 8)
 endif(USE_OpenMP)
 
 if (APPLE AND OPENMP_FOUND)
@@ -195,8 +196,4 @@ add_subdirectory(examples)
 
 add_executable(main main.cpp)
 
-if (USE_OpenMP)
-	target_link_libraries(main hpnmg ${Boost_LIBRARIES} ${GSL_LIBRARIES} OpenMP::OpenMP_CXX)
-else()
-	target_link_libraries(main hpnmg ${Boost_LIBRARIES} ${GSL_LIBRARIES})
-endif()
+target_link_libraries(main hpnmg ${Boost_LIBRARIES} ${GSL_LIBRARIES})
