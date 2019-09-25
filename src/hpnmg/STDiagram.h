@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/Plotter.h"
+#include "util/plotting/Plotter.h"
 #include <gmpxx.h>
 #include "datastructures/Event.h"
 #include "datastructures/Region.h"
@@ -41,11 +41,11 @@ namespace hpnmg {
 
         static void print(const vector<Region> &regionsToPrint, bool cummulative, std::string filename = "out");
 
-        static std::pair<bool, Region> regionIsCandidateForTime(double time,  const Region &region, int dimension);
+        static std::pair<CONTAINMENT, Region> regionIsCandidateForTime(double time,  const Region &region, int dimension);
 
         static Region createTimeRegion(const Region &region, double time, int dimension);
 
-        static std::pair<bool, Region> regionIsCandidateForTimeInterval(const std::pair<double,double> &interval, const Region &region, int dimension);
+        static std::pair<CONTAINMENT, Region> regionIsCandidateForTimeInterval(const std::pair<double,double> &interval, const Region &region, int dimension);
 
         static Region createRegionNoEvent(const Region &baseRegion, const Event &sourceEvent, std::vector<double> leftBounds, std::vector<double> rightBounds);
 

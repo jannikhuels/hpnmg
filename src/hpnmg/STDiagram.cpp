@@ -98,20 +98,20 @@ namespace hpnmg {
         plt.plot2d();
     }
 
-    std::pair<bool, Region> STDiagram::regionIsCandidateForTime(double time,  const Region &region, int dimension) {
+    std::pair<CONTAINMENT, Region> STDiagram::regionIsCandidateForTime(double time,  const Region &region, int dimension) {
         return STDiagram::regionIsCandidateForTimeInterval(std::pair<double,double>(time,time), region, dimension);
     }
 
-    std::pair<bool, Region> STDiagram::regionIsCandidateForTimeInterval(const std::pair<double,double> &interval, const Region &region, int dimension) {
+    std::pair<CONTAINMENT, Region> STDiagram::regionIsCandidateForTimeInterval(const std::pair<double,double> &interval, const Region &region, int dimension) {
         std::pair<matrix_t<double>,vector_t<double>> ihspRepresentations = createHalfspacesFromTimeInterval(interval, dimension);
-        std::pair<bool, Region> intersectionPair = region.satisfiesHalfspaces(ihspRepresentations.first, ihspRepresentations.second);
+        std::pair<CONTAINMENT, Region> intersectionPair = region.satisfiesHalfspaces(ihspRepresentations.first, ihspRepresentations.second);
         return intersectionPair;
     }
 
     Region STDiagram::createTimeRegion(const Region &region, double time, int dimension) {
         Region timeRegion(region);
         std::pair<matrix_t<double>,vector_t<double>> timeHalfspaceRepresentation = createHalfspacesFromTimeInterval(std::pair<double,double>(time,time), dimension);
-        std::pair<bool, HPolytope<double>> intersectionPair = region.satisfiesHalfspaces(timeHalfspaceRepresentation.first, timeHalfspaceRepresentation.second);
+        std::pair<CONTAINMENT, HPolytope<double>> intersectionPair = region.satisfiesHalfspaces(timeHalfspaceRepresentation.first, timeHalfspaceRepresentation.second);
         return intersectionPair.second;
     }
 
@@ -248,7 +248,7 @@ namespace hpnmg {
     {
         //Region base = STDiagram::createBaseRegion(baseInterval.dimension(), time);
         Box<double> boundingBox = Converter<double>::toBox(baseInterval, CONV_MODE::ALTERNATIVE);
-        std::vector<carl::Interval<double>> boundaries = boundingBox.boundaries();
+        std::vector<carl::Interval<double>> boundaries = boundingBox.intervals();
         /*printf("Number of intervals: %lu\n", boundaries.size());
         printf("Intervals:\n");
         for (carl::Interval<double> i : boundaries) {
@@ -321,7 +321,7 @@ namespace hpnmg {
                     if(l[i].upper() == r[i].upper()) {
                         r[i] = carl::Interval<double>(r[i].lower(), r[i].upper()+1);
                     }
-                    bool twofold = l[i].difference(r[i], left, right);
+                    bool twofold = carl::set_difference(l[i], r[i], left, right);
                     if (twofold) {
                         res = duplicate(res, left, right);                 
                     } else {
@@ -355,7 +355,7 @@ namespace hpnmg {
                 for (int i = 0; i < size; i++) {
                     carl::Interval<double> intersection;
 
-                    intersection = l[i].intersect(r[i]);                    
+                    intersection = carl::set_intersection(l[i],r[i]);
                     res.push_back(intersection);                
                 }
                 result.push_back(res);              
@@ -385,7 +385,7 @@ namespace hpnmg {
                 for (int i = 0; i < size; i++) {
                     carl::Interval<double> left;
                     carl::Interval<double> right;
-                    bool twofold = l[i].unite(r[i], left, right);
+                    bool twofold = carl::set_union(l[i], r[i], left, right);
                     if (twofold) {
                         res = duplicate(res, left, right);
                     } else {

@@ -8,7 +8,7 @@ namespace hpnmg {
     std::vector<carl::Interval<double>> ModelChecker::insertIntervalBoundariesForRegionAtTime(const Region &region, double time, double dimension, std::vector<carl::Interval<double>> &intervals) {
         Region timeRegion = STDiagram::createTimeRegion(region,time,dimension);
         Box<double> boundingBox = Converter<double>::toBox(timeRegion, CONV_MODE::ALTERNATIVE);
-        std::vector<carl::Interval<double>> boundaries = boundingBox.boundaries();
+        std::vector<carl::Interval<double>> boundaries = boundingBox.intervals();
         boundaries.pop_back();
         intervals.insert(intervals.end(), boundaries.begin(), boundaries.end());
         return boundaries;
@@ -33,7 +33,7 @@ namespace hpnmg {
             double drift = candidateNode.getParametricLocation().getDrift()[placeIndex];
             try {
                 Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(candidateRegion, candidateNode.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
-                if (regionIntersected.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree.getDimension()).first) {
+                if (regionIntersected.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree.getDimension()).first == CONTAINMENT::YES) { // TODO: what about the other Containment options?
                     ModelChecker::insertIntervalBoundariesForRegionAtTime(regionIntersected, time, parametricLocationTree.getDimension(), intervals);
                 }
             } catch (IllegalIntersectionLevelException e)  {
@@ -68,7 +68,7 @@ namespace hpnmg {
                 Region candidateRegion = candidateNode.getRegion();            
                 double drift = candidateNode.getParametricLocation().getDrift()[placeIndex];
                 Region regionIntersected = STDiagram::intersectRegionForContinuousLevel(candidateRegion, candidateNode.getParametricLocation().getContinuousMarking()[placeIndex], drift, value);
-                if (regionIntersected.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree->getDimension()).first) {
+                if (regionIntersected.vertices().size() > 0 && STDiagram::regionIsCandidateForTime(time,regionIntersected,parametricLocationTree->getDimension()).first == CONTAINMENT::YES) { // TODO: what about the other Containment options?
                     regions.insert(regions.end(), candidateNode.getRegion());
                 }
             } catch (IllegalIntersectionLevelException e)  {
@@ -145,8 +145,9 @@ namespace hpnmg {
                         continue;
                     } 
                     for (Halfspace<double> constraint : hsps[j]) {
-                        std::pair<bool, Region> satisfies = b.satisfiesHalfspace(-constraint);
-                        if (satisfies.first && satisfies.second.vertices().size() > dimension) {
+                        std::pair<CONTAINMENT, Region> satisfies = b.satisfiesHalfspace(-constraint);
+                        if (satisfies.first == CONTAINMENT::YES && satisfies.second.vertices().size() > dimension) {
+                            // TODO: replaced bool by Containment. Containment allows more than just yes/no, which is why this might not be correct
                             b = satisfies.second;
                         }
                     }
