@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <hpnmg/ParametricLocationTree.h>
 #include "representations/GeometricObject.h"
 
 namespace hpnmg {
@@ -19,7 +18,7 @@ namespace hpnmg {
         EventType type;
         std::vector<double> generalDependencies; // factors of s_1 ... s_n
         std::vector<double> generalDependenciesNormed;
-        RateDependencies rateDependencies = {0,0}; // factor + exponent of r
+       // RateDependencies rateDependencies = {0,0}; // factor + exponent of r
         double time; // scalar
 
     public:
@@ -37,8 +36,8 @@ namespace hpnmg {
         std::vector<double> getGeneralDependenciesNormed() const;
         void setGeneralDependenciesNormed(const std::vector<double> generalDependencies);
 
-        RateDependencies getRateDependencies() const;
-        void setRateDependencies(const RateDependencies rateDependencies);
+      //  RateDependencies getRateDependencies() const;
+       // void setRateDependencies(const RateDependencies rateDependencies);
 
         double getTime() const;
         void setTime(double time);

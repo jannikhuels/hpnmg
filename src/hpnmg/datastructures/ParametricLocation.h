@@ -1,6 +1,5 @@
 #pragma once
 
-#include <hpnmg/ParametricLocationTree.h>
 #include "Event.h"
 #include "Region.h"
 #include "helper/Computation.h"
@@ -14,15 +13,15 @@ namespace hpnmg {
     private:
         std::vector<int> discreteMarking;
         std::vector<std::vector<double>> continuousMarking;
-        RateDependencies contMarkRateDependencies;
+     //  RateDependencies contMarkRateDependencies;
         std::vector<double> drift;
-        RateDependencies driftRateDependencies;
+     //   RateDependencies driftRateDependencies;
         std::vector<std::vector<double>> deterministicClock;
         std::vector<std::vector<double>> generalClock; // TODO: do I need rateDependencies here?
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft;
-        std::vector<std::vector<std::vector<RateDependencies>>> generalRateDependenciesLeft;
+      //  std::vector<std::vector<std::vector<RateDependencies>>> generalRateDependenciesLeft;
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
-        std::vector<std::vector<std::vector<RateDependencies>>> generalRateDependenciesRight;
+      //  std::vector<std::vector<std::vector<RateDependencies>>> generalRateDependenciesRight;
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
 

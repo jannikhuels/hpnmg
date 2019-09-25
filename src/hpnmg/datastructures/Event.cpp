@@ -35,8 +35,8 @@ namespace hpnmg {
     std::vector<double> Event::getGeneralDependenciesNormed() const{return generalDependenciesNormed;}
     void Event::setGeneralDependenciesNormed(const std::vector<double> generalDependenciesNormed){this->generalDependenciesNormed = generalDependenciesNormed;}
 
-    RateDependencies Event::getRateDependencies() const {return rateDependencies;}
-    void Event::setRateDependencies(const RateDependencies rateDependencies) {this->rateDependencies = rateDependencies;}
+  //  RateDependencies Event::getRateDependencies() const {return rateDependencies;}
+  //  void Event::setRateDependencies(const RateDependencies rateDependencies) {this->rateDependencies = rateDependencies;}
 
     double Event::getTime() const{return time;}
     void Event::setTime(double time){this->time = time;}
