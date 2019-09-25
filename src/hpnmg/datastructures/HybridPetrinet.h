@@ -8,6 +8,7 @@
 #include "places/Place.h"
 #include "transitions/DeterministicTransition.h"
 #include "transitions/ContinuousTransition.h"
+#include "transitions/ContinuousNondeterministicTransition.h"
 #include "transitions/DynamicTransition.h"
 #include "transitions/GeneralTransition.h"
 #include "transitions/ImmediateTransition.h"
@@ -26,6 +27,7 @@ namespace hpnmg {
         map<string, shared_ptr<ContinuousPlace>> continuousPlaces;
         map<string, shared_ptr<DeterministicTransition>> deterministicTransitions;
         map<string, shared_ptr<ContinuousTransition>> continuousTransitions;
+        map<string, shared_ptr<ContinuousNondeterministicTransition>> continuousNondeterministicTransitions;
         map<string, shared_ptr<GeneralTransition>> generalTransitions;
         map<string, shared_ptr<ImmediateTransition>> immediateTransitions;
 
@@ -45,6 +47,7 @@ namespace hpnmg {
         map<string, shared_ptr<DiscretePlace>> getDiscretePlaces();
         map<string, shared_ptr<ContinuousPlace>> getContinuousPlaces();
         map<string, shared_ptr<DeterministicTransition>> getDeterministicTransitions();
+        map<string, shared_ptr<ContinuousNondeterministicTransition>> getContinuousNondeterministicTransitions();
         map<string, shared_ptr<ContinuousTransition>> getContinuousTransitions();
         map<string, shared_ptr<GeneralTransition>> getGeneralTransitions();
         map<string, shared_ptr<ImmediateTransition>> getImmediateTransitions();
@@ -54,6 +57,7 @@ namespace hpnmg {
 
         void addTransition(shared_ptr<DeterministicTransition> &transition);
         void addTransition(shared_ptr<ContinuousTransition> &transition);
+        void addTransition(shared_ptr<ContinuousNondeterministicTransition> &transition);
         void addTransition(shared_ptr<DynamicTransition> &transition);
         void addTransition(shared_ptr<GeneralTransition> &transition);
         void addTransition(shared_ptr<ImmediateTransition> &transition);

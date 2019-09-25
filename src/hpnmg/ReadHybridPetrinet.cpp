@@ -1,6 +1,5 @@
 #include "ReadHybridPetrinet.h"
 
-
 using namespace xercesc;
 using namespace std;
 namespace hpnmg {
@@ -260,6 +259,24 @@ namespace hpnmg {
                         }
                     }
                     auto transition = make_shared<ContinuousTransition>(id, rate);
+                    hybridPetrinet->addTransition(transition);
+                }
+
+                // transition is continuous nondeterministic transition
+                if (XMLString::equals(transitionNode->getNodeName(), XMLString::transcode("continuousNondeterministicTransition"))) {
+                    pair<double,double> rateInterval;
+                    for (XMLSize_t i = 0; i < attributes->getLength(); ++i) {
+                        DOMNode *attribute = attributes->item(i);
+                        if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("id"))) {
+                            id = XMLString::transcode(attribute->getNodeValue());
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("rateLower"))) {
+                            rateInterval.first = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        } else if (XMLString::equals(attribute->getNodeName(), XMLString::transcode("rateUpper"))) {
+                            rateInterval.second = strtod(XMLString::transcode(attribute->getNodeValue()), nullptr);
+                        }
+                    }
+                    assert(rateInterval.first <= rateInterval.second);
+                    auto transition = make_shared<ContinuousNondeterministicTransition>(id, rateInterval);
                     hybridPetrinet->addTransition(transition);
                 }
 

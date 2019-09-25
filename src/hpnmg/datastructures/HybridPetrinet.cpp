@@ -9,7 +9,7 @@ namespace hpnmg {
     }
 
     unsigned long HybridPetrinet::num_transitions() {
-        return deterministicTransitions.size() + continuousTransitions.size() + generalTransitions.size() +
+        return deterministicTransitions.size() + continuousTransitions.size() + continuousNondeterministicTransitions.size() + generalTransitions.size() +
                immediateTransitions.size();
     }
 
@@ -29,6 +29,7 @@ namespace hpnmg {
     map<string, shared_ptr<ContinuousPlace>> HybridPetrinet::getContinuousPlaces() { return continuousPlaces; };
     map<string, shared_ptr<DeterministicTransition>> HybridPetrinet::getDeterministicTransitions() { return deterministicTransitions; };
     map<string, shared_ptr<ContinuousTransition>> HybridPetrinet::getContinuousTransitions() { return continuousTransitions; };
+    map<string, shared_ptr<ContinuousNondeterministicTransition>> HybridPetrinet::getContinuousNondeterministicTransitions() { return continuousNondeterministicTransitions; };
     map<string, shared_ptr<GeneralTransition>> HybridPetrinet::getGeneralTransitions() { return generalTransitions; };
     map<string, shared_ptr<ImmediateTransition>> HybridPetrinet::getImmediateTransitions() { return immediateTransitions; };
 
@@ -40,6 +41,8 @@ namespace hpnmg {
         else if (deterministicTransitions.find(id) != deterministicTransitions.end())
             return "transition";
         else if(continuousTransitions.find(id) != continuousTransitions.end())
+            return "transition";
+        else if(continuousNondeterministicTransitions.find(id) != continuousNondeterministicTransitions.end())
             return "transition";
         else if (generalTransitions.find(id) != generalTransitions.end())
             return "transition";
@@ -63,6 +66,8 @@ namespace hpnmg {
             return deterministicTransitions[id];
         else if (continuousTransitions.find(id) != continuousTransitions.end())
             return continuousTransitions[id];
+        else if (continuousNondeterministicTransitions.find(id) != continuousNondeterministicTransitions.end())
+            return continuousNondeterministicTransitions[id];
         else if (generalTransitions.find(id) != generalTransitions.end())
             return generalTransitions[id];
         else if (immediateTransitions.find(id) != immediateTransitions.end())
@@ -80,6 +85,9 @@ namespace hpnmg {
     void HybridPetrinet::addTransition(shared_ptr<ContinuousTransition> &transition) {
         continuousTransitions[transition->id] = transition;
     }
+    void HybridPetrinet::addTransition(shared_ptr<ContinuousNondeterministicTransition> &transition) {
+        continuousNondeterministicTransitions[transition->id] = transition;
+    }
     void HybridPetrinet::addTransition(shared_ptr<DynamicTransition> &transition) {
         continuousTransitions[transition->id] = transition;
     }
@@ -95,6 +103,8 @@ namespace hpnmg {
             deterministicTransitions[transitionID]->addInputArc(arc);
         else if (continuousTransitions.find(transitionID) != continuousTransitions.end())
             continuousTransitions[transitionID]->addInputArc(arc);
+        else if (continuousNondeterministicTransitions.find(transitionID) != continuousNondeterministicTransitions.end())
+            continuousNondeterministicTransitions[transitionID]->addInputArc(arc);
         else if (generalTransitions.find(transitionID) != generalTransitions.end())
             generalTransitions[transitionID]->addInputArc(arc);
         else if (immediateTransitions.find(transitionID) != immediateTransitions.end())
@@ -105,6 +115,8 @@ namespace hpnmg {
             deterministicTransitions[transitionID]->addInputArc(arc);
         else if (continuousTransitions.find(transitionID) != continuousTransitions.end())
             continuousTransitions[transitionID]->addInputArc(arc);
+        else if (continuousNondeterministicTransitions.find(transitionID) != continuousNondeterministicTransitions.end())
+            continuousNondeterministicTransitions[transitionID]->addInputArc(arc);
         else if (generalTransitions.find(transitionID) != generalTransitions.end())
             generalTransitions[transitionID]->addInputArc(arc);
         else if (immediateTransitions.find(transitionID) != immediateTransitions.end())
@@ -115,6 +127,8 @@ namespace hpnmg {
             deterministicTransitions[transitionID]->addInputArc(arc);
         else if (continuousTransitions.find(transitionID) != continuousTransitions.end())
             continuousTransitions[transitionID]->addInputArc(arc);
+        else if (continuousNondeterministicTransitions.find(transitionID) != continuousNondeterministicTransitions.end())
+            continuousNondeterministicTransitions[transitionID]->addInputArc(arc);
         else if (generalTransitions.find(transitionID) != generalTransitions.end())
             generalTransitions[transitionID]->addInputArc(arc);
         else if (immediateTransitions.find(transitionID) != immediateTransitions.end())
@@ -126,6 +140,8 @@ namespace hpnmg {
             deterministicTransitions[transitionID]->addOutputArc(arc);
         else if (continuousTransitions.find(transitionID) != continuousTransitions.end())
             continuousTransitions[transitionID]->addOutputArc(arc);
+        else if (continuousNondeterministicTransitions.find(transitionID) != continuousNondeterministicTransitions.end())
+            continuousNondeterministicTransitions[transitionID]->addOutputArc(arc);
         else if (generalTransitions.find(transitionID) != generalTransitions.end())
             generalTransitions[transitionID]->addOutputArc(arc);
         else if (immediateTransitions.find(transitionID) != immediateTransitions.end())
@@ -136,6 +152,8 @@ namespace hpnmg {
             deterministicTransitions[transitionID]->addOutputArc(arc);
         else if (continuousTransitions.find(transitionID) != continuousTransitions.end())
             continuousTransitions[transitionID]->addOutputArc(arc);
+        else if (continuousNondeterministicTransitions.find(transitionID) != continuousNondeterministicTransitions.end())
+            continuousNondeterministicTransitions[transitionID]->addOutputArc(arc);
         else if (generalTransitions.find(transitionID) != generalTransitions.end())
             generalTransitions[transitionID]->addOutputArc(arc);
         else if (immediateTransitions.find(transitionID) != immediateTransitions.end())
@@ -146,6 +164,8 @@ namespace hpnmg {
             deterministicTransitions[transitionID]->addOutputArc(arc);
         else if (continuousTransitions.find(transitionID) != continuousTransitions.end())
             continuousTransitions[transitionID]->addOutputArc(arc);
+        else if (continuousNondeterministicTransitions.find(transitionID) != continuousNondeterministicTransitions.end())
+            continuousNondeterministicTransitions[transitionID]->addOutputArc(arc);
         else if (generalTransitions.find(transitionID) != generalTransitions.end())
             generalTransitions[transitionID]->addOutputArc(arc);
         else if (immediateTransitions.find(transitionID) != immediateTransitions.end())
