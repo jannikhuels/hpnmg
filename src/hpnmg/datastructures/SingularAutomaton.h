@@ -87,13 +87,13 @@ namespace hpnmg {
             const shared_ptr<Location> predecessorLocation;
             const TransitionType type; // indicates, whether a deterministic clock, a continuous marking
                                        // or a general value is compared and/or reset
-            const long variableIndex; // index of the variable, which is compared and/or reset
-            const double valuePreCompare; // the value to compare to
+            const long variableIndex; // indices of the variables, which is compared and/or reset
+            const double valueGuardCompare; // the value to compare to
             shared_ptr<Location> successorLocation;
 
         public:
             Transition(shared_ptr<SingularAutomaton::Location> predecessorLocation, const TransitionType type,
-                       const long variableIndex, const double valuePreCompare,
+                       const long variableIndex, const double valueGuardCompare,
                        shared_ptr<SingularAutomaton::Location> successorLocation);
 
             const shared_ptr<Location> getPredecessorLocation() const;
@@ -102,7 +102,7 @@ namespace hpnmg {
 
             const long getVariableIndex() const;
 
-            const double getValuePreCompare() const;
+            const double getValueGuardCompare() const;
 
             const shared_ptr<Location> getSuccessorLocation() const;
 

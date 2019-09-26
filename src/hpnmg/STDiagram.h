@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <gmpxx.h>
 #include <util/plotting/Plotter.h>
 

@@ -32,6 +32,7 @@ namespace hpnmg {
         return STDPolytope<Numeric>(res);
     }
 
+
     template<typename Numeric>
     STDPolytope<Numeric>::STDPolytope(const Polytope& polytope) : STDPolytope(polytope, {}) {}
 
@@ -152,6 +153,7 @@ namespace hpnmg {
             // Check if the hsp is the support of an open facet in the new polytope
             const auto& satisfaction = negated.hPolytope.satisfiesHalfspace(hsp);
             if (satisfaction.first != hypro::CONTAINMENT::NO)
+
                 negated.openFacets.push_back(satisfaction.second);
 
             negated.openFacets.erase(
@@ -210,6 +212,7 @@ namespace hpnmg {
         if (reducedVertices.empty())
             return STDPolytope::Empty(this->dimension()).hPolytope;
 
+
         for (auto &vertex : reducedVertices)
             vertex.reduceDimension(vertex.dimension() - 1);
 
@@ -233,6 +236,7 @@ namespace hpnmg {
         auto vertices = this->hPolytope.vertices();
         if (vertices.empty())
             return STDPolytope<Numeric>::Empty(this->dimension()).hPolytope;
+
 
         // The vector must not reallocate (and thus invalidate its iterators) while we duplicate it
         vertices.reserve(vertices.size() * 2);
@@ -280,3 +284,4 @@ std::ostream& operator<<(std::ostream &os, const hpnmg::STDPolytope<Numeric> &re
     return os;
 }
 #endif //HPNMG_STDPOLYTOPE_TPP
+

@@ -115,11 +115,11 @@ namespace hpnmg {
                                                            shared_ptr<SingularAutomaton::Location> locationForParent,
                                                            PetriNetState stateOfParent) {
 
-        // every time a leaf is reached, print an information
-        if (parametricLocationTree->getChildNodes(*parentNode).empty()) {
-            cout << "Location with no outgoing transition added to singular automaton. "
-                 << "You might increase the time horizon. (This does not necessarily help.)" << endl;
-        }
+//        // every time a leaf is reached, print an information
+//        if (parametricLocationTree->getChildNodes(*parentNode).empty()) {
+//            cout << "Location with no outgoing transition added to singular automaton. "
+//                 << "You might increase the time horizon. (This does not necessarily help.)" << endl;
+//        }
 
         // variable to check whether non-leaf parametric locations are considered, in which only non-stochastic events occur
         bool allEventsAreGeneral = true;
@@ -196,6 +196,7 @@ namespace hpnmg {
 
         SingularAutomaton::Transition::TransitionType type = childSourceEventType;
         long variableIndex = -1;
+        long guardIndex = -1;
         double valuePreCompare = -1; // the value to compare to
         invariantOperator invOperator = UNLIMITED; // indicates whether the relational operator is <= or >=
 
@@ -277,6 +278,9 @@ namespace hpnmg {
                 break; // do nothing
         }
 
+
+
+
         // insert transition in automaton
         singularAutomaton->insertTransition(move(locationForParent), type, variableIndex, valuePreCompare, invOperator,
                                             locationForChild);
@@ -317,11 +321,17 @@ namespace hpnmg {
 
     vector<vector<vector<double>>> SingularAutomatonCreator::sortByOrder(const vector<vector<double>>& values,
                                                                          const vector<int>& order) {
+
+        if (values.size() == 0)
+            return {};
+
         // get amount of different general transitions that fired and create vector accordingly
         unsigned long amount = order.empty() ? 0 : *max_element(order.begin(), order.end())+1;
+
         vector<vector<vector<double>>> orderedValues(amount+1);
 
         vector<double> valuesAtThisTime(values.size());
+
         for(int pointInTime = 0; pointInTime < values[0].size(); pointInTime++) {
             for(int posOfVar = 0; posOfVar < values.size(); posOfVar++) {
                 valuesAtThisTime[posOfVar] = values[posOfVar][pointInTime];

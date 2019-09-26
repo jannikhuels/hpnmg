@@ -109,3 +109,5 @@ std::ostream& operator<<(std::ostream &os, const hpnmg::STDPolytope<Numeric> &re
 // types we actually use during development.
 //#include "datastructures/STDPolytope.tpp"
 #endif //HPNMG_STDPOLYTOPE_H
+
+

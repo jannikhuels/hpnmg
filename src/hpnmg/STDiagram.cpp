@@ -289,6 +289,7 @@ namespace hpnmg {
         else
             intersectRegion.insertOpen(-satHalfspace);
         return intersectRegion;
+
     }
 
     std::vector<Intervals> duplicate(std::vector<Intervals> intervals, carl::Interval<double> res1, carl::Interval<double> res2) {
@@ -363,6 +364,7 @@ namespace hpnmg {
         }
         result = STDiagram::removeEmptyIntervals(result);
         return result;
+
     }
 
     std::vector<Intervals> STDiagram::intersectionOfIntervals(std::vector<Intervals> i1, std::vector<Intervals> i2)
