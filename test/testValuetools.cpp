@@ -55,7 +55,7 @@ TEST(Valuetools, valuetools_1){
             // TODO: Check why I cannot reuse hybridPetrinet0 (When i remove the next 3 lines and move them outside the for loops, the probability is always 0)
             auto reader= new ReadHybridPetrinet();
             auto parser = new ParseHybridPetrinet();
-            auto hybridPetrinet0 = reader->readHybridPetrinet("norep_2_4.xml");
+            auto hybridPetrinet0 = reader->readHybridPetrinet("qest_2_unif.xml");
             //auto hybridPetrinet0 = reader->readHybridPetrinet("valuetools_1_1.xml");
 
             cout << endl << "=========" << endl;
@@ -109,10 +109,10 @@ TEST(Valuetools, valuetools_1){
                     propertySatisfyingNodes.push_back(c);
                 }*/
 
-                /*if (c.getParametricLocation().getDiscreteMarking()[3] <= 0) {
+                if (c.getParametricLocation().getDiscreteMarking()[1] == 1) {
                     propertySatisfyingNodes.push_back(c);
-                }*/
-                propertySatisfyingNodes.push_back(c);
+                }
+                //propertySatisfyingNodes.push_back(c);
             }
 
             cout << "Number of candidates that satisfy the property " << propertySatisfyingNodes.size() << endl;

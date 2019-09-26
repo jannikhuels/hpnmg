@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+<places>
+    <discretePlace id="pd1" marking="1"/>
+    <discretePlace id="pd2" marking="0"/>
+    <discretePlace id="pd3" marking="1"/>
+    <discretePlace id="pd4" marking="0"/>
+    <discretePlace id="pd5" marking="0"/>
+</places>
+<transitions>
+    <deterministicTransition id="td3" discTime="7.0" priority="1" weight="1.0E0"/>
+    <immediateTransition id="td1" priority="1" weight="1.0E0"/>
+    <immediateTransition id="td2" priority="1" weight="1.0E0"/>
+</transitions>
+<arcs>
+    <discreteArc id="da1" fromNode="pd1" toNode="td1" weight="1.0E0"/>
+    <discreteArc id="da2" fromNode="td1" toNode="pd2" weight="1.0E0"/>
+    <discreteArc id="da3" fromNode="pd3" toNode="td2" weight="1.0E0"/>
+    <discreteArc id="da4" fromNode="td2" toNode="pd4" weight="1.0E0"/>
+    <guardArc fromNode="pd5" id="ga1" isInhibitor="0" toNode="td1" weight="1.0E0"/>
+    <guardArc fromNode="pd5" id="ga2" isInhibitor="0" toNode="td2" weight="1.0E0"/>
+    <discreteArc id="da4" fromNode="td3" toNode="pd5" weight="1.0E0"/>
+</arcs>
+</HPnG>

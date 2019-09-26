@@ -80,7 +80,7 @@ namespace hpnmg {
         if (domParser.loadGrammar(schemaFilePath.c_str(), Grammar::SchemaGrammarType) == NULL) {
             throw ("Couldn't load schema");
         }
-            
+
 
         ParserErrorHandler parserErrorHandler;
 
@@ -521,7 +521,7 @@ namespace hpnmg {
                     auto arc = make_shared<GuardArc>(id, weight, place, isInhibitor);
                     if (isInputArc) {
                         hybridPetrinet->addInputArc(transitionId, arc);
-                    } else {
+                    } else { // TODO this never happens. Guard arcs are always input arcs
                         hybridPetrinet->addOutputArc(transitionId, arc);
                     }
                 }

@@ -168,13 +168,13 @@ TEST(CaseStudy, norep_2_3){
     ASSERT_NEAR(1.0, result, 0.01+error);
 }
 
-TEST(CaseStudy, norep_2_4){
+TEST(CaseStudy, EasyRepition){
 
     double detTime = 11;
     double checkTime = 8.0;
     auto reader= new ReadHybridPetrinet();
     auto parser = new ParseHybridPetrinet();
-    auto hybridPetrinet0 = reader->readHybridPetrinet("norep_2_4.xml");
+    auto hybridPetrinet0 = reader->readHybridPetrinet("grid_available_test.xml");
 
     auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
     auto calculator = new ProbabilityCalculator();
@@ -184,12 +184,43 @@ TEST(CaseStudy, norep_2_4){
 
     vector <ParametricLocationTree::Node> propertySatisfyingNodes;
     for (ParametricLocationTree::Node c : nodes) {
-        propertySatisfyingNodes.push_back(c);
+        if (c.getParametricLocation().getDiscreteMarking()[0] == 1) {
+            propertySatisfyingNodes.push_back(c);
+        }
     }
 
     double error;
     double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(propertySatisfyingNodes,
                                                                                                *plt0, checkTime, 50000,
                                                                                                error);
-    ASSERT_NEAR(1.0, result, 0.01+error);
+    ASSERT_NEAR(.3, result, 0.01+error);
+}
+
+TEST(CaseStudy, ProbTwoConflict){
+
+    double detTime = 11;
+    double checkTime = 8.0;
+    auto reader= new ReadHybridPetrinet();
+    auto parser = new ParseHybridPetrinet();
+    auto hybridPetrinet0 = reader->readHybridPetrinet("prob_two_conflict.xml");
+
+    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
+    auto calculator = new ProbabilityCalculator();
+    auto writer = new PLTWriter();
+    writer->writePLT(plt0, 10);
+
+    vector <ParametricLocationTree::Node> nodes = plt0->getCandidateLocationsForTime(checkTime);
+
+    vector <ParametricLocationTree::Node> propertySatisfyingNodes;
+    for (ParametricLocationTree::Node c : nodes) {
+        if (c.getParametricLocation().getDiscreteMarking()[1] == 1) {
+            propertySatisfyingNodes.push_back(c);
+        }
+    }
+
+    double error;
+    double result = calculator->ProbabilityCalculator::getTotalProbabilityUsingMonteCarloVegas(propertySatisfyingNodes,
+                                                                                               *plt0, checkTime, 50000,
+                                                                                               error);
+    ASSERT_NEAR(.04, result, 0.01+error);
 }

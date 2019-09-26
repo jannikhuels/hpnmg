@@ -1,117 +1,174 @@
-#include "STDiagram.h"
+#include <cerrno>
+#include <chrono>
+#include <cstdlib>
+#include <stdexcept>
+#include <string>
+
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/program_options.hpp>
+
+#include "modelchecker/RegionModelChecker.h"
+#include "ParseHybridPetrinet.h"
 #include "ReadHybridPetrinet.h"
-#include <iostream>
-#include <ParseHybridPetrinet.h>
-#include <PLTWriter.h>
-#include <ctime>
+#include "PLTWriter.h"
+#include "ReadFormula.h"
 
-using namespace hpnmg;
-using namespace std;
-
-unsigned long getNodes(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node node) {
-    vector<ParametricLocationTree::Node> children = plt->getChildNodes(node);
-    unsigned long nodes = children.size();
-    for (ParametricLocationTree::Node child : children)
-        nodes += getNodes(plt, child);
-    return nodes;
+bool fileExists(const std::string &filename) {
+    struct stat buf;
+    if (stat(filename.c_str(), &buf) != -1) {
+        return true;
+    }
+    return false;
 }
 
-int main (int argc, char *argv[])
-{
-    auto reader= new ReadHybridPetrinet();
-    auto parser = new ParseHybridPetrinet();
-    auto writer = new PLTWriter();
+namespace po = boost::program_options;
 
-    cout << "Example 0 with repair and N=0 and t=10:" << endl;
-    clock_t begin0 = clock();
-    auto hybridPetrinet0 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_1_0.xml");
-    auto plt0 = parser->parseHybridPetrinet(hybridPetrinet0, 10);
-    clock_t end0 = clock();
-    double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
-    cout << elapsed_secs << " seconds" << endl;
-    cout << getNodes(plt0, plt0->getRootNode()) + 1 << " locations" << endl;
+int process_command_line(int argc, char **argv, std::string& model, std::string& formula, double &maxtime, double &checktime, string& resultfile, std::vector<string> &appendix) {
+    try {
+        po::options_description desc("Allowed options are");
+        desc.add_options()
+                ("help,h", "Produce help message.")
+                ("stateonly,s", "Only create the state space.")
+                ("model", po::value<std::string>(&model)->required(), "Path to the model .xml file.")
+                ("formula,f", po::value<std::string>(&formula)->default_value(""), "Path to the formula .xml file.")
+                ("additional,a", po::value<std::vector<std::string>>(&appendix)->multitoken(), "Additional parameters appended to the output file.")
+                ("maxtime", po::value<double>(&maxtime)->required(), "Maxtime of state space creation.")
+                ("checktime,c", po::value<double>(&checktime)->default_value(0), "Checktime of model checking.")
+                ("result,r", po::value<std::string>(&resultfile)->default_value("result.dat"), "Path to the result file.")
+                ;
 
-    cout << "Example 0 with repair and N=1 and t=10:" << endl;
-    clock_t begin1 = clock();
-    auto hybridPetrinet1 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/rep_1_1.xml");
-    auto plt1 = parser->parseHybridPetrinet(hybridPetrinet1, 10);
-    clock_t end1 = clock();
-    elapsed_secs = double(end1 - begin1) / CLOCKS_PER_SEC;
-    cout << elapsed_secs << " seconds" << endl;
-//    writer->writePLT(plt1, 10);
-    cout << getNodes(plt1, plt1->getRootNode()) + 1 << " locations" << endl;
+        if (argc == 1) {
+            cout << endl << "No option was specified." << endl << endl << desc << endl;
+            return 2;
+        }
 
-//    cout << "Example 1 with repair and N=2 and t=10:" << endl;
-//    clock_t begin2 = clock();
-//    auto hybridPetrinet2 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/rep_2_2.xml");
-//    auto plt2 = parser->parseHybridPetrinet(hybridPetrinet2, 10);
-//    clock_t end2 = clock();
-//    elapsed_secs = double(end2 - begin2) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-////    writer->writePLT(plt2, 10);
-//    cout << getNodes(plt2, plt2->getRootNode()) + 1 << " locations" << endl;
-//////
-    cout << "Example 1 with repair and N=3 and t=10:" << endl;
-    clock_t begin3 = clock();
-    auto hybridPetrinet3 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/rep_2_3.xml");
-    auto plt3 = parser->parseHybridPetrinet(hybridPetrinet3, 10);
-    clock_t end3 = clock();
-    elapsed_secs = double(end3 - begin3) / CLOCKS_PER_SEC;
-    cout << elapsed_secs << " seconds" << endl;
-    cout << getNodes(plt3, plt3->getRootNode()) + 1 << " locations" << endl;
+        po::variables_map vm;
+        po::store(po::parse_command_line(argc, argv, desc), vm);
 
-//    cout << "Example 0 without repair and N=4 and t=10:" << endl;
-//    clock_t begin4 = clock();
-//    auto hybridPetrinet4 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_1_4.xml");
-//    auto plt4 = parser->parseHybridPetrinet(hybridPetrinet4, 10);
-//    clock_t end4 = clock();
-//    elapsed_secs = double(end4 - begin4) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt4, plt4->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 0 without repair and N=5 and t=10:" << endl;
-//    clock_t begin5 = clock();
-//    auto hybridPetrinet5 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_1_5.xml");
-//    auto plt5 = parser->parseHybridPetrinet(hybridPetrinet5, 10);
-//    clock_t end5 = clock();
-//    elapsed_secs = double(end5 - begin5) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt5, plt5->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 2 without repair and N=2 and t=10:" << endl;
-//    clock_t begin6 = clock();
-//    auto hybridPetrinet6 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_2_2.xml");
-//    auto plt6 = parser->parseHybridPetrinet(hybridPetrinet6, 10);
-//    clock_t end6 = clock();
-//    elapsed_secs = double(end6 - begin6) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt6, plt6->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 2 without repair and N=3 and t=10:" << endl;
-//    clock_t begin7 = clock();
-//    auto hybridPetrinet7 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_2_3.xml");
-//    auto plt7 = parser->parseHybridPetrinet(hybridPetrinet7, 10);
-//    clock_t end7 = clock();
-//    elapsed_secs = double(end7 - begin7) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt7, plt7->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 2 without repair and N=4 and t=10:" << endl;
-//    clock_t begin8 = clock();
-//    auto hybridPetrinet8 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_2_4.xml");
-//    auto plt8 = parser->parseHybridPetrinet(hybridPetrinet8, 10);
-//    clock_t end8 = clock();
-//    elapsed_secs = double(end8 - begin8) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt8, plt8->getRootNode()) + 1 << " locations" << endl;
-//
-//    cout << "Example 2 without repair and N=5 and t=10:" << endl;
-//    clock_t begin9 = clock();
-//    auto hybridPetrinet9 = reader->readHybridPetrinet("/home/pati/Desktop/hpnmg/test/testfiles/caseStudy/norep_2_5.xml");
-//    auto plt9 = parser->parseHybridPetrinet(hybridPetrinet9, 10);
-//    clock_t end9 = clock();
-//    elapsed_secs = double(end9 - begin9) / CLOCKS_PER_SEC;
-//    cout << elapsed_secs << " seconds" << endl;
-//    cout << getNodes(plt9, plt9->getRootNode()) + 1 << " locations" << endl;
+        if (vm.count("help")) {
+            cout << desc << endl;
+            return 2;
+        }
 
+        po::notify(vm);
+
+        if (vm.count("stateonly")) {
+            return 1;
+        }
+        return 0;
+    }
+    catch(std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 2;
+    }
+    catch(...)
+    {
+        std::cerr << "Unknown error!" << "\n";
+        return 2;
+    }
+}
+
+int main (int argc, char *argv[]) {
+    std::string modelfile;
+    std::string formulafile;
+    std::string resultfile;
+    std::vector<string> appendix;
+    double maxtime;
+    double checktime;
+    int mode = process_command_line(argc, argv, modelfile, formulafile, maxtime, checktime, resultfile, appendix);
+
+    if (mode == 2) {
+        // An error occured.
+        return 1;
+    }
+    // mode==1: Only create state space, mode==0 also perform model checking.
+
+    // Start reading the model file.
+    std::time_t startTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    const auto startTotal = std::chrono::high_resolution_clock::now();
+
+    const auto startRead = std::chrono::high_resolution_clock::now();
+    auto hpng = hpnmg::ReadHybridPetrinet{}.readHybridPetrinet(modelfile);
+    const auto endRead = std::chrono::high_resolution_clock::now();
+    auto readTime = std::chrono::duration_cast<std::chrono::milliseconds>(endRead - startRead).count();
+
+    cout << "[Reading]: " << readTime << "ms" << endl;
+    cout << "[Start parsing for maxtime]: " << maxtime << endl;
+
+    const auto startChecker = std::chrono::high_resolution_clock::now();
+    auto checker = hpnmg::RegionModelChecker(*hpng, maxtime);
+    const auto endChecker = std::chrono::high_resolution_clock::now();
+    auto initTime = std::chrono::duration_cast<std::chrono::milliseconds>(endChecker - startChecker).count();
+
+    cout << "[Parsing]: " << initTime << "ms" << endl;
+
+    bool writeheader = false;
+    if (!fileExists(resultfile)) {
+        writeheader = true;
+    }
+
+    fstream resultfilestream {resultfile, resultfilestream.out | resultfilestream.app};
+
+    if (writeheader) {
+        resultfilestream << "# [Start time]\t" <<
+                            "[Model file]\t" <<
+                            "[Read duration (ms)]\t" <<
+                            "[Parse duration (ms)]\t" <<
+                            "[Model checking duration (ms)]\t" <<
+                            "[Probability]\t[Error]" << endl <<
+                            "start\tmodel\tread\tparse\tcheck\tprob\terr" << endl;
+    }
+
+    //Remove line break from startTimeString
+    std::string startTimeString(std::ctime(&startTime));
+    startTimeString = startTimeString.substr(0, startTimeString.length()-1);
+    resultfilestream << startTimeString  << "\t" << modelfile << "\t" << readTime << "\t" << initTime;
+    double prob = 0;
+    double err = 0;
+    if (mode == 1) {
+        cout << "[Mode]: State space creation only was chosen." << endl;
+        cout << "[Results]: " << resultfile << endl;
+    } else {
+        const auto startSatisfy = std::chrono::high_resolution_clock::now();
+
+        if (formulafile.size() == 0) {
+            std::cerr << "Please specify a formula file (-f) to perform model checking." << endl;
+            resultfilestream << "\t" << 0 << "\t" << prob << "\t" << err;
+            resultfilestream << endl;
+            resultfilestream.close();
+            return 1;
+        }
+
+        hpnmg::Formula formula = hpnmg::ReadFormula{}.readFormula(formulafile);
+
+        cout << "[Start model checking for checktime]: " << checktime << endl;
+
+        const auto checkResult = checker.satisfies(formula, checktime);
+        const auto endSatisfy = std::chrono::high_resolution_clock::now();
+        const auto modelCheckingTime = std::chrono::duration_cast<std::chrono::milliseconds>(endSatisfy - startSatisfy).count();
+        cout << "[Probability]: " << checkResult.first << endl;
+        cout << "[Error]: " << checkResult.second << endl;
+        cout << "[ModelChecking]: " << modelCheckingTime << endl;
+
+        prob = checkResult.first;
+        err = checkResult.second;
+    }
+
+    const auto endTotal = std::chrono::high_resolution_clock::now();
+    const auto totalTime= std::chrono::duration_cast<std::chrono::milliseconds>(endTotal - startTotal).count();
+    cout << "[Complete]: " << totalTime  << endl;
+
+    resultfilestream << "\t" << totalTime << "\t" << prob << "\t" << err;
+
+    // Write appendix to resultfile
+    for (string s : appendix) {
+        resultfilestream << "\t" << s;
+    }
+
+    resultfilestream << endl;
+    resultfilestream.close();
+
+    return 0;
 }

@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='ASCII'?>
+<HPnG>
+  <places>
+    <discretePlace marking="0" id="p1"/>
+    <discretePlace marking="1" id="p2"/>
+      <discretePlace marking="1" id="p3"/>
+  </places>
+  <transitions>
+    <generalTransition id="tg1" cdf="uniform" priority="0" weight="1" policy="resume">
+        <parameter name="a" value="0"/>
+        <parameter name="b" value="10"/>
+    </generalTransition>
+    <generalTransition id="tg2" cdf="uniform" priority="0" weight="1" policy="resume">
+        <parameter name="a" value="0"/>
+        <parameter name="b" value="10"/>
+    </generalTransition>
+      <deterministicTransition id="td" discTime="3" priority="0" weight="1"/>
+  </transitions>
+  <arcs>
+    <discreteArc weight="1" fromNode="p2" toNode="tg1" id="p2totg1"/>
+    <discreteArc weight="1" fromNode="tg1" toNode="p1" id="tg1top1"/>
+    <discreteArc weight="1" fromNode="p1" toNode="tg2" id="p1totg2"/>
+      <discreteArc weight="1" fromNode="p3" toNode="td" id="p3totd"/>
+  </arcs>
+</HPnG>

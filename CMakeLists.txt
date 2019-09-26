@@ -34,7 +34,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 		message("-- Using clang")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 	endif()
-	set(CMAKE_CXX_RELEASE_FLAGS "${CMAKE_CXX_RELEASE_FLAGS} -O3")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 	set(USE_CLANG PARENT SCOPE)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -44,11 +44,11 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	#endif()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 	if(NOT HYPRO_COVERAGE)
-		set(CMAKE_CXX_RELEASE_FLAGS "${CMAKE_CXX_RELEASE_FLAGS} -O3")
+		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 	else()
-		set(CMAKE_CXX_RELEASE_FLAGS "${CMAKE_CXX_RELEASE_FLAGS} -O0")
+		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O0")
 	endif()
-	set(CMAKE_CXX_DEBUG_FLAGS "${CMAKE_CXX_DEBUG_FLAGS} -g -O1")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=auto")
 	endif()
@@ -62,13 +62,40 @@ endif()
 
 
 add_subdirectory(resources)
-find_package(hypro REQUIRED)
-find_package(carl REQUIRED)
+find_package(hypro CONFIG REQUIRED)
+find_package(carl CONFIG REQUIRED)
 find_package(XercesC REQUIRED)
+
 find_package(Boost REQUIRED)
 find_package(GSL REQUIRED)
-find_package(CGAL REQUIRED)
+find_package(CGAL REQUIRED)#find_package(CGAL CONFIG REQUIRED) #also link lib: sudo ln -s /usr/lib/x86_64-linux-gnu/libCGAL.so /usr/lib/x86_64-linux-gnu/libcgal.so
 
+
+if ( CGAL_FOUND )
+
+  include( ${CGAL_USE_FILE} )
+
+  include( CGAL_CreateSingleSourceCGALProgram )
+
+  find_package(Eigen3)
+  if (EIGEN3_FOUND)
+    include( ${EIGEN3_USE_FILE} )
+
+    include_directories (BEFORE "../../include")
+
+    #create_single_source_cgal_program( "Epick_d.cpp" )
+
+  else()
+
+    message(STATUS "NOTICE: This program requires the Eigen3 library, and will not be compiled.")
+
+  endif()
+
+else()
+
+    message(STATUS "NOTICE: This program requires the CGAL library, and will not be compiled.")
+
+endif()
 
 if ( CGAL_FOUND )
 
@@ -112,6 +139,8 @@ add_subdirectory(src)
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/HPnG.xsd ${PROJECT_BINARY_DIR}/test)
 configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/HPnG.xsd ${PROJECT_BINARY_DIR})
+configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/Formula.xsd ${PROJECT_BINARY_DIR}/test)
+configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/Formula.xsd ${PROJECT_BINARY_DIR})
 
 # Testing
 # -----------------------------------------------------------------
@@ -127,4 +156,4 @@ add_subdirectory(examples)
 # -----------------------------------------------------------------
 
 add_executable(main main.cpp)
-target_link_libraries(main hpnmg ${Boost_LIBRARIES} GSL::gsl GSL::gslcblas)
+target_link_libraries(main hpnmg ${Boost_LIBRARIES} ${GSL_LIBRARIES})

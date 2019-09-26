@@ -26,38 +26,35 @@ namespace hpnmg {
         return points;
     }
 
-    std::vector<DT::Point> regionToDTPoints(Region r) {
-        vector<Point<double>> vertices = r.vertices();
+    std::vector<DT::Point> regionToDTPoints(hypro::HPolytope<double> p) {
+        vector<Point<double>> vertices = p.vertices();
         return pointsToDTPoints(vertices);
     }
 
-    Region dTPointsToRegion(std::vector<DT::Point> dTPoints) {
-        std::vector<Point<double>> points = dTPointsToPoints(dTPoints);
-        return STDiagram::createRegionForVertices(points);
-    }
+    std::vector<Simplex> Triangulation::create(const hypro::HPolytope<double> &p) {
+        const auto dimension = p.dimension();
+        std::vector<DT::Point> polytopePoints = regionToDTPoints(p);
 
-    std::vector<Region> Triangulation::create(const ParametricLocationTree::Node &node) {
+        if (polytopePoints.size() < dimension + 1)
+            return {};
 
-        Region r = node.getRegion();
-        DT dt(r.dimension());
-        std::vector<DT::Point> points = regionToDTPoints(r);
-        dt.insert(points.begin(), points.end());
+        DT dt(dimension);
+        dt.insert(polytopePoints.begin(), polytopePoints.end());
 
-        std::vector<Region> regions;
+        std::vector<Simplex> simplexes;
         typedef DT::Finite_full_cell_iterator Finite_full_cell_iterator;
         int i = 0;
         for(Finite_full_cell_iterator cit = dt.finite_full_cells_begin();
-             cit != dt.finite_full_cells_end(); ++cit )
+            cit != dt.finite_full_cells_end(); ++cit )
         {
-            std::vector<DT::Point> points;
+            std::vector<DT::Point> simplexVertices;
             for (auto vi = cit->vertices_begin(); vi != cit->vertices_end(); ++vi) {
                 DT::Vertex_handle t = *vi;
-                points.push_back(t->point());
+                simplexVertices.push_back(t->point());
             }
-            Region tr = dTPointsToRegion(points);
-            regions.push_back(tr);
+            simplexes.emplace_back(hypro::VPolytope<double>(dTPointsToPoints(simplexVertices)));
         }
-        return regions;
+        return simplexes;
     }
 }
 

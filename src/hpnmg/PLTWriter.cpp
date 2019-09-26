@@ -10,6 +10,10 @@ namespace hpnmg {
     }
 
     void PLTWriter::writePLT(shared_ptr<ParametricLocationTree> plt, double maxTime) {
+        writePLT(plt, maxTime, "result_example");
+    }
+
+    void PLTWriter::writePLT(shared_ptr<ParametricLocationTree> plt, double maxTime, string filename) {
         DOMDocument *domDocument = nullptr;
         domDocument = domImplementation->createDocument(0, XMLString::transcode("PLT"), 0);
 
@@ -28,7 +32,7 @@ namespace hpnmg {
         if (configuration->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
             configuration->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
 
-        target = new LocalFileFormatTarget("result_example.xml");
+        target = new LocalFileFormatTarget(filename.append(".xml").c_str());
         output->setByteStream(target);
 
         serializer->write(domDocument, output);
@@ -108,6 +112,16 @@ namespace hpnmg {
             generalClocksElement->appendChild(clockElement);
         }
         element->appendChild(generalClocksElement);
+
+        // add general transition fired
+        DOMElement *generalTransitionsFiredElement = domDocument->createElement(XMLString::transcode("generalTransitionsFired"));
+        vector<int> genFired = location.getGeneralTransitionsFired();
+        for (int i = 0; i < genFired.size(); ++i) {
+            DOMElement *firedElement = domDocument->createElement(XMLString::transcode("fired"));
+            firedElement->setAttribute(XMLString::transcode("value"), XMLString::transcode(to_string(genFired[i]).c_str()));
+            generalTransitionsFiredElement->appendChild(firedElement);
+        }
+        element->appendChild(generalTransitionsFiredElement);
 
         // add general boundaries
         DOMElement* generalBoundariesElement = domDocument->createElement(XMLString::transcode("boundaries"));

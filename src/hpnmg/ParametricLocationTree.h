@@ -1,8 +1,10 @@
 #pragma once
 
-#include "datastructures/ParametricLocation.h"
 #include <map>
-#include <utility>
+//#include <utility>
+#include <unordered_map>
+
+#include "datastructures/ParametricLocation.h"
 #include "exceptions/ParametricLocationTreeExceptions.h"
 #include "STDiagram.h"
 
@@ -25,16 +27,18 @@ namespace hpnmg {
         class Node {
         private:
             NODE_ID id;
-            Region region;
+            bool regionComputed = false;
+            STDPolytope<double> region;
             ParametricLocation parametricLocation;
 
         public:
             Node(NODE_ID id, const ParametricLocation &parametricLocation);
             NODE_ID getNodeID() const;
-            Region getRegion() const;
-            void setRegion(const Region &region);
+            STDPolytope<double> getRegion() const;
+            void computeRegion(ParametricLocationTree &tree);
             ParametricLocation getParametricLocation() const;
             void setParametricLocation(const ParametricLocation &location);
+
         };
     private:
         NODE_ID currentId;
@@ -56,18 +60,19 @@ namespace hpnmg {
         vector<pair<string, map<string, float>>> distributions;
     public:
         const vector<pair<string, map<string, float>>> &getDistributions() const;
+        vector<pair<string, map<string, float>>> getDistributionsNormalized();
 
         void setDistributions(const vector<pair<string, map<string, float>>> &distributions);
 
     private:
 
-        Region baseRegion;
+        STDPolytope<double> baseRegion;
 
-        void recursivelySetRegions(Node &startNode, Region &baseRegion);
+        void recursivelySetRegions(Node &startNode);
 
-        void recursivelyCollectRegions(const Node &startNode, vector<Region> &regions);
+        void recursivelyCollectRegions(const Node &startNode, vector<STDPolytope<double>> &regions);
 
-        void recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, Region> (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension);
+        void recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, STDPolytope<double>> (*isCandidate)(const std::pair<double,double> &interval, const STDPolytope<double> &region, int dimension), std::pair<double, double> interval, int dimension);
 
         void recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability, std::vector<int> occurings);
 
@@ -75,9 +80,33 @@ namespace hpnmg {
 
         void recursivelyPrintRegions(const ParametricLocationTree::Node &startNode, int depth);
 
+        /**
+         * Computes the maximum possible amount of firings for every of the first
+         * <code>numberOfGeneralTransitions</code> general transitions from <code>startNode</code> on.
+         *
+         * For example, a return value of {1, 0, 2} means: For every single path starting in <code>startNode</code>
+         * <ul>
+         *     <li>the 0th general transition fires at most once</li>
+         *     <li>the 1st general transition fires at most zero times, i.e. never</li>
+         *     <li>the 2nd general transition fires at most twice</li>
+         * </ul>
+         *
+         * @param startNode
+         * @param numberOfGeneralTransitions
+         * @return
+         */
         std::vector<int> getDimensionRecursively(const ParametricLocationTree::Node &startNode, int numberOfGeneralTransitions);
 
+        /**
+         *
+         * @param startNode
+         * @param genTransOccurings The amount of (globally) maximum firings for every general transition
+         * @param dimension
+         */
         void addNormedDependenciesRecursively(ParametricLocationTree::Node &startNode, std::vector<int> genTransOccurings, int dimension);
+
+        void recursivelyCollectAllLocationsWithPLT(Node startNode, vector<Node> &candidates, double probability, std::vector<int> occurings);
+
 
     public:
 
@@ -105,7 +134,9 @@ namespace hpnmg {
 
         std::vector<Node> getCandidateLocationsForTime(double time);
 
-        std::vector<Node> getCandidateLocationsForTimeInterval(std::pair<double,double> interval);  
+        std::vector<Node> getCandidateLocationsForTimeInterval(std::pair<double,double> interval);
+
+        std::vector<ParametricLocationTree::Node> getAllLocations();
 
     }; 
 }
