@@ -39,6 +39,10 @@ list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testHeatedTank.cpp$")
 list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testNondeterministicConflicts.cpp$")
 list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testSingularAutomaton.cpp$")
 list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testValuetools.cpp$")
+# takes up too much time
+list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testProbabilityCalculator.cpp$")
+list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testProbabilityCaseStudy.cpp$")
+list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testRegionModelChecker.cpp$")
 
 add_executable(
 		testAll
