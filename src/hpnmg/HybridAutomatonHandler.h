@@ -28,22 +28,23 @@ namespace hpnmg {
         int x;
         int c;
         int v;
-        vector<hypro::Location<Number>> locations;
-        vector<hypro::Transition<Number>> transitions;
-        bool automatonExists = false;
+        vector<unique_ptr<hypro::Location<Number>>> locations;
+       // vector<hypro::Transition<Number>> transitions;
         bool flowpipesComputed = false;
 
     public:
 
+        //shared_ptr<HybridAutomaton<Number>> automaton;
+
+        HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime);
+
         using flowpipe_t = hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>>::flowpipe_t;
-
-        HybridAutomatonHandler();
-
-        HybridAutomaton<Number> convertAutomaton(shared_ptr<SingularAutomaton> singular, double maxTime);
 
         std::vector<std::pair<unsigned, flowpipe_t>> computeFlowpipes(double maxTime, double timestep, int jumpDepth);
 
         void plotTex(string outputfile, std::vector<std::pair<unsigned, flowpipe_t>> flowpipes);
+
+
 
     private:
 

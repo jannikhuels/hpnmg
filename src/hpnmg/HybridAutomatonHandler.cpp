@@ -7,21 +7,13 @@ typedef mpq_class Number;
 
 namespace hpnmg {
 
-
-    HybridAutomatonHandler::HybridAutomatonHandler() {}
-
-
-    HybridAutomaton<Number> HybridAutomatonHandler::convertAutomaton(shared_ptr<SingularAutomaton> singular, double maxTime) {
-
-        singularAutomaton = singular;
-        automaton = HybridAutomaton<Number>();
+    HybridAutomatonHandler::HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime):singularAutomaton(singular)  {//, automaton(std::make_unique<HybridAutomaton<Number>>()) {
 
         //get number of variables
         g = singularAutomaton->getInitialGeneral().size();
         x = singularAutomaton->getInitialContinuous().size();
         c = singularAutomaton->getInitialDeterministic().size();
         v = g + x + c;
-
 
         vector<shared_ptr<SingularAutomaton::Transition>> originalTransitions;
 
@@ -40,6 +32,7 @@ namespace hpnmg {
                 originalTransitions.push_back(originalTransition);
         }
 
+        this->automaton = HybridAutomaton<Number>();
 
         //Add all transitions in list to automaton
         for (shared_ptr<SingularAutomaton::Transition> transition : originalTransitions) {
@@ -51,10 +44,8 @@ namespace hpnmg {
 
         //add locations and transitions to automaton
         for (int i = 0; i < locations.size(); i++) {
-            automaton.addLocation((locations[i]));
+            this->automaton.addLocation(move(locations[i]));
         }
-
-        return automaton;
     }
 
 
@@ -67,61 +58,68 @@ namespace hpnmg {
         vector<pair<invariantOperator, double>> invariantsX = originalLocation->getInvariantsContinuous();
         vector<pair<invariantOperator, double>> invariantsC = originalLocation->getInvariantsDeterministic();
 
-        vector_t<Number> invariantVec = vector_t<Number>::Zero(2 * v);
-        matrix_t<Number> invariantMat = matrix_t<Number>::Zero(2 * v, v);
 
-        //constraints for general variables
-        for (int i = 0; i < g; i++) {
-            invariantVec(2 * i) = Number(0);
-            invariantVec(2 * i + 1) = Number(maxTime);
-            invariantMat(2 * i, i) = Number(-1);
-            invariantMat(2 * i + 1, i) = Number(1);
-            cout << " | Constraint g" << (i + 1) << " in [0," << maxTime << "]";
+        int countX = 0;
+        for (int i = 0; i < invariantsX.size(); i++) {
+            if (invariantsX[i].first != UNLIMITED)
+                countX++;
         }
 
-        //constraints for continuous variables
-        for (int i = 0; i < x; i++) {
+        int countC = 0;
+        for (int i = 0; i < invariantsC.size(); i++) {
+            if (invariantsC[i].first != UNLIMITED)
+                countC++;
+        }
 
-            invariantVec(2 * g + 2 * i) = Number(0);
-            invariantVec(2 * g + 2 * i + 1) = Number(10 * maxTime);
-            invariantMat(2 * g + 2 * i, g + i) = Number(-1);
-            invariantMat(2 * g + 2 * i + 1, g + i) = Number(1);
+        if (countX + countC > 0) {
 
-            if (invariantsX[i].first != UNLIMITED) {
+            vector_t <Number> invariantVec = vector_t<Number>::Zero(countX + countC);
+            matrix_t <Number> invariantMat = matrix_t<Number>::Zero(countX + countC, v);
 
-                if (invariantsX[i].first == GREATER_EQUAL) {
-                    invariantVec(2 * g + 2 * i) = Number(-1 * carl::rationalize<Number>(invariantsX[i].second));
-                } else {
-                    invariantVec(2 * g + 2 * i + 1) = Number(carl::rationalize<Number>(invariantsX[i].second));
+
+            //constraints for continuous variables
+            countX = 0;
+            for (int i = 0; i < x; i++) {
+
+                if (invariantsX[i].first != UNLIMITED) {
+
+                    if (invariantsX[i].first == GREATER_EQUAL) {
+                        invariantMat(countX, g + i) = Number(-1);
+                        invariantVec(countX) = Number(-1 * carl::rationalize<Number>(invariantsX[i].second));
+                        cout << " | Constraint x" << (i + 1) << ">=" << invariantVec(countX) * (-1);
+                    } else {
+                        invariantMat(countX, g + i) = Number(1);
+                        invariantVec(countX) = Number(carl::rationalize<Number>(invariantsX[i].second));
+                        cout << " | Constraint x" << (i + 1) << "<=" << invariantVec(countX);
+                    }
+                    countX++;
+                }
+            }
+
+            //constraints for deterministic clocks
+            countC = 0;
+            for (int i = 0; i < c; i++) {
+
+                if (invariantsC[i].first != UNLIMITED) {
+
+                    if (invariantsC[i].first == GREATER_EQUAL) {
+                        invariantMat(countX + countC, g + x + i) = Number(-1);
+                        invariantVec(countX + countC) = Number(-1 * carl::rationalize<Number>(invariantsC[i].second));
+                        cout << " | Constraint c" << (i + 1) << ">=" << invariantVec(countX + countC) * (-1);
+                    } else {
+                        invariantMat(countX + countC, g + x + i) = Number(1);
+                        invariantVec(countX + countC) = Number(carl::rationalize<Number>(invariantsC[i].second));
+                        cout << " | Constraint c" << (i + 1) << "<=" << invariantVec(countX + countC);
+                    }
+                    countC++;
                 }
 
-                cout << " | Constraint x" << (i + 1) << " in [" << invariantVec(2 * g + 2 * i) << "," << invariantVec(2 * g + 2 * i + 1) << "]";
             }
+
+
+            Condition <Number> inv(invariantMat, invariantVec);
+            newLocation.setInvariant(inv);
         }
-
-        //constraints for deterministic clocks
-        for (int i = 0; i < c; i++) {
-            invariantVec(2 * g + 2 * x + 2 * i) = Number(0);
-            invariantVec(2 * g + 2 * x + 2 * i + 1) = Number(maxTime);
-            invariantMat(2 * g + 2 * x + 2 * i, g + x + i) = Number(-1);
-            invariantMat(2 * g + 2 * x + 2 * i + 1, g + x + i) = Number(1);
-
-            if (invariantsC[i].first != UNLIMITED) {
-
-                if (invariantsC[i].first == GREATER_EQUAL)
-                    invariantVec(2 * g + 2 * x + 2 * i) = Number(-1 * carl::rationalize<Number>(invariantsC[i].second));
-                else
-                    invariantVec(2 * g + 2 * x + 2 * i + 1) = Number(carl::rationalize<Number>(invariantsC[i].second));
-
-           }
-
-        }
-
-
-
-
-        Condition<Number> inv(invariantMat, invariantVec);
-        newLocation.setInvariant(inv);
 
 
         // -- Activities --
@@ -159,7 +157,7 @@ namespace hpnmg {
 
         newLocation.setFlow(flowMatrix);
 
-        locations.push_back(newLocation);
+        locations.push_back(make_unique<hypro::Location<Number>>(newLocation));
     }
 
 
@@ -203,10 +201,17 @@ namespace hpnmg {
             Condition<Number> guard;
             matrix_t<Number> guardMat = matrix_t<Number>::Zero(1, v);
             vector_t<Number> guardVec = vector_t<Number>(1);
-            guardVec(0) = Number(-1 * carl::rationalize<Number>(originalTransition->getValueGuardCompare()));
-            guardMat(0, varIndex) = Number(-1);
 
-            cout << " | Guard " << type << "(" << varIndex << ") >=" << -1 * guardVec(0);
+            if (type == Continuous && originalTransition->getPredecessorLocation()->getActivitiesContinuous()[originalTransition->getVariableIndex()] < 0.0) {
+            //if derivative for continuous variable in source location is negative, guard for lower equal, otherwise guard for greater equal
+                guardVec(0) = Number(carl::rationalize<Number>(originalTransition->getValueGuardCompare()));
+                guardMat(0, varIndex) = Number(1);
+                cout << " | Guard " << type << "(" << varIndex << ") <=" << guardVec(0);
+            } else {
+                guardVec(0) = Number(-1 * carl::rationalize<Number>(originalTransition->getValueGuardCompare()));
+                guardMat(0, varIndex) = Number(-1);
+                cout << " | Guard " << type << "(" << varIndex << ") >=" << -1 * guardVec(0);
+            }
 
             guard.setMatrix(guardMat);
             guard.setVector(guardVec);
@@ -235,11 +240,11 @@ namespace hpnmg {
         newTransition.setReset(reset);
 
         // -- Connecting locations --
-        newTransition.setSource(&locations[source]);
-        newTransition.setTarget(&locations[target]);
+        newTransition.setSource(locations[source]);
+        newTransition.setTarget(locations[target]);
 
-        transitions.push_back(newTransition);
-        locations[source].addTransition(std::make_unique<hypro::Transition<Number>>(transitions[transitions.size() - 1]));
+        //transitions.push_back(newTransition);
+        locations[source]->addTransition(std::make_unique<hypro::Transition<Number>>(newTransition));
     }
 
 
@@ -284,23 +289,18 @@ namespace hpnmg {
         cout << endl;
 
         // create initial state.
-        automaton.addInitialState(&locations[initial], Condition<Number>(boxMat, boxVec));
-        automatonExists = true;
+        automaton.addInitialState(locations[initial].get(), Condition<Number>(boxMat, boxVec));
     }
 
 
     std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> HybridAutomatonHandler::computeFlowpipes(double maxTime, double timestep, int jumpDepth) {
 
            std::vector<std::pair<unsigned, flowpipe_t>> flowpipes;
-           if (!automatonExists) {
-               cout << "No automaton exists to compute flow pipes for. Empty vector returned.";
-               return flowpipes;
-           }
 
            typedef HPolytope<Number> Representation;
 
            // instanciate reachability analysis algorithm
-           reachability::Reach<Number, reachability::ReachSettings, hypro::State_t<Number>> reacher(automaton);
+           reachability::Reach<Number, reachability::ReachSettings, hypro::State_t<Number>> reacher(this->automaton);
            ReachabilitySettings settings = reacher.settings();
            settings.timeStep = carl::convert<double, Number>(timestep);
            settings.timeBound = Number(maxTime);

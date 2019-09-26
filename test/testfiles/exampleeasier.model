@@ -1,14 +1,14 @@
 hybrid reachability
 {
- state var g, x, c1
+ state var g, x, c
 
  setting
  {
   fixed steps 0.1
-  time 15
+  time 20
   remainder estimation 1e-5
   identity precondition
-  gnuplot octagon g, x, c1
+  gnuplot octagon g, x, c
   fixed orders 5
   cutoff 1e-15
   precision 128
@@ -25,13 +25,13 @@ hybrid reachability
    {
     g' = 1
     x' = 0
-    c1' = 1
+    c' = 1
    }
 
    inv
    {
-   g in [0.0,15.0]
-   c1 in [0.0,2.0]
+   g in [0.0,20.0]
+   c in [0.0,2.0]
    }
   }
 
@@ -42,13 +42,13 @@ hybrid reachability
     {
     g' = 0
     x' = 0
-    c1' = 1
+    c' = 1
     }
 
     inv
     {
-   g in [0.0,15.0]
-   c1 in [0.0,2.0]
+   g in [0.0,20.0]
+   c in [0.0,2.0]
     }
    }
 
@@ -59,13 +59,14 @@ hybrid reachability
       {
     g' = 1
     x' = 1
-    c1' = 0
+    c' = 0
       }
 
       inv
       {
-   g in [0.0,15.0]
-   c1 in [0.0,15.0]
+   g in [0.0,20.0]
+   c in [0.0,20.0]
+    x in [0.0,10.0]
       }
      }
 
@@ -75,16 +76,48 @@ hybrid reachability
     {
     g' = 0
     x' = 1
-    c1' = 0
+    c' = 0
     }
 
     inv
     {
-   g in [0.0,15.0]
-  x in [0.0,150.0]
-   c1 in [0.0,15.0]
+   g in [0.0,20.0]
+   c in [0.0,20.0]
+    x in [0.0,10.0]
     }
    }
+
+    l5
+      {
+       poly ode 1
+       {
+       g' = 1
+       x' = 0
+       c' = 0
+       }
+
+       inv
+       {
+      g in [0.0,20.0]
+      c in [0.0,20.0]
+       }
+      }
+
+   l6
+     {
+      poly ode 1
+      {
+      g' = 0
+      x' = 0
+      c' = 0
+      }
+
+      inv
+      {
+     g in [0.0,20.0]
+     c in [0.0,20.0]
+      }
+     }
 }
 
  jumps
@@ -94,17 +127,25 @@ hybrid reachability
   parallelotope aggregation {}
 
   l1 -> l3
-  guard { c1 = 2.0 }
-  reset { c1' := 0}
+  guard { c = 2.0 }
+  reset { c' := 0}
   parallelotope aggregation {}
 
     l2 -> l4
-    guard { c1 = 2.0 }
-    reset { c1' := 0}
+    guard { c = 2.0 }
+    reset { c' := 0}
     parallelotope aggregation {}
 
       l3 -> l4
       reset { g' := 0}
+      parallelotope aggregation {}
+
+  l3 -> l5
+  guard { x = 10.0 }
+  parallelotope aggregation {}
+
+      l4 -> l6
+      guard { x = 10.0 }
       parallelotope aggregation {}
 
  }
@@ -115,7 +156,7 @@ hybrid reachability
   {
    g in [0,0]
    x in [5,5]
-   c1 in [0,0]
+   c in [0,0]
   }
  }
 }
