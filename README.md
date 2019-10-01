@@ -36,7 +36,7 @@ for CArl and [this one](https://github.com/hypro/hypro/commit/9d26f57b5f62) for 
    ```
    # CGAL
    $ sudo apt install libcgal-dev
-   
+
    # GSL - GNU Scientific Library
    $ sudo apt install libgsl-dev
 
@@ -79,7 +79,6 @@ latter command should include lines like these:
 -- Found Java: ...
 ```
 Build HyPro's resources and HyPro itself with `make resources && make hypro`. This may take 10 minutes.
-
 
 ## Instructions
 

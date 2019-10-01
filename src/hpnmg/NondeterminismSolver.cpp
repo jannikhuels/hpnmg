@@ -389,8 +389,6 @@ namespace hpnmg {
                         lowerBounded = k;
                      }
 
-
-//START AUSKOMMENTIEREN
                     params[i].functioncalls = functioncalls;
                     params[i].evaluations = evaluations;
                     params[i].prob = -1.0;
@@ -412,9 +410,6 @@ namespace hpnmg {
                     } else
                         cout << "Main computation failed" << endl;
 
-
-
-//ENDE AUSKOMMENTIEREN
 
                     double a = params[i].result;
 

@@ -18,6 +18,7 @@ namespace hpnmg {
     private:
         EventType type;
         std::vector<double> generalDependencies;
+        std::vector<double> generalDependenciesNormed;
         double time;
         shared_ptr<ImmediateTransition> immediateTransitionMember;
         shared_ptr<GeneralTransition> generalTransitionMember;
@@ -29,13 +30,16 @@ namespace hpnmg {
         Event(EventType type, std::vector<double> generalDependencies, double time);
         Event();
         Event(int numberOfGeneralTransitions);
-        Event(const Event &event);
+        Event(const Event&) = default;
 
         EventType getEventType() const;
         void setEventType(const EventType &eventType);
 
         std::vector<double> getGeneralDependencies() const;
         void setGeneralDependencies(const std::vector<double> generalDependencies);
+
+        std::vector<double> getGeneralDependenciesNormed() const;
+        void setGeneralDependenciesNormed(const std::vector<double> generalDependencies);
 
         double getTime() const;
         void setTime(double time);

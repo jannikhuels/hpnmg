@@ -1,4 +1,5 @@
 #include "ParametricLocationTree.h"
+
 #include <numeric>
 
 namespace hpnmg {
@@ -7,10 +8,37 @@ namespace hpnmg {
 
     NODE_ID ParametricLocationTree::Node::getNodeID() const {return id;}
     ParametricLocation ParametricLocationTree::Node::getParametricLocation() const {return parametricLocation;}
-    Region ParametricLocationTree::Node::getRegion() const {return region;}
+    STDPolytope<double> ParametricLocationTree::Node::getRegion() const {return region;}
 
-    void ParametricLocationTree::Node::setRegion(const Region &region) {
-        this->region = region;
+    void ParametricLocationTree::Node::computeRegion(ParametricLocationTree &tree) {
+        if (this->regionComputed)
+            return;
+
+        const auto dimension = tree.getDimension();
+        const auto &rvIntervals = this->getParametricLocation().getRVIntervalsNormed(
+            tree.getDimensionRecursively(tree.getRootNode(), this->getParametricLocation().getGeneralClock().size()),
+            tree.getMaxTime()
+        );
+        STDPolytope<double> baseRegion = STDiagram::createBaseRegion(dimension, tree.getMaxTime(), rvIntervals);
+
+        std::vector<ParametricLocationTree::Node> childNodes = tree.getChildNodes(*this);
+        if (!childNodes.empty()) {
+            this->region = STDiagram::createRegion(
+                baseRegion,
+                this->getParametricLocation().getSourceEvent(),
+                tree.getSourceEventsFromNodes(childNodes)
+            );
+        } else {
+            //TODO Change when a single general transitions fires more than one time
+            this->region = STDiagram::createRegionNoEvent(
+                baseRegion,
+                this->getParametricLocation().getSourceEvent(),
+                this->getParametricLocation().getGeneralIntervalBoundNormedLeft()[0][0],
+                this->getParametricLocation().getGeneralIntervalBoundNormedRight()[0][0]
+            );
+        }
+
+        this->regionComputed = true;
     }
 
     void ParametricLocationTree::Node::setParametricLocation(const ParametricLocation &parametricLocation) {
@@ -76,43 +104,70 @@ namespace hpnmg {
         return current;
     }
 
-    void ParametricLocationTree::addNormedDependenciesRecursively(ParametricLocationTree::Node &startNode,
-                                                                  std::vector<int> genTransOccurings, int dimension) {
-        // inititalize normed vector and fill with 0
-        vector<double> generalDependenciesNormed(dimension);
-        fill(generalDependenciesNormed.begin(), generalDependenciesNormed.end(), 0);
-
+    void ParametricLocationTree::addNormedDependenciesRecursively(ParametricLocationTree::Node &startNode, std::vector<int> genTransOccurings, int dimension) {
         // get all needed information from parametric location
         ParametricLocation loc = startNode.getParametricLocation();
         vector<int> generalTransitionsFired = loc.getGeneralTransitionsFired();
-        Event event = loc.getSourceEvent();
-        double time = event.getTime();
-        vector<double> generalDependenciesOrig = event.getGeneralDependencies();
 
-        // first val in normed dependencies is time
-        generalDependenciesNormed[0] = time;
+        const auto normalizeDependencyVector = [dimension, &generalTransitionsFired, &genTransOccurings](std::vector<double> dependencies, double time) {
+            // inititalize normed vector and fill with 0
+            vector<double> generalDependenciesNormed(dimension, 0);
 
-        //vector<int> counter = vector<int>(this->dimension - 1);
-        //fill(counter.begin(), counter.end(),0);
+            // first val in normed dependencies is time
+            generalDependenciesNormed[0] = time;
 
-        // startPosition is initial 1 because 0 is the time
-        int startPositionForTransition = 1;
-        // iterate over all general transitions
-        for (int genTrans = 0; genTrans < genTransOccurings.size(); ++genTrans) {
-            // iterate over all possible firings of genTrans
-            int possibleFirings = genTransOccurings[genTrans];
-            int counter = 0;
-            for (int realFiring=0; realFiring<generalTransitionsFired.size(); ++realFiring) {
-                if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
-                    int posNormed = startPositionForTransition + counter;
-                    generalDependenciesNormed[posNormed] = generalDependenciesOrig[realFiring];
-                    ++counter;
+            // startPosition is initial 1 because 0 is the time
+            int startPositionForTransition = 1;
+            // iterate over all general transitions
+            for (int genTrans = 0; genTrans < genTransOccurings.size(); ++genTrans) {
+                // iterate over all possible firings of genTrans
+                int possibleFirings = genTransOccurings[genTrans];
+                int counter = 0;
+                for (int realFiring=0; realFiring < generalTransitionsFired.size() && realFiring < dependencies.size(); ++realFiring) {
+                    if (generalTransitionsFired[realFiring] == genTrans) { // genTrans had Fired
+                        int posNormed = startPositionForTransition + counter;
+                        generalDependenciesNormed[posNormed] = dependencies[realFiring];
+                        ++counter;
+                    }
                 }
+                startPositionForTransition += possibleFirings;
             }
-            startPositionForTransition += possibleFirings;
-        }
-        assert(startPositionForTransition == dimension);
-        loc.setGeneralDependenciesNormed(generalDependenciesNormed);
+            assert(startPositionForTransition == dimension);
+
+            return generalDependenciesNormed;
+        };
+
+        Event event = loc.getSourceEvent();
+        event.setGeneralDependenciesNormed(normalizeDependencyVector(event.getGeneralDependencies(), event.getTime()));
+        loc.setSourceEvent(event);
+
+        //region normalize the dependency vectors with time at index 0
+        const auto normalizeDependencyVectorWithTime = [&normalizeDependencyVector](std::vector<double> dependencyVector) {
+            return normalizeDependencyVector(
+                std::vector<double>(dependencyVector.begin() + 1, dependencyVector.end()),
+                dependencyVector[0]
+            );
+        };
+
+        auto continuousMarking = loc.getContinuousMarking();
+        std::transform(continuousMarking.begin(), continuousMarking.end(), continuousMarking.begin(), normalizeDependencyVectorWithTime);
+        loc.setContinuousMarkingNormed(continuousMarking);
+
+        const size_t numOfAllFirings = std::accumulate(genTransOccurings.begin(), genTransOccurings.end(), 0);
+
+
+        const auto normalizeGeneralIntervals = [&normalizeDependencyVectorWithTime](auto firings) {
+            std::transform(firings.begin(), firings.end(), firings.begin(), normalizeDependencyVectorWithTime);
+            return firings;
+        };
+        auto leftBounds = loc.getGeneralIntervalBoundLeft();
+        std::transform(leftBounds.begin(), leftBounds.end(), leftBounds.begin(), normalizeGeneralIntervals);
+        loc.setGeneralIntervalBoundNormedLeft(leftBounds);
+        auto rightBounds = loc.getGeneralIntervalBoundRight();
+        std::transform(rightBounds.begin(), rightBounds.end(), rightBounds.begin(), normalizeGeneralIntervals);
+        loc.setGeneralIntervalBoundNormedRight(rightBounds);
+        //endregion normalize the dependency vectors with time at index 0
+
         startNode.setParametricLocation(loc);
 
         std::pair <std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator, std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator> ret;
@@ -120,9 +175,6 @@ namespace hpnmg {
         for (std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator it=ret.first; it!=ret.second; ++it) {
             addNormedDependenciesRecursively(it->second, genTransOccurings, dimension);
         }
-        /*for (ParametricLocationTree::Node &node : getChildNodes(startNode)) {
-            addNormedDependenciesRecursively(node, genTransOccurings, dimension);
-        }*/
     }
 
     //TODO Set Dimension accordingly. This is bad -> the dimension should be equal for the whole tree. And Normed Dependencies it should be
@@ -186,26 +238,15 @@ namespace hpnmg {
     void ParametricLocationTree::updateRegions() {
         std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator root;
         root = parametricLocations.find(ROOT_NODE_INDEX);
-        Region r = STDiagram::createBaseRegion(this->getDimension(), this->maxTime);
-        recursivelySetRegions(root->second, r);
+        recursivelySetRegions(root->second);
     }
     
-    void ParametricLocationTree::recursivelySetRegions(ParametricLocationTree::Node &startNode, Region &r) {
-        std::vector<ParametricLocationTree::Node> childNodes = getChildNodes(startNode);
-        if (childNodes.size() > 0) {
-            Region region = STDiagram::createRegion(r, startNode.getParametricLocation().getSourceEvent(), getSourceEventsFromNodes(childNodes));
-            startNode.setRegion(region);
+    void ParametricLocationTree::recursivelySetRegions(ParametricLocationTree::Node &startNode) {
+        startNode.computeRegion(*this);
 
-            std::pair <std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator, std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator> ret;
-            ret = parametricLocations.equal_range(startNode.getNodeID());
-            for (std::multimap<PARENT_NODE_ID,ParametricLocationTree::Node>::iterator it=ret.first; it!=ret.second; ++it) {
-                recursivelySetRegions(it->second, r);
-            }
-        } else {
-            //TODO Change when a single general transitions fires more than one time
-            Region region = STDiagram::createRegionNoEvent(r, startNode.getParametricLocation().getSourceEvent(), startNode.getParametricLocation().getGeneralIntervalBoundLeft()[0][0], startNode.getParametricLocation().getGeneralIntervalBoundRight()[0][0]);
-            startNode.setRegion(region);
-        }
+        auto childNodeRange = parametricLocations.equal_range(startNode.getNodeID());
+        for (auto iterator = childNodeRange.first; iterator != childNodeRange.second; ++iterator)
+            this->recursivelySetRegions(iterator->second);
     }
 
     std::vector<Event> ParametricLocationTree::getSourceEventsFromNodes(const std::vector<ParametricLocationTree::Node> &nodes) {
@@ -216,7 +257,7 @@ namespace hpnmg {
         return events;
     }
 
-    void ParametricLocationTree::recursivelyCollectRegions(const ParametricLocationTree::Node &startNode, vector<Region> &regions) {
+    void ParametricLocationTree::recursivelyCollectRegions(const ParametricLocationTree::Node &startNode, vector<STDPolytope<double>> &regions) {
         regions.push_back(startNode.getRegion());
         for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
             recursivelyCollectRegions(node, regions);
@@ -224,7 +265,7 @@ namespace hpnmg {
     }
     
     void ParametricLocationTree::print(bool cummulative) {
-        vector<Region> regions;
+        vector<STDPolytope<double>> regions;
         recursivelyCollectRegions(getRootNode(), regions);
         STDiagram::print(regions, cummulative);
     }
@@ -245,7 +286,7 @@ namespace hpnmg {
         recursivelyPrintRegions(getRootNode(),0);
     }
 
-    void ParametricLocationTree::recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, Region> (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension) {
+    void ParametricLocationTree::recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, STDPolytope<double>> (*isCandidate)(const std::pair<double,double> &interval, const STDPolytope<double> &region, int dimension), std::pair<double, double> interval, int dimension) {
         if (isCandidate(interval, startNode.getRegion(), dimension).first) {
             candidates.push_back(startNode);
         }
@@ -301,9 +342,27 @@ namespace hpnmg {
                 valid = true;
                 bounds.push_back(parametricLocation.getRVIntervals(occurings, this->maxTime, dimension));
             }
+
+            bool markingIsVanishing = false;
+
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
 
+                // Check if any of the childNodes are an immediate event. This would make the current marking
+                // vanishing and the location must not be added to the candidate set.
+                if (startNode.getParametricLocation().getSourceEvent().getGeneralDependenciesNormed() == node.getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()) {
+                    markingIsVanishing = true;
+                    break;
+                }
+
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
+                double earliestEntryTime = node.getParametricLocation().getEarliestEntryTime();
+
+                // Check if the entry time is constant and exactly meets the checktime.
+                if (latestEntryTime == earliestEntryTime && latestEntryTime == interval.first) {
+                    valid = false;
+                    break;
+                }
+
                 if (latestEntryTime >= interval.first) {
                     valid = true;
 
@@ -342,7 +401,7 @@ namespace hpnmg {
             std::vector<std::vector<double>> unsortedEntryTimes = entryTimes;
             std::sort(entryTimes.begin(), entryTimes.end(),  wayToSortTimes);
 
-            if(valid) {
+            if(valid && !markingIsVanishing) {
                 parametricLocation.setIntegrationIntervals(unsortedEntryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
@@ -411,8 +470,28 @@ namespace hpnmg {
 
         }
 
+    /**
+     * @return std::vector where the i-th entry representes the probability distribution of the i-th general transition.
+     */
     const vector<pair<string, map<string, float>>> &hpnmg::ParametricLocationTree::getDistributions() const {
         return distributions;
+    }
+
+    /**
+     * @return std::vector where the i-th entry representes the probability distribution of the i-th random variable,
+     *         that is the i-th firing in the normalized global firing order
+     */
+    vector<pair<string, map<string, float>>> hpnmg::ParametricLocationTree::getDistributionsNormalized() {
+        auto distributionsNormalized = vector<pair<string, map<string, float>>>();
+        distributionsNormalized.reserve(this->getDimension());
+
+        const auto &occurrings = this->getDimensionRecursively(this->getRootNode(), getRootNode().getParametricLocation().getGeneralClock().size());
+        auto it = distributionsNormalized.begin();
+        for (int transition = 0; transition < occurrings.size(); ++transition)
+            for (int i = 0; i < occurrings[transition]; ++i)
+                distributionsNormalized.push_back(this->getDistributions()[transition]);
+
+        return distributionsNormalized;
     }
 
     void

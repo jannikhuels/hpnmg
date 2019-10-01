@@ -1,3 +1,5 @@
+#ifndef HPNMG_STDPOLYTOPE_TPP
+#define HPNMG_STDPOLYTOPE_TPP
 #include <utility>
 
 #include "STDPolytope.h"
@@ -10,22 +12,45 @@
 #include <utility>
 #include <vector>
 
-#include "representations/GeometricObject.h"
-#include "Eigen/Geometry"
-#include "util/Plotter.h"
+#include <Eigen/Geometry>
+#include <representations/GeometricObject.h>
+#include <util/plotting/Plotter.h>
 
 #include "STDiagram.h"
 #include "Simplex.h"
 
 namespace hpnmg {
     template<typename Numeric>
-    STDPolytope<Numeric> STDPolytope<Numeric>::Empty() { return STDPolytope(Polytope::Empty()); }
+    STDPolytope<Numeric> STDPolytope<Numeric>::Empty(size_t dimension) {
+        vector_t<Numeric> direction = vector_t<Numeric>::Zero(dimension);
+        direction(0) = Numeric(1);
+        Halfspace<Numeric> a(direction, Numeric(-1));
+        direction(0) = Numeric(-1);
+        Halfspace<Numeric> b(direction, Numeric(-1));
+        STDPolytope::Polytope res(std::vector<Halfspace<Numeric>>{a,b});
+        assert(res.empty() == true);
+        return STDPolytope<Numeric>(res);
+    }
 
     template<typename Numeric>
     STDPolytope<Numeric>::STDPolytope(const Polytope& polytope) : STDPolytope(polytope, {}) {}
 
     template<typename Numeric>
     STDPolytope<Numeric>::STDPolytope(const Polytope& polytope, const std::vector<Polytope>& openFacets) : hPolytope(polytope), openFacets(openFacets) {}
+
+    template<typename Numeric>
+    template<typename ToNumeric>
+    STDPolytope<Numeric>::operator STDPolytope<ToNumeric>() const {
+        const auto& fromFacets = this->openFacets;
+        auto toFacets = std::vector<typename STDPolytope<ToNumeric>::Polytope>();
+        toFacets.reserve(fromFacets.size());
+
+        std::transform(fromFacets.begin(), fromFacets.end(), std::back_inserter(toFacets), [](STDPolytope<Numeric>::Polytope poly) {
+            return convertHPolytope(poly);
+        });
+
+        return STDPolytope<ToNumeric>(convertHPolytope(this->hPolytope), toFacets);
+    }
 
     template<typename Numeric>
     void STDPolytope<Numeric>::insert(const hypro::Halfspace<Numeric> &plane) {
@@ -44,7 +69,29 @@ namespace hpnmg {
     }
 
     template<typename Numeric>
-    auto STDPolytope<Numeric>::contains(const hypro::Point<Numeric> &point) const {
+    void STDPolytope<Numeric>::insertOpen(const hypro::Halfspace<Numeric> &plane) {
+        // First, insert as usual
+        this->insert(plane);
+
+        // Then turn the plane into an open facet
+        auto facet = STDPolytope::Polytope(this->hPolytope);
+        facet.insert(-plane);
+        if (!facet.empty())
+            this->openFacets.push_back(facet);
+    }
+
+    template<typename Numeric>
+    bool STDPolytope<Numeric>::empty() const {
+        if(this->hPolytope.empty())
+            return true;
+
+        return std::any_of(this->openFacets.begin(), this->openFacets.end(), [this](const STDPolytope::Polytope& facet) {
+            return facet == this->hPolytope;
+        });
+    }
+
+    template<typename Numeric>
+    bool STDPolytope<Numeric>::contains(const hypro::Point<Numeric> &point) const {
         // Check if the point is contained in our polytope at all
         if (!this->hPolytope.contains(point))
             return false;
@@ -53,6 +100,23 @@ namespace hpnmg {
         return std::none_of(this->openFacets.begin(), this->openFacets.end(), [&point](const STDPolytope::Polytope &facet) {
             return facet.contains(point);
         });
+    }
+
+    template<typename Numeric>
+    size_t STDPolytope<Numeric>::effectiveDimension() const {
+        const auto& vertices = this->hPolytope.vertices();
+        if (vertices.empty())
+            return 0;
+
+        // taken from hypro::effectiveDimension(). calling it directly gave me linker errors.
+        long maxDim = vertices.begin()->rawCoordinates().rows();
+        hypro::matrix_t<Numeric> matr = matrix_t<Numeric>(vertices.size()-1, maxDim);
+        // use first vertex as origin, start at second vertex
+        long rowIndex = 0;
+        for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
+            matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+        }
+        return int(matr.fullPivLu().rank());
     }
 
     template<typename Numeric>
@@ -87,7 +151,7 @@ namespace hpnmg {
 
             // Check if the hsp is the support of an open facet in the new polytope
             const auto& satisfaction = negated.hPolytope.satisfiesHalfspace(hsp);
-            if (satisfaction.first)
+            if (satisfaction.first != hypro::CONTAINMENT::NO)
                 negated.openFacets.push_back(satisfaction.second);
 
             negated.openFacets.erase(
@@ -140,14 +204,26 @@ namespace hpnmg {
         //    before the intersection, they must be equal.
         for (const auto& openFacet : this->openFacets)
             if (openFacet.intersect(timeSlice).vertices().size() == timeSlice.vertices().size())
-                return STDPolytope::Polytope::Empty();
+                return STDPolytope::Empty(this->dimension()).hPolytope;
 
         auto reducedVertices = timeSlice.vertices();
         if (reducedVertices.empty())
-            return STDPolytope::Polytope::Empty();
+            return STDPolytope::Empty(this->dimension()).hPolytope;
 
         for (auto &vertex : reducedVertices)
             vertex.reduceDimension(vertex.dimension() - 1);
+
+        for (const auto& vertices : {this->hPolytope.vertices(), timeSlice.vertices(), reducedVertices}) {
+            long maxDim = vertices.begin()->rawCoordinates().rows();
+            hypro::matrix_t<Numeric> matr = matrix_t<Numeric>(vertices.size()-1, maxDim);
+            // use first vertex as origin, start at second vertex
+            long rowIndex = 0;
+            for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
+                matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+            }
+            auto effectiveDimension = int(matr.fullPivLu().rank());
+            std::cout << "(vertex dim, effective dim) = (" << vertices[0].dimension() << ", " << effectiveDimension << ")" << std::endl;
+        }
 
         return {reducedVertices};
     }
@@ -156,7 +232,7 @@ namespace hpnmg {
     typename STDPolytope<Numeric>::Polytope STDPolytope<Numeric>::extendDownwards() const {
         auto vertices = this->hPolytope.vertices();
         if (vertices.empty())
-            return Polytope::Empty();
+            return STDPolytope<Numeric>::Empty(this->dimension()).hPolytope;
 
         // The vector must not reallocate (and thus invalidate its iterators) while we duplicate it
         vertices.reserve(vertices.size() * 2);
@@ -203,3 +279,4 @@ std::ostream& operator<<(std::ostream &os, const hpnmg::STDPolytope<Numeric> &re
     region.printForWolframMathematica(os);
     return os;
 }
+#endif //HPNMG_STDPOLYTOPE_TPP

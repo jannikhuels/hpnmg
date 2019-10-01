@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Event.h"
-#include "Region.h"
+#include "STDPolytope.h"
 #include "helper/Computation.h"
 #include "helper/LinearBoundsTree.h"
 
@@ -13,20 +13,22 @@ namespace hpnmg {
     private:
         std::vector<int> discreteMarking;
         std::vector<std::vector<double>> continuousMarking;
+        std::vector<std::vector<double>> continuousMarkingNormed;
         std::vector<double> drift;
         std::vector<std::vector<double>> deterministicClock;
         std::vector<std::vector<double>> generalClock;
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft;
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundRight;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundNormedLeft;
+        std::vector<std::vector<std::vector<double>>> generalIntervalBoundNormedRight;
         std::vector<int> generalTransitionFired; // order of general transitions, that already fired
         std::vector<bool> generalTransitionsEnabled;
         std::vector<bool> deterministicTransitionsEnabled;
         std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> integrationIntervals;
-        std::vector<double> generalDependenciesNormed;
+
         void scheduleIntegrationIntervals(int index, std::vector<double> newBound, std::vector<double> splitBound, double boundValue, double splitValue, int boundIndex, int splitIndex, bool parent);
         void setSplitConstraints(std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> &newIntegrationIntervals, int index, int splitIndex, std::vector<double> splitBound, bool upper);
         bool validBound(int index, int boundIndex, std::vector<double> newBound, bool upper);
-
 
     public:
         const vector<bool> &getGeneralTransitionsEnabled() const;
@@ -43,12 +45,6 @@ namespace hpnmg {
         double conflictProbability;
         double accumulatedProbability;
         int dimension;
-    public:
-        vector<double> getGeneralDependenciesNormed();
-
-        void setGeneralDependenciesNormed(const vector<double> &generalDependenciesNormed);
-        // vector needed for STD is empty while parsing and set when PLT is computed
-
     public:
 
         ParametricLocation(int numberOfDiscretePlaces, int numberOfContinuousPlaces, int numberOfGeneralTransitions);
@@ -75,6 +71,10 @@ namespace hpnmg {
 
         void setContinuousMarking(const std::vector<std::vector<double>> &continuousMarking);
 
+        std::vector<std::vector<double>> getContinuousMarkingNormed() const;
+
+        void setContinuousMarkingNormed(const std::vector<std::vector<double>> &continuousMarkingNormed);
+
         std::vector<double> getDrift() const;
 
         void setDrift(const std::vector<double> &drift);
@@ -94,6 +94,14 @@ namespace hpnmg {
         std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundRight() const;
 
         void setGeneralIntervalBoundRight(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundRight);
+
+        std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundNormedLeft() const;
+
+        void setGeneralIntervalBoundNormedLeft(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundNormedLeft);
+
+        std::vector<std::vector<std::vector<double>>> getGeneralIntervalBoundNormedRight() const;
+
+        void setGeneralIntervalBoundNormedRight(const std::vector<std::vector<std::vector<double>>> &generalIntervalBoundNormedRight);
 
         Event getSourceEvent() const;
 
@@ -135,7 +143,32 @@ namespace hpnmg {
 
         std::pair<std::vector<double>, std::vector<double>> compare(std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> boundaries, std::pair<std::vector<double>, std::vector<double>> value, int index);
 
+        /**
+         * Each element (int transition, ([double] lower, [double] upper)) of the result vector represents the <code>lower</code>
+         * and <code>upper</code> limit of the firing time of the <code>transition</code>.
+         *
+         * If <code>transition</code> occurs multiple times, this represents multiple firings of that transition in chronological order.
+         *
+         * The vectors <code>lower</code> and <code>upper</code> represent the coefficients of linear (in)equations
+         * depending on other firing times, ordered in local firing order [???]
+         *
+         * @param occurings
+         * @param maxTime
+         * @param dim
+         * @return
+         */
         std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervals(std::vector<int> occurings, int maxTime, int dim);
 
+        /**
+         * Similar to getRVIntervals() but:
+         * 1. The coefficients of the linear equations are sorted in global firing order [?]
+         * 2. A RV interval for every possible firing (globally) is returned.
+         * 3. The RV intervals themselves are sorted in global firing order [?]
+         *
+         * @param occurings
+         * @param maxTime
+         * @return
+         */
+        std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> getRVIntervalsNormed(std::vector<int> occurings, int maxTime);
     };
 }

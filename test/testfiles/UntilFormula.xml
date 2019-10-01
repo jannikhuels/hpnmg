@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STLFormula>
+    <UntilFormula maxtime="20">
+        <PreFormula>
+            <DiscreteAtomicProperty place="disc1" value="1" />
+        </PreFormula>
+        <GoalFormula>
+            <DiscreteAtomicProperty place="disc2" value="2" />
+        </GoalFormula>
+    </UntilFormula>
+</STLFormula>
