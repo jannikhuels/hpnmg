@@ -12,6 +12,7 @@
 
 #pragma once
 #include "fpc/FirstSegment.h"
+#include "datastructures/HybridPetrinet.h"
 #include <datastructures/reachability/Settings.h>
 #include <datastructures/HybridAutomaton/HybridAutomaton.h>
 #include <datastructures/HybridAutomaton/State.h>
@@ -67,6 +68,7 @@ public:
 
 private:
 	HybridAutomaton<Number> mAutomaton;
+	HybridPetrinet mPetrinet;
 	ReachabilitySettings mSettings;
 	std::size_t mCurrentLevel = 0;
     Number mBloatingFactor = 0;
@@ -84,7 +86,7 @@ public:
 	 * @param _automaton The analyzed automaton.
 	 * @param _settings The reachability analysis settings.
 	 */
-	ReachRHPn(const HybridAutomaton<Number>& _automaton, const ReachabilitySettings& _settings = ReachabilitySettings());
+	ReachRHPn(const HybridPetrinet& _petrinet, const ReachabilitySettings& _settings = ReachabilitySettings());
 
 	/**
 	 * @brief Computes the forward reachability of the given automaton.
@@ -123,7 +125,7 @@ public:
 	 * @param _init The initial valuations.
 	 * @return The resulting flowpipes.
 	 */
-	void processDiscreteBehaviour( const std::vector<boost::tuple<Transition<Number>*, State>>& _newInitialSets );
+	void processDiscreteBehaviour( const std::vector<boost::tuple<hypro::Transition<Number>*, State>>& _newInitialSets );
 
 	/**
 	 * @brief Checks, whether the passed transition is enabled by the passed valuation. Sets the result to be the intersection of the guard and the valuation.
@@ -134,15 +136,17 @@ public:
 	 * @param result At the end of the method this holds the result of the intersection of the guard and the valuation.
 	 * @return True, if the transition is enabled, false otherwise.
 	 */
-	bool intersectGuard( Transition<Number>* _trans, const State& _segment, State& result ) const;
+	bool intersectGuard( hypro::Transition<Number>* _trans, const State& _segment, State& result ) const;
 
-	bool checkTransitions(const State& _state, const carl::Interval<tNumber>& currentTime, std::vector<boost::tuple<Transition<Number>*, State>>& nextInitialSets) const;
+	bool checkTransitions(const State& _state, const carl::Interval<tNumber>& currentTime, std::vector<boost::tuple<hypro::Transition<Number>*, State>>& nextInitialSets) const;
 
 	const ReachabilitySettings& settings() const { return mSettings; }
 	void setSettings(const ReachabilitySettings& settings) { mSettings = settings; }
 
 	representation_name getRepresentationType() const { return mType; }
 	void setRepresentationType(const representation_name& type) { mType = type; }
+
+
 
 private:
 

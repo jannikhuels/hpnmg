@@ -1,7 +1,16 @@
 #include "ReachRHPn.h"
+#include "datastructures/ParametricLocation.h"
+#include "ParseHybridPetrinet.h"
+#include <representations/ConstraintSet/ConstraintSet.h>
 #include <chrono>
+#include <iostream>
+#include <algorithm>
+#include <iterator>
+#include <carl/io/streamingOperators.h>
+
 
 using namespace hypro;
+
 
 namespace hpnmg {
 
@@ -9,15 +18,70 @@ namespace hpnmg {
 	using timeunit = std::chrono::microseconds;
 
 	template<typename Number, typename ReacherSettings, typename State>
-	ReachRHPn<Number,ReacherSettings,State>::ReachRHPn(const HybridAutomaton<Number>& _automaton, const ReachabilitySettings& _settings)
-		: mAutomaton( _automaton ), mSettings(_settings), mCurrentLevel(0), mIntersectedBadStates(false) {
+	ReachRHPn<Number,ReacherSettings,State>::ReachRHPn(const HybridPetrinet& _petrinet, const ReachabilitySettings& _settings)
+		: mPetrinet (_petrinet), mSettings(_settings), mCurrentLevel(0), mIntersectedBadStates(false) {
 			//mAutomaton.addArtificialDimension();
 		}
 
+
+
 	template<typename Number, typename ReacherSettings, typename State>
 	void ReachRHPn<Number,ReacherSettings,State>::initQueue() {
-		TRACE("hypro.reacher.preprocessing","Have " << mAutomaton.getInitialStates().size() << " initial states.");
-		for ( const auto& locationConstraintPair : mAutomaton.getInitialStates() ) {
+	    // get root location
+        shared_ptr<hpnmg::HybridPetrinet> mPetrinetPtr = std::make_shared<hpnmg::HybridPetrinet>(mPetrinet);
+        auto parser = new ParseHybridPetrinet(true);
+        double timeBound = carl::toDouble(mSettings.timeBound);
+        parser->ParseHybridPetrinet::init(mPetrinetPtr);
+        ParametricLocation rootloc = parser->ParseHybridPetrinet::generateRootParametricLocation(mPetrinetPtr,timeBound);
+
+        // printing stuff
+        std::vector<pair<double,double>> path = rootloc.getContinuousMarkingIntervals();
+        std::cout << "Continuous Marking Intervals: ";
+        carl::operator<<(std::cout,path) << std::endl;
+        std::vector<std::pair<double,double>> driftIntervals = rootloc.getDriftIntervals();
+        std::cout << "Drift Intervals: ";
+        carl::operator<<(std::cout,driftIntervals) << std::endl;
+
+
+        // generate Constraint Set for root location / initial states
+	    int dimension = mPetrinet.getContinuousPlaces().size();
+
+	    State s;
+	    matrix_t<Number> constraints =  matrix_t<Number>::Identity(dimension,dimension);
+	    vector_t<Number> constants = vector_t<Number>::Zero(dimension);
+        std::cout << "Matrix: " << constraints << std::endl;
+        std::cout << "Vector: " << constants << std::endl;
+
+
+	    ConstraintSetT<Number,ConstraintSetSettings> constraintSet = ConstraintSetT<Number,ConstraintSetSettings>(constraints, constants);
+	    assert(mType == representation_name::polytope_h);
+
+	    hypro::Location<Number> location;
+	    location.setName("location_0");
+
+        auto& vpool = VariablePool::getInstance();
+        //carl::Variable t = vpool.newCarlVariable("t");
+
+	    hypro::rectangularFlow<Number> rectangularFlow;
+
+	    // vpool.carlVariablebyIndex(0)
+        rectangularFlow.setFlowIntervalForDimension(carl::Interval<Number>{1,1},vpool.newCarlVariable("t"));
+        for (int k = 0; k < dimension; ++k) {
+            string varName = parser->getContinuousPlaceIDs()[k];
+            //carl::Variable xp = vpool.newCarlVariable(varName); driftIntervals[k]
+            rectangularFlow.setFlowIntervalForDimension(carl::Interval<Number>(Number(driftIntervals[k].first),Number(driftIntervals[k].second)),vpool.newCarlVariable(varName));
+        }
+
+        std::cout << rectangularFlow << std::endl;
+
+
+	    s.setLocation(&location);
+	    s.setSetDirect(HPolytope<Number>(constraints, constants));
+        //s.setSetDirect(HPolytope<Number>(locationConstraintPair.second.getMatrix(),locationConstraintPair.second.getVector()));
+	    // TODO consider jumpDepth
+
+	/*	TRACE("hypro.reacher.preprocessing","Have " << mPetrinet.getInitialStates().size() << " initial states.");
+		for ( const std::map<const Location<Number>*, Condition<Number>>& locationConstraintPair : mPetrinet.getInitialStates() ) {
 			if(int(mCurrentLevel) <= mSettings.jumpDepth || mSettings.jumpDepth < 0){
 				// Convert representation in state from matrix and vector to used representation type.
 				State s;
@@ -69,7 +133,18 @@ namespace hpnmg {
 				s.setTimestamp(carl::Interval<tNumber>(0));
 				mWorkingQueue.enqueue(std::make_unique<TaskType>(std::make_pair(mCurrentLevel, s)));
 			}
-		}
+		}*/
+
+        TRACE("hypro.reacher.preprocessing","convert.");
+        //s.setSetDirect(boost::apply_visitor(genericConversionVisitor<typename State::repVariant, Number>(mType), s.getSet()));
+        s.setSetType(mType);
+        TRACE("hypro.reacher.preprocessing","Type after conversion is " << s.getSetType(0));
+
+        DEBUG("hypro.reacher","Adding initial set of type " << mType << ", current queue size (before) is " << mWorkingQueue.size());
+        assert(mType == s.getSetType());
+
+        s.setTimestamp(carl::Interval<tNumber>(0));
+        mWorkingQueue.enqueue(std::make_unique<TaskType>(std::make_pair(mCurrentLevel, s)));
 	}
 
 	template<typename Number, typename ReacherSettings, typename State>
@@ -121,7 +196,7 @@ namespace hpnmg {
 #endif
 		// new empty Flowpipe
 		typename ReachRHPn<Number,ReacherSettings,State>::flowpipe_t flowpipe;
-		std::vector<boost::tuple<Transition<Number>*, State>> nextInitialSets;
+		std::vector<boost::tuple<hypro::Transition<Number>*, State>> nextInitialSets;
 
 		boost::tuple<hypro::CONTAINMENT, State, matrix_t<Number>, vector_t<Number>, Box<Number>> initialSetup = computeFirstSegment<Number,State>(_state, mSettings.timeStep);
 #ifdef REACH_DEBUG

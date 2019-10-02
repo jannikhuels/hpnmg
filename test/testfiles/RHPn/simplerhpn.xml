@@ -4,7 +4,7 @@
         <continuousPlace id="pc1" level="0" capacity="10" infiniteCapacity="0" />
     </places>
     <transitions>
-        <continuousNondeterministicTransition id="tf1" rateUpper="1.0" rateLower="1.0"/>
+        <continuousNondeterministicTransition id="tf1" rateUpper="3.0" rateLower="1.0"/>
     </transitions>
     <arcs>
         <continuousArc id="ca1" fromNode="tf1" toNode="pc1" priority="1" share="1.0E0"  weight="1.0E0"/>

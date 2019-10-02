@@ -2,7 +2,7 @@ using namespace hypro;
 
 namespace hpnmg {
 	template<typename Number, typename ReacherSettings, typename State>
-	bool ReachRHPn<Number,ReacherSettings,State>::intersectGuard( Transition<Number>* _trans, const State& _state,
+	bool ReachRHPn<Number,ReacherSettings,State>::intersectGuard( hypro::Transition<Number>* _trans, const State& _state,
 							   State& result ) const {
 
 		assert(!_state.getTimestamp().isUnbounded());
@@ -38,8 +38,8 @@ namespace hpnmg {
 	}
 
 	template<typename Number,typename ReacherSettings, typename State>
-	void ReachRHPn<Number,ReacherSettings,State>::processDiscreteBehaviour( const std::vector<boost::tuple<Transition<Number>*, State>>& _newInitialSets ) {
-		std::map<Transition<Number>*, std::vector<State>> toAggregate;
+	void ReachRHPn<Number,ReacherSettings,State>::processDiscreteBehaviour( const std::vector<boost::tuple<hypro::Transition<Number>*, State>>& _newInitialSets ) {
+		std::map<hypro::Transition<Number>*, std::vector<State>> toAggregate;
 
 		for(const auto& tuple : _newInitialSets ) {
 			if(boost::get<0>(tuple)->getAggregation() == Aggregation::none){
@@ -144,7 +144,7 @@ namespace hpnmg {
 	}
 
 	template<typename Number,typename ReacherSettings, typename State>
-	bool ReachRHPn<Number,ReacherSettings,State>::checkTransitions(const State& state, const carl::Interval<tNumber>& , std::vector<boost::tuple<Transition<Number>*, State>>& nextInitialSets) const {
+	bool ReachRHPn<Number,ReacherSettings,State>::checkTransitions(const State& state, const carl::Interval<tNumber>& , std::vector<boost::tuple<hypro::Transition<Number>*, State>>& nextInitialSets) const {
 
 		State guardSatisfyingState;
 		bool transitionEnabled = false;
