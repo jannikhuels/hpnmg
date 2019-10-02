@@ -13,13 +13,14 @@ namespace hpnmg {
         vector<string> deterministicTransitionIDs;
         vector<string> generalTransitionIDs;
         vector<ParametricLocationTree::Node> locationQueue;
+        bool isNondeterministic = false;
 
         std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> sortByEqualTimeDelta(std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> deterministicTransitions);
 
     public:
         //TODO Check to make it a singleton
         //TODO Change public / private accessor
-        ParseHybridPetrinet();
+        ParseHybridPetrinet(bool isNondeterministic = false);
 
         ~ParseHybridPetrinet();
 
@@ -76,6 +77,9 @@ namespace hpnmg {
                                  vector<vector<vector<double>>> lowerBounds, vector<vector<vector<double>>>
                                  upperBounds, vector<int> generalTransitionsFired);
 
+        bool transitionIsEnabled(vector<int> discreteMarking, vector<pair<double,double>> continousMarkingIntervals,
+                                 shared_ptr<Transition> transition, shared_ptr<HybridPetrinet> hybridPetrinet);
+
         void addLocationForImmediateEvent(shared_ptr<ImmediateTransition> transition,
                                           ParametricLocationTree::Node parentNode, float probability,
                                           shared_ptr<HybridPetrinet> hybridPetrinet);
@@ -107,6 +111,13 @@ namespace hpnmg {
         long getIndexOfGeneralTransition(shared_ptr<GeneralTransition> generalTransition) const;
 
         vector<double> getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking, shared_ptr<HybridPetrinet> hybridPetrinet, vector<vector<vector<double>>> lowerBounds, vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired);
+
+        vector<pair<double,double>> getDriftIntervals(vector<int> discreteMarking, vector<pair<double,double>> continuousMarkingIntervals, shared_ptr<HybridPetrinet> hybridPetrinet);
+
+        void init(shared_ptr<HybridPetrinet> hybridPetrinet);
+
+        vector<string> getContinuousPlaceIDs();
+
 
     };
 }

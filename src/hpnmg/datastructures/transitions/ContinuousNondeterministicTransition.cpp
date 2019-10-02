@@ -11,4 +11,6 @@ namespace hpnmg {
 
     void ContinuousNondeterministicTransition::setCurrentRateInterval(pair<double, double> newRateInterval) { this->currentRateInterval = newRateInterval; };
 
+    void ContinuousNondeterministicTransition::resetOriginalRate() { currentRateInterval = rateInterval; }
+
 }

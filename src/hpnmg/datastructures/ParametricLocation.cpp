@@ -52,6 +52,18 @@ namespace hpnmg {
         setDrift(drift);
     }
 
+
+    ParametricLocation::ParametricLocation(std::vector<int> discreteMarking,
+                                           std::vector<std::pair<double, double>> continuousMarkingIntervals,
+                                           std::vector<std::pair<double, double>> driftIntervals,
+                                           const Event &sourceEvent) :
+                    ParametricLocation(discreteMarking.size(), continuousMarkingIntervals.size(), 0, sourceEvent)
+                                           {
+                                               setDiscreteMarking(discreteMarking);
+                                               setContinuousMarkingIntervals(continuousMarkingIntervals);
+                                               setDriftIntervals(driftIntervals);
+    }
+
     ParametricLocation::ParametricLocation(const ParametricLocation &parametricLocation) :
             discreteMarking(parametricLocation.discreteMarking),
             continuousMarking(parametricLocation.continuousMarking),
@@ -71,8 +83,8 @@ namespace hpnmg {
             generalTransitionsEnabled(parametricLocation.generalTransitionsEnabled),
             deterministicTransitionsEnabled(parametricLocation.deterministicTransitionsEnabled)
     {
-
     }
+
 
 
     std::vector<int> ParametricLocation::getDiscreteMarking() const { return discreteMarking; }
@@ -85,6 +97,11 @@ namespace hpnmg {
     void ParametricLocation::setContinuousMarking(
             const std::vector<std::vector<double>> &continuousMarking) { this->continuousMarking = continuousMarking; }
 
+    std::vector<std::pair<double,double>> ParametricLocation::getContinuousMarkingIntervals() const { return continuousMarkingIntervals; }
+
+    void ParametricLocation::setContinuousMarkingIntervals(
+            const std::vector<std::pair<double,double>> &continuousMarkingIntervals) { this->continuousMarkingIntervals = continuousMarkingIntervals; }
+
     std::vector<std::vector<double>> ParametricLocation::getContinuousMarkingNormed() const { return continuousMarkingNormed; }
 
     void ParametricLocation::setContinuousMarkingNormed(
@@ -93,6 +110,10 @@ namespace hpnmg {
     std::vector<double> ParametricLocation::getDrift() const { return drift; }
 
     void ParametricLocation::setDrift(const std::vector<double> &drift) { this->drift = drift; }
+
+    std::vector<pair<double,double>> ParametricLocation::getDriftIntervals() const { return driftIntervals; }
+
+    void ParametricLocation::setDriftIntervals(const std::vector<pair<double,double>> &driftIntervals) { this->driftIntervals = driftIntervals; }
 
     std::vector<std::vector<double>> ParametricLocation::getDeterministicClock() const { return deterministicClock; }
 
@@ -693,5 +714,7 @@ namespace hpnmg {
     std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> ParametricLocation::getIntegrationIntervals() const{
         return this->integrationIntervals;
     }
+
+
 
 }

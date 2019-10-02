@@ -2,12 +2,11 @@
 
 using namespace std;
 namespace hpnmg {
-    ParseHybridPetrinet::ParseHybridPetrinet() = default;
+    ParseHybridPetrinet::ParseHybridPetrinet(bool isNondeterministic) : isNondeterministic(isNondeterministic) {}
 
     ParseHybridPetrinet::~ParseHybridPetrinet() = default;
 
-    shared_ptr<ParametricLocationTree>
-    ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, int mode) {
+    void ParseHybridPetrinet::init(shared_ptr<HybridPetrinet> hybridPetrinet) {
         // TODO: all floats to double?
         discretePlaceIDs = {};
         continuousPlaceIDs = {};
@@ -29,6 +28,12 @@ namespace hpnmg {
         map<string, shared_ptr<GeneralTransition>> generalTransitions = hybridPetrinet->getGeneralTransitions();
         for (auto &generalTransition : generalTransitions)
             generalTransitionIDs.push_back(generalTransition.first);
+    }
+
+    shared_ptr<ParametricLocationTree>
+    ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, int mode) {
+        // initilization is excluded
+        init(hybridPetrinet);
 
         ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, maxTime);
 
@@ -61,9 +66,19 @@ namespace hpnmg {
 
         // Get root continuous marking
         vector<vector<double>> rootContinuousMarking;
+        vector<pair<double,double>> rootContinuousMarkingIntervals;
         for (string &placeId: continuousPlaceIDs) {
-            rootContinuousMarking.push_back({hybridPetrinet->getContinuousPlaces()[placeId]->getLevel()}); // NOLINT
+            auto level = hybridPetrinet->getContinuousPlaces()[placeId]->getLevel();
+            std::cout << "For continuous Place " << placeId << " cont. marking interval is: [" << level << "," << level << "]" << std::endl;
+            if(!isNondeterministic) {
+                rootContinuousMarking.push_back({level}); // NOLINT
+            } else {
+                rootContinuousMarkingIntervals.push_back({level,level}); // NOLINT
+            }
         }
+
+        //carl::operator<<(std::cout, rootContinuousMarkingIntervals);
+        //std::cout << std::endl;
 
 
         // Fill left and right bounds
@@ -76,12 +91,40 @@ namespace hpnmg {
             rightBoundaries.push_back({{maxTime}}); // NOLINT
             generalClocks.push_back({0}); // NOLINT
         }
-        vector<double> drift = getDrift(rootDiscreteMarking, rootContinuousMarking, hybridPetrinet, leftBoundaries,
-                                        rightBoundaries, {});
-        ParametricLocation rootLocation = ParametricLocation(rootDiscreteMarking, rootContinuousMarking, drift,
+
+
+
+        //ParametricLocation rootLocation = ParametricLocation(0,0,0);
+        //std::unique_ptr<ParametricLocation> rootLocationPtr;
+
+        // lambdafunktion
+        ParametricLocation rootLocation = [&rootDiscreteMarking, &rootContinuousMarking, &hybridPetrinet, &leftBoundaries,
+                &rightBoundaries, &rootContinuousMarkingIntervals, &numGeneralTransitions, this](){
+            if(!isNondeterministic) {
+                vector<double> drift;
+                drift = getDrift(rootDiscreteMarking, rootContinuousMarking, hybridPetrinet, leftBoundaries,
+                                 rightBoundaries, {});
+                //ParametricLocation location = ParametricLocation(rootDiscreteMarking, rootContinuousMarking, drift,static_cast<int>(numGeneralTransitions),Event(EventType::Root, {}, 0),leftBoundaries, rightBoundaries);
+                return ParametricLocation(rootDiscreteMarking, rootContinuousMarking, drift,
                                                              static_cast<int>(numGeneralTransitions),
                                                              Event(EventType::Root, {}, 0),
                                                              leftBoundaries, rightBoundaries);
+
+            } else {
+                vector<pair<double,double>> driftIntervals;
+                driftIntervals = getDriftIntervals(rootDiscreteMarking, rootContinuousMarkingIntervals, hybridPetrinet);
+                //ParametricLocation location = ParametricLocation(rootDiscreteMarking, rootContinuousMarkingIntervals, driftIntervals,Event(EventType::Root, {}, 0));
+
+                return ParametricLocation(rootDiscreteMarking, rootContinuousMarkingIntervals, driftIntervals,
+                                                             Event(EventType::Root, {}, 0));
+                //rootLocation = ParametricLocation(location); // TODO does this work?!
+            }
+        }();
+
+       /* vector<pair<double,double>> intervals = rootLocation.getContinuousMarkingIntervals();
+        std::cout << "Cont. Marking intervals after initilization of location" << std::endl;
+        carl::operator<<(std::cout, intervals);
+        std::cout << std::endl;*/
 
         vector<vector<double>> deterministicClocks;
         for (string &id : deterministicTransitionIDs)
@@ -842,6 +885,84 @@ namespace hpnmg {
         }
         return true;
     }
+
+    bool ParseHybridPetrinet::transitionIsEnabled(vector<int> discreteMarking,
+                                                  vector<pair<double, double>> continousMarkingIntervals,
+                                                  shared_ptr<Transition> transition,
+                                                  shared_ptr<HybridPetrinet> hybridPetrinet) {
+        // discrete arcs are enabled when place has higher or equal marking than arcs weight
+        // place is discrete Place
+        for (pair<string, shared_ptr<DiscreteArc>> arc_entry : transition->getDiscreteInputArcs()) {
+            shared_ptr<DiscreteArc> arc = arc_entry.second;
+            shared_ptr<DiscretePlace> place = hybridPetrinet->getDiscretePlaces()[arc->place->id];
+            long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), place->id) - discretePlaceIDs.begin();
+            double marking = discreteMarking[pos];
+            if (arc->weight > marking)
+                return false;
+        }
+        for (pair<string, shared_ptr<GuardArc>> arc_entry : transition->getGuardInputArcs()) {
+            shared_ptr<GuardArc> arc = arc_entry.second;
+            // place is discrete
+            if (hybridPetrinet->getDiscretePlaces().count(arc->place->id)) {
+                shared_ptr<DiscretePlace> place = hybridPetrinet->getDiscretePlaces()[arc->place->id];
+                long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), place->id) - discretePlaceIDs.begin();
+                double marking = discreteMarking[pos];
+                if ((marking >= arc->weight && arc->getIsInhibitor()) || ((marking < arc->weight && !arc->getIsInhibitor())))
+                    return false;
+            }  else { // place is continuous
+                shared_ptr <ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[arc->place->id];
+                long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), place->id) -
+                           continuousPlaceIDs.begin();
+
+                pair<double,double> level = continousMarkingIntervals[pos];
+                pair<double,double> driftInterval = getDriftIntervals(discreteMarking, continousMarkingIntervals, hybridPetrinet)[pos];
+
+
+                double maxLevel = level.second;
+                double minLevel = level.first;
+
+                // currently in the unknown case a transition always is considered enabled
+                // (unknown: the drifts upper bound could be above 0, so the marking could change in the wrong way)
+                if (arc->getIsInhibitor()) {
+
+                    if (arc->weight > 0.0) {
+
+                        if (driftInterval.first >= 0.0 && (maxLevel >= arc->weight || minLevel >= arc->weight))
+                            return false;
+
+                        if (maxLevel > arc->weight || minLevel > arc->weight)
+                            return false;
+
+                    } else {
+
+                        if (driftInterval.first > 0.0)
+                            return false;
+
+                        if (driftInterval.first >= 0.0 && (maxLevel > 0.0 || minLevel > 0.0))
+                            return false;
+                    }
+
+                } else {
+
+
+                    if (arc->weight > 0.0){
+
+                        if (driftInterval.second < 0.0 && (minLevel <= arc->weight || maxLevel <= arc->weight))
+                            return false;
+
+                        if (minLevel < arc->weight || maxLevel < arc->weight)
+                            return false;
+
+                    } else {
+
+                        if (driftInterval.second <= 0.0 && (minLevel <= 0.0 || maxLevel <= 0.0))
+                            return false;
+
+                    }
+                }
+            }
+        }
+        return true;    };
 
     void ParseHybridPetrinet::addLocationForImmediateEvent(shared_ptr<ImmediateTransition> transition,
                                                            ParametricLocationTree::Node parentNode, float probability,
@@ -1781,6 +1902,254 @@ namespace hpnmg {
         return drift;
     }
 
+    vector<pair<double,double>> ParseHybridPetrinet::getDriftIntervals(vector<int> discreteMarking, vector<pair<double,double>> continuousMarkingIntervals, shared_ptr<HybridPetrinet> hybridPetrinet) {
+        vector<pair<double,double>> driftIntervals(continuousMarkingIntervals.size());
+        vector<pair<double,double>> inputDrift(continuousMarkingIntervals.size());
+        vector<pair<double,double>> outputDrift(continuousMarkingIntervals.size());
+        pair<double,double> zero = {0,0};
+        fill(driftIntervals.begin(), driftIntervals.end(), zero);
+        fill(inputDrift.begin(), inputDrift.end(), make_pair(0,0));
+        fill(outputDrift.begin(), outputDrift.end(), zero);
+
+        //TODO when adding dynamic transition: first update all static continuous transitions and then set supposed dynamic rates, before computing the drift. For non-piecewise-linear behavior, the derivatives of rates will have to be considered as well.
+
+        // get drift for every place
+        auto continuousNondeterministicTransitions = hybridPetrinet->getContinuousNondeterministicTransitions();
+        std::cout << "Number of cont. Nondet. Transitions: " << continuousNondeterministicTransitions.size() << std::endl;
+        for (auto &continuousNondeterministicTransition : continuousNondeterministicTransitions) {
+            shared_ptr<ContinuousNondeterministicTransition> transition = continuousNondeterministicTransition.second;
+            transition->resetOriginalRate();
+            if (transitionIsEnabled(discreteMarking, continuousMarkingIntervals, transition, hybridPetrinet)) {
+                string transitionId = transition->id;
+                // output transitions
+                for (auto arcItem : transition->getContinuousInputArcs()) {
+                    shared_ptr<ContinuousArc> arc = arcItem.second;
+                    long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), arc->place->id) -
+                               continuousPlaceIDs.begin();
+                    pair<double,double> driftChange;
+                    driftChange.first = arc->weight * transition->getRateInterval().first;
+                    driftChange.second = arc->weight * transition->getRateInterval().second;
+                    driftIntervals[pos].first -= driftChange.first;
+                    driftIntervals[pos].second -= driftChange.second;
+                    // input for transition is output for place
+                    outputDrift[pos].first += driftChange.first;
+                    outputDrift[pos].second += driftChange.second;
+                }
+                // input transitions
+                for (auto arcItem : transition->getContinuousOutputArcs()) {
+                    shared_ptr<ContinuousArc> arc = arcItem.second;
+                    long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), arc->place->id) -
+                               continuousPlaceIDs.begin();
+                    pair<double,double> driftChange;
+                    driftChange.first = arc->weight * transition->getRateInterval().first;
+                    driftChange.second = arc->weight * transition->getRateInterval().second;
+                    driftIntervals[pos].first += driftChange.first;
+                    driftIntervals[pos].second += driftChange.second;
+                    // output for transition is input for place
+                    inputDrift[pos].first += driftChange.first;
+                    inputDrift[pos].second += driftChange.second;
+                }
+            }
+        }
+
+        // TODO implement RATE ADAPTION
+        // Rate Adaption
+       /* vector<shared_ptr<ContinuousPlace>> placesToCheck;
+        for (auto placeItem :  hybridPetrinet->getContinuousPlaces())
+            placesToCheck.push_back(placeItem.second);
+
+        map<string, double> outputDriftNeeded;
+        map<string, double> inputDriftNeeded;
+        while (!placesToCheck.empty()) {
+            shared_ptr<ContinuousPlace> place = placesToCheck[0];
+            long pos =
+                    find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), place->id) - continuousPlaceIDs.begin();
+
+            // Check if we need to adapt the rate
+            bool placeEmpty = true;
+            bool placeFull = false;
+            for (int i = 0; i < continuousMarking[pos].size(); ++i) {
+                double levelAtI = continuousMarking[pos][i];
+                if (levelAtI > 0.0) {
+                    placeEmpty = false; // minimum 1 time is not 0
+                    placeFull = false; // place is only full when first level is capacity and rest is 0
+                }
+                if (i == 0 && levelAtI == place->getCapacity()) {
+                    placeFull = true;
+                }
+            }
+
+            if ((drift[pos] < 0 && placeEmpty) || (!place->getInfiniteCapacity() && drift[pos] > 0 && placeFull)) {
+
+                double rateLeft;
+                if (placeEmpty) {
+                    rateLeft = inputDrift[pos];
+                    outputDrift[pos] = inputDrift[pos];
+                } else {
+                    rateLeft = outputDrift[pos];
+                    inputDrift[pos] = outputDrift[pos];
+                }
+
+                drift[pos] = 0;
+                map<unsigned long, vector<tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>>>> transitionsByPrio;
+                // Get Out-Transitions sorted by prio
+                for (auto transitionItem : hybridPetrinet->getContinuousTransitions()) {
+                    shared_ptr<ContinuousTransition> transition = transitionItem.second;
+                    shared_ptr<ContinuousArc> arc;
+
+                    bool isInputOrOutputTransition = false;
+                    if (placeEmpty) {
+                        for (auto arcItem : transition->getContinuousInputArcs())
+                            if (arcItem.second->place->id == place->id) {
+                                isInputOrOutputTransition = true;
+                                arc = arcItem.second;
+                                break;
+                            }
+                    } else {
+                        for (auto arcItem : transition->getContinuousOutputArcs())
+                            if (arcItem.second->place->id == place->id) {
+                                isInputOrOutputTransition = true;
+                                arc = arcItem.second;
+                                break;
+                            }
+                    }
+                    if (isInputOrOutputTransition) {
+                        unsigned long priority = arc->getPriority();
+                        transitionsByPrio[priority].push_back(make_tuple(transition, arc));
+                    }
+                }
+                // Adapt rate for some transitions
+                map<unsigned long, vector<tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>>>>::reverse_iterator iter = transitionsByPrio.rbegin();
+                while (iter != transitionsByPrio.rend()) {
+                    vector<tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>>> prioTransitions = iter->second;
+                    double rateRequired = 0.0;
+                    double sumSharedRate = 0.0;
+                    for (tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>> transItem : prioTransitions) {
+                        shared_ptr<ContinuousTransition> transition = get<0>(transItem);
+                        shared_ptr<ContinuousArc> arc = get<1>(transItem);
+                        rateRequired += arc->weight * transition->getRate();
+                        sumSharedRate += arc->weight * transition->getRate() * arc->getShare();
+                    }
+
+                    if (rateRequired <= rateLeft) { // we have enough fluid left for this priority
+                        rateLeft -= rateRequired;
+                    } else if (rateLeft > 0.0 && prioTransitions.size() > 1){ // we do not have enough left to supply more than one transition
+
+                        bool change = true;
+                        while (change)  {
+                            change = false;
+                            vector<tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>>>::iterator  it = prioTransitions.begin();
+                            while (it != prioTransitions.end()){
+                                shared_ptr<ContinuousTransition> transition = get<0>(*it);
+                                shared_ptr<ContinuousArc> arc = get<1>(*it);
+                                if (sumSharedRate > 0.0 && rateLeft > 0.0 && (arc->getShare() / sumSharedRate >= 1 / rateLeft)) {
+                                    rateLeft -= arc->weight * transition->getRate();
+                                    sumSharedRate -= arc->weight * transition->getRate() * arc->getShare();
+                                    change = true;
+                                    it = prioTransitions.erase(it);
+                                    break;
+                                } else
+                                    ++it;
+                            }
+
+                        }
+
+
+                        // adapt transition rates and add places to placesToCheck
+                        for (tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>> transItem : prioTransitions) {
+                            shared_ptr <ContinuousTransition> transition = get<0>(transItem);
+                            shared_ptr <ContinuousArc> arc = get<1>(transItem);
+
+                            if (sumSharedRate > 0.0 && rateLeft > 0.0 && (arc->getShare() / sumSharedRate < 1 / rateLeft)) {
+                                double newRate = transition->getRate() * arc->getShare() * rateLeft / sumSharedRate;
+                                rateLeft -= newRate;
+                                if (transition->getRate() != newRate) {
+                                    double rateDiff = transition->getRate() - newRate;
+                                    if (outputDriftNeeded.find(transition->id) == outputDriftNeeded.end())
+                                        outputDriftNeeded[transition->id] = rateDiff;
+                                    else
+                                        outputDriftNeeded[transition->id] += rateDiff;
+                                    transition->setCurrentRate(newRate);
+                                    for (auto arcItem : transition->getContinuousOutputArcs()) {
+                                        shared_ptr <Place> placeToCheck = arcItem.second->place;
+                                        if (place->id != placeToCheck->id) {
+                                            placesToCheck.push_back(
+                                                    hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
+                                            long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
+                                                                 placeToCheck->id) - continuousPlaceIDs.begin();
+                                            inputDrift[placePos] -= rateDiff;
+                                            drift[placePos] -= rateDiff;
+                                        }
+                                    }
+                                    for (auto arcItem : transition->getContinuousInputArcs()) {
+                                        shared_ptr <Place> placeToCheck = arcItem.second->place;
+                                        if (place->id != placeToCheck->id) {
+                                            placesToCheck.push_back(
+                                                    hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
+                                            long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
+                                                                 placeToCheck->id) - continuousPlaceIDs.begin();
+                                            outputDrift[placePos] -= rateDiff;
+                                            drift[placePos] += rateDiff;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    } else if (rateLeft <= 0.0 || (prioTransitions.size() == 1)) {   //nothing left or only one transition to supply
+                        // adapt transition rates and add places to placesToCheck
+                        for (tuple<shared_ptr<ContinuousTransition>, shared_ptr<ContinuousArc>> transItem : prioTransitions) {
+                            shared_ptr<ContinuousTransition> transition = get<0>(transItem);
+                            shared_ptr<ContinuousArc> arc = get<1>(transItem);
+
+                            double newRate = 0.0;
+                            if (rateLeft > 0.0 && prioTransitions.size() == 1)
+                                newRate = rateLeft / arc->weight;
+
+                            if (transition->getRate() != newRate) {
+                                double rateDiff = transition->getRate() - newRate;
+                                if (outputDriftNeeded.find(transition->id) == outputDriftNeeded.end())
+                                    outputDriftNeeded[transition->id] = rateDiff;
+                                else
+                                    outputDriftNeeded[transition->id] += rateDiff;
+                                transition->setCurrentRate(newRate);
+                                for (auto arcItem : transition->getContinuousOutputArcs()) {
+                                    shared_ptr<Place> placeToCheck = arcItem.second->place;
+                                    if (place->id != placeToCheck->id) {
+                                        placesToCheck.push_back(
+                                                hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
+                                        long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
+                                                             placeToCheck->id) - continuousPlaceIDs.begin();
+                                        inputDrift[placePos] -= rateDiff;
+                                        drift[placePos] -= rateDiff;
+                                    }
+                                }
+                                for (auto arcItem : transition->getContinuousInputArcs()) {
+                                    shared_ptr<Place> placeToCheck = arcItem.second->place;
+                                    if (place->id != placeToCheck->id) {
+                                        placesToCheck.push_back(
+                                                hybridPetrinet->getContinuousPlaces()[placeToCheck->id]);
+                                        long placePos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(),
+                                                             placeToCheck->id) - continuousPlaceIDs.begin();
+                                        outputDrift[placePos] -= rateDiff;
+                                        drift[placePos] += rateDiff;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    iter++;
+                }
+                placesToCheck.erase(placesToCheck.begin());
+
+            } else {
+                placesToCheck.erase(placesToCheck.begin());
+            }
+        }*/
+        return driftIntervals;
+    }
+
+
     long ParseHybridPetrinet::getIndexOfModelMember(string id, vector<string> vectorOfIDs) const {
         return find(vectorOfIDs.begin(), vectorOfIDs.end(), id) - vectorOfIDs.begin();
     };
@@ -1791,5 +2160,10 @@ namespace hpnmg {
 
     long ParseHybridPetrinet::getIndexOfDeterministicTransition(shared_ptr<DeterministicTransition> deterministicTransition) const {return getIndexOfModelMember(deterministicTransition->id, deterministicTransitionIDs);};
 
-    long ParseHybridPetrinet::getIndexOfGeneralTransition(shared_ptr<GeneralTransition> generalTransition) const {return getIndexOfModelMember(generalTransition->id, generalTransitionIDs);};
+    long ParseHybridPetrinet::getIndexOfGeneralTransition(shared_ptr<GeneralTransition> generalTransition) const {return getIndexOfModelMember(generalTransition->id, generalTransitionIDs);}
+
+    vector<string> ParseHybridPetrinet::getContinuousPlaceIDs() {
+        return this->continuousPlaceIDs;
+    }
+
 }

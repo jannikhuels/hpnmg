@@ -14,5 +14,6 @@ namespace hpnmg {
 
         virtual pair<double,double> getRateInterval();
         void setCurrentRateInterval(pair<double,double> newRateInterval);
+        void resetOriginalRate();
     };
 }

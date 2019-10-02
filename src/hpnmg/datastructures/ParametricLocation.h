@@ -13,10 +13,12 @@ namespace hpnmg {
     private:
         std::vector<int> discreteMarking;
         std::vector<std::vector<double>> continuousMarking;
+        std::vector<std::pair<double,double>> continuousMarkingIntervals;
      //  RateDependencies contMarkRateDependencies;
         std::vector<std::vector<double>> continuousMarkingNormed;
         std::vector<double> drift;
-     //   RateDependencies driftRateDependencies;
+        std::vector<std::pair<double,double>> driftIntervals;
+        //   RateDependencies driftRateDependencies;
         std::vector<std::vector<double>> deterministicClock;
         std::vector<std::vector<double>> generalClock; // TODO: do I need rateDependencies here?
         std::vector<std::vector<std::vector<double>>> generalIntervalBoundLeft;
@@ -67,6 +69,9 @@ namespace hpnmg {
                            std::vector<std::vector<std::vector<double>>> intervalBoundLeft,
                            std::vector<std::vector<std::vector<double>>> intervalBoundRight);
 
+        ParametricLocation(std::vector<int> discreteMarking, std::vector<std::pair<double,double>> continuousMarkingIntervals, std::vector<std::pair<double,double>> driftIntervals,
+                           const Event &sourceEvent);
+
         std::vector<int> getDiscreteMarking() const;
 
         void setDiscreteMarking(const std::vector<int> &discreteMarking);
@@ -75,6 +80,10 @@ namespace hpnmg {
 
         void setContinuousMarking(const std::vector<std::vector<double>> &continuousMarking);
 
+        std::vector<std::pair<double,double>> getContinuousMarkingIntervals() const;
+
+        void setContinuousMarkingIntervals(const std::vector<std::pair<double,double>> &continuousMarkingIntervals);
+
         std::vector<std::vector<double>> getContinuousMarkingNormed() const;
 
         void setContinuousMarkingNormed(const std::vector<std::vector<double>> &continuousMarkingNormed);
@@ -82,6 +91,10 @@ namespace hpnmg {
         std::vector<double> getDrift() const;
 
         void setDrift(const std::vector<double> &drift);
+
+        std::vector<pair<double,double>> getDriftIntervals() const;
+
+        void setDriftIntervals(const std::vector<pair<double,double>> &driftIntervals);
 
         std::vector<std::vector<double>> getDeterministicClock() const;
 
