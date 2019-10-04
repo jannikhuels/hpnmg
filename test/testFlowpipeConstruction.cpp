@@ -9,8 +9,9 @@ using namespace hpnmg;
 TEST(FlowpipeConstruction, Basic)
 {
 
-    typedef mpq_class Number;
-    typedef hypro::HPolytope<Number> Representation;
+   // typedef mpq_class Number;
+   typedef double Number;
+   typedef hypro::HPolytope<Number> Representation;
 
     // setup
     string filePath = "../../test/testfiles/RHPn/simplerhpn.xml";
@@ -32,7 +33,8 @@ TEST(FlowpipeConstruction, Basic)
     reacher.setSettings(settings);
     reacher.setRepresentationType(Representation::type());
 
-    reacher.initQueue();
+    //reacher.initQueue();
+    reacher.computeForwardReachability();
 
     /*// perform reachability analysis.
     auto flowpipeIndices = reacher.computeForwardReachability();

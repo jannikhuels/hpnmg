@@ -43,27 +43,24 @@ namespace hpnmg {
         carl::operator<<(std::cout,driftIntervals) << std::endl;
 
 
-        // generate Constraint Set for root location / initial states
+        // generate Constraint Set for initial state
 	    int dimension = mPetrinet.getContinuousPlaces().size();
-
 	    State s;
 	    matrix_t<Number> constraints =  matrix_t<Number>::Identity(dimension,dimension);
 	    vector_t<Number> constants = vector_t<Number>::Zero(dimension);
-        std::cout << "Matrix: " << constraints << std::endl;
-        std::cout << "Vector: " << constants << std::endl;
-
-
+        std::cout << "State set constraint matrix: " << constraints;
+        std::cout << "State set constraint (constants) vector: " << constants;
 	    ConstraintSetT<Number,ConstraintSetSettings> constraintSet = ConstraintSetT<Number,ConstraintSetSettings>(constraints, constants);
 	    assert(mType == representation_name::polytope_h);
 
-	    hypro::Location<Number> location;
-	    location.setName("location_0");
+	    // generate location and set name - location instanz liegt jetzt im heap; next step: location wird von Parametric Location gehalten
+	    hypro::Location<Number> *location = new hypro::Location<Number>; // muss irgendwann deleted werden TODO mit delete location;
+	    location->setName("location_0");
 
+	    // set rectangular flow and create variables
         auto& vpool = VariablePool::getInstance();
         //carl::Variable t = vpool.newCarlVariable("t");
-
 	    hypro::rectangularFlow<Number> rectangularFlow;
-
 	    // vpool.carlVariablebyIndex(0)
         rectangularFlow.setFlowIntervalForDimension(carl::Interval<Number>{1,1},vpool.newCarlVariable("t"));
         for (int k = 0; k < dimension; ++k) {
@@ -71,11 +68,17 @@ namespace hpnmg {
             //carl::Variable xp = vpool.newCarlVariable(varName); driftIntervals[k]
             rectangularFlow.setFlowIntervalForDimension(carl::Interval<Number>(Number(driftIntervals[k].first),Number(driftIntervals[k].second)),vpool.newCarlVariable(varName));
         }
+        location->setRectangularFlow(rectangularFlow);
+        std::cout << "Set rectangular flow of location " << location->getName() << " to: " << location->getRectangularFlow();
 
-        std::cout << rectangularFlow << std::endl;
+        // generate invariants TODO
+        // deterministic clocks are set in gen. root loc. (to zero)
 
+        // TODO: what to do about transitions?
 
-	    s.setLocation(&location);
+        // set location for state, set constraint sets of state
+	    s.setLocation(location); //location is a pointer -> no & needed
+	    std::cout << s.getLocation()->getName();
 	    s.setSetDirect(HPolytope<Number>(constraints, constants));
         //s.setSetDirect(HPolytope<Number>(locationConstraintPair.second.getMatrix(),locationConstraintPair.second.getVector()));
 	    // TODO consider jumpDepth
@@ -145,6 +148,9 @@ namespace hpnmg {
 
         s.setTimestamp(carl::Interval<tNumber>(0));
         mWorkingQueue.enqueue(std::make_unique<TaskType>(std::make_pair(mCurrentLevel, s)));
+//        TaskTypePtr nextInitialSet = mWorkingQueue.dequeueFront();
+//        std::cout << nextInitialSet->second.getLocation()->getName();
+//        mWorkingQueue.enqueue(std::move(nextInitialSet));
 	}
 
 	template<typename Number, typename ReacherSettings, typename State>
@@ -171,9 +177,12 @@ namespace hpnmg {
 			}
 
 			mCurrentLevel = nextInitialSet->first;
-			INFO("hypro.reacher","Depth " << mCurrentLevel << ", Location: " << nextInitialSet->second.getLocation()->getName());
+			std::cout << "Depth " << mCurrentLevel << ", Location: " << nextInitialSet->second.getLocation()->getName();
+			std::cout << "Dot repr. of loc:" << std::endl;
+			//std::cout << nextInitialSet->second.getLocation()->getDotRepresentation
+
 			assert(int(mCurrentLevel) <= mSettings.jumpDepth);
-			TRACE("hypro.reacher","Obtained set of type " << nextInitialSet->second.getSetType() << ", requested type is " << mType);
+            std::cout <<"Obtained set of type " << nextInitialSet->second.getSetType() << ", requested type is " << mType;
 			flowpipe_t newFlowpipe = computeForwardTimeClosure(nextInitialSet->second);
 
 			collectedReachableStates.emplace_back(std::make_pair(nextInitialSet->second.getLocation()->hash(), newFlowpipe));
