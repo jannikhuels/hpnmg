@@ -1,7 +1,8 @@
 #include "DeterministicTransition.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
+
     DeterministicTransition::DeterministicTransition(std::string id, unsigned long priority, double weight, double discTime)
         : Transition(id), priority(priority), weight(weight), discTime(discTime)
     {}

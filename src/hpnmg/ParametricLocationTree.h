@@ -11,9 +11,9 @@
 #define ROOT_NODE_INDEX 0
 #define ROOT_NODE_ID 1
 
-using namespace std;
 
 namespace hpnmg {
+    using namespace std;
     typedef int NODE_ID;
     typedef NODE_ID PARENT_NODE_ID;
     // rateDependencies stores the factor of r or r⁻¹

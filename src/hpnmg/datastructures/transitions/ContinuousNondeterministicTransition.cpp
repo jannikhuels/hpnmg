@@ -1,7 +1,7 @@
 #include "ContinuousNondeterministicTransition.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
 
     ContinuousNondeterministicTransition::ContinuousNondeterministicTransition(std::string id, pair<double, double> rateInterval)
         : Transition(id), rateInterval(rateInterval), currentRateInterval(rateInterval)

@@ -9,9 +9,9 @@
 #include "Event.h"
 
 
-using namespace std;
 
 namespace hpnmg {
+    using namespace std;
     typedef int LOCATION_ID;
 
     enum invariantOperator {

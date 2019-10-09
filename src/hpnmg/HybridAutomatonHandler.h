@@ -10,11 +10,10 @@
 #include "algorithms/reachability/Reach.h"
 #include "util/plotting/Plotter.h"
 
-using namespace std;
 using namespace hypro;
 
 namespace hpnmg {
-
+    using namespace std;
 
     typedef mpq_class Number;
 

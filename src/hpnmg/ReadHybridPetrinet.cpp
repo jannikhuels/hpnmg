@@ -1,8 +1,8 @@
 #include "ReadHybridPetrinet.h"
 
 using namespace xercesc;
-using namespace std;
 namespace hpnmg {
+    using namespace std;
 
     ReadHybridPetrinet::ReadHybridPetrinet() {
         try {

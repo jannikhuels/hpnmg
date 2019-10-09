@@ -1,9 +1,9 @@
 #include "ReadFormula.h"
 
 using namespace xercesc;
-using namespace std;
 
 namespace hpnmg {
+    using namespace std;
     ReadFormula::ReadFormula() {
         try {
             XMLPlatformUtils::Initialize();  // Initialize Xerces infrastructure

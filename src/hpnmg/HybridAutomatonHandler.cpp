@@ -1,11 +1,11 @@
 #include "HybridAutomatonHandler.h"
 
-using namespace std;
 using namespace hypro;
 using namespace hypro;
 typedef mpq_class Number;
 
 namespace hpnmg {
+    using namespace std;
 
     HybridAutomatonHandler::HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime):singularAutomaton(singular)  {//, automaton(std::make_unique<HybridAutomaton<Number>>()) {
 

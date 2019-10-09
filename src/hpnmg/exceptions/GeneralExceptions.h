@@ -4,9 +4,9 @@
 #include <sstream>
 #include <string>
 
-using namespace std;
 
 namespace hpnmg {
+    using namespace std;
     class Exception {
     protected:
         string errorDescription;

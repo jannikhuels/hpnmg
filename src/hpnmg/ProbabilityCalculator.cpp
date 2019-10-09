@@ -8,10 +8,9 @@
 
 #include "helper/Triangulation.h"
 
-using namespace std;
 
 namespace hpnmg {
-
+    using namespace std;
 
 ProbabilityCalculator::ProbabilityCalculator(){}
 

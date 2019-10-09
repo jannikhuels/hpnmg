@@ -2,8 +2,8 @@
 
 #include "Transition.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
     class GeneralTransition : public Transition {
 
     private:

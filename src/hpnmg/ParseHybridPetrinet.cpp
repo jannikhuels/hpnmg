@@ -1,7 +1,7 @@
 #include "ParseHybridPetrinet.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
     ParseHybridPetrinet::ParseHybridPetrinet(bool isNondeterministic) : isNondeterministic(isNondeterministic) {}
 
     ParseHybridPetrinet::~ParseHybridPetrinet() = default;

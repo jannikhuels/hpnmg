@@ -1,7 +1,8 @@
 #include "DynamicTransition.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
+
     DynamicTransition::DynamicTransition(std::string id,
                                          double factor,
                                          double constant,

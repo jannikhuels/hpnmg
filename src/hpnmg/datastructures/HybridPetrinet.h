@@ -18,8 +18,8 @@
 #include "arcs/ContinuousArc.h"
 #include "arcs/GuardArc.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
     class HybridPetrinet {
 
     private:
