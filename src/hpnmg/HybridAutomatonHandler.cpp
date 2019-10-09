@@ -297,7 +297,7 @@ namespace hpnmg {
 
            std::vector<std::pair<unsigned, flowpipe_t>> flowpipes;
 
-           typedef HPolytope<Number> Representation;
+           typedef Box<Number> Representation;
 
            // instanciate reachability analysis algorithm
            reachability::Reach<Number, reachability::ReachSettings, hypro::State_t<Number>> reacher(this->automaton);

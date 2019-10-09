@@ -299,8 +299,8 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/example.xml";
-    double tMax = 10.0;
+    string filePath = "../../test/testfiles/exampleeasy2.xml";
+    double tMax = 20.0;
 
 // read
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
@@ -317,7 +317,7 @@ TEST(HybridAutomaton, converter) {
     HybridAutomatonHandler handler(automaton, tMax);
 
 //compute flowpipes
-    auto flowpipes = handler.computeFlowpipes(tMax, 0.1, 5);
+    auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
 
     handler.plotTex("example", flowpipes);
 
@@ -802,16 +802,16 @@ TEST(HybridAutomaton, FlowParser){
 
     // typedefs for simplification.
     typedef mpq_class Number;
-    typedef HPolytope<Number> Representation;
+    typedef Box<Number> Representation;
 
-    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/example.model"));
+    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/exampleeasy2.model"));
 
 
     hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>> reacher(ha.first, ha.second);
 
 
     ReachabilitySettings settings = reacher.settings();
-    settings.timeBound = Number(10); //time bound
+    settings.timeBound = Number(20); //time bound
     settings.jumpDepth = 5;
     reacher.setSettings(settings);
     reacher.setRepresentationType(Representation::type());
