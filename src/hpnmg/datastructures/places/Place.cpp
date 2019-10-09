@@ -1,7 +1,7 @@
 #include "Place.h"
 
-using namespace std;
 
 namespace hpnmg {
+    using namespace std;
     Place::Place(std::string id) : id(id) {}
 }

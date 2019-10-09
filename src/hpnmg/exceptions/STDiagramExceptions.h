@@ -2,9 +2,10 @@
 
 #include "GeneralExceptions.h"
 
-using namespace std;
 
 namespace hpnmg {
+    using namespace std;
+
     class IllegalDimensionException: public invalid_argument, public Exception {
     public:
         IllegalDimensionException(int dimension): invalid_argument("IllegalDimensionException:") {

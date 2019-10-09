@@ -1,10 +1,9 @@
 #include "NondeterminismSolver.h"
 
-using namespace std;
 using namespace alglib;
 
 namespace hpnmg {
-
+    using namespace std;
 
     NondeterminismSolver::NondeterminismSolver() {}
 

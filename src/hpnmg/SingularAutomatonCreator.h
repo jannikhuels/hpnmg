@@ -6,10 +6,9 @@
 #include "ParseHybridPetrinet.h"
 #include <memory>
 
-using namespace std;
 
 namespace hpnmg {
-
+    using namespace std;
 
     class SingularAutomatonCreator {
 //    private:

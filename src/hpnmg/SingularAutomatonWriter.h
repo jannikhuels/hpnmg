@@ -3,9 +3,10 @@
 #include <memory>
 #include <datastructures/SingularAutomaton.h>
 
-using namespace std;
 
 namespace hpnmg {
+    using namespace std;
+
     class SingularAutomatonWriter {
 
     private:

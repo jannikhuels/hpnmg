@@ -2,8 +2,8 @@
 
 #include "Place.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
     class ContinuousPlace : public Place {
 
     private:

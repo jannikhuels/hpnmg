@@ -1,7 +1,8 @@
 #include "Transition.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
+
     Transition::Transition(string &id) : id(id) {}
 
     void Transition::addInputArc(shared_ptr<DiscreteArc> &arc) { discreteInputArcs[arc->id] = arc; }

@@ -7,8 +7,9 @@
 #include "../arcs/ContinuousArc.h"
 #include "../arcs/GuardArc.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
+
     class Transition {
     private:
         map<string, shared_ptr<DiscreteArc>> discreteInputArcs;

@@ -1,8 +1,8 @@
 #include <datastructures/transitions/DynamicTransition.h>
 #include "HybridPetrinet.h"
 
-using namespace std;
 namespace hpnmg {
+    using namespace std;
 
     unsigned long HybridPetrinet::num_places() {
         return discretePlaces.size() + continuousPlaces.size();

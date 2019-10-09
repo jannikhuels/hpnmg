@@ -2,9 +2,9 @@
 
 #include "GeneralExceptions.h"
 
-using namespace std;
 
 namespace hpnmg {
+    using namespace std;
     class NoSuchNodeException: public runtime_error, public Exception {
     public:
         NoSuchNodeException(int id): runtime_error("NoSuchNodeException:") {

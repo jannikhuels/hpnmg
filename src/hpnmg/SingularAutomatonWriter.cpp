@@ -1,8 +1,8 @@
 #include "SingularAutomatonWriter.h"
 
-using namespace std;
 
 namespace hpnmg {
+    using namespace std;
 
     void SingularAutomatonWriter::writeAutomaton(shared_ptr<SingularAutomaton> automaton, string automatonname) {
         string filename = automatonname + ".jani";
