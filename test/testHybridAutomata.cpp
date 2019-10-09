@@ -41,6 +41,7 @@ unsigned long getNumberOfLocations(const shared_ptr<SingularAutomaton>& automato
     return automaton->getLocations().size();
 }
 
+
 unsigned long getNumberOfEdges(const shared_ptr<SingularAutomaton>& automaton) {
     unsigned long numberOfEdges = 0;
     for(const shared_ptr<SingularAutomaton::Location>& loc : automaton->getLocations()) {
@@ -48,8 +49,6 @@ unsigned long getNumberOfEdges(const shared_ptr<SingularAutomaton>& automaton) {
     }
     return numberOfEdges;
 }
-
-
 
 
 
@@ -90,7 +89,6 @@ TEST(HybridAutomaton, example) {
     automatonWriter.writeAutomaton(automaton, "example_10");
 
 }
-
 
 
 
@@ -287,42 +285,6 @@ TEST(HybridAutomaton, exampleAutomaton) {
         // write output.
         plotter.plotTex();
 }
-
-
-TEST(HybridAutomaton, converter) {
-
-    using namespace hypro;
-    typedef HPolytope<Number> Representation;
-
-    ReadHybridPetrinet reader;
-    SingularAutomatonCreator transformer;
-    SingularAutomatonWriter automatonWriter;
-
-// setup
-    string filePath = "../../test/testfiles/exampleeasy2.xml";
-    double tMax = 20.0;
-
-// read
-    shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
-
-
-// transform
-    auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
-
-    shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
-    auto writer = new PLTWriter();
-    writer->writePLT(plt, tMax);
-
-    shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
-    HybridAutomatonHandler handler(automaton, tMax);
-
-//compute flowpipes
-    auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
-
-    handler.plotTex("example", flowpipes);
-
-}
-
 
 
 
@@ -804,7 +766,7 @@ TEST(HybridAutomaton, FlowParser){
     typedef mpq_class Number;
     typedef Box<Number> Representation;
 
-    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/exampleeasy2.model"));
+    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/examplesHybridAutomata/exampleNondeterminism1.model"));
 
 
     hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>> reacher(ha.first, ha.second);
@@ -837,5 +799,43 @@ TEST(HybridAutomaton, FlowParser){
         }
         // write output.
         plotter.plotTex();
+
+}
+
+
+//flow pipe reachability for HPnGs
+TEST(HybridAutomaton, converter) {
+
+    using namespace hypro;
+    typedef HPolytope<Number> Representation;
+
+    ReadHybridPetrinet reader;
+    SingularAutomatonCreator transformer;
+    SingularAutomatonWriter automatonWriter;
+
+// setup
+    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleNondeterminism2.xml";
+    double tMax = 20.0;
+
+// read HPnG
+    shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
+
+
+// transform HPnG into SingularAutomaton
+    auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
+
+// Get and export PLT (not necessary for reachability)
+    shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, tMax);
+
+// Pass Singular Automaton to Handler
+    shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
+    HybridAutomatonHandler handler(automaton, tMax);
+
+// Compute flowpipes
+    auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
+
+    handler.plotTex("example", flowpipes);
 
 }
