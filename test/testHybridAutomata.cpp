@@ -814,8 +814,8 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleNondeterminism2.xml";
-    double tMax = 20.0;
+    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleHybrid2.xml";
+    double tMax = 10.0;
 
 // read HPnG
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
@@ -836,6 +836,6 @@ TEST(HybridAutomaton, converter) {
 // Compute flowpipes
     auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
 
-    handler.plotTex("example", flowpipes);
+    handler.plotTex("exampleHybrid2", flowpipes);
 
 }

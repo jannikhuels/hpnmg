@@ -4,7 +4,7 @@ hybrid reachability
 
  setting
  {
-  fixed steps 0.1
+  fixed steps 0.01
   time 10
   remainder estimation 1e-5
   identity precondition
@@ -31,10 +31,7 @@ hybrid reachability
 
    inv
    {
-   g in [0.0,15.0]
-   x in [0.0,150.0]
-   c1 in [0.0,2.0]
-    c2 in [0.0,15.0]
+   c1 <= 2
    }
   }
 
@@ -51,10 +48,7 @@ hybrid reachability
 
     inv
     {
-   g in [0.0,15.0]
-   x in [0.0,150.0]
-   c1 in [0.0,2.0]
-    c2 in [0.0,15.0]
+ c1 <= 2
     }
    }
 
@@ -71,10 +65,7 @@ hybrid reachability
 
       inv
       {
-   g in [0.0,15.0]
-   x in [0.0,150.0]
-   c1 in [0.0,15.0]
-    c2 in [0.0,1.0]
+ c2 <= 1
       }
      }
 
@@ -90,14 +81,11 @@ hybrid reachability
 
     inv
     {
-   g in [0.0,15.0]
-  x in [0.0,150.0]
-   c1 in [0.0,15.0]
-    c2 in [0.0,1.0]
+ c2 <= 1
     }
    }
 
-    l6
+    l5
       {
        linear ode
        {
@@ -107,32 +95,17 @@ hybrid reachability
        c2' = 0
        }
 
-           inv
-           {
-          g in [0.0,15.0]
-          x in [0.0,150.0]
-          c1 in [0.0,15.0]
-           c2 in [0.0,15.0]
-           }
       }
 
-      l7
+      l6
         {
-         linear ode
-         {
-         g' = 1
-         x' = 1
-         c1' = 0
-         c2' = 0
-         }
-
-         inv
-         {
-        g in [0.0,15.0]
-        x in [0.0,150.0]
-        c1 in [0.0,15.0]
-         c2 in [0.0,15.0]
-         }
+     linear ode
+     {
+     g' = 1
+     x' = 1
+     c1' = 0
+     c2' = 0
+     }
         }
 }
 
@@ -156,17 +129,17 @@ hybrid reachability
       reset { g' := 0}
       parallelotope aggregation {}
 
-      l3 -> l6
+      l3 -> l5
       guard { c2 >= 1.0 }
       reset { c2' := 0}
       parallelotope aggregation {}
 
-       l4 -> l7
+       l4 -> l6
        guard { c2 >= 1.0 }
        reset { c2' := 0}
        parallelotope aggregation {}
 
-     l6 -> l7
+     l5 -> l6
      reset { g' := 0}
      parallelotope aggregation {}
  }

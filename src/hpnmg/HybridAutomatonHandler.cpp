@@ -313,7 +313,7 @@ namespace hpnmg {
 
            flowpipesComputed = true;
 
-           cout << "Points: " << endl;
+           cout << endl;
 
         for (auto &indexPair : flowpipes) {
             std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
@@ -322,7 +322,12 @@ namespace hpnmg {
                 std::vector<Point<Number>> points = set.vertices();
                 if (!points.empty() && points.size() >= 0) {
                     for (auto &point : points) {
-                        cout << point << endl;
+
+                        for (int i = 0; i < point.rawCoordinates().size(); i++){
+                            auto coordinate = point.rawCoordinates()[i];
+                            cout << carl::convert<Number, double>(coordinate) << ", ";
+                        }
+                        cout << endl;
                     }
                     points.clear();
                 }
