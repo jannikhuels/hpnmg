@@ -5,8 +5,10 @@
     </places>
     <transitions>
         <continuousNondeterministicTransition id="tf1" rateUpper="3.0" rateLower="1.0"/>
+        <continuousNondeterministicTransition id="tf2" rateUpper="1.0" rateLower="1.0"/>
     </transitions>
     <arcs>
         <continuousArc id="ca1" fromNode="tf1" toNode="pc1" priority="1" share="1.0E0"  weight="1.0E0"/>
+        <continuousArc id="ca1" fromNode="pc1" toNode="tf2" priority="1" share="1.0E0"  weight="1.0E0"/>
     </arcs>
 </HPnG>
