@@ -61,7 +61,7 @@ unsigned long getNumberOfEdges(const shared_ptr<SingularAutomaton>& automaton) {
 
 
 
-
+/*
 TEST(HybridAutomaton, example) {
 
 
@@ -880,21 +880,21 @@ rectFlow.setFlowIntervalForDimension(carl::Interval<Number>{1,3},varpool.newCarl
 loc1->setRectangularFlow(rectFlow);
 
 
-/*
-// setup flow matrix (3x3, we add an artificial dimension to cope with constants).
-// matrix defining the flow (note: 3rd dimension for constant parts).
-matrix_t<Number> flowMatrix = matrix_t<Number>(3,3);
-flowMatrix(0,0) = Number(0);
-flowMatrix(0,1) = Number(1);
-flowMatrix(0,2) = Number(0);
-flowMatrix(1,0) = Number(0);
-flowMatrix(1,1) = Number(0);
-flowMatrix(1,2) = Number(carl::rationalize<Number>(-9.81));
-flowMatrix(2,0) = Number(0);
-flowMatrix(2,1) = Number(0);
-flowMatrix(2,2) = Number(0);
-loc1->setFlow(flowMatrix);
- */
+
+//// setup flow matrix (3x3, we add an artificial dimension to cope with constants).
+//// matrix defining the flow (note: 3rd dimension for constant parts).
+//matrix_t<Number> flowMatrix = matrix_t<Number>(3,3);
+//flowMatrix(0,0) = Number(0);
+//flowMatrix(0,1) = Number(1);
+//flowMatrix(0,2) = Number(0);
+//flowMatrix(1,0) = Number(0);
+//flowMatrix(1,1) = Number(0);
+//flowMatrix(1,2) = Number(carl::rationalize<Number>(-9.81));
+//flowMatrix(2,0) = Number(0);
+//flowMatrix(2,1) = Number(0);
+//flowMatrix(2,2) = Number(0);
+//loc1->setFlow(flowMatrix);
+
 
 
 // setup of the transition.
@@ -954,7 +954,8 @@ points.clear();
 // write output.
 plotter.plotTex();
 }
-
+*/
+/*
 TEST(HybridAutomaton,RectangularAutomatonWorker) {
     // typedefs
     using Number = double;
@@ -964,8 +965,9 @@ TEST(HybridAutomaton,RectangularAutomatonWorker) {
     hypro::SettingsProvider<State>& settingsProvider = hypro::SettingsProvider<State>::getInstance();
 
     // variables
-    carl::Variable x;
-    carl::Variable y;
+    auto& varpool = VariablePool::getInstance();
+    carl::Variable x = varpool.newCarlVariable("x");
+    carl::Variable y = varpool.newCarlVariable("y");
     // rectangular dynamics
     std::map<carl::Variable, carl::Interval<Number>> dynamics;
     dynamics.emplace(std::make_pair(x,carl::Interval<Number>(1,2)));
@@ -988,8 +990,11 @@ TEST(HybridAutomaton,RectangularAutomatonWorker) {
     hypro::vector_t<Number> constants = hypro::vector_t<Number>(4);
     constants << 1,1,1,1;
 
+    ha.addInitialState(&loc1, Condition<Number>(constraints,constants));
+
     // theoretically we do not need this - check if really needed.
-    settingsProvider.addStrategyElement<hypro::CarlPolytope<Number>>(mpq_class(1)/mpq_class(100), hypro::AGG_SETTING::AGG, -1);
+    //settingsProvider.addStrategyElement<hypro::CarlPolytope<Number>>(mpq_class(1)/mpq_class(100), hypro::AGG_SETTING::AGG, -1);
+    settingsProvider.addStrategyElement<hypro::CarlPolytope<Number>>(mpq_class(1)/mpq_class(10), hypro::AGG_SETTING::AGG, -1);
 
     // set settings
     settingsProvider.setHybridAutomaton(std::move(ha));
@@ -997,6 +1002,9 @@ TEST(HybridAutomaton,RectangularAutomatonWorker) {
     settings.useInvariantTimingInformation = false;
     settings.useGuardTimingInformation = false;
     settings.useBadStateTimingInformation = false;
+    // settings.timeStep = carl::convert<double,Number>(1.00); does not work
+    settings.timeBound = Number(3); //time bound
+    settings.jumpDepth = 3;
     settingsProvider.setReachabilitySettings(settings);
 
     // set up queues
@@ -1048,4 +1056,33 @@ TEST(HybridAutomaton,RectangularAutomatonWorker) {
         worker.processTask(task,settingsProvider.getStrategy(), globalQueue, globalCEXQueue, segments);
     }
 
+    // plot flowpipes.
+    Plotter<Number>& plotter = Plotter<Number>::getInstance();
+    plotter.setFilename("rectangularAutomaton");
+
+
+
+
+//    //for(auto& indexPair : flowpipe){
+//        auto flowpipe = segments.getPlotData();
+//        auto& set = flowpipe.sets();
+//// Plot single flowpipe
+//        for(auto& set : flowpipe) {
+//            std::vector<Point<Number>> points = set.vertices();
+//            if(!points.empty() && points.size() > 2) {
+//                for(auto& point : points) {
+//                    point.reduceDimension(2);
+//                }
+//                plotter.addObject(points);
+//                points.clear();
+//            }
+//        }
+//    //}
+// write output.
+
+    std::vector<hypro::PlotData<State>> plotdata = segments.getPlotData();
+    //plotter.addObject(plotdata);
+    plotter.plotTex();
+
 }
+*/
