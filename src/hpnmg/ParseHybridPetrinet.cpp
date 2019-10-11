@@ -698,6 +698,411 @@ namespace hpnmg {
         }
     }
 
+    vector<pair<shared_ptr<DeterministicTransition>, double>> ParseHybridPetrinet::processLocation(ParametricLocation location, shared_ptr<HybridPetrinet> hybridPetrinet,
+                                          double maxTime) {
+
+        int mode =0; // nondeterminstic stuff from carina; default mode
+        int nodeMax = 100000;
+        vector<int> discreteMarking = location.getDiscreteMarking();
+        vector<pair<double,double>> continuousMarkingIntervals = location.getContinuousMarkingIntervals();
+        map<string, shared_ptr<ImmediateTransition>> immediateTransitions = hybridPetrinet->getImmediateTransitions();
+
+        // step 1: Immediate Transition have highest priority, so we consider them first
+        vector<shared_ptr<ImmediateTransition>> enabledImmediateTransition;
+        double highestPriority = -1.0;
+        for (auto &immediateTransition : immediateTransitions) {
+            shared_ptr<ImmediateTransition> transition = immediateTransition.second;
+
+            if (transitionIsEnabled(discreteMarking, continuousMarkingIntervals, transition, hybridPetrinet)) {
+
+                if (mode < 2 && transition->getPriority() > highestPriority) {
+
+                    highestPriority = transition->getPriority();
+                    // priority is higher (number is greater), so we don't consider transitions with lower priority
+                    enabledImmediateTransition.clear();
+                    enabledImmediateTransition.push_back(transition);
+                } else if (mode == 2 || transition->getPriority() == highestPriority) {
+                    enabledImmediateTransition.push_back(transition);
+                }
+
+            }
+        }
+        // actually processing immediate transitions
+//        if (!enabledImmediateTransition.empty()) {
+//            if (mode == 0){
+//                float sumWeight = 0;
+//                for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
+//                    sumWeight += transition->getWeight();
+//                for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
+//                    addLocationForImmediateEvent(transition, node, transition->getWeight() / sumWeight, hybridPetrinet);
+//            } else  {
+//                for (shared_ptr<ImmediateTransition> &transition : enabledImmediateTransition)
+//                    addLocationForImmediateEvent(transition, node, 1.0, hybridPetrinet);
+//            }
+//
+//            for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
+//                if (childNode.getNodeID() <= nodeMax) { // to avoid zeno behavior
+//                    locationQueue.push_back(childNode);
+//                    if (childNode.getNodeID() == nodeMax)
+//                        cout << nodeMax << " locations or more, some locations may not be shown" << endl;
+//                }
+//            }
+//            return; // no other event has to be considered
+//        }
+
+        // extract important data from location
+        vector<double> drifts = location.getDrift();
+        map<string, shared_ptr<DeterministicTransition>> deterministicTransitions = hybridPetrinet->getDeterministicTransitions();
+        vector<double> deterministicClocks = reduceVector(location.getDeterministicClock());
+
+        // step 2: get all time-delta for timed events
+        vector<double> timeDeltas;
+        // 2.1 guard arcs
+//        for (auto transitionItem : immediateTransitions) {
+//            shared_ptr<ImmediateTransition> transition = transitionItem.second;
+//            for (auto arcItem : transition->getGuardInputArcs()) {
+//                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+//                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+//                                                        drifts);
+//                //If timeDelta is zero, the guard arc condition event is source event of the current location (or condition was fulfilled at root).
+//                if (!timeDelta.empty() && (std::any_of(timeDelta.begin(), timeDelta.end(), [](double coefficient){ return coefficient != 0.0;})))
+//                    timeDeltas.push_back(timeDelta);
+//            }
+//        }
+//        for (auto transitionItem : generalTransitions) {
+//            shared_ptr<GeneralTransition> transition = transitionItem.second;
+//            for (auto arcItem : transition->getGuardInputArcs()) {
+//                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+//                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+//                                                        drifts);
+//                //If timeDelta is zero, the guard arc condition event is source event of the current location (or condition was fulfilled at root).
+//                if (!timeDelta.empty() && (std::any_of(timeDelta.begin(), timeDelta.end(), [](double coefficient){ return coefficient != 0.0;})))
+//                    timeDeltas.push_back(timeDelta);
+//            }
+//        }
+//        for (auto transitionItem : deterministicTransitions) {
+//            shared_ptr<DeterministicTransition> transition = transitionItem.second;
+//            for (auto arcItem : transition->getGuardInputArcs()) {
+//                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+//                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+//                                                        drifts);
+//                //If timeDelta is zero, the guard arc condition event is source event of the current location (or condition was fulfilled at root).
+//                if (!timeDelta.empty() && (std::any_of(timeDelta.begin(), timeDelta.end(), [](double coefficient){ return coefficient != 0.0;})))
+//                    timeDeltas.push_back(timeDelta);
+//            }
+//        }
+//        for (auto transitionItem : hybridPetrinet->getContinuousTransitions()) {
+//            shared_ptr<ContinuousTransition> transition = transitionItem.second;
+//            for (auto arcItem : transition->getGuardInputArcs()) {
+//                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+//                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+//                                                        drifts);
+//                //If timeDelta is zero, the guard arc condition event is source event of the current location (or condition was fulfilled at root).
+//                if (!timeDelta.empty() && (std::any_of(timeDelta.begin(), timeDelta.end(), [](double coefficient){ return coefficient != 0.0;})))
+//                    timeDeltas.push_back(timeDelta);
+//            }
+//        }
+
+        // 2.2 Deterministic transitions
+        for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
+            shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
+            if (transitionIsEnabled(discreteMarking, continuousMarkingIntervals, transition, hybridPetrinet)) {
+                // get time when transitions are fired (disctime - clock)
+                double timeDelta = deterministicClocks[pos] + transition->getDiscTime();
+                timeDeltas.push_back(timeDelta);
+            }
+        }
+
+        // 2.3 Continuous Places
+//        for (int pos = 0; pos < continuousPlaceIDs.size(); ++pos) {
+//            shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[continuousPlaceIDs[pos]];
+//            vector<double> level = levels[pos];
+//            double drift = drifts[pos];
+//            if (drift < 0) { // negative drift
+//                // remaining time is level / abs(drift)
+//                vector<double> timeDelta;
+//                for (double levelPart : level)
+//                    timeDelta.push_back(levelPart / (0 - drift));
+//                timeDeltas.push_back(timeDelta);
+//            } else if (drift > 0 && !place->getInfiniteCapacity()) { // positive drift
+//                // remaining time is (maxLevel - level) / drift
+//                vector<double> timeDelta;
+//                for (int i = 0; i < level.size(); ++i) {
+//                    double value = 0 - level[i];
+//                    if (i == 0)
+//                        value += place->getCapacity();
+//                    timeDelta.push_back(value / drift);
+//                }
+//
+//                timeDeltas.push_back(timeDelta);
+//            }
+//        }
+
+        // step 3: get all minimal time-delta and save minimal maximum
+        // 3.1 get minimal maximumTime (maxTime - minimal location time)
+        double locTime = location.getSourceEvent().getTime();
+        // double maxTime is provided
+        for (double timeDelta : timeDeltas) {
+            if (timeDelta < maxTime)
+                maxTime = timeDelta; // do i really wanna do THIS?
+        }
+        // 3.1 get all minimum times
+//        vector<double> minimalTimeDeltas;
+//        for (double timeDelta : timeDeltas) {
+//            if (timeDelta <= maxTime)
+//                minimalTimeDeltas.push_back(timeDelta);
+//        }
+//        timeDeltas = minimalTimeDeltas; // in my case, there can only be one minimalTimeDelta. is this stupid?
+//      // no:
+        double minimalTimeDelta = maxTime;
+        for (double timeDelta : timeDeltas) {
+            if (timeDelta <= minimalTimeDelta)
+                minimalTimeDelta = timeDelta;
+        }
+        // timeDeltas = minimalTimeDeltas; <- i dont need this anymore?
+
+//        // 3.2 remove duplicates, i dont need this, do i?
+//        for (int i = 1; i < timeDeltas.size(); ++i) {
+//            vector<double> timeDelta = timeDeltas[i];
+//            for (int j = 0; j < i; ++j) {
+//                vector<double> timeDelta2 = timeDeltas[j];
+//                if (timeDelta2.size() != timeDelta.size())
+//                    continue;
+//                bool duplicate = true;
+//                for (int k = 0; k < timeDelta.size(); ++k)
+//                    if (timeDelta[k] != timeDelta2[k])
+//                        duplicate = false;
+//                if (duplicate) {
+//                    timeDeltas.erase(timeDeltas.begin() + i);
+//                    i--;
+//                }
+//            }
+//        }
+
+
+            // this is done by comparing with maxTime already?
+//        // Step 3.3: Remove minimal time delta that have too high minimum
+//        vector<vector<double>> allowedTimeDeltas;
+//        for (vector<double> timeDelta : timeDeltas) {
+//            vector<double> newLocTime;
+//            for (int i=0; i<timeDelta.size() || i < locTime.size(); ++i) {
+//                if (i >= timeDelta.size())
+//                    newLocTime.push_back(locTime[i]);
+//                else if (i >= locTime.size())
+//                    newLocTime.push_back(timeDelta[i]);
+//                else
+//                    newLocTime.push_back(locTime[i] + timeDelta[i]);
+//            }
+//            if (maxTime >= getBoundedTime(generalTransitionsFired, location.getGeneralIntervalBoundLeft(),
+//                                          location.getGeneralIntervalBoundRight(), newLocTime))
+//                allowedTimeDeltas.push_back(timeDelta);
+//        }
+//        timeDeltas = allowedTimeDeltas;
+
+
+        // step 5: add one parametric location for every timed event with minimal time delta
+        // if minimum of time-delta equals minimalMaximum consider order
+        // todo: das hier muss anders sein, pro minimal time delta muss die Order beachtet werden!
+       vector<double> alreadyConsidered(timeDeltas.size()); // add all timeDeltas, that already were taken to consider order
+
+//        // Order I: guard arcs for immediate transitions - TODO some time later
+//        for (auto transitionItem : immediateTransitions) {
+//            shared_ptr<ImmediateTransition> transition = transitionItem.second;
+//            for (auto arcItem : transition->getGuardInputArcs()) {
+//                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+//                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+//                                                        drifts);
+//                if (timeDelta.empty())
+//                    continue;
+//                // timedelta is not minimal
+//                if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
+//                    continue;
+//                if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end())
+//                    continue;
+//                double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+//                                                    generalIntervalBoundRight, timeDelta);
+//                if (minimumTime <= minimalMaximum) {
+//                    alreadyConsidered.push_back(timeDelta);
+//                    addLocationForBoundaryEventByArcMember(arcItem.second, timeDelta, timeDeltas, node, hybridPetrinet);
+//                    //addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet, arcItem.second->place->id);
+//                }
+//            }
+//        }
+
+        // Order II: firing of deterministic transition
+        // get enabled deterministic transitions
+        vector<double> newConsidered; // todo: we should order them by time Delta
+        vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions;
+
+        highestPriority = -1.0;
+        for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
+            shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
+            if (transitionIsEnabled(discreteMarking, continuousMarkingIntervals, transition, hybridPetrinet)) {
+                if (mode < 2 && transition->getPriority() > highestPriority)
+                    highestPriority = transition->getPriority();
+            }
+        }
+
+
+        for (int pos = 0; pos < deterministicTransitionIDs.size(); ++pos) {
+            shared_ptr<DeterministicTransition> transition = deterministicTransitions[deterministicTransitionIDs[pos]];
+            if (!transitionIsEnabled(discreteMarking, continuousMarkingIntervals, transition, hybridPetrinet))
+                continue;
+
+            if (mode < 2 && transition->getPriority() < highestPriority)
+                continue;
+            if (transition->getPriority() < highestPriority)
+                continue;
+
+            double clock = location.getDeterministicClock()[pos][0];
+            double timeDelta  = 0 - clock + transition->getDiscTime(); // richtig?
+
+            // timedelta is not minimal
+            if (timeDelta > minimalTimeDelta)
+                continue;
+            // timedelta was used with higher order
+            if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end())
+                continue;
+            if (timeDelta <= maxTime) { // add to queue of det. trans.
+                newConsidered.push_back(timeDelta);
+                nextDeterministicTransitions.push_back(make_pair(transition, timeDelta)); // NOLINT
+            }
+        }
+
+
+
+        // Only resolve conflicts for next Deterministic events with equal time delta TODO WHAT IS THIS?
+        // ich brauch das nicht, weil eh meine trans. alle das gleich delta haben?
+        std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, double>>> orderedNextDeterministicTransitions = {nextDeterministicTransitions}; // = this->sortByEqualTimeDelta(nextDeterministicTransitions);
+        for (std::vector<pair<shared_ptr<DeterministicTransition>, double>> equalNextTransitions : orderedNextDeterministicTransitions) {
+
+            if (mode == 0) {
+                double sumWeight = 0;
+                for (pair<shared_ptr<DeterministicTransition>, double> transitionItem : equalNextTransitions)
+                    sumWeight += transitionItem.first->getWeight();
+                for (pair<shared_ptr<DeterministicTransition>, double> transitionItem : equalNextTransitions) {
+                    double probability = transitionItem.first->getWeight() / sumWeight;
+                    //addLocationForDeterministicEvent(transitionItem.first, probability, transitionItem.second, timeDeltas, node, hybridPetrinet);
+                    // TODO return this? -> call function, do stuff, return the right stuff
+                    return nextDeterministicTransitions;
+                }
+            } else {
+                for (pair<shared_ptr<DeterministicTransition>, double> transitionItem : equalNextTransitions) {
+                    //addLocationForDeterministicEvent(transitionItem.first, 1.0, transitionItem.second, timeDeltas, node,    hybridPetrinet);
+                }
+
+            }
+        }
+
+        // add new considered
+        for (double timeDelta : newConsidered)
+            if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) == alreadyConsidered.end())
+                alreadyConsidered.push_back(timeDelta);
+
+//        // Order III: ContinuousPlace reaches boundary or guard arc for continuous transition - TODO some time later
+//        vector<vector<double>> newConsideredPlace;
+//        for (int pos = 0; pos < continuousPlaceIDs.size(); ++pos) {
+//            shared_ptr<ContinuousPlace> place = hybridPetrinet->getContinuousPlaces()[continuousPlaceIDs[pos]];
+//            vector<double> level = levels[pos];
+//
+//            vector<double> timeDelta;
+//            double drift = drifts[pos];
+//            if (drift < 0) { // negative drift
+//                // remaining time is level / abs(drift)
+//                for (double levelPart : level)
+//                    timeDelta.push_back(levelPart / (0 - drift));
+//            } else if (drift > 0 && !place->getInfiniteCapacity()) { // positive drift
+//                // remaining time is (maxLevel - level) / drift
+//                for (int i = 0; i < level.size(); ++i) {
+//                    double value = 0 - level[i];
+//                    if (i == 0)
+//                        value += place->getCapacity();
+//                    timeDelta.push_back(value / drift);
+//                }
+//            } else {
+//                continue;
+//            }
+//            // timedelta is not minimal
+//            if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
+//                continue;
+//            // timedelta was used with higher order
+//            if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end() ||
+//                find(newConsideredPlace.begin(), newConsideredPlace.end(), timeDelta) != newConsideredPlace.end())
+//                continue;
+//            double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+//                                                generalIntervalBoundRight, timeDelta);
+//            if (minimumTime <= minimalMaximum) {
+//                newConsideredPlace.push_back(timeDelta);
+//                addLocationForBoundaryEventByContinuousPlaceMember(place, timeDelta, timeDeltas, node, hybridPetrinet);
+//                //addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet, place->id);
+//            }
+//            vector<pair<double, shared_ptr<ContinuousTransition>>> nextContinuousGuards;
+//            for (auto transitionItem : hybridPetrinet->getContinuousTransitions()) {
+//                shared_ptr<ContinuousTransition> transition = transitionItem.second;
+//                for (auto arcItem : transition->getGuardInputArcs()) {
+//                    vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+//                                                            generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+//                                                            drifts);
+//                    if (timeDelta.empty())
+//                        continue;
+//                    // timedelta is not minimal
+//                    if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
+//                        continue;
+//                    // timedelta was used with higher order
+//                    if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end()||
+//                        find(newConsideredPlace.begin(), newConsideredPlace.end(), timeDelta) != newConsideredPlace.end())
+//                        continue;
+//                    double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+//                                                        generalIntervalBoundRight, timeDelta);
+//                    if (minimumTime <= minimalMaximum) {
+//                        newConsideredPlace.push_back(timeDelta);
+//                        addLocationForBoundaryEventByArcMember(arcItem.second, timeDelta, timeDeltas, node, hybridPetrinet);
+//                        //addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet, arcItem.second->id);
+//                    }
+//                }
+//            }
+//        }
+//
+//        // add new considered
+//        for (vector<double> timeDelta : newConsideredPlace)
+//            if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) == alreadyConsidered.end())
+//                alreadyConsidered.push_back(timeDelta);
+
+//        // Order IV: guard arc for deterministic TODO some time later
+//        vector<vector<double>> nextDeterministicGuards;
+//        for (auto transitionItem : hybridPetrinet->getDeterministicTransitions()) {
+//            shared_ptr<DeterministicTransition> transition = transitionItem.second;
+//            for (auto arcItem : transition->getGuardInputArcs()) {
+//                vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
+//                                                        generalIntervalBoundLeft, generalIntervalBoundRight, levels,
+//                                                        drifts);
+//                if (timeDelta.empty())
+//                    continue;
+//                // timedelta is not minimal
+//                if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())
+//                    continue;
+//                // timedelta was used with higher order
+//                if (find(alreadyConsidered.begin(), alreadyConsidered.end(), timeDelta) != alreadyConsidered.end())
+//                    continue;
+//                double minimumTime = getBoundedTime(generalTransitionsFired, generalIntervalBoundLeft,
+//                                                    generalIntervalBoundRight, timeDelta);
+//                if (minimumTime <= minimalMaximum) {
+//                    alreadyConsidered.push_back(timeDelta);
+//                    addLocationForBoundaryEventByArcMember(arcItem.second, timeDelta, timeDeltas, node, hybridPetrinet);
+//                }
+//            }
+//        }
+
+// why is this here? TODO
+//        for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
+//            if (childNode.getNodeID() <= nodeMax) { // to avoid zeno behavior
+//                locationQueue.push_back(childNode);
+//                if (childNode.getNodeID() == nodeMax)
+//                    cout << nodeMax << " locations or more, some locations may not be shown" << endl;
+//            }
+//        }
+    }
+
     vector<double> ParseHybridPetrinet::getTimeDelta(shared_ptr<GuardArc> arc, vector<int> generalTransitionsFired,
                                                      vector<vector<vector<double>>> generalIntervalBoundLeft,
                                                      vector<vector<vector<double>>> generalIntervalBoundRight,
@@ -2164,6 +2569,14 @@ namespace hpnmg {
 
     vector<string> ParseHybridPetrinet::getContinuousPlaceIDs() {
         return this->continuousPlaceIDs;
+    }
+
+    vector<double> reduceVector(vector<vector<double>> deterministicClocks) {
+        vector<double> actualDeterministicClocks;
+        for (int i = 0; i < deterministicClocks.size(); i++) {
+            actualDeterministicClocks[i] = deterministicClocks[i][0];
+        }
+        return actualDeterministicClocks;
     }
 
 }

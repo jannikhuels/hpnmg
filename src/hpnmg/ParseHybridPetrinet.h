@@ -48,6 +48,9 @@ namespace hpnmg {
         // @return                  resulting parametric location tree
         void processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, int mode);
 
+
+        vector<pair<shared_ptr<DeterministicTransition>, double>> processLocation(ParametricLocation location, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime);
+
         vector<double> getTimeDelta(shared_ptr<GuardArc> arc, vector<int> generalTransitionsFired,
                                     vector<vector<vector<double>>> generalIntervalBoundLeft,
                                     vector<vector<vector<double>>> generalIntervalBoundRight,
@@ -118,6 +121,7 @@ namespace hpnmg {
 
         vector<string> getContinuousPlaceIDs();
 
+        vector<double> reduceVector(vector<vector<double>> deterministicClocks);
 
     };
 }
