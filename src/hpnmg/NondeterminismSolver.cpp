@@ -15,10 +15,6 @@ namespace hpnmg {
     vector<int> discreteMarking = node.getParametricLocation().getDiscreteMarking();
     vector<vector<double>> continuousMarking = node.getParametricLocation().getContinuousMarking();
 
-
-    if (version == 0 && node.getNodeID() >= 4)
-        return true;
-
 //    if (discreteMarking[5] > 0) //fig5prophetic + fig1prophetic
 //        return true;
 //
@@ -36,39 +32,23 @@ namespace hpnmg {
         if ((discreteMarking[2] > 0 && !empty && discreteMarking[1] == 0) || (discreteMarking[3] > 0 && empty && discreteMarking[1] > 0)) //right decision
             return true;
 
-//    } else if (version == 3 ) {
-//
-//        vector<double> levelCar = continuousMarking[1]; //charging_ver3
-//        bool emptyCar = true;
-//        for (int p = 0; p < levelCar.size(); p++)
-//            if (levelCar[p] > 0)
-//                emptyCar = false;
-//        vector<double> levelDistance = continuousMarking[0];
-//        bool emptyDistance = true;
-//        for (int q = 0; q < levelDistance.size(); q++)
-//            if (levelDistance[q] > 0)
-//                emptyDistance = false;
-//
-//        if ((discreteMarking[6] > 0 && !emptyCar && emptyDistance) || (discreteMarking[7] > 0 && emptyCar && !emptyDistance)) //right decision
-//            return true;
+    } else if (version == 3 || version == 4) {
 
-    } else if (version >= 3) {
+        vector<double> levelCar = continuousMarking[1]; //charging_ver3 + charging_ver4
+        bool emptyCar = true;
+        for (int p = 0; p < levelCar.size(); p++)
+            if (levelCar[p] > 0)
+                emptyCar = false;
+        vector<double> levelDistance = continuousMarking[0];
+        bool emptyDistance = true;
+        for (int q = 0; q < levelDistance.size(); q++)
+            if (levelDistance[q] > 0)
+                emptyDistance = false;
 
-            vector<double> levelCar = continuousMarking[0]; //charging_ver4
-            bool emptyCar = true;
-            for (int p = 0; p < levelCar.size(); p++)
-                if (levelCar[p] > 0)
-                    emptyCar = false;
-            vector<double> levelDistance = continuousMarking[1];
-            bool emptyDistance = true;
-            for (int q = 0; q < levelDistance.size(); q++)
-                if (levelDistance[q] > 0)
-                    emptyDistance = false;
+        if ((discreteMarking[6] > 0 && !emptyCar && emptyDistance) || (discreteMarking[7] > 0 && emptyCar && !emptyDistance)) //right decision
+            return true;
 
-            if ((discreteMarking[4] > 0 && !emptyCar && emptyDistance) || (discreteMarking[5] > 0 && emptyCar && !emptyDistance)) //right decision
-                return true;
-
-        }
+    }
 
 
     return false;
@@ -117,16 +97,15 @@ namespace hpnmg {
     }
 
 
-
-    void NondeterminismSolver::recursivelyGetGoalLocations(vector<ParametricLocation> &goalLocations, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates, int version){
+    void NondeterminismSolver::recursivelyGetCandidateLocations(vector<ParametricLocation> &list, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates, int version){
 
         if (isCandidateForProperty(node, candidates, version))
-            goalLocations.push_back(node.getParametricLocation());
+            list.push_back(node.getParametricLocation());
 
-        vector<ParametricLocationTree::Node> children = this->plt->getChildNodes(node);
+        vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(node);
 
         for (ParametricLocationTree::Node child : children)
-            recursivelyGetGoalLocations(goalLocations, child, candidates, version);
+            recursivelyGetCandidateLocations(list, child, candidates, version);
     }
 
 
@@ -303,7 +282,7 @@ namespace hpnmg {
 
 
 
-    double NondeterminismSolver::recursivelySolveNondeterminismPartiallyProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version){
+    double NondeterminismSolver::recursivelySolveNondeterminismProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version){
 
 
         double maxOrMinProbability = 0.0;
@@ -332,7 +311,7 @@ namespace hpnmg {
 
             vector<vector<ParametricLocation>> currentLocationsVector;
             vector<ParametricLocation> currentLocations;
-            recursivelyGetGoalLocations(currentLocations, conflictSet[0], candidates, version);
+            recursivelyGetCandidateLocations(currentLocations, conflictSet[0], candidates, version);
             currentLocationsVector.push_back(currentLocations);
 
             //pairwise consideration
@@ -341,12 +320,13 @@ namespace hpnmg {
                 for (int j = k + 1; j < conflictSet.size(); j++) {
 
                     currentLocations.clear();
-                    recursivelyGetGoalLocations(currentLocations, conflictSet[j], candidates, version);
+                    recursivelyGetCandidateLocations(currentLocations, conflictSet[j], candidates, version);
                     currentLocationsVector.push_back(currentLocations);
 
                     vector<nondetParams> params;
 
                     //two ways for ordering
+//START AUSKOMMENTIEREN
                     for (int i = 0; i <= 1; i++) {
 
                         if (i == 0) {
@@ -396,7 +376,7 @@ namespace hpnmg {
                         params.push_back(currentParams);
 
                     }
-
+//ENDE AUSKOMMENTIEREN
 
                     int i;
                     if (params[0].prob >= params[1].prob) {
@@ -408,8 +388,6 @@ namespace hpnmg {
                         upperBounded = j;
                         lowerBounded = k;
                      }
-
-
 
                     params[i].functioncalls = functioncalls;
                     params[i].evaluations = evaluations;
@@ -431,7 +409,6 @@ namespace hpnmg {
                         cout << "Upper bounded: " << conflictSet[upperBounded].getNodeID() << ", lower bounded: " << conflictSet[lowerBounded].getNodeID() << endl;
                     } else
                         cout << "Main computation failed" << endl;
-
 
 
                     double a = params[i].result;
@@ -524,7 +501,7 @@ namespace hpnmg {
 
         //add probability for sub-trees which are not in the conflict set
         for (ParametricLocationTree::Node child: children){
-            maxOrMinProbability += recursivelySolveNondeterminismPartiallyProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError, version);
+            maxOrMinProbability += recursivelySolveNondeterminismProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError, version);
             error += currentError;
         }
 
@@ -550,47 +527,14 @@ namespace hpnmg {
 
 
 
-
-    double NondeterminismSolver::solveNondeterminismFullyProphetic(ParametricLocationTree::Node root, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version){
-
-
-        error = 0.0;
-
-        vector<ParametricLocation> goalLocations;
-        recursivelyGetGoalLocations(goalLocations, root, candidates, version);
-
-        vector<Region> goalRegions;
-        for (ParametricLocation location : goalLocations) {
-
-            Region r = STDiagram::createBaseRegion(location.getIntegrationIntervals()[0].size(), this->plt->getMaxTime(), location.getIntegrationIntervals()[0]);
-            goalRegions.push_back(r);
-        }
-
-        ProbabilityCalculator calculator;
-
-        return calculator.getProbabilityForUnionOfRegionsUsingMonteCarlo(goalRegions, this->plt->getDistributionsNormalized(), algorithm, functioncalls, error);
-
-    }
-
-
-
-
-
-
-    double NondeterminismSolver::solveNondeterminism(shared_ptr<ParametricLocationTree> plt,  std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic, double &error, int version, bool partially){
+    double NondeterminismSolver::solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic, double &error, int version){
 
         this->plt = plt;
 
-        if (prophetic){
-
-            if (partially)
-                return recursivelySolveNondeterminismPartiallyProphetic(plt->getRootNode(), candidates, algorithm, functioncalls, evaluations, minimum, error, version);
-            else{
-                return solveNondeterminismFullyProphetic(plt->getRootNode(), candidates, algorithm, functioncalls, evaluations, minimum, error, version);
-            }
-        }
+        if (prophetic)
+            return recursivelySolveNondeterminismProphetic(currentNode, candidates, algorithm, functioncalls, evaluations, minimum, error, version);
         else
-            return recursivelySolveNondeterminismNonProphetic(plt->getRootNode(), candidates, algorithm, functioncalls, evaluations, minimum, error, version);
+            return recursivelySolveNondeterminismNonProphetic(currentNode, candidates, algorithm, functioncalls, evaluations, minimum, error, version);
     }
 
 
@@ -598,9 +542,5 @@ namespace hpnmg {
     vector<vector<pair<int, string>>> NondeterminismSolver::getBestChildLocations(){
         return this->bestChildLocations;
     }
-
-
-
-
 
 }

@@ -1,10 +1,9 @@
 # Hybrid Petri nets with general transitions
 
-## Installation 
+## Install
 
 ### Ubuntu 18.04
 
-The provided source code can be compiled using CMake. 
 Almost all dependencies can be installed via `apt`. Only [CArL](https://smtrat.github.io/carl/) and
 [Hypro](https://hypro.github.io/hypro/html/) need to be compiled manually. However, they register themselves with CMake
 upon compilation so that no steps other than compiling them need to be taken.
@@ -12,12 +11,13 @@ upon compilation so that no steps other than compiling them need to be taken.
 ##### A note on CArL and HyPro versions
 Not all versions of CArl and HyPro work with each other or with HPnmG. Unfortunately, it is not always so clear which
 *do*. Symptoms of bad versions include:
-- HyPro refusing to compile because of C++17 features in CArl. CArl offers a C++14 branch: `master14`
+- HyPro refusing to compile because of C++17 features in CArl. CArl offers a C++14 branch `master14`, HyPro offers
+  `c++14-support`.
 - HPnmG or targets thereof refusing to compile because of changed include paths, classes or signatures in HyPro
 - Some targets of HPnmG refusing to *link* because of undefined symbols from `libgmp` in `libhypro.so`
 
-As of now (2018-11-04), you should be able to use [this revision](https://github.com/smtrat/carl/commit/ace90eb5daad)
-for CArl and [this one](https://github.com/hypro/hypro/commit/9a19fa931ade) for HyPro.
+As of now (2019-07-22), you should be able to use [this revision](https://github.com/smtrat/carl/commit/ace90eb5daad)
+for CArl and [this one](https://github.com/hypro/hypro/commit/9d26f57b5f62) for HyPro.
 
 #### Dependencies
 1. These are needed for both CArl and HyPro
@@ -36,7 +36,7 @@ for CArl and [this one](https://github.com/hypro/hypro/commit/9a19fa931ade) for 
    ```
    # CGAL
    $ sudo apt install libcgal-dev
-   
+
    # GSL - GNU Scientific Library
    $ sudo apt install libgsl-dev
 
@@ -80,9 +80,10 @@ latter command should include lines like these:
 ```
 Build HyPro's resources and HyPro itself with `make resources && make hypro`. This may take 10 minutes.
 
+## Instructions
 
+Nondetermnistic scheduling (QEST):
 
-## Instructions to replicate experiments from iFM submission
+There exist a number of googletest files in the folder "test". The The file "testNondeterministicConflicts.cpp" contains tests for all versions of the case study used in the QEST paper, both for nonprophetic and prophetic scheduling. Using Google Test, these can be executed. The model files are available in the folder "test/testfiles/nondeterministicModelsQEST".
 
-There exist a number of googletest files in the folder "test", whereas the file "testNondeterministicConflicts.cpp" contains tests for all versions of the case study used in the iFM submission, both for nonprophetic and prophetic scheduling. Using Google Test, these can be executed after build. The model files are available as xml files inside the folder "test/testfiles/nondeterministicModelsIFM".
 

@@ -14,7 +14,7 @@ namespace hpnmg {
         const string RIGHT = "\"right\": ";
         const string AND = "\"∧\"";
         const string EQUAL = "\"=\"";
-        const string LEQ = "\"≤\": ";
+        const string LEQ = "\"≤\"";
         const string DER = "\"der\"";
         const string VAR = "\"var\": ";
         ofstream outputFile;

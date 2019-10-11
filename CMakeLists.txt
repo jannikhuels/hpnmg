@@ -24,12 +24,12 @@ configure_file (
 
 # Export settings
 # -----------------------------------------------------------------
-
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	if (APPLE)
 		message("-- Using clang on apple")
 		set(CMAKE_MACOSX_RPATH 1)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -stdlib=libc++")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -stdlib=libc++")
 	else()
 		message("-- Using clang")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")

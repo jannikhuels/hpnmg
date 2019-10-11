@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="pd1" marking="1"/>
+        <discretePlace id="pd2" marking="1"/>
+        <discretePlace id="pd3" marking="1"/>
+        <discretePlace id="pd4" marking="0"/>
+        <continuousPlace id="pc1" capacity="10" infiniteCapacity="1" level="5.0"/>
+    </places>
+    <transitions>
+        <generalTransition id="tg1" cdf="foldednormal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <continuousTransition id="tf1" rate="2.0"/>
+        <continuousTransition id="tf2" rate="1.0"/>
+        <generalTransition id="tg2" cdf="foldednormal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <immediateTransition id="ti1" priority="0" weight="1.0E0"/>
+        <immediateTransition id="ti2" priority="0" weight="1.0E0"/>
+    </transitions>
+    <arcs>
+        <discreteArc id="da1" fromNode="pd1" toNode="tg1" weight="1.0E0"/>
+        <discreteArc id="da2" fromNode="pd2" toNode="tg2" weight="1.0E0"/>
+        <discreteArc id="da3" fromNode="pd3" toNode="ti1" weight="1.0E0"/>
+        <discreteArc id="da4" fromNode="ti1" toNode="pd4" weight="1.0E0"/>
+        <discreteArc id="da5" fromNode="pd4" toNode="ti2" weight="1.0E0"/>
+        <discreteArc id="da6" fromNode="ti2" toNode="pd3" weight="1.0E0"/>
+        <guardArc fromNode="pd1" id="ga1" isInhibitor="0" toNode="tf1" weight="1.0E0"/>
+        <guardArc fromNode="pd2" id="ga2" isInhibitor="0" toNode="tf2" weight="1.0E0"/>
+        <guardArc fromNode="pc1" id="ga3" isInhibitor="0" toNode="ti1" weight="7.0E0"/>
+        <guardArc fromNode="pc1" id="ga4" isInhibitor="1" toNode="ti2" weight="3.0E0"/>
+        <continuousArc id="ca1" fromNode="tf1" priority="1" share="1.0E0" toNode="pc1" weight="1.0E0"/>
+        <continuousArc id="ca2" fromNode="pc1" priority="1" share="1.0E0" toNode="tf2" weight="1.0E0"/>
+    </arcs>
+</HPnG>

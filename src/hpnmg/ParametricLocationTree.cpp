@@ -440,7 +440,7 @@ namespace hpnmg {
 
             vector<ParametricLocationTree::Node> locations;
             // recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
-            recursivelyCollectAllLocationsWithPLT(getRootNode(), locations, 1.0, dimV);
+        recursivelyCollectAllLocationsWithPLT(getRootNode(), locations, 1.0, dimV);
             return locations;
         }
 
@@ -452,84 +452,21 @@ namespace hpnmg {
             parametricLocation.setAccumulatedProbability(nodeProbability);
             int dimension = this->getDimension();
 
-//Previous approach:
-//
-//        std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds;
-//
-//                    bounds.push_back(parametricLocation.getRVIntervals(occurings, this->maxTime, dimension));
-//
-//
-//                    parametricLocation.overwriteIntegrationIntervals(bounds);
-//                    startNode.setParametricLocation(parametricLocation);
-//                    candidates.push_back(startNode);
-//
-//
-//                    for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
-//                        recursivelyCollectAllLocationsWithPLT(node, candidates, nodeProbability, occurings);
-//                    }
 
-//Alternative approach:
-            if (startNode.getParametricLocation().getEarliestEntryTime() <= this->maxTime) {
+            std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds;
 
-                // now we want to check if there is a possible childevent with latest entry time bigger than tmax.
-                const vector<Node> &childNodes = getChildNodes(startNode);
-                /*
-                 * Check how many General Events are fired and sort them by id
-                 */
-                std::vector<double> parentGeneralDependencies = startNode.getParametricLocation().getSourceEvent().getGeneralDependencies();
-                std::vector<int> idsOfNextGeneralTransitions;
-                for (ParametricLocationTree::Node node : childNodes) {
-                    std::vector<int> generalTransitionsFired = node.getParametricLocation().getGeneralTransitionsFired();
-                    if (generalTransitionsFired.size() > parentGeneralDependencies.size()) {
-                        idsOfNextGeneralTransitions.push_back(generalTransitionsFired[parentGeneralDependencies.size()]);
-                    }
-                }
-                std::sort(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end());
-                idsOfNextGeneralTransitions.erase(std::unique(idsOfNextGeneralTransitions.begin(), idsOfNextGeneralTransitions.end()), idsOfNextGeneralTransitions.end());
-
-                std::vector<std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>>> bounds;
-
-                std::vector<double> maxTimeVector(dimension);
-                fill(maxTimeVector.begin(), maxTimeVector.end(), 0);
-                maxTimeVector[0] = this->maxTime;
+            bounds.push_back(parametricLocation.getRVIntervals(occurings, this->maxTime, dimension));
 
 
-                auto currentBounds = parametricLocation.getRVIntervals(occurings, this->maxTime, dimension);
-                std::vector<LinearDomain> linearDomains;
-                std::vector<double> startEvent = parametricLocation.getSourceEvent().getTimeVector(dimension);
+            parametricLocation.overwriteIntegrationIntervals(bounds);
+            //parametricLocation.setIntegrationIntervals(unsortedEntryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
+            startNode.setParametricLocation(parametricLocation);
+            candidates.push_back(startNode);
 
-                int k = Computation::getDependencyIndex(startEvent, maxTimeVector);
-                if (k > 0) {
-                    std::vector<double> newBound = Computation::computeUnequationCut(startEvent, maxTimeVector, k);
-                    bool upper = Computation::isUpper(startEvent, maxTimeVector, k);
-                    LinearEquation eq(newBound, upper, k-1);
-                    Domain ld = LinearDomain::createDomain(currentBounds);
-                    ld = LinearBoundsTree::Repair(ld);
-                    LinearBoundsTree tree(ld, eq);
-                    std::vector<LinearDomain> dms = tree.getUniqueDomains();
-                    linearDomains.insert(linearDomains.end(), dms.begin(), dms.end());
-                } else {
-                    Domain ld = LinearDomain::createDomain(currentBounds);
-                    ld = LinearBoundsTree::Repair(ld);
-                    LinearDomain l(ld);
-                    linearDomains.push_back(l);
-                }
 
-                for (LinearDomain item: linearDomains)
-                    bounds.push_back(item.toDomainWithIndex(currentBounds));
-
-                parametricLocation.overwriteIntegrationIntervals(bounds);
-
-                startNode.setParametricLocation(parametricLocation);
-                candidates.push_back(startNode);
-
-                for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
-                    recursivelyCollectAllLocationsWithPLT(node, candidates, nodeProbability, occurings);
-                }
-
+            for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
+                recursivelyCollectAllLocationsWithPLT(node, candidates, nodeProbability, occurings);
             }
-
-
 
         }
 

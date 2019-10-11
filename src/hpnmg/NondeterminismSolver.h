@@ -48,18 +48,16 @@ namespace hpnmg {
 
         double recursivelySolveNondeterminismNonProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version);
 
-        double recursivelySolveNondeterminismPartiallyProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version);
+        double recursivelySolveNondeterminismProphetic(ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version);
 
-        double solveNondeterminismFullyProphetic(ParametricLocationTree::Node root, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, double &error, int version);
-
-        void recursivelyGetGoalLocations(std::vector<ParametricLocation> &goalLocations, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, int version);
+        void recursivelyGetCandidateLocations(vector<ParametricLocation> &list, ParametricLocationTree::Node node, std::vector<ParametricLocationTree::Node> candidates, int version);
 
 
     public:
 
         NondeterminismSolver();
 
-        double solveNondeterminism(shared_ptr<ParametricLocationTree> plt, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic, double &error, int version, bool partially = false);
+        double solveNondeterminism(shared_ptr<ParametricLocationTree> plt, ParametricLocationTree::Node currentNode, std::vector<ParametricLocationTree::Node> candidates, char algorithm, int functioncalls, int evaluations, bool minimum, bool prophetic, double &error, int version);
 
         vector<vector<pair<int, string>>> getBestChildLocations();
 
