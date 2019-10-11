@@ -10,6 +10,5 @@ namespace hpnmg {
 
     void ContinuousTransition::resetOriginalRate() { currentRate = rate; }
 
-    double ContinuousTransition::getCurrentRate() { return currentRate; }
     void ContinuousTransition::setCurrentRate(double newRate) { this->currentRate = newRate; }
 }
