@@ -62,12 +62,13 @@ endif()
 
 
 add_subdirectory(resources)
-find_package(hypro REQUIRED)
-find_package(carl REQUIRED)
+find_package(hypro CONFIG REQUIRED)
+find_package(carl CONFIG REQUIRED)
 find_package(XercesC REQUIRED)
+
 find_package(Boost REQUIRED)
 find_package(GSL REQUIRED)
-find_package(CGAL REQUIRED)
+find_package(CGAL REQUIRED)#find_package(CGAL CONFIG REQUIRED) #also link lib: sudo ln -s /usr/lib/x86_64-linux-gnu/libCGAL.so /usr/lib/x86_64-linux-gnu/libcgal.so
 
 
 if ( CGAL_FOUND )
@@ -138,6 +139,8 @@ add_subdirectory(src)
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/HPnG.xsd ${PROJECT_BINARY_DIR}/test)
 configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/HPnG.xsd ${PROJECT_BINARY_DIR})
+configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/Formula.xsd ${PROJECT_BINARY_DIR}/test)
+configure_file(${PROJECT_SOURCE_DIR}/src/hpnmg/datastructures/Formula.xsd ${PROJECT_BINARY_DIR})
 
 # Testing
 # -----------------------------------------------------------------

@@ -157,7 +157,7 @@ namespace hpnmg {
             for (ParametricLocationTree::Node child: conflictSet) {
 
                 currentChildId = child.getNodeID();
-                currentComponent = child.getParametricLocation().getSourceEventId();
+                currentComponent = child.getParametricLocation().getSourceEvent().getMemberID();
                 currentError = 0.0;
                 currentProbability = recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError, version);
 

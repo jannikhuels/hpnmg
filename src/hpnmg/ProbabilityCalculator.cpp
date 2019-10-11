@@ -388,11 +388,33 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
-    double ProbabilityCalculator::getProbabilityForRegionUsingMonteCarlo(const Region &region, const vector<pair<string, map<string, float>>> &distributions,char algorithm, int functioncalls, double &error) {
-        if (region.hPolytope.empty() || region.hPolytope.dimension() == 0)
+    double ProbabilityCalculator::getProbabilityForPolytopeUsingMonteCarlo(
+        const hypro::HPolytope<double> &region,
+        const vector<pair<string, map<string, float>>> &distributions,
+        char algorithm, int functioncalls,
+        double &error
+    ) {
+        if (region.empty() || region.dimension() == 0)
             return 0.0;
 
-        assert(distributions.size() == region.hPolytope.dimension());
+        auto vertices = region.vertices();
+        if (vertices.empty())
+            return 0.0;
+
+        long maxDim = vertices.begin()->rawCoordinates().rows();
+        hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
+        // use first vertex as origin, start at second vertex
+        long rowIndex = 0;
+        for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
+            matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+        }
+        auto effectiveDimension = int(matr.fullPivLu().rank());
+        if (effectiveDimension < region.dimension()) {
+            std::cout << "Polytope with zero volume since effective dimension < space dimension (" << effectiveDimension << " < " << region.dimension() << ")" << std::endl;
+            return 0.0;
+        }
+
+        assert(distributions.size() == region.dimension());
         double result = 0.0;
 
         for(const auto &simplex : Triangulation::create(region))
@@ -461,49 +483,88 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
 
-    double ProbabilityCalculator::getProbabilityForIntersectionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error){
+    double ProbabilityCalculator::getProbabilityForIntersectionOfPolytopesUsingMonteCarlo(
+        const vector<HPolytope<double>> &polytopes,
+        const vector<pair<string, map<string, float>>> &distributionsNormalized,
+        char algorithm,
+        int functioncalls,
+        double &error
+    ){
+        HPolytope<double> regionToIntegrate{polytopes[0]};
 
-            Region regionToIntegrate(regions[0]);
+       if (polytopes.size() > 1)
+           for(HPolytope<double> currentRegion : polytopes)
+               regionToIntegrate = regionToIntegrate.intersect(currentRegion);
 
-           if (regions.size() > 1){
-
-               for(Region currentRegion : regions)
-                   regionToIntegrate.hPolytope = regionToIntegrate.hPolytope.intersect(currentRegion.hPolytope);
-
-           }
-
-           auto calculator = new ProbabilityCalculator();
-           return calculator->ProbabilityCalculator::getProbabilityForRegionUsingMonteCarlo(regionToIntegrate, distributionsNormalized, algorithm, functioncalls, error);
+       return ProbabilityCalculator::getProbabilityForPolytopeUsingMonteCarlo(
+           regionToIntegrate,
+           distributionsNormalized,
+           algorithm,
+           functioncalls,
+           error
+       );
     }
 
 
 
-    double ProbabilityCalculator::getProbabilityForUnionOfRegionsUsingMonteCarlo(const vector<Region> &regions, const vector<pair<string, map<string, float>>> &distributionsNormalized, char algorithm, int functioncalls, double &error){
+    double ProbabilityCalculator::getProbabilityForUnionOfPolytopesUsingMonteCarlo(
+        std::vector<HPolytope<double>> polytopes,
+        const vector<pair<string, map<string, float>>> &distributionsNormalized,
+        char algorithm,
+        int functioncalls,
+        double &error
+    ){
+        polytopes.erase(
+                std::remove_if(polytopes.begin(), polytopes.end(), [](HPolytope<double> region) {
+                    if (region.empty() || region.dimension() == 0)
+                        return true;
+
+                    auto vertices = region.vertices();
+                    if (vertices.empty())
+                        return true;
+                    long maxDim = vertices.begin()->rawCoordinates().rows();
+                    hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
+                    // use first vertex as origin, start at second vertex
+                    long rowIndex = 0;
+                    for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
+                        matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+                    }
+                    auto effectiveDimension = int(matr.fullPivLu().rank());
+                    return effectiveDimension < region.dimension();
+                }),
+                polytopes.end()
+        );
 
         double probability = 0.0;
         error = 0.0;
         double currentError;
         double currentProb;
         double p = 1.0;
-        unsigned long n = regions.size();
+        unsigned long n = polytopes.size();
 
-        for (int k = 1; k <= regions.size(); ++k){
+        for (int k = 1; k <= polytopes.size(); ++k){
 
             vector<bool> v(n);
             fill(v.begin(), v.begin() + k, true);
 
             do {
 
-                vector<Region> regionsToIntegrate;
+                vector<hypro::HPolytope<double>> regionsToIntegrate;
 
                 for (int i = 0; i < n; ++i) {
                     if (v[i]) {
-                        regionsToIntegrate.push_back(regions[i]);
+                        regionsToIntegrate.push_back(polytopes[i]);
                     }
                 }
 
                 currentError = 0.0;
-                currentProb = getProbabilityForIntersectionOfRegionsUsingMonteCarlo(regionsToIntegrate, distributionsNormalized, algorithm, functioncalls, currentError);
+                currentProb = getProbabilityForIntersectionOfPolytopesUsingMonteCarlo(
+                    regionsToIntegrate,
+                    distributionsNormalized,
+                    algorithm,
+                    functioncalls,
+                    currentError
+                );
 
                 probability += p * currentProb;
                 error += currentError;
@@ -749,8 +810,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         return result;
     }
 
-
-
     double ProbabilityCalculator::transformedFunctionToIntegrateMonteCarlo(double *k, size_t dim, void* params){
         allDims all = *((allDims *)params);
         double result = 1.0;
@@ -874,10 +933,18 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
    			} else  if (distribution.first == "exp"){
 
-                double lambda = (double) normalMap.at("lambda");
+   			    double lambda;
+   			    double mean = 0.0;
 
-                if (lambda <= 0.0) {
-                    cout << "Invalid exponential distribution. Make sure that lambda > 0." << endl;
+                if (normalMap.find("lambda") == normalMap.end() ) {
+                    mean = (double) normalMap.at("mean");
+                    lambda = 1.0 / mean;
+                } else {
+                    lambda = (double) normalMap.at("lambda");
+                }
+
+                if (lambda <= 0.0 && mean <= 0.0) {
+                    cout << "Invalid exponential distribution. Make sure that either lambda > 0 or mean > 0 is given." << endl;
                     throw std::invalid_argument("invalid distribution");
                 }
 

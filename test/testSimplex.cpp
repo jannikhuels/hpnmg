@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
-#include "datastructures/Region.h"
+#include "datastructures/Simplex.h"
+#include "datastructures/STDPolytope.h"
 #include "hpnmg/helper/Triangulation.h"
 
 #include "representations/GeometricObject.h"
@@ -26,52 +27,50 @@ auto createUnitSimplex(int dim) {
     return unitSimplex;
 }
 
-TEST(RegionTest, IntegrationTransformation2D)
+TEST(SimplexTest, IntegrationTransformation2D)
 {
-    auto simplex = std::vector<hypro::Point<double>>{
+    auto vertices = std::vector<hypro::Point<double>>{
         hypro::Point<double>{1, 0},
         hypro::Point<double>{3, 0},
         hypro::Point<double>{2, 2},
     };
 
-    Region region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(simplex))};
-    const auto &trans = region.getIntegrationTransformationMatrix();
+    const auto &trans = Simplex{hypro::VPolytope<double>(vertices)}.getIntegrationTransformationMatrix();
 
     auto mappedUnitSimplex = std::vector<hypro::Point<double>>();
     for (const auto &vertex : createUnitSimplex(2)) {
         mappedUnitSimplex.emplace_back((trans * Eigen::VectorXd(vertex.rawCoordinates()).homogeneous()).hnormalized());
     }
 
-    std::sort(simplex.begin(), simplex.end());
+    std::sort(vertices.begin(), vertices.end());
     std::sort(mappedUnitSimplex.begin(), mappedUnitSimplex.end());
 
-    ASSERT_EQ(simplex, mappedUnitSimplex);
+    ASSERT_EQ(vertices, mappedUnitSimplex);
 }
 
-TEST(RegionTest, IntegrationTransformation3D)
+TEST(SimplexTest, IntegrationTransformation3D)
 {
-    auto simplex = std::vector<hypro::Point<double>>{
+    auto vertices = std::vector<hypro::Point<double>>{
         hypro::Point<double>{1, 0, 0},
         hypro::Point<double>{0, 1, 0},
         hypro::Point<double>{0, 0, 1},
         hypro::Point<double>{1, 1, 1},
     };
 
-    Region region{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(simplex))};
-    const auto &trans = region.getIntegrationTransformationMatrix();
+    const auto &trans = Simplex{hypro::VPolytope<double>(vertices)}.getIntegrationTransformationMatrix();
 
     auto mappedUnitSimplex = std::vector<hypro::Point<double>>();
     for (const auto &vertex : createUnitSimplex(3)) {
         mappedUnitSimplex.emplace_back((trans * Eigen::VectorXd(vertex.rawCoordinates()).homogeneous()).hnormalized());
     }
 
-    std::sort(simplex.begin(), simplex.end());
+    std::sort(vertices.begin(), vertices.end());
     std::sort(mappedUnitSimplex.begin(), mappedUnitSimplex.end());
 
-    ASSERT_EQ(simplex, mappedUnitSimplex);
+    ASSERT_EQ(vertices, mappedUnitSimplex);
 }
 
-TEST(RegionTest, IntegrationTransformationQuadrilateral)
+TEST(SimplexTest, TriangulationTransformation)
 {
     auto quadrilateral = std::vector<hypro::Point<double>>{
         hypro::Point<double>{0, 1},
@@ -80,24 +79,24 @@ TEST(RegionTest, IntegrationTransformationQuadrilateral)
         hypro::Point<double>{2, 4},
     };
 
-    Region quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(quadrilateral))};
+    hypro::HPolytope<double> quadRegion{hypro::Converter<double>::toHPolytope(hypro::VPolytope<double>(quadrilateral))};
 
     const auto simplexes = Triangulation::create(quadRegion);
 
     EXPECT_EQ(simplexes.size(), 2);
 
-    for (auto &region : simplexes) {
-        const auto &trans = region.getIntegrationTransformationMatrix();
+    for (auto &simplex : simplexes) {
+        const auto &trans = simplex.getIntegrationTransformationMatrix();
 
         auto mappedUnitSimplex = std::vector<hypro::Point<double>>();
         for (const auto &vertex : createUnitSimplex(2)) {
             mappedUnitSimplex.emplace_back((trans * Eigen::VectorXd(vertex.rawCoordinates()).homogeneous()).hnormalized());
         }
 
-        auto regionVertices = region.hPolytope.vertices();
-        std::sort(regionVertices.begin(), regionVertices.end());
+        auto simplexVertices = simplex.vertices();
+        std::sort(simplexVertices.begin(), simplexVertices.end());
         std::sort(mappedUnitSimplex.begin(), mappedUnitSimplex.end());
 
-        EXPECT_EQ(regionVertices, mappedUnitSimplex);
+        EXPECT_EQ(simplexVertices, mappedUnitSimplex);
     }
 }

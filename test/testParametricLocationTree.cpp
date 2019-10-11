@@ -97,37 +97,36 @@ TEST(ParametricLocationTreeTest, RegionTest)
     shared_ptr<hpnmg::ParametricLocationTree> parametricLocationTree = parser.parseHybridPetrinet(hybridPetrinet, 20);
     parametricLocationTree->updateRegions();
 
-    parametricLocationTree->updateRegions();
     ParametricLocationTree::Node rootNode = parametricLocationTree->getRootNode();
-    ASSERT_EQ(rootNode.getRegion().hPolytope.dimension(), 2);
+    ASSERT_EQ(2, rootNode.getRegion().dimension());
 
     //parametricLocationTree.print(true);
 
     vector_t<double> point = vector_t<double>::Zero(2);
     point << 2,1;
-    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
+    EXPECT_TRUE(rootNode.getRegion().contains(Point<double>(point)));
     point << 10,0;
-    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), true);
+    EXPECT_TRUE(rootNode.getRegion().contains(Point<double>(point)));
     point << 1,2;
-    ASSERT_EQ(rootNode.getRegion().hPolytope.contains(Point<double>(point)), false);
+    EXPECT_FALSE(rootNode.getRegion().contains(Point<double>(point)));
 
     vector<ParametricLocationTree::Node> rootChildNodes = parametricLocationTree->getChildNodes(rootNode);
     vector<ParametricLocationTree::Node> stocChildNodes;
     for (ParametricLocationTree::Node node: rootChildNodes) {
         if (node.getParametricLocation().getSourceEvent().getEventType() == EventType::General) {
             point << 2,2;
-            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), true);
+            EXPECT_TRUE(node.getRegion().contains(Point<double>(point)));
             point << 1,2;
-            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), true);
+            EXPECT_TRUE(node.getRegion().contains(Point<double>(point)));
             point << 1,3;
-            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), false);
+            EXPECT_FALSE(node.getRegion().contains(Point<double>(point)));
             point << 1,0.5;
-            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), false);
+            EXPECT_FALSE(node.getRegion().contains(Point<double>(point)));
         } else {
             point << 8,6;
-            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), true);
+            EXPECT_TRUE(node.getRegion().contains(Point<double>(point)));
             point << 8,4;
-            ASSERT_EQ(node.getRegion().hPolytope.contains(Point<double>(point)), false);
+            EXPECT_FALSE(node.getRegion().contains(Point<double>(point)));
         }
     }
 }
@@ -195,15 +194,15 @@ TEST(ParametricLocationTreeXML, CreateRegions2D) {
         const vector<ParametricLocationTree::Node> children = plt->getChildNodes(node);
         working_set.insert(working_set.end(), children.begin(), children.end());
 
-        const Region::PolytopeT &polytope = node.getRegion().hPolytope;
+        const STDPolytope<double> &polytope = node.getRegion();
         ASSERT_EQ(polytope.dimension(), 2);
 
         for (const auto &sample : samples) {
             const auto point = sample.first;
             if (node.getNodeID() == sample.second)
-                EXPECT_TRUE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+                EXPECT_TRUE(polytope.contains(point));
             else
-                EXPECT_FALSE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+                EXPECT_FALSE(polytope.contains(point));
         }
     }
 }
@@ -247,15 +246,15 @@ TEST(ParametricLocationTreeXML, CreateRegions3D) {
         const vector<ParametricLocationTree::Node> children = plt->getChildNodes(node);
         working_set.insert(working_set.end(), children.begin(), children.end());
 
-        const Region::PolytopeT &polytope = node.getRegion().hPolytope;
+        const STDPolytope<double> &polytope = node.getRegion();
         ASSERT_EQ(polytope.dimension(), 3);
 
         for (const auto &sample : samples) {
             const auto point = sample.first;
             if (node.getNodeID() == sample.second)
-                EXPECT_TRUE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+                EXPECT_TRUE(polytope.contains(point));
             else
-                EXPECT_FALSE(polytope.contains(point)) << "NodeID: " << node.getNodeID() << endl << "polytope: " << polytope << endl << "point: " << point;
+                EXPECT_FALSE(polytope.contains(point));
         }
     }
 }
@@ -277,13 +276,12 @@ TEST(ParametricLocationTreeXML, CollectCandidatesWithPLT) {
     ASSERT_EQ(candidates[2].getNodeID(),5);
 
     candidates = plt->getCandidateLocationsForTime(7.5);
-    ASSERT_EQ(candidates.size(),6);
+    ASSERT_EQ(candidates.size(),5);
     ASSERT_EQ(candidates[0].getNodeID(),4);
     ASSERT_EQ(candidates[1].getNodeID(),8);
-    ASSERT_EQ(candidates[2].getNodeID(),3);
-    ASSERT_EQ(candidates[3].getNodeID(),6);
-    ASSERT_EQ(candidates[4].getNodeID(),7);
-    ASSERT_EQ(candidates[5].getNodeID(),9);
+    ASSERT_EQ(candidates[2].getNodeID(),6);
+    ASSERT_EQ(candidates[3].getNodeID(),7);
+    ASSERT_EQ(candidates[4].getNodeID(),9);
 
     candidates = plt->getCandidateLocationsForTimeInterval({3.0,7.5});
     ASSERT_EQ(candidates.size(),9);
@@ -308,9 +306,6 @@ TEST(ParametricLocationTreeXML, AccumulatedProbability) {
     shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("exampleImmediate.xml");
     ParseHybridPetrinet parser;
     shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
-    plt->print(false);
-    PLTWriter writer;
-    writer.writePLT(plt,20);
 
     vector<ParametricLocationTree::Node> candidates;
     candidates = plt->getCandidateLocationsForTime(1);
@@ -326,23 +321,16 @@ TEST(ParametricLocationTreeXML, AccumulatedProbability) {
     ASSERT_NEAR(0.44, candidates[3].getParametricLocation().getAccumulatedProbability(),0.01);
 
     candidates = plt->getCandidateLocationsForTime(0.0);
-    EXPECT_EQ(7, candidates.size());
-    ASSERT_EQ(1, candidates[0].getNodeID());
-    ASSERT_EQ(2, candidates[1].getNodeID());
-    ASSERT_EQ(4, candidates[2].getNodeID());
-    ASSERT_EQ(5, candidates[3].getNodeID());
-    ASSERT_EQ(3, candidates[4].getNodeID());
-    ASSERT_EQ(6, candidates[5].getNodeID());
-    ASSERT_EQ(7, candidates[6].getNodeID());
+    EXPECT_EQ(4, candidates.size());
+    ASSERT_EQ(4, candidates[0].getNodeID());
+    ASSERT_EQ(5, candidates[1].getNodeID());
+    ASSERT_EQ(6, candidates[2].getNodeID());
+    ASSERT_EQ(7, candidates[3].getNodeID());
 
-    ASSERT_EQ(candidates[0].getParametricLocation().getAccumulatedProbability(),1);
-    ASSERT_NEAR(candidates[1].getParametricLocation().getAccumulatedProbability(),0.33,0.01);
-    ASSERT_NEAR(candidates[2].getParametricLocation().getAccumulatedProbability(),0.11,0.01);
-    ASSERT_NEAR(candidates[3].getParametricLocation().getAccumulatedProbability(),0.22,0.01);
-    ASSERT_NEAR(candidates[4].getParametricLocation().getAccumulatedProbability(),0.66,0.01);
-    ASSERT_NEAR(candidates[5].getParametricLocation().getAccumulatedProbability(),0.22,0.01);
-    ASSERT_NEAR(candidates[6].getParametricLocation().getAccumulatedProbability(),0.44,0.01);
-
+    ASSERT_NEAR(candidates[0].getParametricLocation().getAccumulatedProbability(),0.11,0.01);
+    ASSERT_NEAR(candidates[1].getParametricLocation().getAccumulatedProbability(),0.22,0.01);
+    ASSERT_NEAR(candidates[2].getParametricLocation().getAccumulatedProbability(),0.22,0.01);
+    ASSERT_NEAR(candidates[3].getParametricLocation().getAccumulatedProbability(),0.44,0.01);
 }
 
 TEST(ParametricLocationTreeXML, Normed) {

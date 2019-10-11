@@ -9,11 +9,7 @@ namespace hpnmg {
 
     }
 
-    Event::Event(EventType type, std::vector<double> generalDependencies, double time, std::string id): type(type), generalDependencies(generalDependencies), time(time), id(id) {
-
-    }
-
-    Event::Event(const Event &event) : type(event.type), generalDependencies(event.generalDependencies), generalDependenciesNormed(event.generalDependenciesNormed), time(event.time) {
+    Event::Event(EventType type, std::vector<double> generalDependencies, double time): type(type), generalDependencies(generalDependencies), time(time){
 
     }
 
@@ -37,8 +33,20 @@ namespace hpnmg {
     double Event::getTime() const{return time;}
     void Event::setTime(double time){this->time = time;}
 
-    std::string Event::getId() const{return id;}
-    void Event::setId(std::string id){this->id = id;}
+    shared_ptr<ImmediateTransition> Event::getImmediateTransitionMember() const {return immediateTransitionMember;};
+    void Event::setImmediateTransitionMember(shared_ptr<ImmediateTransition> immediateTransitionMember) {this->immediateTransitionMember = immediateTransitionMember;};
+
+    shared_ptr<GeneralTransition> Event::getGeneralTransitionMember() const {return generalTransitionMember;};
+    void Event::setGeneralTransitionMember(shared_ptr<GeneralTransition> generalTransitionMember) {this->generalTransitionMember = generalTransitionMember;};
+
+    shared_ptr<DeterministicTransition> Event::getDeterministicTransitionMember() const {return deterministicTransitionMember;};
+    void Event::setDeterministicTransitionMember(shared_ptr<DeterministicTransition> deterministicTransitionMember) {this->deterministicTransitionMember = deterministicTransitionMember;};
+
+    shared_ptr<GuardArc> Event::getArcMember() const {return arcMember;};
+    void Event::setArcMember(shared_ptr<GuardArc> arcMember) {this->arcMember = arcMember;};
+
+    shared_ptr<ContinuousPlace> Event::getPlaceMember() const {return placeMember;};
+    void Event::setPlaceMember(shared_ptr<ContinuousPlace> placeMember) {this->placeMember = placeMember;};
 
     std::vector<double> Event::getTimeVector(int dimension) {
         std::vector<double> timeVector(dimension);
@@ -51,5 +59,31 @@ namespace hpnmg {
             }
         }
         return timeVector;
+    }
+
+    std::string Event::getMemberID(){
+
+
+        switch (this->type){
+
+            case Immediate:
+                return  (*(this->immediateTransitionMember)).getId();
+
+            case General:
+                return  (*(this->generalTransitionMember)).getId();
+
+            case Timed:
+                return  (*(this->deterministicTransitionMember)).getId();
+
+            case Continuous:
+                return  (*(this->placeMember)).id;
+
+            case Root :
+                return "";
+
+            default:
+                return "";
+
+        }
     }
 }

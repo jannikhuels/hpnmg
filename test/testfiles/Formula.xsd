@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:complexType name="Formula">
+        <xs:choice maxOccurs="1">
+            <xs:element name="DiscreteAtomicProperty">
+                <xs:complexType>
+                    <xs:attribute name="place" type="xs:string" use="required"></xs:attribute>
+                    <xs:attribute name="value" type="xs:nonNegativeInteger" use="required"></xs:attribute>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="ContinuousAtomicProperty">
+                <xs:complexType>
+                    <xs:attribute name="place" type="xs:string" use="required"></xs:attribute>
+                    <xs:attribute name="value" type="nonNegativeDouble" use="required"></xs:attribute>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Negation">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Formula" type="Formula"></xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="Conjunction">
+                <xs:complexType>
+                    <xs:sequence minOccurs="2" maxOccurs="2">
+                        <xs:element name="Formula" type="Formula"></xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="Until">
+        <xs:sequence>
+            <xs:element name="PreFormula" type="Formula"></xs:element>
+            <xs:element name="GoalFormula" type="Formula"></xs:element>
+        </xs:sequence>
+        <xs:attribute name="maxtime" type="nonNegativeDouble" use="required"></xs:attribute>
+    </xs:complexType>
+
+
+    <xs:element name="STLFormula">
+        <xs:complexType>
+            <xs:choice>
+                <xs:element name="Formula" type="Formula"></xs:element>
+                <xs:element name="UntilFormula" type="Until"></xs:element>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="nonNegativeDouble">
+        <xs:restriction base="xs:double">
+            <xs:minInclusive value="0.0"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="positiveDouble">
+        <xs:restriction base="xs:double">
+            <xs:minExclusive value="0.0"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

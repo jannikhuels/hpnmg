@@ -4,16 +4,41 @@
 
 namespace hpnmg {
 
-    ParametricLocationTree::Node::Node(NODE_ID id, const ParametricLocation &parametricLocation) : id(id), parametricLocation(parametricLocation) {
-        this->parametricLocation.setSourceEventId(parametricLocation.getSourceEventId());
-    }
+    ParametricLocationTree::Node::Node(NODE_ID id, const ParametricLocation &parametricLocation) : id(id), parametricLocation(parametricLocation) {}
 
     NODE_ID ParametricLocationTree::Node::getNodeID() const {return id;}
     ParametricLocation ParametricLocationTree::Node::getParametricLocation() const {return parametricLocation;}
-    Region ParametricLocationTree::Node::getRegion() const {return region;}
+    STDPolytope<double> ParametricLocationTree::Node::getRegion() const {return region;}
 
-    void ParametricLocationTree::Node::setRegion(const Region &region) {
-        this->region = region;
+    void ParametricLocationTree::Node::computeRegion(ParametricLocationTree &tree) {
+        if (this->regionComputed)
+            return;
+
+        const auto dimension = tree.getDimension();
+        const auto &rvIntervals = this->getParametricLocation().getRVIntervalsNormed(
+            tree.getDimensionRecursively(tree.getRootNode(), this->getParametricLocation().getGeneralClock().size()),
+            tree.getMaxTime()
+        );
+        STDPolytope<double> baseRegion = STDiagram::createBaseRegion(dimension, tree.getMaxTime(), rvIntervals);
+
+        std::vector<ParametricLocationTree::Node> childNodes = tree.getChildNodes(*this);
+        if (!childNodes.empty()) {
+            this->region = STDiagram::createRegion(
+                baseRegion,
+                this->getParametricLocation().getSourceEvent(),
+                tree.getSourceEventsFromNodes(childNodes)
+            );
+        } else {
+            //TODO Change when a single general transitions fires more than one time
+            this->region = STDiagram::createRegionNoEvent(
+                baseRegion,
+                this->getParametricLocation().getSourceEvent(),
+                this->getParametricLocation().getGeneralIntervalBoundNormedLeft()[0][0],
+                this->getParametricLocation().getGeneralIntervalBoundNormedRight()[0][0]
+            );
+        }
+
+        this->regionComputed = true;
     }
 
     void ParametricLocationTree::Node::setParametricLocation(const ParametricLocation &parametricLocation) {
@@ -128,6 +153,9 @@ namespace hpnmg {
         std::transform(continuousMarking.begin(), continuousMarking.end(), continuousMarking.begin(), normalizeDependencyVectorWithTime);
         loc.setContinuousMarkingNormed(continuousMarking);
 
+        const size_t numOfAllFirings = std::accumulate(genTransOccurings.begin(), genTransOccurings.end(), 0);
+
+
         const auto normalizeGeneralIntervals = [&normalizeDependencyVectorWithTime](auto firings) {
             std::transform(firings.begin(), firings.end(), firings.begin(), normalizeDependencyVectorWithTime);
             return firings;
@@ -214,35 +242,11 @@ namespace hpnmg {
     }
     
     void ParametricLocationTree::recursivelySetRegions(ParametricLocationTree::Node &startNode) {
-        const auto dimension = this->getDimension();
-        const auto &rvIntervals = startNode.getParametricLocation().getRVIntervalsNormed(
-            getDimensionRecursively(getRootNode(), startNode.getParametricLocation().getGeneralClock().size()),
-            this->maxTime,
-            dimension
-        );
-        Region baseRegion = STDiagram::createBaseRegion(dimension, this->maxTime, rvIntervals);
-        std::vector<ParametricLocationTree::Node> childNodes = getChildNodes(startNode);
-        if (!childNodes.empty()) {
-            startNode.setRegion(STDiagram::createRegion(
-                baseRegion,
-                startNode.getParametricLocation().getSourceEvent(),
-                getSourceEventsFromNodes(childNodes)
-            ));
+        startNode.computeRegion(*this);
 
-            const auto &ret = parametricLocations.equal_range(startNode.getNodeID());
-            for (auto it=ret.first; it!=ret.second; ++it) {
-                recursivelySetRegions(it->second);
-            }
-        } else {
-            //TODO Change when a single general transitions fires more than one time
-            Region region = STDiagram::createRegionNoEvent(
-                baseRegion,
-                startNode.getParametricLocation().getSourceEvent(),
-                startNode.getParametricLocation().getGeneralIntervalBoundNormedLeft()[0][0],
-                startNode.getParametricLocation().getGeneralIntervalBoundNormedRight()[0][0]
-            );
-            startNode.setRegion(region);
-        }
+        auto childNodeRange = parametricLocations.equal_range(startNode.getNodeID());
+        for (auto iterator = childNodeRange.first; iterator != childNodeRange.second; ++iterator)
+            this->recursivelySetRegions(iterator->second);
     }
 
     std::vector<Event> ParametricLocationTree::getSourceEventsFromNodes(const std::vector<ParametricLocationTree::Node> &nodes) {
@@ -253,7 +257,7 @@ namespace hpnmg {
         return events;
     }
 
-    void ParametricLocationTree::recursivelyCollectRegions(const ParametricLocationTree::Node &startNode, vector<Region> &regions) {
+    void ParametricLocationTree::recursivelyCollectRegions(const ParametricLocationTree::Node &startNode, vector<STDPolytope<double>> &regions) {
         regions.push_back(startNode.getRegion());
         for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
             recursivelyCollectRegions(node, regions);
@@ -261,7 +265,7 @@ namespace hpnmg {
     }
     
     void ParametricLocationTree::print(bool cummulative) {
-        vector<Region> regions;
+        vector<STDPolytope<double>> regions;
         recursivelyCollectRegions(getRootNode(), regions);
         STDiagram::print(regions, cummulative);
     }
@@ -282,7 +286,7 @@ namespace hpnmg {
         recursivelyPrintRegions(getRootNode(),0);
     }
 
-    void ParametricLocationTree::recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, Region> (*isCandidate)(const std::pair<double,double> &interval, const Region &region, int dimension), std::pair<double, double> interval, int dimension) {
+    void ParametricLocationTree::recursivelyCollectCandidateLocations(const Node &startNode, vector<Node> &candidates, std::pair<bool, STDPolytope<double>> (*isCandidate)(const std::pair<double,double> &interval, const STDPolytope<double> &region, int dimension), std::pair<double, double> interval, int dimension) {
         if (isCandidate(interval, startNode.getRegion(), dimension).first) {
             candidates.push_back(startNode);
         }
@@ -338,9 +342,27 @@ namespace hpnmg {
                 valid = true;
                 bounds.push_back(parametricLocation.getRVIntervals(occurings, this->maxTime, dimension));
             }
+
+            bool markingIsVanishing = false;
+
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
 
+                // Check if any of the childNodes are an immediate event. This would make the current marking
+                // vanishing and the location must not be added to the candidate set.
+                if (startNode.getParametricLocation().getSourceEvent().getGeneralDependenciesNormed() == node.getParametricLocation().getSourceEvent().getGeneralDependenciesNormed()) {
+                    markingIsVanishing = true;
+                    break;
+                }
+
                 double latestEntryTime = node.getParametricLocation().getLatestEntryTime();
+                double earliestEntryTime = node.getParametricLocation().getEarliestEntryTime();
+
+                // Check if the entry time is constant and exactly meets the checktime.
+                if (latestEntryTime == earliestEntryTime && latestEntryTime == interval.first) {
+                    valid = false;
+                    break;
+                }
+
                 if (latestEntryTime >= interval.first) {
                     valid = true;
 
@@ -379,7 +401,7 @@ namespace hpnmg {
             std::vector<std::vector<double>> unsortedEntryTimes = entryTimes;
             std::sort(entryTimes.begin(), entryTimes.end(),  wayToSortTimes);
 
-            if(valid) {
+            if(valid && !markingIsVanishing) {
                 parametricLocation.setIntegrationIntervals(unsortedEntryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);

@@ -10,6 +10,10 @@ namespace hpnmg {
     }
 
     void PLTWriter::writePLT(shared_ptr<ParametricLocationTree> plt, double maxTime) {
+        writePLT(plt, maxTime, "result_example");
+    }
+
+    void PLTWriter::writePLT(shared_ptr<ParametricLocationTree> plt, double maxTime, string filename) {
         DOMDocument *domDocument = nullptr;
         domDocument = domImplementation->createDocument(0, XMLString::transcode("PLT"), 0);
 
@@ -28,7 +32,7 @@ namespace hpnmg {
         if (configuration->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
             configuration->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
 
-        target = new LocalFileFormatTarget("result_example.xml");
+        target = new LocalFileFormatTarget(filename.append(".xml").c_str());
         output->setByteStream(target);
 
         serializer->write(domDocument, output);

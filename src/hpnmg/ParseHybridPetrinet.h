@@ -90,12 +90,23 @@ namespace hpnmg {
                                               ParametricLocationTree::Node parentNode,
                                               shared_ptr<HybridPetrinet> hybridPetrinet);
 
-        void addLocationForBoundaryEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode,
-                                         shared_ptr<HybridPetrinet> hybridPetrinet, std::string);
 
-        vector<double> getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking,
-                                shared_ptr<HybridPetrinet> hybridPetrinet,
-                                vector<vector<vector<double>>> lowerBounds,
-                                vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired);
+        void addLocationForBoundaryEventByArcMember(shared_ptr<GuardArc> arcMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet);
+        void addLocationForBoundaryEventByContinuousPlaceMember(shared_ptr<ContinuousPlace> placeMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet);
+        //void addLocationForBoundaryEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet, std::string);
+
+
+        long getIndexOfModelMember(string id, vector<string> vectorOfIDs) const;
+
+        long getIndexOfDiscretePlace(shared_ptr<DiscretePlace> discretePlace) const;
+
+        long getIndexOfContinuousPlace(shared_ptr<ContinuousPlace> continuousPlace) const;
+
+        long getIndexOfDeterministicTransition(shared_ptr<DeterministicTransition> deterministicTransition) const;
+
+        long getIndexOfGeneralTransition(shared_ptr<GeneralTransition> generalTransition) const;
+
+        vector<double> getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking, shared_ptr<HybridPetrinet> hybridPetrinet, vector<vector<vector<double>>> lowerBounds, vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired);
+
     };
 }

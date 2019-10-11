@@ -70,7 +70,7 @@ TEST(ParseHybridPetrinet, RateAdaption) {
     ParametricLocation initLocation = initState.getParametricLocation();
 
     std::vector<std::vector<double>> expectedContRootMarking = {{0},{0},{0},{0},{0}};
-    std::vector<double> expectedRootDrift = {0,1,2,1,0};
+    std::vector<double> expectedRootDrift = {0,0,2,1,1};
     ASSERT_EQ(1, plt->getChildNodes(initState).size());
     ASSERT_EQ(expectedContRootMarking, initLocation.getContinuousMarking());
     ASSERT_EQ(expectedRootDrift, initLocation.getDrift());
@@ -78,7 +78,7 @@ TEST(ParseHybridPetrinet, RateAdaption) {
     auto nextState = plt->getChildNodes(initState)[0];
     ParametricLocation nextLocation = nextState.getParametricLocation();
 
-    std::vector<std::vector<double>> expectedContMarking1 = {{0},{0.5},{1},{0.5},{0}};
+    std::vector<std::vector<double>> expectedContMarking1 = {{0},{0},{1},{0.5},{0.5}};
     std::vector<double> expectedDrift1 = {0,1,0,2,1};
 //    ASSERT_EQ(2, plt->getChildNodes(nextState).size());
     ASSERT_EQ(0.5, nextState.getParametricLocation().getSourceEvent().getTime());
@@ -409,38 +409,6 @@ TEST(ParseHybridPetrinet, Example2General) {
     }
 }
 
-TEST(ParseHybridPetrinet, DynamicTransitions)
-{
-    ReadHybridPetrinet reader;
-    ParseHybridPetrinet parser;
-    PLTWriter writer;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("exampleDynamic.xml");
-    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
-    writer.writePLT(plt,20);
-
-    shared_ptr<ContinuousTransition> transition = hybridPetrinet->getContinuousTransitions()["td0"];
-    EXPECT_EQ(2,transition->currentRate);
-    EXPECT_EQ(5,transition->getRate());
-
-
-}
-
-/*TEST(ParseHybridPetrinet, DynamicTransitions2)
-{
-    ReadHybridPetrinet reader;
-    ParseHybridPetrinet parser;
-    PLTWriter writer;
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("battery.xml");
-    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, 18);
-    writer.writePLT(plt,20);
-
-    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet2 = reader.readHybridPetrinet("battery_simple.xml");
-    shared_ptr<hpnmg::ParametricLocationTree> plt2 = parser.parseHybridPetrinet(hybridPetrinet, 18);
-    writer.writePLT(plt2,20);
-
-
-}*/
-
 TEST(ParseHybridPetrinet, GuardArcContinuous)
 {
     auto reader = new ReadHybridPetrinet();
@@ -618,11 +586,50 @@ TEST(ParseHybridPetrinet, GuardDiscreteConflict)
     ASSERT_EQ(0.5, children[0].getParametricLocation().getConflictProbability());
 }
 
-/*TEST(ParseHybridPetrinet, Example5General) {
+TEST(ParseHybridPetrinet, RateAdaptionNew) {
     auto reader= new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("jannik5general.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("exampleperformanceeval.xml");
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto writer = new PLTWriter();
-    writer->writePLT(plt, 20);
-}*/
+    writer->writePLT(plt, 10);
+}
+
+TEST(ParseHybridPetrinet, GeneralActivatingAnotherGeneral) {
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("one_gt_enabling_another_gt.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+    auto jumpChild = plt->getChildNodes(plt->getRootNode())[0];
+    auto childOfInterest = plt->getChildNodes(jumpChild)[1];
+
+    EXPECT_EQ(5, childOfInterest.getNodeID());
+
+    vector<vector<vector<double>>> expectedLeftBound{{{0}, {0,0}},
+                                                     {{3,-1}}};
+    vector<vector<vector<double>>> expectedRightBound{{{3}, {20,0}},
+                                                      {{20}}};
+
+    EXPECT_EQ(expectedLeftBound, childOfInterest.getParametricLocation().getGeneralIntervalBoundLeft());
+    EXPECT_EQ(expectedRightBound, childOfInterest.getParametricLocation().getGeneralIntervalBoundRight());
+}
+
+TEST(ParseHybridPetrinet, ContinuousConflict) {
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("continuous_conflict.xml");
+    auto parser = new ParseHybridPetrinet();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
+
+    // Two continuous places that get drained at the exact same time resulted in two locations in the plt.
+    // These events should be consolidated.
+
+    auto continuousChilds = plt->getChildNodes(plt->getRootNode());
+
+    EXPECT_EQ(1, continuousChilds.size());
+    EXPECT_EQ(Continuous, continuousChilds[0].getParametricLocation().getSourceEvent().getEventType());
+
+    auto discreteChilds = plt->getChildNodes(continuousChilds[0]);
+
+    EXPECT_EQ(1, discreteChilds.size());
+    EXPECT_EQ(Timed, discreteChilds[0].getParametricLocation().getSourceEvent().getEventType());
+}

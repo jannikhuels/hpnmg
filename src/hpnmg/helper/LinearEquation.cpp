@@ -37,12 +37,12 @@ namespace hpnmg {
         }
     }
 
-    LinearEquation::LinearEquation(const hpnmg::LinearEquation &equation) {
-        this->dependencyIndex = equation.dependencyIndex;
-        this->alwaysTrue = equation.alwaysTrue;
-        this->equation = equation.equation;
-        this->isUpper = equation.isUpper;
-    }
+//    LinearEquation::LinearEquation(const hpnmg::LinearEquation &equation) {
+//        this->dependencyIndex = equation.dependencyIndex;
+//        this->alwaysTrue = equation.alwaysTrue;
+//        this->equation = equation.equation;
+//        this->isUpper = equation.isUpper;
+//    }
 
     bool LinearEquation::isDecidable() {
         return dependencyIndex <= 0;

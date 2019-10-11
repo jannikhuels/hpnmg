@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "datastructures/HybridPetrinet.h"
 #include "representations/GeometricObject.h"
 
 namespace hpnmg {
@@ -19,13 +20,17 @@ namespace hpnmg {
         std::vector<double> generalDependencies;
         std::vector<double> generalDependenciesNormed;
         double time;
-        std::string id;
+        shared_ptr<ImmediateTransition> immediateTransitionMember;
+        shared_ptr<GeneralTransition> generalTransitionMember;
+        shared_ptr<DeterministicTransition> deterministicTransitionMember;
+        shared_ptr<GuardArc> arcMember;
+        shared_ptr<ContinuousPlace> placeMember;
 
     public:
-        Event(EventType type, std::vector<double> generalDependencies, double time, std::string id);
+        Event(EventType type, std::vector<double> generalDependencies, double time);
         Event();
         Event(int numberOfGeneralTransitions);
-        Event(const Event &event);
+        Event(const Event&) = default;
 
         EventType getEventType() const;
         void setEventType(const EventType &eventType);
@@ -39,11 +44,25 @@ namespace hpnmg {
         double getTime() const;
         void setTime(double time);
 
-        std::string getId() const;
-        void setId(std::string id);
+        shared_ptr<ImmediateTransition> getImmediateTransitionMember() const;
+        void setImmediateTransitionMember(shared_ptr<ImmediateTransition> immediateTransitionMember);
+
+        shared_ptr<GeneralTransition> getGeneralTransitionMember() const;
+        void setGeneralTransitionMember(shared_ptr<GeneralTransition> generalTransitionMember);
+
+        shared_ptr<DeterministicTransition> getDeterministicTransitionMember() const;
+        void setDeterministicTransitionMember(shared_ptr<DeterministicTransition> deterministicTransitionMember);
+
+        shared_ptr<GuardArc> getArcMember() const;
+        void setArcMember(shared_ptr<GuardArc> arcMember);
+
+        shared_ptr<ContinuousPlace> getPlaceMember() const;
+        void setPlaceMember(shared_ptr<ContinuousPlace> placeMember);
 
         std::vector<double> getTimeVector(int dimension);
 
         void print() const;
+
+        std::string getMemberID();
     };
 }
