@@ -348,7 +348,7 @@ namespace hpnmg {
                         currentParams.rvIndex = 0.0; //currentNode.getParametricLocation().getGeneralTransitionsFired()[0] + 1;
 
                         if (currentNode.getParametricLocation().getGeneralTransitionsFired().size() <= 0)
-                            cout << "Error: no GT has fired yet when non-deterministic choice is taken." << endl;
+                            cout << "Warning NondeterminsmSolver: no general transition has fired yet when non-deterministic choice is taken." << endl;
 
                         currentParams.lowerBounded = currentLocationsVector[lowerBounded];
                         currentParams.upperBounded = currentLocationsVector[upperBounded];
