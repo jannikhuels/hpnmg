@@ -661,7 +661,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     if ((fabs(gsl_monte_vegas_chisq(s) - 1.0) <= 0.5) || (error == 0.0))
                         break;
                 }
-                gsl_monte_vegas_free(s);
 
                 if (fabs(gsl_monte_vegas_chisq(s) - 1.0) > 0.5 && errorAll > 0.0) {
                     //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
@@ -670,6 +669,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     gsl_monte_miser_free(z);
                     //cout << "Monte Carlo MISER integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
                 } //else
+
+                gsl_monte_vegas_free(s);
                 //cout << "Monte Carlo VEGAS final integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
             }
 
@@ -715,7 +716,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     if ((fabs(gsl_monte_vegas_chisq(s) - 1.0) <= 0.5) || (errorPlus == 0.0))
                         break;
                 }
-                gsl_monte_vegas_free(s);
 
                 if (fabs(gsl_monte_vegas_chisq(s) - 1.0) > 0.5 && errorPlus > 0.0) {
                     //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
@@ -724,6 +724,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     gsl_monte_miser_free(z);
                  //   cout << "Monte Carlo MISER integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
                 } //else
+
+                gsl_monte_vegas_free(s);
                 //cout << "Monte Carlo VEGAS final integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
             }
 
@@ -768,7 +770,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     if ((fabs(gsl_monte_vegas_chisq(s) - 1.0) <= 0.5) || (errorMinus == 0.0))
                         break;
                 }
-                gsl_monte_vegas_free(s);
 
                 if (fabs(gsl_monte_vegas_chisq(s) - 1.0) > 0.5 && errorMinus > 0.0) {
                     //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
@@ -777,6 +778,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                     gsl_monte_miser_free(z);
                     //cout << "Monte Carlo MISER integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
                 } //else
+
+                gsl_monte_vegas_free(s);
                 //cout << "Monte Carlo VEGAS final integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
             }
 
