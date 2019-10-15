@@ -1,13 +1,13 @@
 #ifndef HPNMG_FORMULA_H
 #define HPNMG_FORMULA_H
 
-#include <memory>
-#include <vector>
-
 #include "modelchecker/ContinuousAtomicProperty.h"
 #include "modelchecker/DiscreteAtomicProperty.h"
 #include "modelchecker/False.h"
 #include "modelchecker/True.h"
+
+#include <memory>
+#include <vector>
 
 namespace hpnmg {
     class Conjunction;

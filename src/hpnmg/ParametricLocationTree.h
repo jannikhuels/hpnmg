@@ -1,11 +1,11 @@
 #pragma once
 
-#include <map>
-#include <unordered_map>
-
 #include "datastructures/ParametricLocation.h"
 #include "exceptions/ParametricLocationTreeExceptions.h"
 #include "STDiagram.h"
+
+#include <map>
+#include <unordered_map>
 
 #define ROOT_NODE_INDEX 0
 #define ROOT_NODE_ID 1

@@ -1,9 +1,9 @@
 #ifndef HPNMG_NEGATION_H
 #define HPNMG_NEGATION_H
 
-#include <string>
-
 #include "modelchecker/Formula.h"
+
+#include <string>
 
 namespace hpnmg {
     struct Negation {

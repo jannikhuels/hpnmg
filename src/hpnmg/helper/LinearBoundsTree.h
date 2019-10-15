@@ -1,8 +1,12 @@
 #ifndef HPNMG_LINEARBOUNDS_H
 #define HPNMG_LINEARBOUNDS_H
 
-#include "LinearRestriction.h"
 #include "LinearDomain.h"
+#include "LinearEquation.h"
+#include "LinearRestriction.h"
+
+#include <utility>
+#include <vector>
 
 namespace hpnmg {
 

@@ -1,9 +1,9 @@
 #ifndef HPNMG_CONJUNCTION_H
 #define HPNMG_CONJUNCTION_H
 
-#include <string>
-
 #include "modelchecker/Formula.h"
+
+#include <string>
 
 namespace hpnmg {
     struct Conjunction {

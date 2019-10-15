@@ -1,10 +1,8 @@
 #ifndef HPNMG_COMPUTATION_H
 #define HPNMG_COMPUTATION_H
 
+#include <utility>
 #include <vector>
-#include "util/linearOptimization/Optimizer.h"
-
-using namespace hypro;
 
 namespace hpnmg {
     class Computation {

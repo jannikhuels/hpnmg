@@ -1,5 +1,9 @@
 #include "STDiagram.h"
 
+#include "exceptions/STDiagramExceptions.h"
+
+#include <carl/interval/Interval.h>
+
 namespace hpnmg {
 
     /**

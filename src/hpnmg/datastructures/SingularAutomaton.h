@@ -1,13 +1,10 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <utility>
-#include <map>
-#include <memory>
-#include <limits>
 #include "Event.h"
 
+#include <memory>
+#include <utility>
+#include <vector>
 
 using namespace std;
 

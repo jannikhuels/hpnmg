@@ -1,7 +1,11 @@
 #pragma once
 
+#include "datastructures/SingularAutomaton.h"
+
 #include <memory>
-#include <datastructures/SingularAutomaton.h>
+#include <fstream>
+#include <string>
+#include <vector>
 
 using namespace std;
 

@@ -2,6 +2,9 @@
 
 #include "Transition.h"
 
+#include <map>
+#include <string>
+
 using namespace std;
 namespace hpnmg {
     class GeneralTransition : public Transition {

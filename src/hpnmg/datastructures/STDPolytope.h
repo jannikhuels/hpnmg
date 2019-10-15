@@ -1,14 +1,15 @@
 #ifndef HPNMG_STDPOLYTOPE_H
 #define HPNMG_STDPOLYTOPE_H
 
-#include <iostream>
-#include <memory>
+#include <representations/GeometricObject.h>
+#include <util/plotting/Plotter.h>
+
+#include <carl/interval/Interval.h>
 
 #include <gmpxx.h>
 
-#include <Eigen/Geometry>
-#include <representations/GeometricObject.h>
-#include <util/plotting/Plotter.h>
+#include <iosfwd>
+#include <memory>
 
 namespace hpnmg {
     typedef std::vector<carl::Interval<double>> Intervals;

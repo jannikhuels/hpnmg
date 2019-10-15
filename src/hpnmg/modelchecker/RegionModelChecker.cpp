@@ -1,11 +1,5 @@
 #include "RegionModelChecker.h"
 
-#include <algorithm>
-#include <iterator>
-#include <memory>
-#include <utility>
-#include <vector>
-
 #include "datastructures/STDPolytope.h"
 #include "modelchecker/Conjunction.h"
 #include "modelchecker/ContinuousAtomicProperty.h"
@@ -15,6 +9,12 @@
 #include "modelchecker/Until.h"
 #include "ParseHybridPetrinet.h"
 #include "ProbabilityCalculator.h"
+
+#include <algorithm>
+#include <iterator>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace hpnmg {
     RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :

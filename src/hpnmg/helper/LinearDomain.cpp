@@ -1,8 +1,6 @@
-//
-// Created by Jannik Hüls on 15.01.19.
-//
-
 #include "LinearDomain.h"
+
+#include <cassert>
 
 namespace hpnmg {
 

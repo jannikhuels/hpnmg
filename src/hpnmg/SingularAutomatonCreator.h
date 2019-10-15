@@ -1,10 +1,14 @@
 #pragma once
 
-#include <datastructures/HybridPetrinet.h>
-#include <datastructures/SingularAutomaton.h>
+#include "datastructures/HybridPetrinet.h"
+#include "datastructures/SingularAutomaton.h"
 #include "ParametricLocationTree.h"
 #include "ParseHybridPetrinet.h"
+
+#include <map>
 #include <memory>
+#include <utility>
+#include <vector>
 
 using namespace std;
 

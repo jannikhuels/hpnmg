@@ -1,10 +1,15 @@
 #include "ParametricLocation.h"
 
+#include "helper/Computation.h"
+#include "helper/LinearBoundsTree.h"
+#include "helper/LinearDomain.h"
+#include "helper/LinearEquation.h"
+
+#include <representations/GeometricObject.h>
+
 #include <algorithm>
 #include <cassert>
 #include <numeric>
-
-#include "representations/GeometricObject.h"
 
 namespace hpnmg {
 

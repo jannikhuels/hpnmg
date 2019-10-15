@@ -1,12 +1,10 @@
-//
-// Created by Jannik Hüls on 15.01.19.
-//
-
 #ifndef HPNMG_LINEARDOMAIN_H
 #define HPNMG_LINEARDOMAIN_H
 
 #include "LinearEquation.h"
 
+#include <utility>
+#include <vector>
 
 namespace hpnmg {
 
