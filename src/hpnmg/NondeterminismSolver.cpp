@@ -32,9 +32,26 @@ namespace hpnmg {
         if ((discreteMarking[2] > 0 && !empty && discreteMarking[1] == 0) || (discreteMarking[3] > 0 && empty && discreteMarking[1] > 0)) //right decision
             return true;
 
-    } else if (version == 3 || version == 4) {
+    } else if (version >= 3) {
 
-        vector<double> levelCar = continuousMarking[1]; //charging_ver3 + charging_ver4
+                vector<double> levelCar = continuousMarking[0]; //charging_ver3
+                bool emptyCar = true;
+                for (int p = 0; p < levelCar.size(); p++)
+                    if (levelCar[p] > 0)
+                        emptyCar = false;
+                vector<double> levelDistance = continuousMarking[1];
+                bool emptyDistance = true;
+                for (int q = 0; q < levelDistance.size(); q++)
+                    if (levelDistance[q] > 0)
+                        emptyDistance = false;
+
+                if ((discreteMarking[4] > 0 && !emptyCar && emptyDistance) || (discreteMarking[5] > 0 && emptyCar && !emptyDistance)) //right decision
+                    return true;
+
+
+    } else if (version == 4) {
+
+        vector<double> levelCar = continuousMarking[1]; //charging_ver4
         bool emptyCar = true;
         for (int p = 0; p < levelCar.size(); p++)
             if (levelCar[p] > 0)
@@ -49,7 +66,6 @@ namespace hpnmg {
             return true;
 
     }
-
 
     return false;
 }
@@ -277,7 +293,6 @@ namespace hpnmg {
             (*params).result = x[0];
         }
 
-        //cout << x[0] << " --- " << prob <<endl;
     }
 
 
@@ -326,7 +341,6 @@ namespace hpnmg {
                     vector<nondetParams> params;
 
                     //two ways for ordering
-//START AUSKOMMENTIEREN
                     for (int i = 0; i <= 1; i++) {
 
                         if (i == 0) {
@@ -348,7 +362,7 @@ namespace hpnmg {
                         currentParams.rvIndex = 0.0; //currentNode.getParametricLocation().getGeneralTransitionsFired()[0] + 1;
 
                         if (currentNode.getParametricLocation().getGeneralTransitionsFired().size() <= 0)
-                            cout << "Error: no GT has fired yet when non-deterministic choice is taken." << endl;
+                            cout << "Warning: no general transition has fired yet when non-deterministic choice is taken." << endl;
 
                         currentParams.lowerBounded = currentLocationsVector[lowerBounded];
                         currentParams.upperBounded = currentLocationsVector[upperBounded];
@@ -367,16 +381,12 @@ namespace hpnmg {
                         minnlcoptimize(state, optimizationFunction, NULL, &currentParams); //start optimizer
                         minnlcresults(state, x1, rep); //get results
 
-                        if (rep.terminationtype == 2) {
-                            cout << "Pre-computation " << i + 1 << " succeeded: x = " << currentParams.result << " with P_max = " << currentParams.prob << " +- " << currentParams.error << endl;
-                            cout << "Upper bounded: " << conflictSet[upperBounded].getNodeID() << ", lower bounded: " << conflictSet[lowerBounded].getNodeID() << endl;
-                        } else
+                        if (rep.terminationtype != 2)
                             cout << "Pre-computation " << i + 1 << " failed" << endl;
 
                         params.push_back(currentParams);
 
                     }
-//ENDE AUSKOMMENTIEREN
 
                     int i;
                     if (params[0].prob >= params[1].prob) {
@@ -405,8 +415,8 @@ namespace hpnmg {
                     minnlcresults(state, x1, rep); //get results
 
                     if (rep.terminationtype == 2) {
-                        cout << "Main computation succeeded: x = " << params[i].result << " with P_max = " << params[i].prob << " +- " << params[i].error << endl;
-                        cout << "Upper bounded: " << conflictSet[upperBounded].getNodeID() << ", lower bounded: " << conflictSet[lowerBounded].getNodeID() << endl;
+                        cout << "Computation succeeded: x = " << params[i].result <<  endl; //" with P_max = " << params[i].prob << " +- " << params[i].error << endl;
+                        cout << "Upper bounded location: " << conflictSet[upperBounded].getNodeID() << ", lower bounded location: " << conflictSet[lowerBounded].getNodeID() << endl;
                     } else
                         cout << "Main computation failed" << endl;
 

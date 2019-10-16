@@ -618,7 +618,6 @@ TEST(ParametricLocationTreeXML, Nonprophetic3d) {
     double maxTime = 24.0;
 
 
-
     ReadHybridPetrinet reader;
     shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsCharging/charging_ver3d.xml");
     ParseHybridPetrinet parser;
