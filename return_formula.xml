@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STLFormula>
+    <Formula><Negation><Formula><DiscreteAtomicProperty place="in lot" value="1"/></Formula></Negation></Formula>
+</STLFormula>
