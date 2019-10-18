@@ -367,13 +367,26 @@ namespace hpnmg {
         }
 
         // Check if there is a part of the region left, which needs the processing in the child locations.
-        if (!fullRegion.setDifference(knownSat).empty()) {
+        const auto unresolvedRegion = fullRegion.setDifference(knownSat);
+        if (!unresolvedRegion.empty()) {
             // The polytopes resulting from recursively handled child locations
             for (auto& childNode : this->plt.getChildNodes(node)) {
                 childNode.computeRegion(this->plt);
                 // untilHandler returns downwards extended polytopes
                 auto childSat = this->untilHandler(childNode, formula, atTime);
-                std::move(childSat.begin(), childSat.end(), std::back_inserter(eventualSat));
+
+                std::vector<STDPolytope<mpq_class>> tempsat{};
+                tempsat.reserve(unresolvedRegion.size() * childSat.size());
+                for(const STDPolytope<mpq_class>& ai : unresolvedRegion) {
+                    for (const STDPolytope<mpq_class>& bi : childSat) {
+                        STDPolytope<mpq_class> res = ai.intersect(bi);
+                        if (!res.empty()) {
+                            tempsat.push_back(res);
+                        }
+                    }
+                }
+
+                std::move(tempsat.begin(), tempsat.end(), std::back_inserter(eventualSat));
             }
         }
 
