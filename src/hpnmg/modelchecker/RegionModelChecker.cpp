@@ -58,7 +58,7 @@ namespace hpnmg {
             probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
                 integrationDomains,
                 this->plt.getDistributionsNormalized(),
-                3,
+                2,
                 50000,
                 nodeError
             ) * node.getParametricLocation().getAccumulatedProbability();
