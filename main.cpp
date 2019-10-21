@@ -80,11 +80,11 @@ int main (int argc, char *argv[]) {
     int mode = process_command_line(argc, argv, modelfile, formulafile, maxtime, checktime, resultfile, appendix);
 
     if (mode == 2) {
-        // An error occured.
+        // An error occured./home/annabell/src/hpnmg/src/hpnmg/modelchecker/RegionModelChecker.h
         return 1;
     }
     // mode==1: Only create state space, mode==0 also perform model checking.
-
+/home/annabell/src/hpnmg/src/hpnmg/modelchecker/RegionModelChecker.h
     // Start reading the model file.
     std::time_t startTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     const auto startTotal = std::chrono::high_resolution_clock::now();
