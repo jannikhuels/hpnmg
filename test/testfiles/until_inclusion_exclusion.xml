@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="location policy" marking="10"/>
+        <discretePlace id="pd1" marking="1"/>
+        <discretePlace id="pd2" marking="1"/>
+    </places>
+    <transitions>
+        <generalTransition id="tg1" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0"/>
+            <parameter name="b" value="20"/>
+        </generalTransition>
+        <generalTransition id="tg2" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="a" value="0"/>
+            <parameter name="b" value="20"/>
+        </generalTransition>
+        <deterministicTransition id="create location" discTime="0.25" priority="1" weight="1.0E0"/>
+    </transitions>
+    <arcs>
+        <discreteArc id="location policy to create location" fromNode="location policy" toNode="create location" weight="1.0E0"/>
+        <discreteArc id="pd1 to tg1" fromNode="pd1" toNode="tg1" weight="1.0E0"/>
+        <discreteArc id="pd2 to tg2" fromNode="pd2" toNode="tg2" weight="1.0E0"/>
+    </arcs>
+</HPnG>

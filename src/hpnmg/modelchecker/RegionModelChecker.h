@@ -40,6 +40,19 @@ namespace hpnmg {
         std::pair<double, double> satisfies(const Formula &formula, double atTime);
 
     private:
+        /**
+         * Private because these really suck and should not escape this class.
+         * Downwards extended polytopes representing a partition of candidate regions, intended to be passed from
+         * children to parents.
+         *
+         * If this turns out good, we might add a function to the PLT that calculates this or so?
+         */
+        using PartitionHelper = std::vector<STDPolytope<mpq_class>>;
+        /**
+         * Private because these really suck and should not escape this class.
+         */
+        using Union = std::vector<STDPolytope<mpq_class>>;
+
         STDPolytope<mpq_class> cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value, bool negate = false);
         STDPolytope<mpq_class> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value, bool negate = false);
         std::vector<STDPolytope<mpq_class>> conj(const ParametricLocationTree::Node &node, const Conjunction& conj, double atTime);
@@ -57,7 +70,7 @@ namespace hpnmg {
          *         provided node's region. Each polytope has been intersected with the time-halfspaces induced by
          *         `atTime` and `atTime + formula.withinTime`.
          */
-        std::vector<STDPolytope<mpq_class>> until(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
+        std::pair<Union, PartitionHelper> until(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
 
         /**
          * Recursive utility function for the until-computation.
@@ -76,9 +89,9 @@ namespace hpnmg {
          *         So in order to get the actual satisfaction polytopes for the node, you need to intersect them with
          *         the node's region.
          */
-        std::vector<STDPolytope<mpq_class>> untilHandler(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
+        std::pair<Union, PartitionHelper> untilHandler(const ParametricLocationTree::Node& node, const Until& formula, double atTime);
 
-        std::vector<STDPolytope<mpq_class>> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
+        std::pair<Union, PartitionHelper> satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
 
         std::shared_ptr<HybridPetrinet> hpng;
         ParametricLocationTree plt;
@@ -89,7 +102,7 @@ namespace hpnmg {
          * Currently, the RegionModelChecker does not support nested untils so we need a way to detect such formulae.
          */
         bool withinUntil = false;
-        std::unordered_map<NODE_ID, std::vector<STDPolytope<mpq_class>>> untilCache;
+        std::unordered_map<NODE_ID, std::pair<Union, PartitionHelper>> untilCache;
     };
 }
 

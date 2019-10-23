@@ -36,63 +36,77 @@ namespace hpnmg {
             std::cout << "Done. Dimensions: (vertex dim, effective dim) = (" << node.getRegion().dimension() << ", " << node.getRegion().effectiveDimension() << ")" << std::endl;
 
             std::cout << "[Location " << node.getNodeID() << "]: Computing sat." << std::endl;
-            const auto& sat = this->satisfiesHandler(node, formula, atTime);
+            const auto& handlerResult = this->satisfiesHandler(node, formula, atTime);
 
-            std::cout << "[Location " << node.getNodeID() << "]: Computing time slice of " << sat.size() << " polytopes." << std::endl;
-            std::vector<hypro::HPolytope<double>> integrationDomains{};
-            // Add all result polytopes intersected with the check-time hyperplane to sat
-            std::transform(sat.begin(), sat.end(), std::back_inserter(integrationDomains), [atTime](const STDPolytope<mpq_class> &region) {
-                return convertHPolytope(region.timeSlice(atTime));
-            });
-            integrationDomains.erase(
-                std::remove_if(integrationDomains.begin(), integrationDomains.end(), [](const auto &region) { return region.empty(); }),
-                integrationDomains.end()
-            );
+            for (const STDPolytope<mpq_class>& partitionHelper : handlerResult.second) {
+                Union sat{};
+                sat.reserve(handlerResult.first.size());
 
-            std::cout << "[Location " << node.getNodeID() << "]: Integrating over " << integrationDomains.size() << " time slices." << std::endl;
+                std::cout << "[Location " << node.getNodeID() << "]: Partitioning " << handlerResult.first.size() << " polytopes." << std::endl;
+                std::transform(handlerResult.first.begin(), handlerResult.first.end(), std::back_inserter(sat), [&partitionHelper](const STDPolytope<mpq_class>& satPoly) {
+                    return partitionHelper.intersect(satPoly);
+                });
+                sat.erase(
+                    std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.empty(); }),
+                    sat.end()
+                );
 
-            if (integrationDomains.size())
-                std::cout << STDPolytope<double>(integrationDomains[0]) << std::endl;
+                std::cout << "[Location " << node.getNodeID() << "]: Computing time slice of " << sat.size() << " polytopes." << std::endl;
+                std::vector<hypro::HPolytope<double>> integrationDomains{};
+                // Add all result polytopes intersected with the check-time hyperplane to sat
+                std::transform(sat.begin(), sat.end(), std::back_inserter(integrationDomains), [atTime](const STDPolytope<mpq_class> &region) {
+                    return convertHPolytope(region.timeSlice(atTime));
+                });
+                integrationDomains.erase(
+                    std::remove_if(integrationDomains.begin(), integrationDomains.end(), [](const auto &region) { return region.empty(); }),
+                    integrationDomains.end()
+                );
 
-            double nodeError = 0.0;
-            probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
-                integrationDomains,
-                this->plt.getDistributionsNormalized(),
-                2,
-                50000,
-                nodeError
-            ) * node.getParametricLocation().getAccumulatedProbability();
-            std::cout << "[Location " << node.getNodeID() << "]: Running total probability: " << probability << std::endl;
-            error += nodeError;
+                std::cout << "[Location " << node.getNodeID() << "]: Integrating over " << integrationDomains.size() << " time slices." << std::endl;
+
+                if (!integrationDomains.empty())
+                    std::cout << STDPolytope<double>(integrationDomains[0]) << std::endl;
+
+                double nodeError = 0.0;
+                probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
+                    integrationDomains,
+                    this->plt.getDistributionsNormalized(),
+                    2,
+                    50000,
+                    nodeError
+                ) * node.getParametricLocation().getAccumulatedProbability();
+                std::cout << "[Location " << node.getNodeID() << "]: Running total probability: " << probability << std::endl;
+                error += nodeError;
+            }
         }
 
         return {probability, error};
     }
 
-    std::vector<STDPolytope<mpq_class>> RegionModelChecker::satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime) {
+    std::pair<RegionModelChecker::Union, RegionModelChecker::PartitionHelper> RegionModelChecker::satisfiesHandler(const ParametricLocationTree::Node& node, const Formula &formula, double atTime) {
         switch (formula.getType()) {
             case Formula::Type::Conjunction:
-                return this->conj(node, *formula.getConjunction(), atTime);
+                return {{this->conj(node, *formula.getConjunction(), atTime)}, {STDPolytope<mpq_class>(STDPolytope<mpq_class>(node.getRegion()).extendDownwards())}};
             case Formula::Type::ContinuousAtomicProperty: {
                 auto result = std::vector<STDPolytope<mpq_class>>();
                 auto region = this->cfml(node, formula.getContinuousAtomicProperty()->place, formula.getContinuousAtomicProperty()->value);
                 if (!region.empty())
                     result.push_back(region);
-                return result;
+                return {{result}, {STDPolytope<mpq_class>(STDPolytope<mpq_class>(node.getRegion()))}};
             }
             case Formula::Type::DiscreteAtomicProperty: {
                 auto result = std::vector<STDPolytope<mpq_class>>();
                 auto region = this->dfml(node, formula.getDiscreteAtomicProperty()->place, formula.getDiscreteAtomicProperty()->value);
                 if (!region.empty())
                     result.push_back(region);
-                return result;
+                return {{result}, {STDPolytope<mpq_class>(STDPolytope<mpq_class>(node.getRegion()))}};
             }
             case Formula::Type::False:
                 return {};
             case Formula::Type::Negation:
-                return this->neg(node, formula.getNegation()->formula, atTime);
+                return {{this->neg(node, formula.getNegation()->formula, atTime)}, {STDPolytope<mpq_class>(STDPolytope<mpq_class>(node.getRegion()))}};
             case Formula::Type::True:
-                return {STDPolytope<mpq_class>(node.getRegion())};
+                return {{STDPolytope<mpq_class>(node.getRegion())}, {STDPolytope<mpq_class>(STDPolytope<mpq_class>(node.getRegion()))}};
             case Formula::Type::Until: {
                 if (this->withinUntil)
                     throw std::invalid_argument("RegionModelChecker encountered nested Until formulae.");
@@ -166,8 +180,8 @@ namespace hpnmg {
             else
                 sat = {};
         } else if(!lhsTrivial.first && !rhsTrivial.first) { // Neither formula is trivial -> evaluate both and intersect
-            const auto leftSat = this->satisfiesHandler(node, conj.left, atTime);
-            const auto rightSat = this->satisfiesHandler(node, conj.right, atTime);
+            const auto leftSat = this->satisfiesHandler(node, conj.left, atTime).first;
+            const auto rightSat = this->satisfiesHandler(node, conj.right, atTime).first;
             sat = {};
             sat.reserve(leftSat.size() * rightSat.size());
             for(const STDPolytope<mpq_class>& ai : leftSat) {
@@ -184,7 +198,7 @@ namespace hpnmg {
             const auto& nonTrivialFormula = lhsTrivial.first ? rhsTrivial : lhsTrivial;
 
             if (trivialFormula.second.getType() == Formula::Type::True)
-                sat = this->satisfiesHandler(node, nonTrivialFormula.second, atTime);
+                sat = this->satisfiesHandler(node, nonTrivialFormula.second, atTime).first;
             else
                 sat = {};
         }
@@ -215,7 +229,7 @@ namespace hpnmg {
                 return {this->dfml(node, dap->place, dap->value, true)};
             }
             case Formula::Type::Negation: {
-                return this->satisfiesHandler(node, innerFormula.getNegation()->formula, atTime);
+                return this->satisfiesHandler(node, innerFormula.getNegation()->formula, atTime).first; //TODO partition helper
             }
             // These formulae cannot be negated easily in general:
             case Formula::Type::Conjunction:
@@ -225,7 +239,7 @@ namespace hpnmg {
                 throw std::logic_error("unhandled non-trivial formula type in RegionModelChecker::neg");
         }
 
-        const auto subSat = this->satisfiesHandler(node, innerFormula, atTime);
+        const auto subSat = this->satisfiesHandler(node, innerFormula, atTime).first;
         // If the nested satisfaction set is empty, the whole region satisfies the negation
         if (subSat.empty())
             return {nodeRegion};
@@ -260,7 +274,7 @@ namespace hpnmg {
         return sat;
     }
 
-    std::vector<STDPolytope<mpq_class>> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
+    std::pair<RegionModelChecker::Union, RegionModelChecker::PartitionHelper> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
         auto sat = this->untilHandler(node, formula, atTime);
 
         std::cout << "sat(until) computed. Intersecting it with the node's region." << std::endl;
@@ -275,13 +289,13 @@ namespace hpnmg {
         fullRegion.insert(upperLimit);
         fullRegion.insert(lowerLimit);
 
-        std::transform(sat.begin(), sat.end(), sat.begin(), [&fullRegion](auto&& region) { return region.intersect(fullRegion); });
-        sat.erase(std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.empty(); }), sat.end());
+        std::transform(sat.first.begin(), sat.first.end(), sat.first.begin(), [&fullRegion](auto&& region) { return region.intersect(fullRegion); });
+        sat.first.erase(std::remove_if(sat.first.begin(), sat.first.end(), [](const auto &region) { return region.empty(); }), sat.first.end());
 
         return sat;
     }
 
-    std::vector<STDPolytope<mpq_class>> RegionModelChecker::untilHandler(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
+    std::pair<RegionModelChecker::Union, RegionModelChecker::PartitionHelper> RegionModelChecker::untilHandler(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
         auto cached = this->untilCache.find(node.getNodeID());
         if (cached != this->untilCache.end())
             return cached->second;
@@ -299,29 +313,32 @@ namespace hpnmg {
 
         // Check if the current region is a vanishing region, and only consider the children
         if (fullRegion.effectiveDimension() < fullRegion.dimension()) {
-            std::vector<STDPolytope<mpq_class>> childrenSat{};
+            Union childrenSat{};
+            PartitionHelper childrenPartition{};
             for (auto& childNode : this->plt.getChildNodes(node)) {
                 std::cout << "Until @ Node " << node.getNodeID() << ": Recursively checking Node " << childNode.getNodeID() << std::endl;
                 childNode.computeRegion(this->plt);
                 // untilHandler returns downwards extended polytopes
                 auto childSat = this->untilHandler(childNode, formula, atTime);
-                std::move(childSat.begin(), childSat.end(), std::back_inserter(childrenSat));
+                std::move(childSat.first.begin(), childSat.first.end(), std::back_inserter(childrenSat));
+                std::move(childSat.second.begin(), childSat.second.end(), std::back_inserter(childrenPartition));
             }
-            this->untilCache.insert({node.getNodeID(), childrenSat});
-            return childrenSat;
+            this->untilCache.insert({node.getNodeID(), {childrenSat, childrenPartition}});
+            return {childrenSat, childrenPartition};
         }
 
         fullRegion.insert(upperLimit);
         fullRegion.insert(lowerLimit);
         if (fullRegion.empty()){
-            this->untilCache.insert({node.getNodeID(), {}});
-            return {};
+            const PartitionHelper regionPartition{STDPolytope<mpq_class>(STDPolytope<mpq_class>(node.getRegion()).extendDownwards())};
+            this->untilCache.insert({node.getNodeID(), {{}, regionPartition}});
+            return {{}, regionPartition};
         }
 
         std::vector<STDPolytope<mpq_class>> eventualSat{};
         //region Gather all polytopes that most certainly fulfill `formula` within the time frame.
         // The polytopes in the current region that fulfill `formula.goal`
-        auto regionSat = this->satisfiesHandler(node, formula.goal, atTime);
+        auto regionSat = this->satisfiesHandler(node, formula.goal, atTime).first;
         std::transform(regionSat.begin(), regionSat.end(), regionSat.begin(), [&upperLimit](STDPolytope<mpq_class> sat) {
             sat.insert(upperLimit);
             std::cout << "Extending member of sat(goal) downwards." << std::endl;
@@ -345,8 +362,9 @@ namespace hpnmg {
                 deadRegions = {};
             } else {
                 std::cout << "Until @ Node " << node.getNodeID() << ": Precondition is trivially false. Returning early with sat(goal)." << std::endl;
-                this->untilCache.insert({node.getNodeID(), regionSat});
-                return regionSat;
+                const PartitionHelper regionPartition{STDPolytope<mpq_class>(STDPolytope<mpq_class>(node.getRegion()).extendDownwards())};
+                this->untilCache.insert({node.getNodeID(), {regionSat, regionPartition}});
+                return {regionSat, regionPartition};
             }
         } else {
             std::cout << "Until @ Node " << node.getNodeID() << ": Precondition is non-trivial. Computing sat(dead)." << std::endl;
@@ -356,7 +374,7 @@ namespace hpnmg {
                 Formula(std::make_shared<Negation>(formula.goal))
             ));
 
-            for (const auto& deadRegion : this->satisfiesHandler(node, deadFormula, atTime)) {
+            for (const auto& deadRegion : this->satisfiesHandler(node, deadFormula, atTime).first) {
                 std::cout << "Done. Extending member of sat(dead) downwards." << std::endl;
                 const auto deadRegionDownwardsExtension = deadRegion.extendDownwards();
                 deadRegions.emplace_back(deadRegion, deadRegionDownwardsExtension);
@@ -366,9 +384,11 @@ namespace hpnmg {
             std::cout << "Done." << std::endl;
         }
 
+        PartitionHelper partitionHelper{};
+
         // Check if there is a part of the region left, which needs the processing in the child locations.
         const auto unresolvedRegion = fullRegion.setDifference(knownSat);
-        if (!unresolvedRegion.empty()) {
+        if (!unresolvedRegion.empty() && !this->plt.getChildNodes(node).empty()) {
             // The polytopes resulting from recursively handled child locations
             for (auto& childNode : this->plt.getChildNodes(node)) {
                 childNode.computeRegion(this->plt);
@@ -376,18 +396,21 @@ namespace hpnmg {
                 auto childSat = this->untilHandler(childNode, formula, atTime);
 
                 std::vector<STDPolytope<mpq_class>> tempsat{};
-                tempsat.reserve(unresolvedRegion.size() * childSat.size());
+                tempsat.reserve(unresolvedRegion.size() * childSat.first.size());
                 for(const STDPolytope<mpq_class>& ai : unresolvedRegion) {
-                    for (const STDPolytope<mpq_class>& bi : childSat) {
+                    for (const STDPolytope<mpq_class>& bi : childSat.first) {
                         STDPolytope<mpq_class> res = ai.intersect(bi);
                         if (!res.empty()) {
-                            tempsat.push_back(res);
+                            tempsat.push_back(STDPolytope<mpq_class>(res.extendDownwards()));
                         }
                     }
                 }
 
                 std::move(tempsat.begin(), tempsat.end(), std::back_inserter(eventualSat));
+                std::move(childSat.second.begin(), childSat.second.end(), std::back_inserter(partitionHelper));
             }
+        } else {
+            partitionHelper = {STDPolytope<mpq_class>(STDPolytope<mpq_class>(node.getRegion()).extendDownwards())};
         }
 
         auto sat = std::vector<STDPolytope<mpq_class>>();
@@ -411,9 +434,9 @@ namespace hpnmg {
             std::move(goalSat.begin(), goalSat.end(), std::back_inserter(sat));
         }
 
-        std::cout << "Computed " << sat.size() << " sat regions.";
+        std::cout << "Computed " << sat.size() << " sat regions." << std::endl;
 
-        this->untilCache.insert({node.getNodeID(), sat});
-        return sat;
+        this->untilCache.insert({node.getNodeID(), {sat, partitionHelper}});
+        return {sat, partitionHelper};
     }
 }

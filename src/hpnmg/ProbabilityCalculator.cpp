@@ -535,6 +535,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 polytopes.end()
         );
 
+        std::cout << "Removed non-full-dimensional (zero-probability) polytopes from the union: " << polytopes.size() << " polytopes remain in the union." << std::endl;
+
         double probability = 0.0;
         error = 0.0;
         double currentError;

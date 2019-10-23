@@ -450,3 +450,20 @@ TEST(RegionModelChecker, ChecktimeMeetsOneDeterministicEventWithTwoGT) {
     auto result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("grid_failed", 1)), 18);
     EXPECT_NEAR(1.0, round(result.first * 10) / 10, result.second);
 }
+
+TEST(UntilFormula, PartitionChildResults) {
+    const double maxTime = 20;
+    auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("until_inclusion_exclusion.xml");
+    auto modelChecker = RegionModelChecker(*hpn, maxTime);
+
+    PLTWriter{}.writePLT(ParseHybridPetrinet{}.parseHybridPetrinet(hpn, maxTime), maxTime, "until_inclusion_exclusion.plt.xml");
+
+    // Adding more general transitions that are independent from the property to check
+    // resulted in a too small proability.
+    auto result = modelChecker.satisfies(Formula(std::make_shared<Until>(
+        Formula(std::make_shared<True>()),
+        Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 0)),
+        maxTime
+    )), 0);
+    EXPECT_NEAR(1.0, round(result.first * 10) / 10, result.second);
+}
