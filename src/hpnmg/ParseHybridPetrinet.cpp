@@ -753,7 +753,8 @@ namespace hpnmg {
         // extract important data from location
         vector<double> drifts = location.getDrift();
         map<string, shared_ptr<DeterministicTransition>> deterministicTransitions = hybridPetrinet->getDeterministicTransitions();
-        vector<double> deterministicClocks = reduceVector(location.getDeterministicClock());
+        vector<vector<double>> detClocksVector = location.getDeterministicClock();
+        vector<double> deterministicClocks = this->reduceVector(&detClocksVector);
 
         // step 2: get all time-delta for timed events
         vector<double> timeDeltas;
@@ -902,7 +903,7 @@ namespace hpnmg {
 
         // step 5: add one parametric location for every timed event with minimal time delta
         // if minimum of time-delta equals minimalMaximum consider order
-        // todo: das hier muss anders sein, pro minimal time delta muss die Order beachtet werden!
+        // das hier muss anders sein, pro minimal time delta muss die Order beachtet werden!
        vector<double> alreadyConsidered(timeDeltas.size()); // add all timeDeltas, that already were taken to consider order
 
 //        // Order I: guard arcs for immediate transitions - TODO some time later
@@ -931,7 +932,7 @@ namespace hpnmg {
 
         // Order II: firing of deterministic transition
         // get enabled deterministic transitions
-        vector<double> newConsidered; // todo: we should order them by time Delta
+        vector<double> newConsidered; //  we should order them by time Delta
         vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions;
 
         highestPriority = -1.0;
@@ -2571,10 +2572,10 @@ namespace hpnmg {
         return this->continuousPlaceIDs;
     }
 
-    vector<double> reduceVector(vector<vector<double>> deterministicClocks) {
-        vector<double> actualDeterministicClocks;
-        for (int i = 0; i < deterministicClocks.size(); i++) {
-            actualDeterministicClocks[i] = deterministicClocks[i][0];
+    std::vector<double> ParseHybridPetrinet::reduceVector(const std::vector<std::vector<double>>* deterministicClocks) {
+        std::vector<double> actualDeterministicClocks(deterministicClocks->size());
+        for (int i = 0; i < deterministicClocks->size(); i++) {
+            actualDeterministicClocks[i] = (*deterministicClocks)[i][0];
         }
         return actualDeterministicClocks;
     }

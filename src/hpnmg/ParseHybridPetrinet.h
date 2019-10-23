@@ -121,7 +121,7 @@ namespace hpnmg {
 
         vector<string> getContinuousPlaceIDs();
 
-        vector<double> reduceVector(vector<vector<double>> deterministicClocks);
+        std::vector<double> reduceVector(const std::vector<std::vector<double>>* deterministicClocks);
 
     };
 }
