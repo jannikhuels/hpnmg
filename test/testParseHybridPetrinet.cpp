@@ -8,7 +8,7 @@ using namespace hpnmg;
 TEST(ParseHybridPetrinet, InitialLocation)
 {
     auto reader = new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("../../test/example.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("example.xml");
     auto parser = new ParseHybridPetrinet();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode().getParametricLocation();
@@ -82,7 +82,7 @@ TEST(ParseHybridPetrinet, RateAdaption) {
     std::vector<double> expectedDrift1 = {0,1,0,2,1};
 //    ASSERT_EQ(2, plt->getChildNodes(nextState).size());
     ASSERT_EQ(0.5, nextState.getParametricLocation().getSourceEvent().getTime());
-    //    ASSERT_EQ(expect/home/annabell/src/carl/build/resources/lib/edContMarking1, nextLocation.getContinuousMarking());
+    ASSERT_EQ(expectedContMarking1, nextLocation.getContinuousMarking());
 //    ASSERT_EQ(expectedDrift1, nextLocation.getDrift()); todo: does not work correct
 }
 
@@ -632,63 +632,4 @@ TEST(ParseHybridPetrinet, ContinuousConflict) {
 
     EXPECT_EQ(1, discreteChilds.size());
     EXPECT_EQ(Timed, discreteChilds[0].getParametricLocation().getSourceEvent().getEventType());
-}
-
-TEST(ParseHybridPetrinet, MaxtimeToChecktime)
-{
-    //maxtime20
-    //checktime10
-    auto reader = new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("example.xml");
-    auto parser = new ParseHybridPetrinet();
-    auto plt1 = parser->parseHybridPetrinet(hybridPetrinet, 10);
-    //auto initState = plt->getRootNode();
-    //auto writer = new PLTWriter();
-    //ist 20 die Zeit? jupp
-    //writer->writePLT(plt, 10);
-    //ist das das gleiche wie oben i zwei schritten?
-    auto hpng = ReadHybridPetrinet{}.readHybridPetrinet("example.xml");
-    auto modelChecker = RegionModelChecker(*hpng, 20);
-    //wie komme ich an den plt2?
-    auto plt2 = modelChecker -> plt;
-
-    auto children1 = plt1->getChildNodes(plt1->getRootNode());
-    auto children2 = plt2->getChildNodes(plt2->getRootNode());
-
-     ASSERT_EQ(children1.size(), children2.size());
-
-     //lieber auto?
-    std::vector<ParametricLocationTree::Node> vec1 = plt1->getAllLocations();
-    std::vector<ParametricLocationTree::Node> vec2 = plt2->getAllLocations();
-    ASSERT_EQ(vec1.size(), vec2.size());
-    for(i:=0, i<vec2.size(),i++){
-
-        ASSERT_EQ(children1[i].getDiscreteMarking(), children1[i].getDiscreteMarking());
-        ASSERT_EQ(children1[i].getGeneralIntervalBoundRight(), children2[i].getGeneralIntervalBoundRight());
-        ASSERT_EQ(children1[i].getGeneralIntervalBoundLeft(), children2[i].getGeneralIntervalBoundLeft());
-        ASSERT_EQ(children1[i].getGeneralClock(), children2[i].getGeneralClock());
-        ASSERT_EQ(children1[i].getSourceEvent(), children2[i].getSourceEvent());
-        //ist MinimumTime die Zeit beim Verlassen?
-        ASSERT_EQ(children1[i].getEarliestEntryTime(), children2[i].getEarliestEntryTime());
-        ASSERT_EQ(children1[i].getLatestEntryTime(), children2[i].getLatestEntryTime());
-
-
-    }
-
-
-
-    //inspiration
-    //auto result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 2)), 10);
-    //EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
-
-    std::vector<int> expectedRootMarking = {2,0,0,1};
-    ASSERT_EQ(expectedRootMarking, initState.getParametricLocation().getDiscreteMarking());
-    ASSERT_EQ(2, children.size());
-    ASSERT_EQ(EventType::Immediate, children[0].getParametricLocation().getSourceEvent().getEventType())
-    ASSERT_EQ(0, children[0].getParametricLocation().getSourceEvent().getTime());
-
-    children = plt->getChildNodes(children[0]);
-    ASSERT_EQ(expectedSecondChildMarking1, children[0].getParametricLocation().getDiscreteMarking());
-    ASSERT_EQ(0, plt->getChildNodes(children[0]).size());
-    ASSERT_EQ(0, plt->getChildNodes(children[1]).size());
 }

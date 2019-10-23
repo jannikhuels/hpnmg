@@ -22,7 +22,7 @@ namespace hpnmg {
         ParseHybridPetrinet();
 
         ~ParseHybridPetrinet();
-/home/annabell/src/hpnmg/src/hpnmg/PLTWriter.h
+
         // Parses a hybrid petrinet recursively until reaching maximal time and generates a parametric location tree
         //
         // @param hybridPetrinet    hybrid petrinet that should be parsed
