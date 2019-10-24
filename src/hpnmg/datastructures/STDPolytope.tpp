@@ -116,11 +116,14 @@ namespace hpnmg {
 
         auto newFacets = std::vector<Polytope>();
         newFacets.reserve(this->openFacets.size() + other.openFacets.size());
-        for (const auto &facet : this->openFacets) {
-            const auto newFacet = intersection.intersect(facet);
-            if (!newFacet.empty())
-                newFacets.push_back(newFacet);
+        for (const auto &oldFacets : {this->openFacets, other.openFacets}) {
+            for (const auto &facet : oldFacets) {
+                const auto newFacet = intersection.intersect(facet);
+                if (!newFacet.empty())
+                    newFacets.push_back(newFacet);
+            }
         }
+        //TODO: we might want to detect and remove duplicate facets here...
         newFacets.shrink_to_fit();
 
         return STDPolytope(intersection, newFacets);
