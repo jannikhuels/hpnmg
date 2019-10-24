@@ -39,11 +39,18 @@ namespace hpnmg {
          */
         std::pair<double, double> satisfies(const Formula &formula, double atTime);
 
+        int numberOfCandidates;
+        int satSize;
+        double modelCheckingTime;
+        double integrationTime;
+
     private:
         STDPolytope<mpq_class> cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value, bool negate = false);
         STDPolytope<mpq_class> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value, bool negate = false);
         std::vector<STDPolytope<mpq_class>> conj(const ParametricLocationTree::Node &node, const Conjunction& conj, double atTime);
         std::vector<STDPolytope<mpq_class>> neg(const ParametricLocationTree::Node & node, const Negation& formula, double atTime);
+
+        omp_lock_t updatelock;
 
         /**
          * Computes the satisfaction set `sat(formula.pre Until formula.goal, atTime)` for the given node.

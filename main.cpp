@@ -116,9 +116,13 @@ int main (int argc, char *argv[]) {
                             "[Model file]\t" <<
                             "[Read duration (ms)]\t" <<
                             "[Parse duration (ms)]\t" <<
+                            "[Number of candidates]\t" <<
+                            "[Sat size]\t" <<
                             "[Model checking duration (ms)]\t" <<
+                            "[Only Model checking duration (ms)]\t" <<
+                            "[Only Integration duration (ms)]\t" <<
                             "[Probability]\t[Error]" << endl <<
-                            "start\tmodel\tread\tparse\tcheck\tprob\terr" << endl;
+                            "start\tmodel\tread\tparse\tcandidates\tsat\tcheck\tmodelcheck\tintegration\tprob\terr" << endl;
     }
 
     //Remove line break from startTimeString
@@ -135,7 +139,7 @@ int main (int argc, char *argv[]) {
 
         if (formulafile.size() == 0) {
             std::cerr << "Please specify a formula file (-f) to perform model checking." << endl;
-            resultfilestream << "\t" << 0 << "\t" << prob << "\t" << err;
+            resultfilestream << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << prob << "\t" << err;
             resultfilestream << endl;
             resultfilestream.close();
             return 1;
@@ -160,7 +164,7 @@ int main (int argc, char *argv[]) {
     const auto totalTime= std::chrono::duration_cast<std::chrono::milliseconds>(endTotal - startTotal).count();
     cout << "[Complete]: " << totalTime  << endl;
 
-    resultfilestream << "\t" << totalTime << "\t" << prob << "\t" << err;
+    resultfilestream << "\t" << checker.numberOfCandidates << "\t" << checker.satSize << "\t" << totalTime << "\t" << checker.modelCheckingTime << "\t" << checker.integrationTime << "\t"  << prob << "\t" << err;
 
     // Write appendix to resultfile
     for (string s : appendix) {

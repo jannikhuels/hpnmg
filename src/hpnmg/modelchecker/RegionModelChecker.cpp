@@ -29,9 +29,18 @@ namespace hpnmg {
         double error = 0.0;
         auto calculator = ProbabilityCalculator();
 
+        this->numberOfCandidates = 0;
+        this->integrationTime = 0;
+        this->modelCheckingTime = 0;
+        this->satSize = 0;
+
         auto candidates = this->plt.getCandidateLocationsForTime(atTime);
 
-        #pragma omp parallel for default(none) reduction(+: probability) reduction(+:error) shared(candidates, atTime, calculator)
+        this->numberOfCandidates = candidates.size();
+
+        omp_init_lock(&updatelock);
+
+        #pragma omp parallel for default(none) reduction(+: probability) reduction(+:error) reduction(+:integrationTime) reduction(+:modelCheckingTime) reduction(+:satSize) shared(candidates, atTime, calculator)
         for (int candidate_index = 0; candidate_index < candidates.size(); candidate_index++) {
             auto node = candidates[candidate_index];
             node.computeRegion(this->plt);
@@ -39,7 +48,9 @@ namespace hpnmg {
             std::cout << "Done. Dimensions: (vertex dim, effective dim) = (" << node.getRegion().dimension() << ", " << node.getRegion().effectiveDimension() << ")" << std::endl;
 
             std::cout << "[Location " << node.getNodeID() << "]: Computing sat." << std::endl;
+            const auto startChecker = std::chrono::high_resolution_clock::now();
             const auto& sat = this->satisfiesHandler(node, formula, atTime);
+
 
             std::cout << "[Location " << node.getNodeID() << "]: Computing time slice of " << sat.size() << " polytopes." << std::endl;
             std::vector<hypro::HPolytope<double>> integrationDomains{};
@@ -53,22 +64,28 @@ namespace hpnmg {
             );
 
             std::cout << "[Location " << node.getNodeID() << "]: Integrating over " << integrationDomains.size() << " time slices." << std::endl;
+            satSize += integrationDomains.size();
 
             if (integrationDomains.size())
                 std::cout << STDPolytope<double>(integrationDomains[0]) << std::endl;
+            const auto endChecker = std::chrono::high_resolution_clock::now();
+            modelCheckingTime += std::chrono::duration_cast<std::chrono::milliseconds>(endChecker - startChecker).count();
 
+            const auto startIntegration = std::chrono::high_resolution_clock::now();
             double nodeError = 0.0;
             probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
                 integrationDomains,
                 this->plt.getDistributionsNormalized(),
-                3,
+                1,
                 50000,
                 nodeError
             ) * node.getParametricLocation().getAccumulatedProbability();
             std::cout << "[Location " << node.getNodeID() << "]: Running total probability: " << probability << std::endl;
             error += nodeError;
+            const auto endIntegration = std::chrono::high_resolution_clock::now();
+            integrationTime += std::chrono::duration_cast<std::chrono::milliseconds>(endIntegration - startIntegration).count();
         }
-
+        omp_destroy_lock(&updatelock);
         return {probability, error};
     }
 
@@ -97,14 +114,14 @@ namespace hpnmg {
             case Formula::Type::True:
                 return {STDPolytope<mpq_class>(node.getRegion())};
             case Formula::Type::Until: {
-                if (this->withinUntil)
+                /*if (this->withinUntil)
                     throw std::invalid_argument("RegionModelChecker encountered nested Until formulae.");
-
+                omp_set_lock(&updatelock);
                 this->untilCache.erase(this->untilCache.begin(), this->untilCache.end());
-
-                this->withinUntil = true;
+                omp_unset_lock(&updatelock);*/
+                //this->withinUntil = true;
                 const auto result = this->until(node, *formula.getUntil(), atTime);
-                this->withinUntil = false;
+                //this->withinUntil = false;
 
                 return result;
             }
@@ -285,9 +302,11 @@ namespace hpnmg {
     }
 
     std::vector<STDPolytope<mpq_class>> RegionModelChecker::untilHandler(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
-        auto cached = this->untilCache.find(node.getNodeID());
+
+
+        /*auto cached = this->untilCache.find(node.getNodeID());
         if (cached != this->untilCache.end())
-            return cached->second;
+            return cached->second;*/
 
         // Construct the upper and lower boundary halfspaces defined by the check-time and the check-time plus until-time.
         hypro::vector_t<mpq_class> timeVectorUp = hypro::vector_t<mpq_class>::Zero(node.getRegion().dimension());
@@ -310,14 +329,18 @@ namespace hpnmg {
                 auto childSat = this->untilHandler(childNode, formula, atTime);
                 std::move(childSat.begin(), childSat.end(), std::back_inserter(childrenSat));
             }
+            /*omp_set_lock(&updatelock);
             this->untilCache.insert({node.getNodeID(), childrenSat});
+            omp_unset_lock(&updatelock);*/
             return childrenSat;
         }
 
         fullRegion.insert(upperLimit);
         fullRegion.insert(lowerLimit);
         if (fullRegion.empty()){
+            /*omp_set_lock(&updatelock);
             this->untilCache.insert({node.getNodeID(), {}});
+            omp_unset_lock(&updatelock);*/
             return {};
         }
 
@@ -348,7 +371,9 @@ namespace hpnmg {
                 deadRegions = {};
             } else {
                 std::cout << "Until @ Node " << node.getNodeID() << ": Precondition is trivially false. Returning early with sat(goal)." << std::endl;
+                /*omp_set_lock(&updatelock);
                 this->untilCache.insert({node.getNodeID(), regionSat});
+                omp_unset_lock(&updatelock);*/
                 return regionSat;
             }
         } else {
@@ -402,8 +427,9 @@ namespace hpnmg {
         }
 
         std::cout << "Computed " << sat.size() << " sat regions.";
-
+        /*omp_set_lock(&updatelock);
         this->untilCache.insert({node.getNodeID(), sat});
+        omp_unset_lock(&updatelock);*/
         return sat;
     }
 }
