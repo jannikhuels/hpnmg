@@ -20,11 +20,13 @@ if (SAMPLE_POINTS < 2)
   die('please choose at least 2 sample points' . LF);
 
 if ($argc != 3)
-    die('please pass min and max token count for ppd' . LF);
+    die('please pass pps and ppd' . LF);
+
+$pps = $argv[1];
+$ppd = $argv[2];
 
 $model_tpl = file_get_contents('ev_charging.xml') or die('no model' . LF);
-// $formula_tpl = file_get_contents('ev_formula.xml') or die('no formula' . LF);
-$formula_tpl = file_get_contents('return_formula.xml') or die('no formula' . LF);
+$formula_tpl = file_get_contents('ev_formula.xml') or die('no formula' . LF);
 
 $max_time = 24 * HOURS;
 $mu_return = 8 * HOURS; // average customer return time
@@ -33,6 +35,10 @@ $t_di = 4 * HOURS; // time to demand increase
 $max_soc = 90 * KILOWATTHOURS;
 $r_base = $max_soc / ($mu_return / 2); // base rate fully charges in half the expected return time
 $r_g2v = 120 * KILOWATTHOURS / HOURS - $r_base;
+
+$lambda_price_slump = $pps / (24 * HOURS);
+$mu_decrease = 90 * MINUTES;
+$sigma_decrease = 20 * MINUTES;
 
 [$model_tpl, $formula_tpl] = str_replace(
     [
@@ -43,30 +49,31 @@ $r_g2v = 120 * KILOWATTHOURS / HOURS - $r_base;
         '%max_soc%',
         '%r_base%',
         '%r_g2v%',
+        '%lambda_price_slump%',
+        '%mu_decrease%',
+        '%sigma_decrease%',
     ],
     [
         $max_time / TIME_PER_UNIT,
         $mu_return / TIME_PER_UNIT,
         $t_pr / TIME_PER_UNIT,
         $t_di / TIME_PER_UNIT,
-        $max_soc + 1, //TODO: little hack to allow "place is 100% full"
-        $r_base / TIME_PER_UNIT,
-        $r_g2v / TIME_PER_UNIT,
+        ($max_soc / TIME_PER_UNIT) + 1, //TODO: little hack to allow "place is 100% full"
+        $r_base,
+        $r_g2v,
+        $lambda_price_slump / TIME_PER_UNIT,
+        $mu_decrease / TIME_PER_UNIT,
+        $sigma_decrease / TIME_PER_UNIT,
     ],
     [$model_tpl, $formula_tpl]
 );
 
 $m_ps = [[0,0], [1,1], [2,2]];
-    $m_ps = [];
-foreach (range($argv[1], $argv[2]) as $tokens)
-    $m_ps []= [0, $tokens];
-
-$esocs = [0.9 * $max_soc, 0.95 * $max_soc, 1 * $max_soc];
-$esocs = [0.1 * $max_soc];
+$m_ps = [[$pps, $ppd]];
+$esocs = [0.5 * $max_soc, 0.75 * $max_soc, 0.95 * $max_soc];
 $sigma_returns = [7.5 * MINUTES, 60 * MINUTES];
 $sigma_returns = [7.5 * MINUTES];
 $r_v2gs = [2 * $r_base, 2 * $r_base + $r_g2v, 2 * $r_base + 2 * $r_g2v];
-$r_v2gs = [1];
 
 echo 'I will create tons of files in ' . getcwd() . '. Enter to continue.' . LF;
 fgets(STDIN);
@@ -82,38 +89,39 @@ foreach ($m_ps as $m_p_i => [$m_pps, $m_ppd])
         {
             foreach ($r_v2gs as $r_v2g_i => $r_v2g)
             {
-                $settings = [
-                    $m_pps,
-                    $m_ppd,
-                    $esoc / TIME_PER_UNIT,
-                    $sigma_return / TIME_PER_UNIT,
-                    $r_v2g / TIME_PER_UNIT,
-                ];
-                [$model, $formula] = str_replace([
-                    '%m_pps%',
-                    '%m_ppd%',
-                    '%esoc%',
-                    '%sigma_return%',
-                    '%r_v2g%',
-                ], $settings, [$model_tpl, $formula_tpl]);
+//                 for ($i = 0; $i < SAMPLE_POINTS; ++$i) {
+//                     $checktime = $mu_return - (4 * $sigma_return) + $i * (8 * $sigma_return) / TIME_PER_UNIT / (SAMPLE_POINTS - 1);
 
-                $settings_string = implode('_', $settings);
+                    $settings = [
+                        $m_pps,
+                        $m_ppd,
+                        $esoc / TIME_PER_UNIT,
+                        $sigma_return / TIME_PER_UNIT,
+                        $r_v2g,
+                    ];
+                    [$model, $formula] = str_replace([
+                        '%m_pps%',
+                        '%m_ppd%',
+                        '%esoc%',
+                        '%sigma_return%',
+                        '%r_v2g%',
+                        '%until_bound%',
+                    ], array_merge($settings, [$max_time / TIME_PER_UNIT]), [$model_tpl, $formula_tpl]);
 
-                $model_file = tempnam(getcwd(), 'model_' . $settings_string);
-                $formula_file = tempnam(getcwd(), 'formula_' . $settings_string);
-                file_put_contents($model_file, $model);
-                file_put_contents($formula_file, $formula);
+                    $settings_string = implode('_', $settings);
 
-                for ($i = 0; $i < SAMPLE_POINTS; ++$i) {
-                    $checktime = $mu_return - (4 * $sigma_return) + $i * (8 * $sigma_return) / TIME_PER_UNIT / (SAMPLE_POINTS - 1);
+                    $model_file = tempnam(getcwd(), 'model_' . $settings_string);
+                    $formula_file = tempnam(getcwd(), 'formula_' . $settings_string);
+                    file_put_contents($model_file, $model);
+                    file_put_contents($formula_file, $formula);
+
                     passthru('./main --model ' . $model_file
                         . ' --formula ' . $formula_file
                         . ' --maxtime ' . ($max_time / TIME_PER_UNIT)
-                        . ' --checktime ' . $checktime
-                        . ' --result return_probs_multidim_' . (2 + $argv[1]). '_to_' . (2 + $argv[2]) . '.txt'
-                        . ' --additional ' . $checktime
+                        . ' --checktime 0'
+                        . ' --result result-pps-' . ($pps). '-ppd-' . ($ppd) . '.txt'
                     );
-                }
+//                 }
             }
         }
     }

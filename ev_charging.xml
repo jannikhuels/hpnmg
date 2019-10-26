@@ -31,7 +31,6 @@
 <!--      <parameter name="mu" value="%mu_return%"/>-->
 <!--      <parameter name="sigma" value="%sigma_return%"/>-->
 <!--    </generalTransition>-->
-    <deterministicTransition id="price recovery" priority="0" weight="1" discTime="%t_pr%" />
     <generalTransition id="price slump" cdf="uniform" priority="0" weight="1" policy="resume"><!-- TODO: proper distribution -->
         <parameter name="a" value="0"/>
         <parameter name="b" value="%mu_return%"/>
