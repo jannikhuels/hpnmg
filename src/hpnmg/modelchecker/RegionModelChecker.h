@@ -17,7 +17,7 @@
 namespace hpnmg {
     class RegionModelChecker {
     public:
-        RegionModelChecker(HybridPetrinet hpng, double maxTime);
+        RegionModelChecker(HybridPetrinet hpng, double maxTime, int mode, double atTime);
 
         /**
          * Compute the probability of <code>formula</code> holding at time <code>atTime</code> in the model associated

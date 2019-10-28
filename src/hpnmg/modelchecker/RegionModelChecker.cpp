@@ -17,10 +17,13 @@
 #include "ProbabilityCalculator.h"
 
 namespace hpnmg {
-    RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :
+    RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime, int mode, double atTime) :
         hpng(std::make_shared<HybridPetrinet>(hpng)),
         plt(*ParseHybridPetrinet{}.parseHybridPetrinet(this->hpng, maxTime))
     {
+        if(mode==1){
+        plt=*ParseHybridPetrinet{}.parseHybridPetrinet(this->hpng, atTime);
+        }
         std::cout << "[Number of Model dimensions]:" << this->plt.getDimension() << std::endl;
     }
 

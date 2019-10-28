@@ -7,7 +7,7 @@ namespace hpnmg {
     ParseHybridPetrinet::~ParseHybridPetrinet() = default;
 
     shared_ptr<ParametricLocationTree>
-    ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, int mode) {
+    ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double atTime, int mode) {
         // TODO: all floats to double?
         discretePlaceIDs = {};
         continuousPlaceIDs = {};
@@ -30,9 +30,9 @@ namespace hpnmg {
         for (auto &generalTransition : generalTransitions)
             generalTransitionIDs.push_back(generalTransition.first);
 
-        ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, maxTime);
+        ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, atTime);
 
-        parametriclocationTree = make_shared<ParametricLocationTree>(rootLocation, maxTime);
+        parametriclocationTree = make_shared<ParametricLocationTree>(rootLocation, atTime);
 
         // Add distributions to plt
         vector<pair<string, map<string, float>>> distributions(generalTransitionIDs.size());
@@ -53,7 +53,7 @@ namespace hpnmg {
     }
 
     ParametricLocation
-    ParseHybridPetrinet::generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime) {
+    ParseHybridPetrinet::generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double atTime) {
         // Get root discrete markings
         vector<int> rootDiscreteMarking;
         for (string &placeId: discretePlaceIDs)
@@ -73,7 +73,7 @@ namespace hpnmg {
         vector<vector<double>> generalClocks;
         for (int i = 0; i < numGeneralTransitions; ++i) {
             leftBoundaries.push_back({{0}}); // NOLINT
-            rightBoundaries.push_back({{maxTime}}); // NOLINT
+            rightBoundaries.push_back({{atTime}}); // NOLINT
             generalClocks.push_back({0}); // NOLINT
         }
         vector<double> drift = getDrift(rootDiscreteMarking, rootContinuousMarking, hybridPetrinet, leftBoundaries,
@@ -145,7 +145,7 @@ namespace hpnmg {
     }
 
     void ParseHybridPetrinet::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet,
-                                          double maxTime, int mode) {
+                                          double atTime, int mode) {
 
          /* --- Nondeterministic Conflicts ---
          Mode 0: Nondeterminism resolved by priorities and conflicts (default)
@@ -415,11 +415,11 @@ namespace hpnmg {
                     .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
                 // if we have no minimal timeDelta we use maxTime
                 if (timeDeltas.empty())
-                    addLocationForGeneralEvent(transition, maxTime, {maxTime}, {{}}, node, hybridPetrinet);
+                    addLocationForGeneralEvent(transition, maxTime, {atTime}, {{}}, node, hybridPetrinet);
 
                 // for every general transition we need one parametric location per minimal timedelta
                 for (int i = 0; i < timeDeltas.size(); ++i)
-                    addLocationForGeneralEvent(transition, maxTime, timeDeltas[i], timeDeltas, node,
+                    addLocationForGeneralEvent(transition, atTime, timeDeltas[i], timeDeltas, node,
                                                hybridPetrinet);
             }
         }
@@ -1356,7 +1356,7 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    void ParseHybridPetrinet::addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double maxTime,
+    void ParseHybridPetrinet::addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double atTime,
                                                          vector<double> timeDelta, vector<vector<double>> timeDeltas,
                                                          ParametricLocationTree::Node parentNode,
                                                          shared_ptr<HybridPetrinet> hybridPetrinet) {
@@ -1468,7 +1468,7 @@ namespace hpnmg {
         }
         generalDependecies.push_back(1.0);
 
-        vector<double> maxTimeVector{maxTime};
+        vector<double> maxTimeVector{atTime};
         // adjust general bounds
         // adjust fired transition bounds
         for (int i = 0; i < generalTransitionIDs.size(); ++i) {
@@ -1485,7 +1485,7 @@ namespace hpnmg {
                 vector<double> vectorRight = vector<double>(currentBoundRight[currentBoundRight.size() - 1].size() + 1);
                 fill(vectorLeft.begin(), vectorLeft.end(), 0);
                 fill(vectorRight.begin(), vectorRight.end(), 0);
-                vectorRight[0] = maxTime;
+                vectorRight[0] = atTime;
                 currentBoundLeft.push_back(vectorLeft);
                 currentBoundRight.push_back(vectorRight);
                 generalIntervalBoundLeft[i] = currentBoundLeft;
