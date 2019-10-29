@@ -56,9 +56,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         double nodeResult = 0.0;
 
         for (int i = 0;i < nodes.size(); i++) {
-            cout << "----" << endl;
-            cout << "Node: " << nodes[i].getNodeID() << endl;
-            cout << "Normed: " << nodes[i].getParametricLocation().getSourceEvent().getGeneralDependenciesNormed() << " - ";
 
             if (algorithm == 0)
                 //Gauss Legendre
@@ -67,17 +64,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 //Monte Carlo
                 nodeResult = getProbabilityForLocationUsingMonteCarlo(nodes[i].getParametricLocation(), tree.getDistributions(), tree.getMaxTime(), algorithm, functioncalls, error) * nodes[i].getParametricLocation().getAccumulatedProbability();
 
-            cout << "----" << endl;
-            cout << "Node Result: p=" << nodeResult << " +- " << error << endl;
-
             total += nodeResult;
             totalerror += error;
         }
-
-        cout << "----" << endl;
-        cout << "Total: " << total << " +- " << totalerror << endl;
-        cout << "----" << endl;
-        cout << "----" << endl;
 
         return total;
 
@@ -103,14 +92,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             allPlus.current_index = 0;
             allMinus.current_index = 0;
 
-          //  cout << "Max time: " << maxTime << " - ";
-
             //std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
             vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
             int dimension = location.getDimension();
-
-          //  cout << "GTF: " << generalTransitionsFired << " - ";
-          //  cout << "Accumulated Probability: " << location.getAccumulatedProbability() << endl << endl;
 
             for (int i = 0; i < integrationIntervals.size(); i++) {
                 singleDim sAll;
@@ -164,8 +148,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             result = computeMultivariateIntegralUsingGauss(evaluations, all, allPlus, allMinus);
 
             completeResult += result;
-            //cout << "Local Result " << result << endl;
-
         }
 
         return completeResult;
@@ -317,14 +299,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             allPlus.current_index = 0;
             allMinus.current_index = 0;
 
-          //  cout << "Max time: " << maxTime << " - ";
 
             //std::vector<std::pair<int, std::pair<std::vector<double>, std::vector<double>>>> integrationIntervals = location.getIntegrationIntervals();
             vector<int> generalTransitionsFired = location.getGeneralTransitionsFired();
             int dimension = location.getDimension();
-
-            //cout << "GTF: " << generalTransitionsFired << " - ";
-            //cout << "Accumulated Probability: " << location.getAccumulatedProbability() << endl << endl;
 
             for (int i = 0; i < integrationIntervals.size(); i++) {
                 singleDim sAll;
@@ -370,8 +348,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                        allMinus.upperBounds[last][0] = maxTime;
                        fill(allMinus.lowerBounds[last].begin(), allMinus.lowerBounds[last].end(), 0.0);
                    }
-
-             //  cout << "TransitionID:" << integrationIntervals[i].first << " in [ " << integrationIntervals[i].second.first << " ; " << integrationIntervals[i].second.second << " ] " << endl;
             }
 
 
@@ -379,7 +355,6 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
             completeResult += result;
-            //cout << "Local Result " << result << endl;
         }
 
 
@@ -410,7 +385,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         }
         auto effectiveDimension = int(matr.fullPivLu().rank());
         if (effectiveDimension < region.dimension()) {
-            std::cout << "Polytope with zero volume since effective dimension < space dimension (" << effectiveDimension << " < " << region.dimension() << ")" << std::endl;
+            INFOLOG("hpnmg.ProbabilityCalculator", "Polytope with zero volume since effective dimension < space dimension (" << effectiveDimension << " < " << region.dimension() << ")");
             return 0.0;
         }
 
@@ -639,14 +614,11 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 gsl_monte_plain_integrate(&G, xl, xu, dimension1, calls, r, s, &resultAll, &errorAll);
                 gsl_monte_plain_free(s);
 
-                //cout << "Plain Monte Carlo integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
-
             } else if (algorithm == 2) {
 
                 gsl_monte_miser_state *s = gsl_monte_miser_alloc(dimension1);
                 gsl_monte_miser_integrate(&G, xl, xu, dimension1, calls, r, s, &resultAll, &error);
                 gsl_monte_miser_free(s);
-                //cout << "Monte Carlo MISER integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
 
             } else if (algorithm == 3) {
 
@@ -664,13 +636,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 gsl_monte_vegas_free(s);
 
                 if (fabs(gsl_monte_vegas_chisq(s) - 1.0) > 0.5 && errorAll > 0.0) {
-                    //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
                     gsl_monte_miser_state *z = gsl_monte_miser_alloc(dimension1);
                     gsl_monte_miser_integrate(&G, xl, xu, dimension1, calls, r, z, &resultAll, &errorAll);
                     gsl_monte_miser_free(z);
-                    //cout << "Monte Carlo MISER integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
-                } //else
-                //cout << "Monte Carlo VEGAS final integral result: " << resultAll << ", " << "error estimate: " << errorAll << endl;
+                }
             }
 
             gsl_rng_free(r);
@@ -693,14 +662,12 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 gsl_monte_plain_integrate(&GPlus, xl, xu, dimension1, calls, r, s, &resultPlus, &errorPlus);
                 gsl_monte_plain_free(s);
 
-                //cout << "Plain Monte Carlo integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
 
             } else if (algorithm == 2) {
 
                 gsl_monte_miser_state *s = gsl_monte_miser_alloc(dimension1);
                 gsl_monte_miser_integrate(&GPlus, xl, xu, dimension1, calls, r, s, &resultPlus, &error);
                 gsl_monte_miser_free(s);
-                //cout << "Monte Carlo MISER integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
 
             } else if (algorithm == 3) {
 
@@ -718,13 +685,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 gsl_monte_vegas_free(s);
 
                 if (fabs(gsl_monte_vegas_chisq(s) - 1.0) > 0.5 && errorPlus > 0.0) {
-                    //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
                     gsl_monte_miser_state *z = gsl_monte_miser_alloc(dimension1);
                     gsl_monte_miser_integrate(&GPlus, xl, xu, dimension1, calls, r, z, &resultPlus, &errorPlus);
                     gsl_monte_miser_free(z);
-                 //   cout << "Monte Carlo MISER integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
-                } //else
-                //cout << "Monte Carlo VEGAS final integral result: " << resultPlus << ", " << "error estimate: " << errorPlus << endl;
+                }
             }
 
             gsl_rng_free(r);
@@ -745,14 +709,12 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 gsl_monte_plain_integrate(&GMinus, xl, xu, dimension1, calls, r, s, &resultMinus, &errorMinus);
                 gsl_monte_plain_free(s);
 
-                //cout << "Plain Monte Carlo integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
 
             } else if (algorithm == 2) {
 
                 gsl_monte_miser_state *s = gsl_monte_miser_alloc(dimension1);
                 gsl_monte_miser_integrate(&GMinus, xl, xu, dimension1, calls, r, s, &resultMinus, &error);
                 gsl_monte_miser_free(s);
-                //cout << "Monte Carlo MISER integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
 
             } else if (algorithm == 3) {
 
@@ -771,13 +733,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 gsl_monte_vegas_free(s);
 
                 if (fabs(gsl_monte_vegas_chisq(s) - 1.0) > 0.5 && errorMinus > 0.0) {
-                    //cout << "Monte Carlo VEGAS not converging, switched to MISER" << endl;
                     gsl_monte_miser_state *z = gsl_monte_miser_alloc(dimension1);
                     gsl_monte_miser_integrate(&GMinus, xl, xu, dimension1, calls, r, z, &resultMinus, &errorMinus);
                     gsl_monte_miser_free(z);
-                    //cout << "Monte Carlo MISER integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
-                } //else
-                //cout << "Monte Carlo VEGAS final integral result: " << resultMinus << ", " << "error estimate: " << errorMinus << endl;
+                }
             }
 
             gsl_rng_free(r);
@@ -892,7 +851,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double sigma = (double) normalMap.at("sigma");
 
                 if (sigma <= 0.0) {
-                    cout << "Invalid normal distribution. Make sure that sigma > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid normal distribution. Make sure that sigma > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -906,7 +865,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double mu = (double) normalMap.at("mu");
 
                 if (sigma <= 0.0 || mu < 0.0) {
-                    cout << "Invalid folded normal distribution. Make sure that sigma > 0 and mu >= 0.0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid folded normal distribution. Make sure that sigma > 0 and mu >= 0.0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -920,7 +879,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
    				double b = (double) normalMap.at("b");
 
    				if (b <= a) {
-   					cout << "Invalid uniform distribution. Make sure that a > b." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid uniform distribution. Make sure that a > b.")
    					throw std::invalid_argument("invalid distribution");
    				}
 
@@ -944,7 +903,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 }
 
                 if (lambda <= 0.0 && mean <= 0.0) {
-                    cout << "Invalid exponential distribution. Make sure that either lambda > 0 or mean > 0 is given." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid exponential distribution. Make sure that either lambda > 0 or mean > 0 is given.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -957,7 +916,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double sigma = (double) normalMap.at("sigma");
 
                 if (sigma <= 0.0) {
-                    cout << "Invalid half normal distribution. Make sure that sigma > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid half normal distribution. Make sure that sigma > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -970,7 +929,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double sigma = (double) normalMap.at("sigma");
 
                 if (sigma <= 0.0) {
-                    cout << "Invalid log normal distribution. Make sure that sigma > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid log normal distribution. Make sure that sigma > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -984,7 +943,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double lambda = (double) normalMap.at("lambda");
 
                 if (mu <= 0.0 || lambda <=0.0) {
-                    cout << "Invalid inverse normal distribution. Make sure that mu > 0 and lambda > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid inverse normal distribution. Make sure that mu > 0 and lambda > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -998,7 +957,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double beta = (double) normalMap.at("beta");
 
                 if (alpha <= 0.0 || beta <=0.0) {
-                    cout << "Invalid beta distribution. Make sure that alpha > 0 and beta > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid beta distribution. Make sure that alpha > 0 and beta > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1011,7 +970,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double beta = (double) normalMap.at("beta");
 
                 if (beta <=0.0) {
-                    cout << "Invalid cauchy distribution. Make sure that beta > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid cauchy distribution. Make sure that beta > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1024,7 +983,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 int n = (int) normalMap.at("n");
 
                 if (n <= 0) {
-                    cout << "Invalid chi square distribution. Make sure that n is a natural number > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid chi square distribution. Make sure that n is a natural number > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1038,7 +997,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 int m = (int) normalMap.at("m");
 
                 if (n <= 0 || m <= 0) {
-                    cout << "Invalid fisher f distribution. Make sure that m and n are both natural numbers > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid fisher f distribution. Make sure that m and n are both natural numbers > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1052,7 +1011,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double beta = (double) normalMap.at("beta");
 
                 if (alpha <= 0.0 || beta <=0.0) {
-                    cout << "Invalid gamma distribution. Make sure that alpha > 0 and beta > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid gamma distribution. Make sure that alpha > 0 and beta > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1066,7 +1025,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double beta = (double) normalMap.at("beta");
 
                 if (alpha <= 0.0 || beta <=0.0) {
-                    cout << "Invalid inverse gamma distribution. Make sure that alpha > 0 and beta > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid inverse gamma distribution. Make sure that alpha > 0 and beta > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1079,7 +1038,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double beta = (double) normalMap.at("beta");
 
                 if (beta <=0.0) {
-                    cout << "Invalid laplace distribution. Make sure that beta > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid laplace distribution. Make sure that beta > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1092,7 +1051,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double s = (double) normalMap.at("s");
 
                 if (s <= 0.0) {
-                    cout << "Invalid log normal distribution. Make sure that s > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid log normal distribution. Make sure that s > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1106,7 +1065,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double beta = (double) normalMap.at("beta");
 
                 if (alpha <= 0.0 || beta <=0.0) {
-                    cout << "Invalid pareto distribution. Make sure that alpha > 0 and beta > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid pareto distribution. Make sure that alpha > 0 and beta > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1119,7 +1078,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double beta = (double) normalMap.at("beta");
 
                 if (beta <=0.0) {
-                    cout << "Invalid laplace distribution. Make sure that beta > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid laplace distribution. Make sure that beta > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1131,7 +1090,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 int n = (int) normalMap.at("n");
 
                 if (n <= 0) {
-                    cout << "Invalid student distribution. Make sure that n is a natural number > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid student distribution. Make sure that n is a natural number > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1144,7 +1103,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 double beta = (double) normalMap.at("beta");
 
                 if (alpha <= 0.0 || beta <=0.0) {
-                    cout << "Invalid weibull distribution. Make sure that alpha > 0 and beta > 0." << endl;
+                    ERRORLOG("hpnmg.ProbabilityCalculator", "Invalid weibull distribution. Make sure that alpha > 0 and beta > 0.")
                     throw std::invalid_argument("invalid distribution");
                 }
 
@@ -1153,12 +1112,12 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
    			} else {
-   				cout << "ERROR" << endl;
+                ERRORLOG("hpnmg.ProbabilityCalculator", "No distribution specified")
    				throw std::invalid_argument( "invalid distribution" );
    			}
 
    		} catch (const std::invalid_argument& e) {
-   			cout << "ERROR"<< endl;
+            ERRORLOG("hpnmg.ProbabilityCalculator", e.what())
    			throw std::invalid_argument( "invalid distribution" );
    		}
    	}

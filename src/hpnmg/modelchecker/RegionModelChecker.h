@@ -13,6 +13,7 @@
 #include "modelchecker/Negation.h"
 #include "modelchecker/Until.h"
 #include "ParametricLocationTree.h"
+#include "util/Logging.h"
 
 namespace hpnmg {
     class RegionModelChecker {
