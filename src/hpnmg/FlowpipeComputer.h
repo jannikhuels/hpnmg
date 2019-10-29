@@ -32,20 +32,39 @@ namespace hpnmg {
         std::string sep = "\n----------------------------------------\n";
         Eigen::IOFormat Print{Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ",", "[", "]", "(",")\n"};
 
-        int dimension;
+        // class member variables ---------------------------------------------
+        int dimension = -1;
+        Number timeBoundN = 3;
+        shared_ptr<HybridPetrinet> mPetrinet;
         hypro::WorkQueueManager<std::shared_ptr<hypro::Task<State>>> queueManager;
         hypro::WorkQueue<std::shared_ptr<hypro::Task<State>>>* globalCEXQueue = queueManager.addQueue();
         hypro::WorkQueue<std::shared_ptr<hypro::Task<State>>>* globalQueue = queueManager.addQueue();
+        ParseHybridPetrinet* parser;
+        hypro::VariablePool& varpool = hypro::VariablePool::getInstance();
+        hypro::SettingsProvider<State>& settingsProvider = hypro::SettingsProvider<State>::getInstance(); // settings provider instance as reference for readability
+        hypro::ReachabilitySettings settings;
+
+        // data structure to store computed flowpipes
+        hypro::Flowpipe<State> segments;
+
+        // class member functions ---------------------------------------------
+        void setup();
 
         hypro::Condition<Number> generateInvariant(vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions, map<string, shared_ptr<ContinuousPlace>> cplaces);
 
+        hypro::rectangularFlow<Number> generateFlow(std::vector<std::pair<double,double>> driftIntervals);
+
+        hypro::Condition<Number> generateInitialSet();
+
         void addStatesToQueue(std::map<const Location<Number>*, Condition<Number>> & locationStateMap);
+
+
 
     public:
 
-        FlowpipeComputer();
+        FlowpipeComputer(shared_ptr<HybridPetrinet> mPetrinet);
 
-        void processPetrinet(shared_ptr<HybridPetrinet> mPetrinet);
+        void processPetrinet();
 
 
 

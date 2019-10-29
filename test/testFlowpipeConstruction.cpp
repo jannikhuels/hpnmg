@@ -221,8 +221,8 @@ TEST(FlowpipeConstruction, PetriNetFlowpipe) {
     ReadHybridPetrinet reader;
     shared_ptr<HybridPetrinet> mPetrinet = reader.readHybridPetrinet(filePath);
 
-    FlowpipeComputer computer{};
-    computer.processPetrinet(mPetrinet);
+    FlowpipeComputer computer(mPetrinet);
+    computer.processPetrinet();
 
 
 }
