@@ -197,7 +197,7 @@ namespace hpnmg {
             globalQueue->enqueue(std::shared_ptr<hypro::Task<State>>(new hypro::Task<State>(initialNode)));
         }
 
-        std::cout << sep << "Tree Stats are: \n" << tree.getTreeStats();
+        std::cout << sep << "Tree Stats are: \n" << tree->getTreeStats();
 
     }
 
