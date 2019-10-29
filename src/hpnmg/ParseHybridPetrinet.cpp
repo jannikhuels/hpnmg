@@ -1,4 +1,5 @@
 #include "ParseHybridPetrinet.h"
+#include "util/logging/Logging.h"
 
 using namespace std;
 namespace hpnmg {

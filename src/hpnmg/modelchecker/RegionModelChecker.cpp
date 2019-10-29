@@ -15,6 +15,7 @@
 #include "modelchecker/Until.h"
 #include "ParseHybridPetrinet.h"
 #include "ProbabilityCalculator.h"
+#include "util/logging/Logging.h"
 
 namespace hpnmg {
     RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :

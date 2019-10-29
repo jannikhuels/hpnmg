@@ -8,7 +8,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/program_options.hpp>
 
-#include "util/Logging.h"
+#include "util/logging/Logging.h"
 #include "modelchecker/RegionModelChecker.h"
 #include "ParseHybridPetrinet.h"
 #include "ReadHybridPetrinet.h"
@@ -99,9 +99,7 @@ int main (int argc, char *argv[]) {
     // mode==1: Only create state space, mode==0 also perform model checking.
 
     // Initialize logging, may be influence by program options
-#ifdef HPNMG_LOGGING
     hpnmg::initializeLogging(coutLogLevel, fileLogLevel);
-#endif
 
     // Start reading the model file.
     std::time_t startTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());

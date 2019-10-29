@@ -3,7 +3,6 @@
 #include "ParametricLocationTree.h"
 #include "datastructures/ParametricLocation.h"
 #include "datastructures/STDPolytope.h"
-#include "util/Logging.h"
 
 #include "Eigen/Geometry"
 

@@ -7,6 +7,7 @@
 #include <cmath>
 
 #include "helper/Triangulation.h"
+#include "util/logging/Logging.h"
 
 using namespace std;
 

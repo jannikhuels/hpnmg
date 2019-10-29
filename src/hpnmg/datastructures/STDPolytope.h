@@ -9,7 +9,6 @@
 #include <Eigen/Geometry>
 #include <representations/GeometricObject.h>
 #include <util/plotting/Plotter.h>
-#include "util/Logging.h"
 
 namespace hpnmg {
     typedef std::vector<carl::Interval<double>> Intervals;

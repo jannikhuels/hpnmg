@@ -3,7 +3,6 @@
 #include <vector>
 #include "datastructures/HybridPetrinet.h"
 #include "ParametricLocationTree.h"
-#include "util/Logging.h"
 
 namespace hpnmg {
     class ParseHybridPetrinet {

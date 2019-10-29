@@ -1,7 +1,5 @@
 #include "Logging.h"
 
-#ifdef HPNMG_LOGGING
-
 namespace hpnmg {
     void initializeLogging(carl::logging::LogLevel coutLevel, carl::logging::LogLevel fileLevel) {
 
@@ -50,5 +48,3 @@ namespace hpnmg {
     }
 
 }
-
-#endif
