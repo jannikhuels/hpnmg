@@ -24,7 +24,7 @@ configure_file (
 
 # Export settings
 # -----------------------------------------------------------------
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	if (APPLE)
 		message("-- Using clang on apple")
