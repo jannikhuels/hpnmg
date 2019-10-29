@@ -61,7 +61,7 @@ unsigned long getNumberOfEdges(const shared_ptr<SingularAutomaton>& automaton) {
 
 
 
-/*
+
 TEST(HybridAutomaton, example) {
 
 
@@ -848,7 +848,7 @@ TEST(HybridAutomaton, FlowParser){
         plotter.plotTex();
 
 }
-
+/*
 TEST(HybridAutomaton, RectangularAutomaton) {
 using namespace hypro;
 
@@ -954,7 +954,7 @@ points.clear();
 // write output.
 plotter.plotTex();
 }
-*/
+ */
 /*
 TEST(HybridAutomaton,RectangularAutomatonWorker) {
     // typedefs
@@ -1085,4 +1085,5 @@ TEST(HybridAutomaton,RectangularAutomatonWorker) {
     plotter.plotTex();
 
 }
-*/
+ */
+
