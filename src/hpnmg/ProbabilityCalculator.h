@@ -4,24 +4,25 @@
 #include "datastructures/ParametricLocation.h"
 #include "datastructures/STDPolytope.h"
 
-#include "Eigen/Geometry"
+extern "C"{
+#include "integration/gauss_legendre.h"
+}
 
-#include <math.h>
-#include <iostream>
-#include <stdlib.h>
+#include <Eigen/Geometry>
+
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_monte.h>
 #include <gsl/gsl_monte_plain.h>
 #include <gsl/gsl_monte_miser.h>
 #include <gsl/gsl_monte_vegas.h>
-extern "C"{
-#include "integration/gauss_legendre.h"
-}
+
 #include <boost/math/distributions.hpp> // for normal_distribution
-#include <string>
+
 #include <iostream>
-#include <iomanip>
-#include <limits>
+#include <map>
+#include <stdlib.h>
+#include <string>
+#include <utility>
 
 
 namespace hpnmg {

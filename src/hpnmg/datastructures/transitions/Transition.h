@@ -1,11 +1,12 @@
 #pragma once
 
-#include <string>
-#include <memory>
-#include <map>
 #include "../arcs/DiscreteArc.h"
 #include "../arcs/ContinuousArc.h"
 #include "../arcs/GuardArc.h"
+
+#include <memory>
+#include <map>
+#include <string>
 
 using namespace std;
 namespace hpnmg {

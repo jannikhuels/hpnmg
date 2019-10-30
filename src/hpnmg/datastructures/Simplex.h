@@ -1,11 +1,12 @@
 #ifndef HPNMG_SIMPLEX_H
 #define HPNMG_SIMPLEX_H
 
+#include <representations/GeometricObject.h>
+
+#include <Eigen/Dense>
 
 #include <iostream>
 #include <memory>
-#include "Eigen/Geometry"
-#include "representations/GeometricObject.h"
 
 namespace hpnmg {
     class Simplex {

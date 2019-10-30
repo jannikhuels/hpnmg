@@ -1,13 +1,12 @@
 #pragma once
 
+#include "ParametricLocationTree.h"
+
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/util/XMLString.hpp>
 #include <xercesc/framework/StdOutFormatTarget.hpp>
 #include <xercesc/framework/LocalFileFormatTarget.hpp>
-
-#include "ParametricLocationTree.h"
-
 
 namespace hpnmg {
 

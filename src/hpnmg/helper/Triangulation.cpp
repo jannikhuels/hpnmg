@@ -1,16 +1,20 @@
 #include "Triangulation.h"
 
+#include <datastructures/Point.h>
+
+#include <Eigen/Dense>
+
 namespace hpnmg {
 
-    std::vector<double> getPointRepresentation(Point<double> p) {
+    std::vector<double> getPointRepresentation(hypro::Point<double> p) {
         Eigen::VectorXd v = p.rawCoordinates();
         std::vector<double> coords(v.data(), v.data() + v.rows() * v.cols());
         return coords;
     }
 
-    std::vector<DT::Point> pointsToDTPoints(std::vector<Point<double>> points) {
+    std::vector<DT::Point> pointsToDTPoints(std::vector<hypro::Point<double>> points) {
         std::vector<DT::Point> dTPoints;
-        for (Point<double> p : points) {
+        for (hypro::Point<double> p : points) {
             std::vector<double> pr = getPointRepresentation(p);
             DT::Point pDT(pr.begin(), pr.end());
             dTPoints.push_back(pDT);
@@ -18,16 +22,16 @@ namespace hpnmg {
         return dTPoints;
     }
 
-    std::vector<Point<double>> dTPointsToPoints(std::vector<DT::Point> dTPoints) {
-        std::vector<Point<double>> points;
+    std::vector<hypro::Point<double>> dTPointsToPoints(std::vector<DT::Point> dTPoints) {
+        std::vector<hypro::Point<double>> points;
         for(DT::Point p : dTPoints) {
-            points.push_back(Point<double>(p));
+            points.push_back(hypro::Point<double>(p));
         }
         return points;
     }
 
     std::vector<DT::Point> regionToDTPoints(hypro::HPolytope<double> p) {
-        vector<Point<double>> vertices = p.vertices();
+        std::vector<hypro::Point<double>> vertices = p.vertices();
         return pointsToDTPoints(vertices);
     }
 

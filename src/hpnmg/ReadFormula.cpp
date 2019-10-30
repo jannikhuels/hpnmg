@@ -1,5 +1,10 @@
 #include "ReadFormula.h"
 
+#include <iostream>
+#include <stdexcept>
+#include <stdio.h>
+#include <sys/stat.h>
+
 using namespace xercesc;
 using namespace std;
 

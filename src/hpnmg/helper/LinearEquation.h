@@ -1,7 +1,7 @@
 #ifndef HPNMG_LINEAREQUATION_H
 #define HPNMG_LINEAREQUATION_H
 
-#include "Computation.h"
+#include <vector>
 
 namespace hpnmg {
     typedef std::vector<double> LinEq;

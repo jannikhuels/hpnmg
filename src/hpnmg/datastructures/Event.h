@@ -1,8 +1,14 @@
 #pragma once
 
+#include "datastructures/arcs/GuardArc.h"
+#include "datastructures/places/ContinuousPlace.h"
+#include "datastructures/transitions/ImmediateTransition.h"
+#include "datastructures/transitions/GeneralTransition.h"
+#include "datastructures/transitions/DeterministicTransition.h"
+
+#include <memory>
+#include <string>
 #include <vector>
-#include "datastructures/HybridPetrinet.h"
-#include "representations/GeometricObject.h"
 
 namespace hpnmg {
 

@@ -1,8 +1,6 @@
-//
-// Created by maurice on 11.12.18.
-//
-
 #include "SingularAutomaton.h"
+
+#include <algorithm>
 
 namespace hpnmg {
     SingularAutomaton::Location::Location(LOCATION_ID id,

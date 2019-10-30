@@ -1,5 +1,7 @@
 #include "ParametricLocationTree.h"
 
+#include "helper/Computation.h"
+
 #include <numeric>
 
 namespace hpnmg {

@@ -1,10 +1,10 @@
 #ifndef HPNMG_UNTIL_H
 #define HPNMG_UNTIL_H
 
+#include "modelchecker/Formula.h"
+
 #include <string>
 #include <utility>
-
-#include "modelchecker/Formula.h"
 
 namespace hpnmg {
     struct Until {

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <string>
-#include <memory>
-
 #include "places/DiscretePlace.h"
 #include "places/ContinuousPlace.h"
 #include "places/Place.h"
@@ -12,10 +9,13 @@
 #include "transitions/GeneralTransition.h"
 #include "transitions/ImmediateTransition.h"
 #include "transitions/Transition.h"
-#include "arcs/Arc.h"
 #include "arcs/DiscreteArc.h"
 #include "arcs/ContinuousArc.h"
 #include "arcs/GuardArc.h"
+
+#include <map>
+#include <memory>
+#include <string>
 
 using namespace std;
 namespace hpnmg {

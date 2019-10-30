@@ -1,18 +1,18 @@
 #ifndef HPNMG_REGIONMODELCHECKER_H
 #define HPNMG_REGIONMODELCHECKER_H
 
-#include <memory>
-#include <utility>
-#include <vector>
-
-#include <gmpxx.h>
-
 #include "datastructures/HybridPetrinet.h"
 #include "datastructures/STDPolytope.h"
 #include "modelchecker/Formula.h"
 #include "modelchecker/Negation.h"
 #include "modelchecker/Until.h"
 #include "ParametricLocationTree.h"
+
+#include <gmpxx.h>
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace hpnmg {
     class RegionModelChecker {

@@ -1,8 +1,6 @@
-//
-// Created by Jannik Hüls on 09.01.19.
-//
-
 #include "LinearEquation.h"
+
+#include "Computation.h"
 
 namespace hpnmg {
     LinearEquation::LinearEquation() {

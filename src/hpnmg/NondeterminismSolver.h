@@ -2,17 +2,13 @@
 
 #include "ParametricLocationTree.h"
 #include "datastructures/ParametricLocation.h"
-#include "datastructures/Event.h"
-#include "ProbabilityCalculator.h"
-#include "helper/LinearBoundsTree.h"
-#include <math.h>
-#include <iostream>
-#include <stdlib.h>
-#include <stdio.h>
-#include "../src/hpnmg/optimization/stdafx.h"
-#include "../src/hpnmg/optimization/optimization.h"
+#include "optimization/ap.h"
 
-
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace hpnmg {
 

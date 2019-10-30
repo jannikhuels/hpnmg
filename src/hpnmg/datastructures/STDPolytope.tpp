@@ -1,33 +1,24 @@
 #ifndef HPNMG_STDPOLYTOPE_TPP
 #define HPNMG_STDPOLYTOPE_TPP
-#include <utility>
-
 #include "STDPolytope.h"
 
-#include <algorithm>
-#include <cassert>
-#include <cstdlib>
-#include <iostream>
-#include <tuple>
-#include <utility>
-#include <vector>
-
-#include <Eigen/Geometry>
 #include <representations/GeometricObject.h>
 #include <util/plotting/Plotter.h>
 
-#include "STDiagram.h"
-#include "Simplex.h"
+#include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <vector>
 
 namespace hpnmg {
     template<typename Numeric>
     STDPolytope<Numeric> STDPolytope<Numeric>::Empty(size_t dimension) {
-        vector_t<Numeric> direction = vector_t<Numeric>::Zero(dimension);
+        hypro::vector_t<Numeric> direction = hypro::vector_t<Numeric>::Zero(dimension);
         direction(0) = Numeric(1);
-        Halfspace<Numeric> a(direction, Numeric(-1));
+        hypro::Halfspace<Numeric> a(direction, Numeric(-1));
         direction(0) = Numeric(-1);
-        Halfspace<Numeric> b(direction, Numeric(-1));
-        STDPolytope::Polytope res(std::vector<Halfspace<Numeric>>{a,b});
+        hypro::Halfspace<Numeric> b(direction, Numeric(-1));
+        STDPolytope::Polytope res(std::vector<hypro::Halfspace<Numeric>>{a,b});
         assert(res.empty() == true);
         return STDPolytope<Numeric>(res);
     }
@@ -110,7 +101,7 @@ namespace hpnmg {
 
         // taken from hypro::effectiveDimension(). calling it directly gave me linker errors.
         long maxDim = vertices.begin()->rawCoordinates().rows();
-        hypro::matrix_t<Numeric> matr = matrix_t<Numeric>(vertices.size()-1, maxDim);
+        hypro::matrix_t<Numeric> matr = hypro::matrix_t<Numeric>(vertices.size()-1, maxDim);
         // use first vertex as origin, start at second vertex
         long rowIndex = 0;
         for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
@@ -218,7 +209,7 @@ namespace hpnmg {
 
         for (const auto& vertices : {this->hPolytope.vertices(), timeSlice.vertices(), reducedVertices}) {
             long maxDim = vertices.begin()->rawCoordinates().rows();
-            hypro::matrix_t<Numeric> matr = matrix_t<Numeric>(vertices.size()-1, maxDim);
+            hypro::matrix_t<Numeric> matr = hypro::matrix_t<Numeric>(vertices.size()-1, maxDim);
             // use first vertex as origin, start at second vertex
             long rowIndex = 0;
             for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {

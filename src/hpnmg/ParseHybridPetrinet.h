@@ -1,8 +1,9 @@
 #pragma once
 
-#include <vector>
 #include "datastructures/HybridPetrinet.h"
 #include "ParametricLocationTree.h"
+
+#include <vector>
 
 namespace hpnmg {
     class ParseHybridPetrinet {

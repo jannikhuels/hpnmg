@@ -1,7 +1,9 @@
 #pragma once
 
-#include <vector>
 #include "ContinuousTransition.h"
+
+#include <memory>
+#include <vector>
 
 namespace hpnmg {
     class DynamicTransition : public ContinuousTransition {

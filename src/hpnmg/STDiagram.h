@@ -1,11 +1,14 @@
 #pragma once
 
-#include <gmpxx.h>
-#include <util/plotting/Plotter.h>
-
 #include "datastructures/Event.h"
 #include "datastructures/STDPolytope.h"
-#include "exceptions/STDiagramExceptions.h"
+
+#include <datastructures/Halfspace.h>
+#include <datastructures/Point.h>
+#include <types.h>
+
+#include <utility>
+#include <vector>
 
 using namespace hypro;
 

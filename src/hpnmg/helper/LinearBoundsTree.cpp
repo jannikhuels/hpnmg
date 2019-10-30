@@ -1,5 +1,9 @@
 #include "LinearBoundsTree.h"
 
+#include "Computation.h"
+
+#include <cassert>
+
 namespace hpnmg {
 
     LinearBoundsTree::Node::Node(LinearEquation equation) {

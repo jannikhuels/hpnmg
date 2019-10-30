@@ -1,17 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <sys/stat.h>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <list>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdexcept>
-
-
 #include "datastructures/HybridPetrinet.h"
 #include "datastructures/places/DiscretePlace.h"
 #include "datastructures/places/ContinuousPlace.h"
@@ -32,10 +20,11 @@
 #include <xercesc/dom/DOMText.hpp>
 #include <xercesc/sax/ErrorHandler.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
-
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
 
+#include <memory>
+#include <string>
 
 namespace hpnmg {
 

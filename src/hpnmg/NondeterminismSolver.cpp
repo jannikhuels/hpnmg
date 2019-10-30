@@ -1,5 +1,11 @@
 #include "NondeterminismSolver.h"
 
+#include "ProbabilityCalculator.h"
+#include "helper/LinearBoundsTree.h"
+#include "helper/LinearDomain.h"
+#include "helper/LinearEquation.h"
+#include "optimization/optimization.h"
+
 using namespace std;
 using namespace alglib;
 

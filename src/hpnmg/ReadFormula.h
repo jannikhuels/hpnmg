@@ -1,20 +1,10 @@
-//
-// Created by Jannik Hüls on 17.09.19.
-//
-
 #ifndef HPNMG_READFORMULA_H
 #define HPNMG_READFORMULA_H
 
-#include <memory>
-#include <sys/stat.h>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <list>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdexcept>
+#include "modelchecker/Formula.h"
+#include "modelchecker/Conjunction.h"
+#include "modelchecker/Negation.h"
+#include "modelchecker/Until.h"
 
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/dom/DOMDocument.hpp>
@@ -27,13 +17,12 @@
 #include <xercesc/dom/DOMText.hpp>
 #include <xercesc/sax/ErrorHandler.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
-
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/util/XMLUni.hpp>
-#include "modelchecker/Formula.h"
-#include "modelchecker/Conjunction.h"
-#include "modelchecker/Negation.h"
-#include "modelchecker/Until.h"
+
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace hpnmg {
     class ReadFormula {

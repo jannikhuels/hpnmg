@@ -1,7 +1,3 @@
-//
-// Created by Jannik Hüls on 09.01.19.
-//
-
 #include "LinearRestriction.h"
 
 namespace hpnmg {

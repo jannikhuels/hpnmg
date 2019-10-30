@@ -1,6 +1,8 @@
 #include "SingularAutomatonCreator.h"
-#include <datastructures/SingularAutomaton.h>
+
+#include "datastructures/SingularAutomaton.h"
 #include "ParseHybridPetrinet.h"
+
 #include <algorithm>
 
 namespace hpnmg {
