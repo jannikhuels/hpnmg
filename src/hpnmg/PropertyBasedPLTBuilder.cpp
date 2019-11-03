@@ -1,13 +1,13 @@
-#include "ParseHybridPetrinet.h"
+#include "PropertyBasedPLTBuilder.h"
 
 using namespace std;
 namespace hpnmg {
-    ParseHybridPetrinet::ParseHybridPetrinet() = default;
 
-    ParseHybridPetrinet::~ParseHybridPetrinet() = default;
+   PropertyBasedPLTBuilder::PropertyBasedPLTBuilder() = default;
+   PropertyBasedPLTBuilder::~PropertyBasedPLTBuilder() = default;
 
     shared_ptr<ParametricLocationTree>
-    ParseHybridPetrinet::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double atTime, int mode) {
+    PropertyBasedPLTBuilder::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double atTime, int mode) {
         // TODO: all floats to double?
         discretePlaceIDs = {};
         continuousPlaceIDs = {};
@@ -31,7 +31,6 @@ namespace hpnmg {
             generalTransitionIDs.push_back(generalTransition.first);
 
         ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, atTime);
-
         parametriclocationTree = make_shared<ParametricLocationTree>(rootLocation, atTime);
 
         // Add distributions to plt
@@ -45,7 +44,7 @@ namespace hpnmg {
         locationQueue.push_back(parametriclocationTree->getRootNode());
 
         while (!locationQueue.empty()) {
-            processNode(locationQueue[0], hybridPetrinet, maxTime, mode);
+            processNode(locationQueue[0], hybridPetrinet, atTime, mode);
             locationQueue.erase(locationQueue.begin());
         }
 
@@ -53,7 +52,7 @@ namespace hpnmg {
     }
 
     ParametricLocation
-    ParseHybridPetrinet::generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double atTime) {
+    PropertyBasedPLTBuilder::generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double atTime) {
         // Get root discrete markings
         vector<int> rootDiscreteMarking;
         for (string &placeId: discretePlaceIDs)
@@ -114,7 +113,7 @@ namespace hpnmg {
         return rootLocation;
     }
 
-    bool isEqualTimeDelta(vector<double> first, vector<double> second) {
+    bool isEqualAtTimeDelta(vector<double> first, vector<double> second) {
         if (first.size() != second.size()) {
             return false;
         }
@@ -126,12 +125,12 @@ namespace hpnmg {
         return true;
     }
 
-    std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> ParseHybridPetrinet::sortByEqualTimeDelta(std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> deterministicTransitions) {
+    std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> PropertyBasedPLTBuilder::sortByEqualTimeDelta(std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> deterministicTransitions) {
         std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> equalTimeDeltaTransitions;
         for (pair<shared_ptr<DeterministicTransition>, vector<double>> dt : deterministicTransitions) {
             bool newTimeDelta = true;
             for (int i = 0; i < equalTimeDeltaTransitions.size(); i++) {
-                if (isEqualTimeDelta(dt.second, equalTimeDeltaTransitions[i][0].second)) {
+                if (isEqualAtTimeDelta(dt.second, equalTimeDeltaTransitions[i][0].second)) {
                     equalTimeDeltaTransitions[i].push_back(dt);
                     newTimeDelta = false;
                     break;
@@ -144,7 +143,7 @@ namespace hpnmg {
         return equalTimeDeltaTransitions;
     }
 
-    void ParseHybridPetrinet::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet,
+    void PropertyBasedPLTBuilder::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet,
                                           double atTime, int mode) {
 
          /* --- Nondeterministic Conflicts ---
@@ -308,7 +307,7 @@ namespace hpnmg {
         locTime[0] = location.getSourceEvent().getTime();
         for (int i = 1; i < locTime.size(); ++i)
             locTime[i] = timeGenDep[i - 1];
-        double minimalMaximum = maxTime -
+        double minimalMaximum = atTime -
                                 getBoundedTime(generalTransitionsFired, location.getGeneralIntervalBoundLeft(),
                                                location.getGeneralIntervalBoundRight(), locTime);
         for (vector<double> &timeDelta : timeDeltas) {
@@ -377,7 +376,7 @@ namespace hpnmg {
                 else
                     newLocTime.push_back(locTime[i] + timeDelta[i]);
             }
-            if (maxTime >= getBoundedTime(generalTransitionsFired, location.getGeneralIntervalBoundLeft(),
+            if (atTime >= getBoundedTime(generalTransitionsFired, location.getGeneralIntervalBoundLeft(),
                                           location.getGeneralIntervalBoundRight(), newLocTime))
                 allowedTimeDeltas.push_back(timeDelta);
         }
@@ -415,7 +414,7 @@ namespace hpnmg {
                     .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
                 // if we have no minimal timeDelta we use maxTime
                 if (timeDeltas.empty())
-                    addLocationForGeneralEvent(transition, maxTime, {atTime}, {{}}, node, hybridPetrinet);
+                    addLocationForGeneralEvent(transition, atTime, {atTime}, {{}}, node, hybridPetrinet);
 
                 // for every general transition we need one parametric location per minimal timedelta
                 for (int i = 0; i < timeDeltas.size(); ++i)
@@ -655,7 +654,7 @@ namespace hpnmg {
         }
     }
 
-    vector<double> ParseHybridPetrinet::getTimeDelta(shared_ptr<GuardArc> arc, vector<int> generalTransitionsFired,
+    vector<double> PropertyBasedPLTBuilder::getTimeDelta(shared_ptr<GuardArc> arc, vector<int> generalTransitionsFired,
                                                      vector<vector<vector<double>>> generalIntervalBoundLeft,
                                                      vector<vector<vector<double>>> generalIntervalBoundRight,
                                                      vector<vector<double>> levels, vector<double> drifts) {
@@ -709,7 +708,7 @@ namespace hpnmg {
         }
     }
 
-    vector<double> ParseHybridPetrinet::computeUnequationCut(vector<double> time1, vector<double> time2) {
+    vector<double> PropertyBasedPLTBuilder::computeUnequationCut(vector<double> time1, vector<double> time2) {
         unsigned long minSize = min(time1.size(), time2.size());
         long k = -1;
         double diffK = 0.0;
@@ -728,7 +727,7 @@ namespace hpnmg {
         return unequationCut;
     }
 
-    double ParseHybridPetrinet::getBoundedTime(vector<int> generalTransitionsFired,
+    double PropertyBasedPLTBuilder::getBoundedTime(vector<int> generalTransitionsFired,
                                                vector<vector<vector<double>>> generalBounds,
                                                vector<vector<vector<double>>> oppositeGeneralBounds,
                                                vector<double> time) {
@@ -763,7 +762,7 @@ namespace hpnmg {
     }
 
 
-    bool ParseHybridPetrinet::transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,
+    bool PropertyBasedPLTBuilder::transitionIsEnabled(vector<int> discreteMarking, vector<vector<double>> continousMarking,
                                                   shared_ptr<Transition> transition,
                                                   shared_ptr<HybridPetrinet> hybridPetrinet,
         vector<vector<vector<double>>> lowerBounds, vector<vector<vector<double>>>
@@ -843,7 +842,7 @@ namespace hpnmg {
         return true;
     }
 
-    void ParseHybridPetrinet::addLocationForImmediateEvent(shared_ptr<ImmediateTransition> transition,
+    void PropertyBasedPLTBuilder::addLocationForImmediateEvent(shared_ptr<ImmediateTransition> transition,
                                                            ParametricLocationTree::Node parentNode, float probability,
                                                            shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
@@ -907,7 +906,7 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    void ParseHybridPetrinet::addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition,
+    void PropertyBasedPLTBuilder::addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition,
                                                                double probability, vector<double> timeDelta,
                                                                vector<vector<double>> timeDeltas,
                                                                ParametricLocationTree::Node parentNode,
@@ -1074,7 +1073,7 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    void ParseHybridPetrinet::addLocationForBoundaryEventByArcMember(shared_ptr<GuardArc> arcMember, vector<double> timeDelta, vector<vector<double>> timeDeltas,
+    void PropertyBasedPLTBuilder::addLocationForBoundaryEventByArcMember(shared_ptr<GuardArc> arcMember, vector<double> timeDelta, vector<vector<double>> timeDeltas,
                                                           ParametricLocationTree::Node parentNode,
                                                           shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
@@ -1214,7 +1213,7 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    void ParseHybridPetrinet::addLocationForBoundaryEventByContinuousPlaceMember(shared_ptr<ContinuousPlace> placeMember, vector<double> timeDelta, vector<vector<double>> timeDeltas,
+    void PropertyBasedPLTBuilder::addLocationForBoundaryEventByContinuousPlaceMember(shared_ptr<ContinuousPlace> placeMember, vector<double> timeDelta, vector<vector<double>> timeDeltas,
                                                           ParametricLocationTree::Node parentNode,
                                                           shared_ptr<HybridPetrinet> hybridPetrinet) {
         ParametricLocation parentLocation = parentNode.getParametricLocation();
@@ -1356,7 +1355,7 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    void ParseHybridPetrinet::addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double atTime,
+    void PropertyBasedPLTBuilder::addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double atTime,
                                                          vector<double> timeDelta, vector<vector<double>> timeDeltas,
                                                          ParametricLocationTree::Node parentNode,
                                                          shared_ptr<HybridPetrinet> hybridPetrinet) {
@@ -1548,7 +1547,7 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
-    vector<double> ParseHybridPetrinet::getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking, shared_ptr<HybridPetrinet> hybridPetrinet, vector<vector<vector<double>>> lowerBounds, vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired) {
+    vector<double> PropertyBasedPLTBuilder::getDrift(vector<int> discreteMarking, vector<vector<double>> continuousMarking, shared_ptr<HybridPetrinet> hybridPetrinet, vector<vector<vector<double>>> lowerBounds, vector<vector<vector<double>>> upperBounds, vector<int> generalTransitionsFired) {
         vector<double> drift(continuousMarking.size());
         vector<double> inputDrift(continuousMarking.size());
         vector<double> outputDrift(continuousMarking.size());
@@ -1781,15 +1780,15 @@ namespace hpnmg {
         return drift;
     }
 
-    long ParseHybridPetrinet::getIndexOfModelMember(string id, vector<string> vectorOfIDs) const {
+    long PropertyBasedPLTBuilder::getIndexOfModelMember(string id, vector<string> vectorOfIDs) const {
         return find(vectorOfIDs.begin(), vectorOfIDs.end(), id) - vectorOfIDs.begin();
     };
 
-    long ParseHybridPetrinet::getIndexOfDiscretePlace(shared_ptr<DiscretePlace> discretePlace) const {return getIndexOfModelMember(discretePlace->id, discretePlaceIDs);};
+    long PropertyBasedPLTBuilder::getIndexOfDiscretePlace(shared_ptr<DiscretePlace> discretePlace) const {return getIndexOfModelMember(discretePlace->id, discretePlaceIDs);};
 
-    long ParseHybridPetrinet::getIndexOfContinuousPlace(shared_ptr<ContinuousPlace> continuousPlace) const {return getIndexOfModelMember(continuousPlace->id, continuousPlaceIDs);};
+    long PropertyBasedPLTBuilder::getIndexOfContinuousPlace(shared_ptr<ContinuousPlace> continuousPlace) const {return getIndexOfModelMember(continuousPlace->id, continuousPlaceIDs);};
 
-    long ParseHybridPetrinet::getIndexOfDeterministicTransition(shared_ptr<DeterministicTransition> deterministicTransition) const {return getIndexOfModelMember(deterministicTransition->id, deterministicTransitionIDs);};
+    long PropertyBasedPLTBuilder::getIndexOfDeterministicTransition(shared_ptr<DeterministicTransition> deterministicTransition) const {return getIndexOfModelMember(deterministicTransition->id, deterministicTransitionIDs);};
 
-    long ParseHybridPetrinet::getIndexOfGeneralTransition(shared_ptr<GeneralTransition> generalTransition) const {return getIndexOfModelMember(generalTransition->id, generalTransitionIDs);};
+    long PropertyBasedPLTBuilder::getIndexOfGeneralTransition(shared_ptr<GeneralTransition> generalTransition) const {return getIndexOfModelMember(generalTransition->id, generalTransitionIDs);};
 }

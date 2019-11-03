@@ -1,42 +1,17 @@
 #include <hpnmg/PLTWriter.h>
 #include "gtest/gtest.h"
 #include "ReadHybridPetrinet.h"
-#include "ParseHybridPetrinet.h"
+#include "PropertyBasedPLTBuilder.h"
 #include <chrono>
 #include <memory>
 
 using namespace hpnmg;
 
-
-TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTFoldedNormal) {
-
-    //since checktime=3 only the first two tests can succed
-    auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 1, 3 );
-
-    auto result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 0)), 0);
-    // Place is empty at t = 0
-    EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
-
-    result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 3)), 3);
-    // out-transition is deterministically disabled at t=5, so the place's level cannot exceed t' at time t'<=5
-    EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
-
-    result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)), 3);
-    // folded normal distribution with mu = 5 and sigma = 3
-    // cdf(2.5) = 0.5 * (erf((2.5 + 5) / sqrt(18)) + erf((2.5 - 5) / sqrt(18))) ~ 0.196119
-    EXPECT_NEAR(0.1961187156378668902015554951380463273568632340661803, result.first, result.second);
-
-    result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 7)), 10);
-    // folded normal distribution with mu = 5 and sigma = 3
-    // (1 - cdf(6)) = (0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 0.630436
-     EXPECT_NEAR(0.6304357934282712096662251163331139441485145682519407, result.first, result.second);
-}
-
-TEST(ParseHybridPetrinet, InitialLocation)
+TEST(PropertyBasedPLTBuilder, InitialLocation)
 {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("example.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode().getParametricLocation();
     ASSERT_EQ(initState.getDiscreteMarking().size(), 2);
@@ -51,11 +26,11 @@ TEST(ParseHybridPetrinet, InitialLocation)
 }
 
 
-TEST(ParseHybridPetrinet, ImmediateTransitions)
+TEST(PropertyBasedPLTBuilder, ImmediateTransitions)
 {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("exampleImmediate.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
     auto writer = new PLTWriter();
@@ -88,10 +63,10 @@ TEST(ParseHybridPetrinet, ImmediateTransitions)
 }
 
 
-TEST(ParseHybridPetrinet, RateAdaption) {
+TEST(PropertyBasedPLTBuilder, RateAdaption) {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("exampleRateAdaption.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
     ParametricLocation initLocation = initState.getParametricLocation();
@@ -113,10 +88,10 @@ TEST(ParseHybridPetrinet, RateAdaption) {
 //    ASSERT_EQ(expectedDrift1, nextLocation.getDrift()); todo: does not work correct
 }
 
-TEST(ParseHybridPetrinet, BoundarysMainExample) {
+TEST(PropertyBasedPLTBuilder, BoundarysMainExample) {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("example.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode().getParametricLocation();
 
@@ -209,10 +184,10 @@ TEST(ParseHybridPetrinet, BoundarysMainExample) {
     }
 }
 
-TEST(ParseHybridPetrinet, Example2General) {
+TEST(PropertyBasedPLTBuilder, Example2General) {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("example2general.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode().getParametricLocation();
 
@@ -436,11 +411,11 @@ TEST(ParseHybridPetrinet, Example2General) {
     }
 }
 
-TEST(ParseHybridPetrinet, GuardArcContinuous)
+TEST(PropertyBasedPLTBuilder, GuardArcContinuous)
 {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("guard_continuous.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
 
@@ -464,11 +439,11 @@ TEST(ParseHybridPetrinet, GuardArcContinuous)
     ASSERT_EQ(5, children[0].getParametricLocation().getSourceEvent().getTime());
 }
 
-TEST(ParseHybridPetrinet, GuardArcContinuousNegation)
+TEST(PropertyBasedPLTBuilder, GuardArcContinuousNegation)
 {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("guard_continuous_negation.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
 
@@ -492,11 +467,11 @@ TEST(ParseHybridPetrinet, GuardArcContinuousNegation)
     ASSERT_EQ(3, children[0].getParametricLocation().getSourceEvent().getTime());
 }
 
-TEST(ParseHybridPetrinet, GuardArcFillLevelTest)
+TEST(PropertyBasedPLTBuilder, GuardArcFillLevelTest)
 {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("guard_fill_level_test.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
 
@@ -544,11 +519,11 @@ TEST(ParseHybridPetrinet, GuardArcFillLevelTest)
     ASSERT_EQ(7, children[0].getParametricLocation().getSourceEvent().getTime());
 }
 
-TEST(ParseHybridPetrinet, GuardArcContinuousConflict)
+TEST(PropertyBasedPLTBuilder, GuardArcContinuousConflict)
 {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("guard_continuous_conflict.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto initState = plt->getRootNode();
 
@@ -564,11 +539,11 @@ TEST(ParseHybridPetrinet, GuardArcContinuousConflict)
     ASSERT_EQ(5, children[0].getParametricLocation().getSourceEvent().getTime());
 }
 
-TEST(ParseHybridPetrinet, GuardArcEmptyTest)
+TEST(PropertyBasedPLTBuilder, GuardArcEmptyTest)
 {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("guard_empty_test.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 10);
     auto initState = plt->getRootNode();
 
@@ -586,11 +561,11 @@ TEST(ParseHybridPetrinet, GuardArcEmptyTest)
     children= plt->getChildNodes(children[0]);
 }
 
-TEST(ParseHybridPetrinet, GuardDiscreteConflict)
+TEST(PropertyBasedPLTBuilder, GuardDiscreteConflict)
 {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("guard_discrete_conflict.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 10);
     auto initState = plt->getRootNode();
 
@@ -613,19 +588,19 @@ TEST(ParseHybridPetrinet, GuardDiscreteConflict)
     ASSERT_EQ(0.5, children[0].getParametricLocation().getConflictProbability());
 }
 
-TEST(ParseHybridPetrinet, RateAdaptionNew) {
+TEST(PropertyBasedPLTBuilder, RateAdaptionNew) {
     auto reader= new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("exampleperformanceeval.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto writer = new PLTWriter();
     writer->writePLT(plt, 10);
 }
 
-TEST(ParseHybridPetrinet, GeneralActivatingAnotherGeneral) {
+TEST(PropertyBasedPLTBuilder, GeneralActivatingAnotherGeneral) {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("one_gt_enabling_another_gt.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
     auto jumpChild = plt->getChildNodes(plt->getRootNode())[0];
     auto childOfInterest = plt->getChildNodes(jumpChild)[1];
@@ -641,10 +616,10 @@ TEST(ParseHybridPetrinet, GeneralActivatingAnotherGeneral) {
     EXPECT_EQ(expectedRightBound, childOfInterest.getParametricLocation().getGeneralIntervalBoundRight());
 }
 
-TEST(ParseHybridPetrinet, ContinuousConflict) {
+TEST(PropertyBasedPLTBuilder, ContinuousConflict) {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("continuous_conflict.xml");
-    auto parser = new ParseHybridPetrinet();
+    auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 20);
 
     // Two continuous places that get drained at the exact same time resulted in two locations in the plt.
