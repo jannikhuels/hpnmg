@@ -8,7 +8,6 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/program_options.hpp>
 
-#include "util/logging/Logging.h"
 #include "modelchecker/RegionModelChecker.h"
 #include "ParseHybridPetrinet.h"
 #include "ReadHybridPetrinet.h"
@@ -25,7 +24,7 @@ bool fileExists(const std::string &filename) {
 
 namespace po = boost::program_options;
 
-int process_command_line(int argc, char **argv, std::string& model, std::string& formula, double &maxtime, double &checktime, string& resultfile, std::vector<string> &appendix, string &fileLogLevel, string &coutLogLevel) {
+int process_command_line(int argc, char **argv, std::string& model, std::string& formula, double &maxtime, double &checktime, string& resultfile, std::vector<string> &appendix) {
     try {
         po::options_description desc("Allowed options are");
         desc.add_options()
@@ -37,8 +36,6 @@ int process_command_line(int argc, char **argv, std::string& model, std::string&
                 ("maxtime", po::value<double>(&maxtime)->required(), "Maxtime of state space creation.")
                 ("checktime,c", po::value<double>(&checktime)->default_value(0), "Checktime of model checking.")
                 ("result,r", po::value<std::string>(&resultfile)->default_value("result.dat"), "Path to the result file.")
-                ("file-loglevel", po::value<std::string>(&fileLogLevel), "Log level of the file output.")
-                ("stdout-loglevel", po::value<std::string>(&coutLogLevel), "Log level of the stdout output.")
                 ;
 
         if (argc == 1) {
@@ -55,14 +52,6 @@ int process_command_line(int argc, char **argv, std::string& model, std::string&
         }
 
         po::notify(vm);
-
-        if (vm.count("file-loglevel") && !(fileLogLevel == "ALL" || fileLogLevel == "TRACE" || fileLogLevel == "DEBUG" || fileLogLevel == "INFO" || fileLogLevel == "WARN" || fileLogLevel == "ERROR" || fileLogLevel == "FATAL")) {
-            throw po::validation_error(po::validation_error::invalid_option_value, "file-loglevel");
-        }
-
-        if (vm.count("stdout-loglevel") && !(coutLogLevel == "ALL" || coutLogLevel == "TRACE" || coutLogLevel == "DEBUG" || coutLogLevel == "INFO" || coutLogLevel == "WARN" || coutLogLevel == "ERROR" || coutLogLevel == "FATAL")) {
-            throw po::validation_error(po::validation_error::invalid_option_value, "cout-loglevel");
-        }
 
         if (vm.count("stateonly")) {
             return 1;
@@ -85,21 +74,16 @@ int main (int argc, char *argv[]) {
     std::string modelfile;
     std::string formulafile;
     std::string resultfile;
-    std::string fileLogLevel;
-    std::string coutLogLevel;
     std::vector<string> appendix;
     double maxtime;
     double checktime;
-    int mode = process_command_line(argc, argv, modelfile, formulafile, maxtime, checktime, resultfile, appendix, fileLogLevel, coutLogLevel);
+    int mode = process_command_line(argc, argv, modelfile, formulafile, maxtime, checktime, resultfile, appendix);
 
     if (mode == 2) {
         // An error occured.
         return 1;
     }
     // mode==1: Only create state space, mode==0 also perform model checking.
-
-    // Initialize logging, may be influence by program options
-    hpnmg::initializeLogging(coutLogLevel, fileLogLevel);
 
     // Start reading the model file.
     std::time_t startTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());

@@ -16,7 +16,6 @@
 #include "ParseHybridPetrinet.h"
 #include "PropertyBasedPLTBuilder.h"
 #include "ProbabilityCalculator.h"
-#include "util/logging/Logging.h"
 
 namespace hpnmg {
 
@@ -33,7 +32,7 @@ namespace hpnmg {
     RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :
         RegionModelChecker(hpng, maxTime, 0.0, 0)
     {
-        INFOLOG("hpnmg.RegionModelChecker", "[Number of Model dimensions]:" << this->plt.getDimension())
+        std::cout << "[Number of Model dimensions]:" << this->plt.getDimension() << std::endl;
     }
 
 
@@ -43,14 +42,15 @@ namespace hpnmg {
         auto calculator = ProbabilityCalculator();
 
         for (auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
-            TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Computing STD region.")
+            std::cout << "[Location " << node.getNodeID() << "]: Computing STD region." << std::endl;
             node.computeRegion(this->plt);
 
-            TRACELOG("hpnmg.RegionModelChecker", "Done. Dimensions: (vertex dim, effective dim) = (" << node.getRegion().dimension() << ", " << node.getRegion().effectiveDimension() << ")")
+            std::cout << "Done. Dimensions: (vertex dim, effective dim) = (" << node.getRegion().dimension() << ", " << node.getRegion().effectiveDimension() << ")" << std::endl;
 
-            TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Computing sat.")
+            std::cout << "[Location " << node.getNodeID() << "]: Computing sat." << std::endl;
             const auto& sat = this->satisfiesHandler(node, formula, atTime);
-            TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Computing time slice of " << sat.size() << " polytopes.")
+
+            std::cout << "[Location " << node.getNodeID() << "]: Computing time slice of " << sat.size() << " polytopes." << std::endl;
             std::vector<hypro::HPolytope<double>> integrationDomains{};
             // Add all result polytopes intersected with the check-time hyperplane to sat
             std::transform(sat.begin(), sat.end(), std::back_inserter(integrationDomains), [atTime](const STDPolytope<mpq_class> &region) {
@@ -61,7 +61,7 @@ namespace hpnmg {
                 integrationDomains.end()
             );
 
-            TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Integrating over " << integrationDomains.size() << " time slices.")
+            std::cout << "[Location " << node.getNodeID() << "]: Integrating over " << integrationDomains.size() << " time slices." << std::endl;
 
             if (integrationDomains.size())
                 std::cout << STDPolytope<double>(integrationDomains[0]) << std::endl;
@@ -74,7 +74,7 @@ namespace hpnmg {
                 50000,
                 nodeError
             ) * node.getParametricLocation().getAccumulatedProbability();
-            TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Running total probability: " << probability)
+            std::cout << "[Location " << node.getNodeID() << "]: Running total probability: " << probability << std::endl;
             error += nodeError;
         }
 
@@ -144,7 +144,8 @@ namespace hpnmg {
             value,
             negate
         );
-        TRACELOG("hpnmg.RegionModelChecker", "post level intersection: (vertex dim, effective dim) = (" << regionIntersected.dimension() << ", " << regionIntersected.effectiveDimension() << ")")
+
+        std::cout << "post level intersection: (vertex dim, effective dim) = (" << regionIntersected.dimension() << ", " << regionIntersected.effectiveDimension() << ")" << std::endl;
 
         return STDPolytope<mpq_class>(regionIntersected);
     }
@@ -274,7 +275,7 @@ namespace hpnmg {
     std::vector<STDPolytope<mpq_class>> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
         auto sat = this->untilHandler(node, formula, atTime);
 
-        TRACELOG("hpnmg.RegionModelChecker.Until", "sat(until) computed. Intersecting it with the node's region.")
+        std::cout << "sat(until) computed. Intersecting it with the node's region." << std::endl;
 
         // Construct the upper and lower boundary halfspaces defined by the check-time and the check-time plus until-time.
         hypro::vector_t<mpq_class> timeVectorUp = hypro::vector_t<mpq_class>::Zero(node.getRegion().dimension());
@@ -305,13 +306,14 @@ namespace hpnmg {
 
         // Make sure that this node is even reachable within the formula's time frame
         auto fullRegion = STDPolytope<mpq_class>(node.getRegion());
-        TRACELOG("hpnmg.RegionModelChecker.Until", "Dimension: [" << fullRegion.effectiveDimension() << ", " << fullRegion.dimension() << "]")
+
+        cout << "Dimension: [" << fullRegion.effectiveDimension() << ", " << fullRegion.dimension() << "]" << endl;
 
         // Check if the current region is a vanishing region, and only consider the children
         if (fullRegion.effectiveDimension() < fullRegion.dimension()) {
             std::vector<STDPolytope<mpq_class>> childrenSat{};
             for (auto& childNode : this->plt.getChildNodes(node)) {
-                TRACELOG("hpnmg.RegionModelChecker.Until", "Until @ Node " << node.getNodeID() << ": Recursively checking Node " << childNode.getNodeID())
+                std::cout << "Until @ Node " << node.getNodeID() << ": Recursively checking Node " << childNode.getNodeID() << std::endl;
                 childNode.computeRegion(this->plt);
                 // untilHandler returns downwards extended polytopes
                 auto childSat = this->untilHandler(childNode, formula, atTime);
@@ -334,14 +336,14 @@ namespace hpnmg {
         auto regionSat = this->satisfiesHandler(node, formula.goal, atTime);
         std::transform(regionSat.begin(), regionSat.end(), regionSat.begin(), [&upperLimit](STDPolytope<mpq_class> sat) {
             sat.insert(upperLimit);
-            TRACELOG("hpnmg.RegionModelChecker.Until", "Extending member of sat(goal) downwards.")
+            std::cout << "Extending member of sat(goal) downwards." << std::endl;
             return STDPolytope<mpq_class>(sat.extendDownwards());
         });
         regionSat.erase(std::remove_if(regionSat.begin(), regionSat.end(), [](const auto& region) { return region.empty(); }), regionSat.end());
         std::move(regionSat.begin(), regionSat.end(), std::back_inserter(eventualSat));
         //endregion Gather all polytopes that most certainly fulfill `formula`.
 
-        TRACELOG("hpnmg.RegionModelChecker.Until", "Until @ Node " << node.getNodeID() << ": Done.")
+        std::cout << "Until @ Node " << node.getNodeID() << ": Done." << std::endl;
 
         // All polytopes that do satisfy or do not satisfy the until formula inside this region
         std::vector<STDPolytope<mpq_class>> knownSat(eventualSat);
@@ -351,15 +353,15 @@ namespace hpnmg {
         const auto& preTrivial = formula.pre.isTrivial();
         if (preTrivial.first) {
             if (preTrivial.second.getType() == Formula::Type::True) {
-                TRACELOG("hpnmg.RegionModelChecker.Until", "Until @ Node " << node.getNodeID() << ": Precondition is trivially true. No need to compute dead regions.")
+                std::cout << "Until @ Node " << node.getNodeID() << ": Precondition is trivially true. No need to compute dead regions." << std::endl;
                 deadRegions = {};
             } else {
-                TRACELOG("hpnmg.RegionModelChecker.Until", "Until @ Node " << node.getNodeID() << ": Precondition is trivially false. Returning early with sat(goal).")
+                std::cout << "Until @ Node " << node.getNodeID() << ": Precondition is trivially false. Returning early with sat(goal)." << std::endl;
                 this->untilCache.insert({node.getNodeID(), regionSat});
                 return regionSat;
             }
         } else {
-            TRACELOG("hpnmg.RegionModelChecker.Until",  "Until @ Node " << node.getNodeID() << ": Precondition is non-trivial. Computing sat(dead).")
+            std::cout << "Until @ Node " << node.getNodeID() << ": Precondition is non-trivial. Computing sat(dead)." << std::endl;
 
             auto deadFormula = Formula(std::make_shared<Conjunction>(
                 Formula(std::make_shared<Negation>(formula.pre)),
@@ -367,12 +369,13 @@ namespace hpnmg {
             ));
 
             for (const auto& deadRegion : this->satisfiesHandler(node, deadFormula, atTime)) {
-                TRACELOG("hpnmg.RegionModelChecker.Until",  "Done. Extending member of sat(dead) downwards.")
+                std::cout << "Done. Extending member of sat(dead) downwards." << std::endl;
                 const auto deadRegionDownwardsExtension = deadRegion.extendDownwards();
                 deadRegions.emplace_back(deadRegion, deadRegionDownwardsExtension);
                 knownSat.push_back(STDPolytope<mpq_class>(deadRegionDownwardsExtension));
             }
-            TRACELOG("hpnmg.RegionModelChecker.Until",  "Done.")
+
+            std::cout << "Done." << std::endl;
         }
 
         // Check if there is a part of the region left, which needs the processing in the child locations.
@@ -396,18 +399,18 @@ namespace hpnmg {
                 // Since all satisfaction polytopes are convex and disjoint: if polytope A intersects with the
                 // downward-extension of polytope B, then A must be (at least partially) directly below B but nowhere
                 // directly above B.
-                TRACELOG("hpnmg.RegionModelChecker.Until",  "Checking if member of sat(dead) needs to be removed from extended member of sat(goal).")
+                std::cout << "Checking if member of sat(dead) needs to be removed from extended member of sat(goal)." << std::endl;
                 if (!STDPolytope<mpq_class>(goalRegion).intersect(otherRegion.first).empty())
                     regionsToRemove.emplace_back(STDPolytope<mpq_class>(otherRegion.second));
             }
 
-            TRACELOG("hpnmg.RegionModelChecker.Until",  "Removing all " << regionsToRemove.size() << " dead members from extended goal member.")
+            std::cout << "Removing all " << regionsToRemove.size() << " dead members from extended goal member." << std::endl;
             auto goalSat = goalRegion.setDifference(regionsToRemove);
             goalSat.erase(std::remove_if(goalSat.begin(), goalSat.end(), [](const auto& region) { return region.empty(); }), goalSat.end());
             std::move(goalSat.begin(), goalSat.end(), std::back_inserter(sat));
         }
 
-        TRACELOG("hpnmg.RegionModelChecker.Until",  "Computed " << sat.size() << " sat regions.")
+        std::cout << "Computed " << sat.size() << " sat regions.";
 
         this->untilCache.insert({node.getNodeID(), sat});
         return sat;
