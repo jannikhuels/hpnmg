@@ -14,15 +14,27 @@
 #include "modelchecker/Negation.h"
 #include "modelchecker/Until.h"
 #include "ParseHybridPetrinet.h"
+#include "PropertyBasedPLTBuilder.h"
 #include "ProbabilityCalculator.h"
 
 namespace hpnmg {
-    RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :
+
+    RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime, double atTime=20, int mode=0) :
         hpng(std::make_shared<HybridPetrinet>(hpng)),
-        plt(*ParseHybridPetrinet{}.parseHybridPetrinet(this->hpng, maxTime))
+        plt(mode==1
+        ?*PropertyBasedPLTBuilder{}.parseHybridPetrinet(this->hpng, atTime)
+        :*ParseHybridPetrinet{}.parseHybridPetrinet(this->hpng, maxTime))
     {
         std::cout << "[Number of Model dimensions]:" << this->plt.getDimension() << std::endl;
     }
+
+    //second constructor since default parameters dont work
+    RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :
+        RegionModelChecker(hpng, maxTime, 0.0, 0)
+    {
+        std::cout << "[Number of Model dimensions]:" << this->plt.getDimension() << std::endl;
+    }
+
 
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
         double probability = 0.0;

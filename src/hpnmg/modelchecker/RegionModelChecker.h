@@ -17,6 +17,7 @@
 namespace hpnmg {
     class RegionModelChecker {
     public:
+        RegionModelChecker(HybridPetrinet hpng, double maxTime, double atTime, int mode);
         RegionModelChecker(HybridPetrinet hpng, double maxTime);
 
         /**
