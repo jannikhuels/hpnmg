@@ -26,11 +26,94 @@ namespace hpnmg {
 
         // get root location
         std::cout << "Getting the root location." << std::endl;
-        double timeBound = carl::toDouble(timeBoundN);
-        ParametricLocation rootloc = parser->ParseHybridPetrinet::generateRootParametricLocation(mPetrinet,timeBound);
+        ParametricLocation rootloc = parser->ParseHybridPetrinet::generateRootParametricLocation(mPetrinet,carl::toDouble(timeBoundN));
+        auto location = processParametricLocation(rootloc);
+        locationQueue = {location};
 
+        bool stop = false;
+        // process tasks from global queue
+        while(queueManager.hasWorkable(true)) { // using locked access to queues.
+            auto task = queueManager.getNextWorkable(true,true); // get next task locked and dequeue from front.
+            assert(task!=nullptr);
+            worker.processTask(task,settingsProvider.getStrategy(), globalQueue, globalCEXQueue, segments);
+
+            // new state
+            const auto& segment = segments.getStates()[1];
+            auto currentLocation = locationQueue.front();
+            locationQueue.pop_front();
+            hypro::Condition<Number> currentCondition = currentLocation->getInvariant();
+            hypro::matrix_t<Number> invariantMatrix = currentCondition.getMatrix();
+            hypro::vector_t<Number> invariantVector = currentCondition.getVector();
+            //for ()
+            //for (int i=0; i<invariantMatrix.rows(); i++) {
+            //   // time
+            //    if(invariantMatrix(i,0)!=0) {
+            //        std::cout << "Event is deterministic!" << std::endl;
+            //    }
+            //}
+
+            hypro::matrix_t<Number> halfspaceMatrix = hypro::matrix_t<Number>(2,dimension);
+            hypro::vector_t<Number> halfspaceVector = hypro::vector_t<Number>(2);
+            halfspaceMatrix << 1,0,-1,0;
+            halfspaceVector << 2,-2;
+            auto newState = segment.intersectHalfspaces(halfspaceMatrix, halfspaceVector);
+            std::cout << "New state is " << newState << std::endl;
+
+            auto constraintset = hypro::Converter<Number>::toConstraintSet(boost::get<hypro::CarlPolytope<Number>>(newState.getSet()));
+            hypro::Condition<Number> condition = hypro::Condition<Number>(constraintset);
+
+            //location erzeugen auslagern
+            hypro::Location<Number>* loc1 = new hypro::Location<Number>();
+            hypro::rectangularFlow<Number> flow = generateFlow({{1,3}});
+
+            hypro::matrix_t<Number> invariantMatrix = hypro::matrix_t<Number>::Zero(dimension*2,dimension);
+            hypro::vector_t<Number> invariantVector = hypro::vector_t<Number>::Zero(dimension*2);
+
+            invariantMatrix(1,0) = 0;
+            invariantVector(1) = 0;
+
+            // erstmal nur die place boundaries
+            for  (int k=1; k<dimension; k++) { // zeile,spalte
+                invariantMatrix(k*2,k) = 1; // upper bound
+                invariantVector(k*2) = 10;
+                invariantMatrix(k*2+1,k) = -1;  // lower bound
+                invariantVector(k*2+1) = 0;
+            }
+
+            std::cout << "Invariant Matrix: " << invariantMatrix.format(Print);
+            std::cout << "Invariant Vector: " << invariantVector.format(Print);
+
+            hypro::Condition<Number> invariant(invariantMatrix,invariantVector);
+            loc1->setRectangularFlow(flow);
+            loc1->setInvariant(invariant);
+
+            std::map<const Location<Number>*, Condition<Number>> initialStates;
+            initialStates.emplace(std::make_pair(loc1,condition));
+            addStatesToQueue(initialStates);
+
+            if(stop) {
+               break;
+            }
+            stop = true;
+        }
+
+        // output
+        hypro::Plotter<Number>& plotter = hypro::Plotter<Number>::getInstance();
+        std::cout << sep << "Reachability analysis results in the following locations: \n" << std::endl;
+        for(const auto& segment : segments) {
+            std::cout << segment << std::endl;
+            plotter.addObject(segment.vertices());
+        }
+
+        plotter.plot2d();
+
+
+
+    }
+
+        hypro::Location<FlowpipeComputer::Number>* FlowpipeComputer::processParametricLocation(ParametricLocation parametricLocation) {
         // get deterministic transition firings (-> invariant && transition in HA)
-        vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions = parser->ParseHybridPetrinet::processLocation(rootloc, mPetrinet, timeBound);
+        vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions = parser->ParseHybridPetrinet::processLocation(parametricLocation, mPetrinet, carl::toDouble(timeBoundN));
         std::cout << "The next deterministic transitions are:" << std::endl;
         for (auto& element : nextDeterministicTransitions) {
             std::cout << "- transition " << element.first->getId() << " at time " << element.second << std::endl;
@@ -38,33 +121,23 @@ namespace hpnmg {
 
         // create one location with flow + invariant
         std::cout << "Generating a location." << std::endl;
-        hypro::Location<Number> loc1;
-        hypro::rectangularFlow<Number> flow = generateFlow(rootloc.getDriftIntervals());
+        hypro::Location<Number>* loc1 = new hypro::Location<Number>();
+//        hypro::Location<Number> loc1;
+        hypro::rectangularFlow<Number> flow = generateFlow(parametricLocation.getDriftIntervals());
         hypro::Condition<Number> invariant = generateInvariant(nextDeterministicTransitions, mPetrinet->getContinuousPlaces());
-        loc1.setRectangularFlow(flow);
-        loc1.setInvariant(invariant);
+        loc1->setRectangularFlow(flow);
+        loc1->setInvariant(invariant);
 
         // generate Constraint Set for initial state
         hypro::Condition<Number> state = generateInitialSet();
 
         // set up initial states to the correct representation - in this case CarlPolytope
         std::map<const Location<Number>*, Condition<Number>> initialStates;
-        initialStates.emplace(std::make_pair(&loc1,state));
+        initialStates.emplace(std::make_pair(loc1,state));
+//        initialStates.emplace(std::make_pair(&loc1,state));
         addStatesToQueue(initialStates);
 
-        // process tasks from global queue
-        while(queueManager.hasWorkable(true)) { // using locked access to queues.
-            auto task = queueManager.getNextWorkable(true,true); // get next task locked and dequeue from front.
-            assert(task!=nullptr);
-            worker.processTask(task,settingsProvider.getStrategy(), globalQueue, globalCEXQueue, segments);
-        }
-
-        // output
-        std::cout << sep << "Reachability analysis results in the following locations: \n" << std::endl;
-        for(const auto& segment : segments) {
-            std::cout << segment << std::endl;
-        }
-
+        return loc1;
     }
 
     void FlowpipeComputer::setup() {
@@ -138,8 +211,7 @@ namespace hpnmg {
 
     }
 
-
-        void FlowpipeComputer::addStatesToQueue(map<const Location<Number> *, Condition<Number>> &locationStateMap) {
+    void FlowpipeComputer::addStatesToQueue(map<const Location<Number> *, Condition<Number>> &locationStateMap) {
 
         std::vector<hypro::State_t<Number>> initialStateData;
         for (auto stateMapIt = locationStateMap.begin(); stateMapIt != locationStateMap.end(); ++stateMapIt) {
@@ -149,6 +221,7 @@ namespace hpnmg {
             copyState.setTimestamp(carl::Interval<hypro::tNumber>(0));
 
             // if the decider is in use - convert subspaces according to mapping
+
             State::repVariant _temp;
             _temp = hypro::CarlPolytope<Number>(stateMapIt->second.getMatrix(), stateMapIt->second.getVector());
 
@@ -208,6 +281,7 @@ namespace hpnmg {
         Condition<Number> state(constraints,constants);
         return state;
     }
+
 
 
 

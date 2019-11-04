@@ -14,6 +14,7 @@
 #include <datastructures/reachability/workQueue/WorkQueueManager.h>
 #include <datastructures/reachability/timing/EventTimingProvider.h>
 #include <algorithms/reachability/workers/ContextBasedReachabilityWorker.h>
+#include <util/plotting/Plotter.h>
 #include <Eigen/src/Core/IO.h>
 
 namespace hpnmg {
@@ -34,11 +35,12 @@ namespace hpnmg {
 
         // class member variables ---------------------------------------------
         int dimension = -1;
-        Number timeBoundN = 3;
+        Number timeBoundN = 5;
         shared_ptr<HybridPetrinet> mPetrinet;
         hypro::WorkQueueManager<std::shared_ptr<hypro::Task<State>>> queueManager;
         hypro::WorkQueue<std::shared_ptr<hypro::Task<State>>>* globalCEXQueue = queueManager.addQueue();
         hypro::WorkQueue<std::shared_ptr<hypro::Task<State>>>* globalQueue = queueManager.addQueue();
+        std::deque<hypro::Location<Number>*> locationQueue;
         ParseHybridPetrinet* parser;
         hypro::VariablePool& varpool = hypro::VariablePool::getInstance();
         hypro::SettingsProvider<State>& settingsProvider = hypro::SettingsProvider<State>::getInstance(); // settings provider instance as reference for readability
@@ -50,6 +52,8 @@ namespace hpnmg {
         // class member functions ---------------------------------------------
         void setup();
 
+        hypro::Location<Number>* processParametricLocation(ParametricLocation parametricLocation);
+
         hypro::Condition<Number> generateInvariant(vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions, map<string, shared_ptr<ContinuousPlace>> cplaces);
 
         hypro::rectangularFlow<Number> generateFlow(std::vector<std::pair<double,double>> driftIntervals);
@@ -57,6 +61,7 @@ namespace hpnmg {
         hypro::Condition<Number> generateInitialSet();
 
         void addStatesToQueue(std::map<const Location<Number>*, Condition<Number>> & locationStateMap);
+
 
 
 
