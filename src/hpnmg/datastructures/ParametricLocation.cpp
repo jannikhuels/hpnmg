@@ -67,8 +67,10 @@ namespace hpnmg {
     ParametricLocation::ParametricLocation(const ParametricLocation &parametricLocation) :
             discreteMarking(parametricLocation.discreteMarking),
             continuousMarking(parametricLocation.continuousMarking),
+            continuousMarkingIntervals(parametricLocation.continuousMarkingIntervals),
             continuousMarkingNormed(parametricLocation.continuousMarkingNormed),
             drift(parametricLocation.drift),
+            driftIntervals(parametricLocation.driftIntervals),
             deterministicClock(parametricLocation.deterministicClock), generalClock(parametricLocation.generalClock),
             generalIntervalBoundLeft(parametricLocation.generalIntervalBoundLeft),
             generalIntervalBoundRight(parametricLocation.generalIntervalBoundRight),
