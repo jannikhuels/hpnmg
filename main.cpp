@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
+#include <signal.h>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -82,6 +83,11 @@ int process_command_line(int argc, char **argv, std::string& model, std::string&
     }
 }
 
+void handler(int s){
+    PRINT_STATS()
+    exit(1);
+}
+
 int main (int argc, char *argv[]) {
     std::string modelfile;
     std::string formulafile;
@@ -101,6 +107,15 @@ int main (int argc, char *argv[]) {
 
     // Initialize logging, may be influence by program options
     hpnmg::initializeLogging(coutLogLevel, fileLogLevel);
+
+    // Register handler to print statistics also when CTRL-C is pressed
+    struct sigaction sigIntHandler;
+
+    sigIntHandler.sa_handler = handler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+
+    sigaction(SIGINT, &sigIntHandler, NULL);
 
     // Start reading the model file.
     std::time_t startTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
