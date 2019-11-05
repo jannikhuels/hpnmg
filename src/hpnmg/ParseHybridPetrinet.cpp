@@ -1434,6 +1434,98 @@ namespace hpnmg {
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
+    ParametricLocation ParseHybridPetrinet::addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition,
+                                                               double probability, double timeDelta,
+                                                               //vector<double> timeDelta,
+                                                               //vector<vector<double>> timeDeltas,
+                                                               const ParametricLocation& parentLocation,
+                                                               shared_ptr<HybridPetrinet> hybridPetrinet) {
+
+        // get new markings
+        vector<int> discreteMarking = parentLocation.getDiscreteMarking();
+        for (auto arcItem : transition->getDiscreteInputArcs()) {
+            shared_ptr<DiscreteArc> arc = arcItem.second;
+            long pos =
+                    find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
+            discreteMarking[pos] -= arc->weight;
+        }
+        for (auto arcItem : transition->getDiscreteOutputArcs()) {
+            shared_ptr<DiscreteArc> arc = arcItem.second;
+            long pos =
+                    find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
+            discreteMarking[pos] += arc->weight;
+        }
+
+        // get new drift
+        vector<pair<double,double>> parentContinuousMarkingIntervals = parentLocation.getContinuousMarkingIntervals();
+        std::vector<pair<double,double>> parentDriftIntervals = parentLocation.getDriftIntervals();
+        vector<pair<double,double>> continuousMarkingIntervals;
+        for (int place = 0; place < parentContinuousMarkingIntervals.size(); ++place) {
+            pair<double,double> drift = parentDriftIntervals[place];
+            pair<double,double> oldMarking = parentContinuousMarkingIntervals[place];
+            pair<double,double> newMarking;
+            newMarking.first = oldMarking.first + timeDelta * drift.first;
+            newMarking.second = oldMarking.second + timeDelta * drift.second;
+            continuousMarkingIntervals.push_back(newMarking);
+        }
+
+        vector<pair<double,double>> driftIntervals = getDriftIntervals(discreteMarking, continuousMarkingIntervals, hybridPetrinet);
+
+
+        double eventTime = parentLocation.getSourceEvent().getTime() + timeDelta;
+
+
+        Event event = Event(EventType::Timed, {}, eventTime);
+        event.setDeterministicTransitionMember(transition);
+
+        ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarkingIntervals, driftIntervals, event);
+
+        // get new deterministic clocks
+        vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
+        for (int i = 0; i < deterministicClocks.size(); ++i) {
+            if (deterministicTransitionIDs[i] == transition->id) {
+//                vector<double> initVector{0.0};
+//                for (int j = 0; j < generalTransitionsFired.size(); ++j) {
+//                    initVector.push_back(0.0);
+//                }
+                //deterministicClocks[i] = {0.0}; // oder
+                deterministicClocks[i][0]=0.0;
+                continue;
+            }
+            if (!transitionIsEnabled(parentLocation.getDiscreteMarking(), parentContinuousMarkingIntervals,
+                                     hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
+                                     hybridPetrinet)) {
+                continue;
+            }
+//            for (int j = 0; j < deterministicClocks[i].size() || j < timeDelta.size(); ++j) {
+//                if (j >= deterministicClocks[i].size())
+//                    deterministicClocks[i].push_back(timeDelta[j]);
+//                else if (j >= timeDelta.size())
+//                    continue;
+//                else
+//                    deterministicClocks[i][j] = deterministicClocks[i][j] + timeDelta[j];
+//            }
+            deterministicClocks[i][0] = deterministicClocks[i][0] + timeDelta;
+        }
+
+
+        newLocation.setDeterministicClock(deterministicClocks);
+        newLocation.setConflictProbability(probability);
+        newLocation.setAccumulatedProbability(1);
+
+
+        // add bool vector for enabling status of deterministic transitions
+        vector<bool> enablingStatusesOfDeterministicTransitions(deterministicTransitionIDs.size());
+        for (int i = 0; i < deterministicTransitionIDs.size(); i++) {
+            shared_ptr<DeterministicTransition> detTrans = hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]];
+            enablingStatusesOfDeterministicTransitions[i] = transitionIsEnabled(discreteMarking, continuousMarkingIntervals, detTrans, hybridPetrinet);
+        }
+        newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
+
+        //parametriclocationTree->setChildNode(parentNode, newLocation);
+        return newLocation;
+    }
+
     void ParseHybridPetrinet::addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition,
                                                                double probability, vector<double> timeDelta,
                                                                vector<vector<double>> timeDeltas,
@@ -1449,7 +1541,7 @@ namespace hpnmg {
             if (transitionIsEnabled(parentLocation.getDiscreteMarking(), parentLocation.getContinuousMarking(),
                                     hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]], hybridPetrinet,
                                     parentLocation.getGeneralIntervalBoundLeft(), parentLocation
-                                                                                         .getGeneralIntervalBoundRight(), parentLocation.getGeneralTransitionsFired())) {
+                                            .getGeneralIntervalBoundRight(), parentLocation.getGeneralTransitionsFired())) {
                 for (int j = 0; j < timeDelta.size(); ++j) {
                     if (generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].size() <= j)
                         generalIntervalBoundLeft[i][generalIntervalBoundLeft[i].size() - 1].push_back(timeDelta[j]);
@@ -1563,7 +1655,7 @@ namespace hpnmg {
             if (!transitionIsEnabled(parentLocation.getDiscreteMarking(), parentContinuousMarking,
                                      hybridPetrinet->getGeneralTransitions()[generalTransitionIDs[i]],
                                      hybridPetrinet,parentLocation.getGeneralIntervalBoundLeft(),
-                        parentLocation.getGeneralIntervalBoundRight(), parentLocation.getGeneralTransitionsFired()))
+                                     parentLocation.getGeneralIntervalBoundRight(), parentLocation.getGeneralTransitionsFired()))
                 continue;
             for (int j = 0; j < generalClocks[i].size() || j < timeDelta.size(); ++j) {
                 if (j >= generalClocks[i].size())
@@ -1600,6 +1692,7 @@ namespace hpnmg {
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
+
 
     void ParseHybridPetrinet::addLocationForBoundaryEventByArcMember(shared_ptr<GuardArc> arcMember, vector<double> timeDelta, vector<vector<double>> timeDeltas,
                                                           ParametricLocationTree::Node parentNode,
@@ -1881,6 +1974,75 @@ namespace hpnmg {
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
+    }
+
+    ParametricLocation ParseHybridPetrinet::addLocationForBoundaryEventByContinuousPlaceMember(shared_ptr<ContinuousPlace> placeMember, std::pair<double,double> timeInterval,
+                                                                                 ParametricLocation parentLocation,
+                                                                                 shared_ptr<HybridPetrinet> hybridPetrinet) {
+
+
+
+
+
+        // get new drift
+        vector<pair<double,double>> parentContinuousMarkingIntervals = parentLocation.getContinuousMarkingIntervals();
+        std::vector<pair<double,double>> parentDriftIntervals = parentLocation.getDriftIntervals();
+        vector<pair<double,double>> continuousMarkingIntervals;
+        for (int place = 0; place < parentContinuousMarkingIntervals.size(); ++place) {
+            pair<double,double> drift = parentDriftIntervals[place];
+            pair<double,double> oldMarking = parentContinuousMarkingIntervals[place];
+            pair<double,double> newMarking;
+            newMarking.first = oldMarking.first + timeInterval.first * drift.first; // time interval first richtig?
+            newMarking.second = oldMarking.second + timeInterval.second * drift.second;
+            continuousMarkingIntervals.push_back(newMarking);
+        }
+        vector<pair<double,double>> driftIntervals = getDriftIntervals(parentLocation.getDiscreteMarking(), continuousMarkingIntervals, hybridPetrinet);
+
+        double eventTime = parentLocation.getSourceEvent().getTime() + timeInterval.first; // todo: event time needs to accept interval, add first + second!!
+
+        Event event = Event(EventType::Continuous, {}, eventTime);
+        event.setPlaceMember(placeMember);
+
+        ParametricLocation newLocation = ParametricLocation(parentLocation.getDiscreteMarking(), continuousMarkingIntervals, driftIntervals, event);
+
+        // get new deterministic clocks
+        vector<vector<double>> deterministicClocks = parentLocation.getDeterministicClock();
+        for (int i = 0; i < deterministicClocks.size(); ++i) {
+            if (!transitionIsEnabled(parentLocation.getDiscreteMarking(), parentContinuousMarkingIntervals,
+                                     hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]],
+                                     hybridPetrinet)) {
+                continue;
+            }
+            deterministicClocks[i][0] = deterministicClocks[i][0] + timeInterval.first; // todo !! first is wrong !! interval!
+        }
+
+
+
+        newLocation.setDeterministicClock(deterministicClocks);
+        newLocation.setConflictProbability(1);
+        newLocation.setAccumulatedProbability(1);
+
+//        // add bool vector for enabling status of deterministic transitions
+//        vector<bool> enablingStatusesOfDeterministicTransitions(deterministicTransitionIDs.size());
+//        for (int i = 0; i < deterministicTransitionIDs.size(); i++) {
+//            shared_ptr<DeterministicTransition> detTrans = hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]];
+//            enablingStatusesOfDeterministicTransitions[i] = transitionIsEnabled(discreteMarking, continuousMarking, detTrans, hybridPetrinet, generalIntervalBoundLeft,generalIntervalBoundRight, parentLocation.getGeneralTransitionsFired());
+//        }
+//        newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
+
+      //  parametriclocationTree->setChildNode(parentNode, newLocation);
+
+
+        vector<bool> enablingStatusesOfDeterministicTransitions(deterministicTransitionIDs.size());
+        for (int i = 0; i < deterministicTransitionIDs.size(); i++) {
+            shared_ptr<DeterministicTransition> detTrans = hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]];
+            enablingStatusesOfDeterministicTransitions[i] = transitionIsEnabled(parentLocation.getDiscreteMarking(), continuousMarkingIntervals, detTrans, hybridPetrinet);
+        }
+        newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
+
+        //parametriclocationTree->setChildNode(parentNode, newLocation);
+        return newLocation;
+
     }
 
     void ParseHybridPetrinet::addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double maxTime,

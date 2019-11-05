@@ -27,47 +27,120 @@ namespace hpnmg {
         // get root location
         std::cout << "Getting the root location." << std::endl;
         ParametricLocation rootloc = parser->ParseHybridPetrinet::generateRootParametricLocation(mPetrinet,carl::toDouble(timeBoundN));
-        auto location = processParametricLocation(rootloc);
-        locationQueue = {location};
+        hypro::Location<Number>* location = processParametricLocation(rootloc, true);
+        locationQueue = {{location,rootloc}};
 
         bool stop = false;
+        int loopNumber = 0;
         // process tasks from global queue
         while(queueManager.hasWorkable(true)) { // using locked access to queues.
+            loopNumber++;
+            std::cout << sep << "Loop number " << loopNumber << std::endl;
+            std::cout << "There are still " << locationQueue.size() << " locations in the Queue." << std::endl;
+
             auto task = queueManager.getNextWorkable(true,true); // get next task locked and dequeue from front.
             assert(task!=nullptr);
+            std::cout << "Process task." << std::endl;
             worker.processTask(task,settingsProvider.getStrategy(), globalQueue, globalCEXQueue, segments);
 
+            std::cout << sep << "Segments up to this point:" << std::endl;
+            for(const auto& segment : segments) {
+                std::cout << segment << std::endl;
+            }
+            std::cout << sep << std::endl;
+
+            if(loopNumber == 4) {
+                std::cout << "Breaking now. (manually by bool stop)" << std::endl;
+                break;
+            }
+
+            std::cout << "Adding new locations?" << std::endl;
             // new state
             const auto& segment = segments.getStates()[1];
-            auto currentLocation = locationQueue.front();
+            hypro::Location<Number>* currentLocation = locationQueue.front().first;
+            ParametricLocation currentParametricLocation = locationQueue.front().second;
+            std::cout << "- current location is " << currentLocation << " with name: " << currentLocation->getName() << std::endl;
             locationQueue.pop_front();
             hypro::Condition<Number> currentCondition = currentLocation->getInvariant();
             hypro::matrix_t<Number> invariantMatrix = currentCondition.getMatrix();
             hypro::vector_t<Number> invariantVector = currentCondition.getVector();
             //for ()
-            //for (int i=0; i<invariantMatrix.rows(); i++) {
-            //   // time
-            //    if(invariantMatrix(i,0)!=0) {
-            //        std::cout << "Event is deterministic!" << std::endl;
-            //    }
-            //}
+            for (int i=0; i<invariantMatrix.rows(); i++) {
+                std::cout << "invariantMatrix i= " << i << std::endl;
+               // time
+                if(invariantMatrix(i,0)!=0) {// add test if this invariant had influence on the region
+                double timePassed = invariantVector(i);
+                    std::cout << "Invariant: t <= " << timePassed << " is deterministic" << std::endl;
 
-            hypro::matrix_t<Number> halfspaceMatrix = hypro::matrix_t<Number>(2,dimension);
-            hypro::vector_t<Number> halfspaceVector = hypro::vector_t<Number>(2);
-            halfspaceMatrix << 1,0,-1,0;
-            halfspaceVector << 2,-2;
-            auto newState = segment.intersectHalfspaces(halfspaceMatrix, halfspaceVector);
-            std::cout << "New state is " << newState << std::endl;
+                    hypro::matrix_t<Number> halfspaceMatrix = hypro::matrix_t<Number>::Zero(2,dimension);
+                    hypro::vector_t<Number> halfspaceVector = hypro::vector_t<Number>(2);
+                    halfspaceMatrix(0,0) = 1;
+                    halfspaceMatrix(1,0) = -1;
+                    halfspaceVector(0) = timePassed;
+                    halfspaceVector(1) = -timePassed;
 
-            auto constraintset = hypro::Converter<Number>::toConstraintSet(boost::get<hypro::CarlPolytope<Number>>(newState.getSet()));
-            hypro::Condition<Number> condition = hypro::Condition<Number>(constraintset);
+                    auto newStatePair = segment.satisfiesHalfspaces(halfspaceMatrix, halfspaceVector);
+                    if(newStatePair.first == hypro::CONTAINMENT::NO ){
+                        std::cout << "Skipping the invariant since the segment is empty!" << std::endl;
+                        continue;
+                    }
+                    std::cout << "New state for deterministic event is \n" << newStatePair.second.getSet() << std::endl;
 
+                    auto constraintset = hypro::Converter<Number>::toConstraintSet(boost::get<hypro::CarlPolytope<Number>>(newStatePair.second.getSet()));
+                    hypro::Condition<Number> condition = hypro::Condition<Number>(constraintset);
+
+
+                    std::cout << sep << "Creating new Location for deterministic event." << std::endl;
+                    ParametricLocation newLoc = parser->addLocationForDeterministicEvent(mPetrinet->getDeterministicTransitions()["td0"],1.0,timePassed, currentParametricLocation, mPetrinet);
+                    hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, condition);
+                    std::cout << "Adding the new location to the locationQueue." << std::endl;
+                    locationQueue.push_back({newLocation,newLoc});
+                }
+                for(int j=1; j<invariantMatrix.cols(); j++) {
+                    std::cout << "invariantMatrix j= " << j << std::endl;
+                    if(invariantMatrix(i,j)!=0) {
+                        double boundary = invariantVector(i);
+                        std::cout << "Invariant: x_"<< j << "<=" << boundary << " is boundary." << std::endl;
+
+                        hypro::matrix_t<Number> halfspaceMatrix = hypro::matrix_t<Number>::Zero(2,dimension);
+                        hypro::vector_t<Number> halfspaceVector = hypro::vector_t<Number>(2);
+                        halfspaceMatrix(0,j) = 1;
+                        halfspaceMatrix(1,j) = -1;
+                        halfspaceVector(0) = boundary;
+                        halfspaceVector(1) = -boundary;
+                        auto newStatePair = segment.satisfiesHalfspaces(halfspaceMatrix, halfspaceVector);
+                        if(newStatePair.first == hypro::CONTAINMENT::NO || boundary==0) {  // fix test if x=0 the whole time (boundary == 0 is NOT safe)
+                            std::cout << "Skipping the invariant since the segment is empty!" << std::endl;
+                            continue;
+                        }
+                        std::cout << "New state for boundary event is \n" << newStatePair.second.getSet() << std::endl;
+
+                        auto constraintset = hypro::Converter<Number>::toConstraintSet(boost::get<hypro::CarlPolytope<Number>>(newStatePair.second.getSet()));
+                        hypro::Condition<Number> condition = hypro::Condition<Number>(constraintset);
+
+
+
+                        // time passed is not the right time delta!!
+                        std::pair<double,double> timeInterval = {1.5,2};
+                        std::cout << sep << "Creating new Location for boundary event." << std::endl;
+                        ParametricLocation newLoc = parser->addLocationForBoundaryEventByContinuousPlaceMember(mPetrinet->getContinuousPlaces()["pc1"],timeInterval, currentParametricLocation, mPetrinet);
+                        hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, condition);
+                        std::cout << "Adding the new location to the locationQueue." << std::endl;
+                        locationQueue.push_back({newLocation,newLoc});
+
+                    }
+                }
+
+
+            }
+
+/*
             //location erzeugen auslagern
             hypro::Location<Number>* loc1 = new hypro::Location<Number>();
             hypro::rectangularFlow<Number> flow = generateFlow({{1,3}});
 
-            hypro::matrix_t<Number> invariantMatrix = hypro::matrix_t<Number>::Zero(dimension*2,dimension);
-            hypro::vector_t<Number> invariantVector = hypro::vector_t<Number>::Zero(dimension*2);
+            //hypro::matrix_t<Number> invariantMatrix = hypro::matrix_t<Number>::Zero(dimension*2,dimension);
+            //hypro::vector_t<Number> invariantVector = hypro::vector_t<Number>::Zero(dimension*2);
 
             invariantMatrix(1,0) = 0;
             invariantVector(1) = 0;
@@ -89,11 +162,9 @@ namespace hpnmg {
 
             std::map<const Location<Number>*, Condition<Number>> initialStates;
             initialStates.emplace(std::make_pair(loc1,condition));
-            addStatesToQueue(initialStates);
+            addStatesToQueue(initialStates);*/
 
-            if(stop) {
-               break;
-            }
+
             stop = true;
         }
 
@@ -111,7 +182,7 @@ namespace hpnmg {
 
     }
 
-        hypro::Location<FlowpipeComputer::Number>* FlowpipeComputer::processParametricLocation(ParametricLocation parametricLocation) {
+        hypro::Location<FlowpipeComputer::Number>* FlowpipeComputer::processParametricLocation(ParametricLocation parametricLocation, bool isInitial, hypro::Condition<Number> state) {
         // get deterministic transition firings (-> invariant && transition in HA)
         vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions = parser->ParseHybridPetrinet::processLocation(parametricLocation, mPetrinet, carl::toDouble(timeBoundN));
         std::cout << "The next deterministic transitions are:" << std::endl;
@@ -129,7 +200,12 @@ namespace hpnmg {
         loc1->setInvariant(invariant);
 
         // generate Constraint Set for initial state
-        hypro::Condition<Number> state = generateInitialSet();
+        if(isInitial) {
+            state = generateInitialSet();
+            loc1->setName("loc_root");
+        } else {
+            loc1->setName("loc_new");
+        }
 
         // set up initial states to the correct representation - in this case CarlPolytope
         std::map<const Location<Number>*, Condition<Number>> initialStates;
@@ -244,7 +320,7 @@ namespace hpnmg {
             globalQueue->enqueue(std::shared_ptr<hypro::Task<State>>(new hypro::Task<State>(initialNode)));
         }
 
-        std::cout << sep << "Tree Stats are: \n" << tree->getTreeStats();
+        //std::cout << sep << "Tree Stats are: \n" << tree->getTreeStats();
 
     }
 

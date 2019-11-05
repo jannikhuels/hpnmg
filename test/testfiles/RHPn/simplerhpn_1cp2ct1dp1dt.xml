@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <HPnG>
     <places>
-        <continuousPlace id="pc1" level="0" capacity="10" infiniteCapacity="0" />
+        <continuousPlace id="pc1" level="0" capacity="3.5" infiniteCapacity="0" />
         <discretePlace id="pd0" marking="1"/>
     </places>
     <transitions>

@@ -97,9 +97,16 @@ namespace hpnmg {
                                               ParametricLocationTree::Node parentNode,
                                               shared_ptr<HybridPetrinet> hybridPetrinet);
 
+        ParametricLocation addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition,
+                                                                   double probability, double timeDelta,
+                                                                   const ParametricLocation& parentLocation,
+                                                                   shared_ptr<HybridPetrinet> hybridPetrinet);
+
 
         void addLocationForBoundaryEventByArcMember(shared_ptr<GuardArc> arcMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet);
         void addLocationForBoundaryEventByContinuousPlaceMember(shared_ptr<ContinuousPlace> placeMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet);
+
+        ParametricLocation addLocationForBoundaryEventByContinuousPlaceMember(shared_ptr<ContinuousPlace> placeMember, std::pair<double,double> timeDelta, ParametricLocation parentLocation, shared_ptr<HybridPetrinet> hybridPetrinet);
         //void addLocationForBoundaryEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet, std::string);
 
 

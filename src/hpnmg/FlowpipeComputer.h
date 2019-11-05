@@ -40,7 +40,7 @@ namespace hpnmg {
         hypro::WorkQueueManager<std::shared_ptr<hypro::Task<State>>> queueManager;
         hypro::WorkQueue<std::shared_ptr<hypro::Task<State>>>* globalCEXQueue = queueManager.addQueue();
         hypro::WorkQueue<std::shared_ptr<hypro::Task<State>>>* globalQueue = queueManager.addQueue();
-        std::deque<hypro::Location<Number>*> locationQueue;
+        std::deque<std::pair<hypro::Location<Number>*,ParametricLocation>> locationQueue;
         ParseHybridPetrinet* parser;
         hypro::VariablePool& varpool = hypro::VariablePool::getInstance();
         hypro::SettingsProvider<State>& settingsProvider = hypro::SettingsProvider<State>::getInstance(); // settings provider instance as reference for readability
@@ -52,7 +52,7 @@ namespace hpnmg {
         // class member functions ---------------------------------------------
         void setup();
 
-        hypro::Location<Number>* processParametricLocation(ParametricLocation parametricLocation);
+        hypro::Location<Number>* processParametricLocation(ParametricLocation parametricLocation, bool isInitial, hypro::Condition<Number> state = hypro::Condition<Number>());
 
         hypro::Condition<Number> generateInvariant(vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions, map<string, shared_ptr<ContinuousPlace>> cplaces);
 
