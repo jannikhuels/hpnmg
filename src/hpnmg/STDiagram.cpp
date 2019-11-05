@@ -1,4 +1,5 @@
 #include "STDiagram.h"
+#include "util/statistics/Statistics.h"
 
 namespace hpnmg {
 
@@ -254,6 +255,8 @@ namespace hpnmg {
 
     STDPolytope<double> STDiagram::intersectRegionForContinuousLevel(const STDPolytope<double> &baseRegion, std::vector<double> entryTimeNormed, std::vector<double> markingNormed, double drift, double level, bool negate) {
         assert(markingNormed.size() == entryTimeNormed.size());
+        COUNT_STATS("STDIAGRAM_INTERSECT_REGION_CONTINUOUS_LEVEL")
+        START_BENCHMARK_OPERATION("STDIAGRAM_INTERSECT_REGION_CONTINUOUS_LEVEL")
         vector_t<double> markingDirection = vector_t<double>::Zero(markingNormed.size());
         vector_t<double> entryTimeDirection = vector_t<double>::Zero(entryTimeNormed.size());
 
@@ -275,10 +278,14 @@ namespace hpnmg {
 
         if (direction.isZero()) {
             // The level is independent of RVs and time, thus constant in the region. Check if it satisfies the level.
-            if ((markingNormed[0] <= level) != negate)
+            if ((markingNormed[0] <= level) != negate) {
+                STOP_BENCHMARK_OPERATION("STDIAGRAM_INTERSECT_REGION_CONTINUOUS_LEVEL")
                 return baseRegion;
-            else
+            }
+            else {
+                STOP_BENCHMARK_OPERATION("STDIAGRAM_INTERSECT_REGION_CONTINUOUS_LEVEL")
                 return STDPolytope<double>::Empty(baseRegion.dimension());
+            }
         }
 
         STDPolytope<double> intersectRegion(baseRegion);
@@ -286,6 +293,7 @@ namespace hpnmg {
             intersectRegion.insert(satHalfspace);
         else
             intersectRegion.insertOpen(-satHalfspace);
+        STOP_BENCHMARK_OPERATION("STDIAGRAM_INTERSECT_REGION_CONTINUOUS_LEVEL")
         return intersectRegion;
     }
 

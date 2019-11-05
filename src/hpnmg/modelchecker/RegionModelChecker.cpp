@@ -16,6 +16,7 @@
 #include "ParseHybridPetrinet.h"
 #include "ProbabilityCalculator.h"
 #include "util/logging/Logging.h"
+#include "util/statistics/Statistics.h"
 
 namespace hpnmg {
     RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :
@@ -31,6 +32,8 @@ namespace hpnmg {
         auto calculator = ProbabilityCalculator();
 
         for (auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
+            COUNT_STATS("MODELCHECKING_OVERALL")
+            START_BENCHMARK_OPERATION("MODELCHECKING_OVERALL")
             TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Computing STD region.")
             node.computeRegion(this->plt);
 
@@ -62,6 +65,7 @@ namespace hpnmg {
                 50000,
                 nodeError
             ) * node.getParametricLocation().getAccumulatedProbability();
+            STOP_BENCHMARK_OPERATION("MODELCHECKING_OVERALL")
             TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Running total probability: " << probability)
             error += nodeError;
         }
@@ -115,6 +119,8 @@ namespace hpnmg {
 
     //TODO this checks x_p <= u. Should I change this?
     STDPolytope<mpq_class> RegionModelChecker::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value, bool negate) {
+        COUNT_STATS("MODELCHECKING_CONTINUOUS")
+        START_BENCHMARK_OPERATION("MODELCHECKING_CONTINUOUS")
         const auto &continuousPlaces = this->hpng->getContinuousPlaces();
         if (continuousPlaces.count(placeId) == 0)
             throw std::invalid_argument(std::string("no such continuous place in model: ") + placeId);
@@ -133,17 +139,20 @@ namespace hpnmg {
             negate
         );
         TRACELOG("hpnmg.RegionModelChecker", "post level intersection: (vertex dim, effective dim) = (" << regionIntersected.dimension() << ", " << regionIntersected.effectiveDimension() << ")")
-
+        STOP_BENCHMARK_OPERATION("MODELCHECKING_CONTINUOUS")
         return STDPolytope<mpq_class>(regionIntersected);
     }
 
     STDPolytope<mpq_class> RegionModelChecker::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value, bool negate) {
+        COUNT_STATS("MODELCHECKING_DISCRETE")
+        START_BENCHMARK_OPERATION("MODELCHECKING_DISCRETE")
         const auto &discretePlaces = this->hpng->getDiscretePlaces();
         if (discretePlaces.count(placeId) == 0)
             throw std::invalid_argument(std::string("no such discrete place in model: ") + placeId);
 
         auto placeOffset = std::distance(discretePlaces.begin(), discretePlaces.find(placeId));
         const bool satisfied = node.getParametricLocation().getDiscreteMarking().at(placeOffset) == value;
+        STOP_BENCHMARK_OPERATION("MODELCHECKING_DISCRETE")
         if (satisfied != negate)
             return STDPolytope<mpq_class>(node.getRegion());
         else
@@ -155,7 +164,9 @@ namespace hpnmg {
          // trivial sub-formulae we can skip the intersection:
          //    - sat(true AND phi) -> sat(phi)
          //    - sat(false AND phi) -> empty set
-        const auto lhsTrivial = conj.left.isTrivial();
+        COUNT_STATS("MODELCHECKING_CONJUNCTION")
+        START_BENCHMARK_OPERATION("MODELCHECKING_CONJUNCTION")
+         const auto lhsTrivial = conj.left.isTrivial();
         const auto rhsTrivial = conj.right.isTrivial();
 
         std::vector<STDPolytope<mpq_class>> sat;
@@ -182,16 +193,20 @@ namespace hpnmg {
             const auto& trivialFormula = lhsTrivial.first ? lhsTrivial : rhsTrivial;
             const auto& nonTrivialFormula = lhsTrivial.first ? rhsTrivial : lhsTrivial;
 
-            if (trivialFormula.second.getType() == Formula::Type::True)
+            if (trivialFormula.second.getType() == Formula::Type::True) {
+                STOP_BENCHMARK_OPERATION("MODELCHECKING_CONJUNCTION")
                 sat = this->satisfiesHandler(node, nonTrivialFormula.second, atTime);
+            }
             else
                 sat = {};
         }
-
+        STOP_BENCHMARK_OPERATION("MODELCHECKING_CONJUNCTION")
         return sat;
     }
 
     std::vector<STDPolytope<mpq_class>> RegionModelChecker::neg(const ParametricLocationTree::Node& node, const Negation& formula, double atTime) {
+        COUNT_STATS("MODELCHECKING_NEGATION")
+        START_BENCHMARK_OPERATION("MODELCHECKING_NEGATION")
         const STDPolytope<mpq_class>& nodeRegion = STDPolytope<mpq_class>(node.getRegion());
 
         const auto innerFormula = formula.formula;
@@ -207,13 +222,16 @@ namespace hpnmg {
         switch (innerFormula.getType()) {
             case Formula::Type::ContinuousAtomicProperty: {
                 const auto cap = innerFormula.getContinuousAtomicProperty();
+                STOP_BENCHMARK_OPERATION("MODELCHECKING_NEGATION")
                 return {this->cfml(node, cap->place, cap->value, true)};
             }
             case Formula::Type::DiscreteAtomicProperty: {
                 const auto dap = innerFormula.getDiscreteAtomicProperty();
+                STOP_BENCHMARK_OPERATION("MODELCHECKING_NEGATION")
                 return {this->dfml(node, dap->place, dap->value, true)};
             }
             case Formula::Type::Negation: {
+                STOP_BENCHMARK_OPERATION("MODELCHECKING_NEGATION")
                 return this->satisfiesHandler(node, innerFormula.getNegation()->formula, atTime);
             }
             // These formulae cannot be negated easily in general:
@@ -226,8 +244,10 @@ namespace hpnmg {
 
         const auto subSat = this->satisfiesHandler(node, innerFormula, atTime);
         // If the nested satisfaction set is empty, the whole region satisfies the negation
-        if (subSat.empty())
+        if (subSat.empty()) {
+            STOP_BENCHMARK_OPERATION("MODELCHECKING_NEGATION")
             return {nodeRegion};
+        }
 
         std::vector<STDPolytope<mpq_class>> sat;
         for (const auto& polytope : subSat) {
@@ -255,11 +275,13 @@ namespace hpnmg {
             );
             sat = intersections;
         }
-
+        STOP_BENCHMARK_OPERATION("MODELCHECKING_NEGATION")
         return sat;
     }
 
     std::vector<STDPolytope<mpq_class>> RegionModelChecker::until(const ParametricLocationTree::Node& node, const Until& formula, double atTime) {
+        COUNT_STATS("MODELCHECKING_UNTIL")
+        START_BENCHMARK_OPERATION("MODELCHECKING_UNTIL")
         auto sat = this->untilHandler(node, formula, atTime);
 
         TRACELOG("hpnmg.RegionModelChecker.Until", "sat(until) computed. Intersecting it with the node's region.")
@@ -276,7 +298,7 @@ namespace hpnmg {
 
         std::transform(sat.begin(), sat.end(), sat.begin(), [&fullRegion](auto&& region) { return region.intersect(fullRegion); });
         sat.erase(std::remove_if(sat.begin(), sat.end(), [](const auto &region) { return region.empty(); }), sat.end());
-
+        STOP_BENCHMARK_OPERATION("MODELCHECKING_UNTIL")
         return sat;
     }
 
@@ -284,7 +306,7 @@ namespace hpnmg {
         auto cached = this->untilCache.find(node.getNodeID());
         if (cached != this->untilCache.end())
             return cached->second;
-
+        COUNT_STATS("MODELCHECKING_UNTIL_HANDLER")
         // Construct the upper and lower boundary halfspaces defined by the check-time and the check-time plus until-time.
         hypro::vector_t<mpq_class> timeVectorUp = hypro::vector_t<mpq_class>::Zero(node.getRegion().dimension());
         timeVectorUp[timeVectorUp.size() - 1] = 1;
@@ -320,6 +342,7 @@ namespace hpnmg {
         //region Gather all polytopes that most certainly fulfill `formula` within the time frame.
         // The polytopes in the current region that fulfill `formula.goal`
         auto regionSat = this->satisfiesHandler(node, formula.goal, atTime);
+        START_BENCHMARK_OPERATION("MODELCHECKING_UNTIL_HANDLER_GOAL")
         std::transform(regionSat.begin(), regionSat.end(), regionSat.begin(), [&upperLimit](STDPolytope<mpq_class> sat) {
             sat.insert(upperLimit);
             TRACELOG("hpnmg.RegionModelChecker.Until", "Extending member of sat(goal) downwards.")
@@ -328,13 +351,14 @@ namespace hpnmg {
         regionSat.erase(std::remove_if(regionSat.begin(), regionSat.end(), [](const auto& region) { return region.empty(); }), regionSat.end());
         std::move(regionSat.begin(), regionSat.end(), std::back_inserter(eventualSat));
         //endregion Gather all polytopes that most certainly fulfill `formula`.
-
+        STOP_BENCHMARK_OPERATION("MODELCHECKING_UNTIL_HANDLER_GOAL")
         TRACELOG("hpnmg.RegionModelChecker.Until", "Until @ Node " << node.getNodeID() << ": Done.")
 
         // All polytopes that do satisfy or do not satisfy the until formula inside this region
         std::vector<STDPolytope<mpq_class>> knownSat(eventualSat);
         // Get the polytopes where the until is "unfulfilled" immediately. The downward extension is needed multiple
         // times, so it is calculated and cached here already.
+        START_BENCHMARK_OPERATION("MODELCHECKING_UNTIL_HANDLER_INSIDE")
         auto deadRegions = std::vector<std::pair<STDPolytope<mpq_class>, STDPolytope<mpq_class>::Polytope>>();
         const auto& preTrivial = formula.pre.isTrivial();
         if (preTrivial.first) {
@@ -362,9 +386,12 @@ namespace hpnmg {
             }
             TRACELOG("hpnmg.RegionModelChecker.Until",  "Done.")
         }
+        STOP_BENCHMARK_OPERATION("MODELCHECKING_UNTIL_HANDLER_INSIDE")
 
         // Check if there is a part of the region left, which needs the processing in the child locations.
+        START_BENCHMARK_OPERATION("MODELCHECKING_UNTIL_HANDLER_SET_DIFFERENCE")
         if (!fullRegion.setDifference(knownSat).empty()) {
+            STOP_BENCHMARK_OPERATION("MODELCHECKING_UNTIL_HANDLER_SET_DIFFERENCE")
             // The polytopes resulting from recursively handled child locations
             for (auto& childNode : this->plt.getChildNodes(node)) {
                 childNode.computeRegion(this->plt);
@@ -372,8 +399,11 @@ namespace hpnmg {
                 auto childSat = this->untilHandler(childNode, formula, atTime);
                 std::move(childSat.begin(), childSat.end(), std::back_inserter(eventualSat));
             }
+        } else {
+            STOP_BENCHMARK_OPERATION("MODELCHECKING_UNTIL_HANDLER_SET_DIFFERENCE")
         }
 
+        START_BENCHMARK_OPERATION("MODELCHECKING_UNTIL_HANDLER_SATISFIED")
         auto sat = std::vector<STDPolytope<mpq_class>>();
         for (const auto& goalRegion : eventualSat) {
             std::vector<STDPolytope<mpq_class>> regionsToRemove{};
@@ -394,7 +424,7 @@ namespace hpnmg {
             goalSat.erase(std::remove_if(goalSat.begin(), goalSat.end(), [](const auto& region) { return region.empty(); }), goalSat.end());
             std::move(goalSat.begin(), goalSat.end(), std::back_inserter(sat));
         }
-
+        STOP_BENCHMARK_OPERATION("MODELCHECKING_UNTIL_HANDLER_SATISFIED")
         TRACELOG("hpnmg.RegionModelChecker.Until",  "Computed " << sat.size() << " sat regions.")
 
         this->untilCache.insert({node.getNodeID(), sat});

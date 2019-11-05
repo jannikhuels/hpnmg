@@ -1,6 +1,8 @@
 #include "ParametricLocationTree.h"
 
 #include <numeric>
+#include "util/statistics/Statistics.h"
+#include "util/logging/Logging.h"
 
 namespace hpnmg {
 
@@ -303,6 +305,7 @@ namespace hpnmg {
     }
 
     void ParametricLocationTree::recursivelyCollectCandidateLocationsWithPLT(Node startNode, vector<Node> &candidates, std::pair<double, double> interval, double probability, std::vector<int> occurings) {
+        COUNT_STATS("CHECK_LOCATION_IS_CANDIDATE")
         // nodeProbability is the probability to get here times the probability to be here
         double nodeProbability = startNode.getParametricLocation().getConflictProbability() * probability;
         ParametricLocation parametricLocation = startNode.getParametricLocation();
@@ -405,6 +408,7 @@ namespace hpnmg {
                 parametricLocation.setIntegrationIntervals(unsortedEntryTimes, bounds, interval.first, occurings, dimension, this->maxTime);
                 startNode.setParametricLocation(parametricLocation);
                 candidates.push_back(startNode);
+                COUNT_STATS("ADD_LOCATION_AS_CANDIDATE")
             }
 
             for (ParametricLocationTree::Node node : getChildNodes(startNode)) {
@@ -427,7 +431,10 @@ namespace hpnmg {
 
         vector<ParametricLocationTree::Node> locations;
         // recursivelyCollectCandidateLocations(getRootNode(), locations, &STDiagram::regionIsCandidateForTimeInterval, interval, this->getDimension());
+        START_BENCHMARK_OPERATION("CREATE_CANDIDATES")
         recursivelyCollectCandidateLocationsWithPLT(getRootNode(), locations, interval, 1.0, dimV);
+        STOP_BENCHMARK_OPERATION("CREATE_CANDIDATE")
+        INFOLOG("hpnmg.ParametricLocationTree", "[Number of candidates at time [" << interval <<  "] ]: " << locations.size())
         return locations;
     }
 

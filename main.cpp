@@ -14,6 +14,7 @@
 #include "ReadHybridPetrinet.h"
 #include "PLTWriter.h"
 #include "ReadFormula.h"
+#include "util/statistics/Statistics.h"
 
 bool fileExists(const std::string &filename) {
     struct stat buf;
@@ -182,6 +183,8 @@ int main (int argc, char *argv[]) {
     for (string s : appendix) {
         resultfilestream << "\t" << s;
     }
+
+    PRINT_STATS()
 
     resultfilestream << endl;
     resultfilestream.close();

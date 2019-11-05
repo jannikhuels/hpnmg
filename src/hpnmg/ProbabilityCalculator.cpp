@@ -8,6 +8,7 @@
 
 #include "helper/Triangulation.h"
 #include "util/logging/Logging.h"
+#include "util/statistics/Statistics.h"
 
 using namespace std;
 
@@ -370,12 +371,18 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         char algorithm, int functioncalls,
         double &error
     ) {
-        if (region.empty() || region.dimension() == 0)
+        COUNT_STATS("PROBABILITY_INTEGRATION_POLYTOPE")
+        START_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_POLYTOPE")
+        if (region.empty() || region.dimension() == 0) {
+            STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_POLYTOPE")
             return 0.0;
+        }
 
         auto vertices = region.vertices();
-        if (vertices.empty())
+        if (vertices.empty()) {
+            STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_POLYTOPE")
             return 0.0;
+        }
 
         long maxDim = vertices.begin()->rawCoordinates().rows();
         hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
@@ -387,6 +394,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         auto effectiveDimension = int(matr.fullPivLu().rank());
         if (effectiveDimension < region.dimension()) {
             INFOLOG("hpnmg.ProbabilityCalculator", "Polytope with zero volume since effective dimension < space dimension (" << effectiveDimension << " < " << region.dimension() << ")");
+            STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_POLYTOPE")
             return 0.0;
         }
 
@@ -453,7 +461,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             result += computeMultivariateIntegralUsingMonteCarlo(functioncalls, all, allPlus,  allMinus, algorithm, error);
         }
 
-
+        STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_POLYTOPE")
         return result;
     }
 
@@ -466,12 +474,15 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         int functioncalls,
         double &error
     ){
-        HPolytope<double> regionToIntegrate{polytopes[0]};
 
+        HPolytope<double> regionToIntegrate{polytopes[0]};
+        COUNT_STATS("PROBABILITY_INTEGRATION_INTERSECTION")
+        START_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_INTERSECTION")
        if (polytopes.size() > 1)
            for(HPolytope<double> currentRegion : polytopes)
                regionToIntegrate = regionToIntegrate.intersect(currentRegion);
 
+           STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_INTERSECTION")
        return ProbabilityCalculator::getProbabilityForPolytopeUsingMonteCarlo(
            regionToIntegrate,
            distributionsNormalized,
@@ -490,6 +501,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         int functioncalls,
         double &error
     ){
+        COUNT_STATS("PROBABILITY_INTEGRATION_UNION")
+        START_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_UNION_REMOVE_EMPTY")
         polytopes.erase(
                 std::remove_if(polytopes.begin(), polytopes.end(), [](HPolytope<double> region) {
                     if (region.empty() || region.dimension() == 0)
@@ -510,6 +523,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 }),
                 polytopes.end()
         );
+        STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_UNION_REMOVE_EMPTY")
 
         double probability = 0.0;
         error = 0.0;

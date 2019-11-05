@@ -1,4 +1,5 @@
 #include "ReadHybridPetrinet.h"
+#include "util/statistics/Statistics.h"
 
 using namespace xercesc;
 using namespace std;
@@ -97,7 +98,8 @@ namespace hpnmg {
     }
 
     shared_ptr<HybridPetrinet> ReadHybridPetrinet::readHybridPetrinet(const std::string &filepath) {
-
+        START_BENCHMARK_OPERATION("READ_HPN")
+        COUNT_STATS("READ_HPN")
         hybridPetrinet = make_shared<HybridPetrinet>();
 
         // Check if file is valid
@@ -166,7 +168,7 @@ namespace hpnmg {
             // char* message = xercesc::XMLString::transcode( e.getMessage() );
             std::runtime_error("Error parsing XML file.");
         }
-
+        STOP_BENCHMARK_OPERATION("READ_HPN")
         return hybridPetrinet;
     }
 
