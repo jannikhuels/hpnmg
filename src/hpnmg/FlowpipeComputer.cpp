@@ -8,7 +8,7 @@ namespace hpnmg {
         varpool.clear();
 
         // theoretically we do not need this - check if really needed.
-        settingsProvider.addStrategyElement<hypro::CarlPolytope<Number>>(mpq_class(1)/mpq_class(100), hypro::AGG_SETTING::AGG, -1);
+        settingsProvider.addStrategyElement<hypro::CarlPolytope<Number>>(mpq_class(1)/mpq_class(1), hypro::AGG_SETTING::AGG, -1);
         // set settings
         settings.useInvariantTimingInformation = false;
         settings.useGuardTimingInformation = false;
@@ -35,7 +35,7 @@ namespace hpnmg {
         // process tasks from global queue
         while(queueManager.hasWorkable(true)) { // using locked access to queues.
             loopNumber++;
-            std::cout << sep << "Loop number " << loopNumber << std::endl;
+            std::cout << sep2 << "Loop number " << loopNumber << std::endl;
             std::cout << "There are still " << locationQueue.size() << " locations in the Queue." << std::endl;
 
             auto task = queueManager.getNextWorkable(true,true); // get next task locked and dequeue from front.
@@ -43,20 +43,20 @@ namespace hpnmg {
             std::cout << "Process task." << std::endl;
             worker.processTask(task,settingsProvider.getStrategy(), globalQueue, globalCEXQueue, segments);
 
-            std::cout << sep << "Segments up to this point:" << std::endl;
+            std::cout << sep2 << "Segments up to this point:" << std::endl;
             for(const auto& segment : segments) {
                 std::cout << segment << std::endl;
             }
-            std::cout << sep << std::endl;
+            std::cout << sep2 << std::endl;
 
-            if(loopNumber == 4) {
+            if(loopNumber == 8) {
                 std::cout << "Breaking now. (manually by bool stop)" << std::endl;
                 break;
             }
 
             std::cout << "Adding new locations?" << std::endl;
             // new state
-            const auto& segment = segments.getStates()[1];
+            const auto& segment = segments.getStates()[loopNumber];
             hypro::Location<Number>* currentLocation = locationQueue.front().first;
             ParametricLocation currentParametricLocation = locationQueue.front().second;
             std::cout << "- current location is " << currentLocation << " with name: " << currentLocation->getName() << std::endl;
@@ -90,10 +90,10 @@ namespace hpnmg {
                     hypro::Condition<Number> condition = hypro::Condition<Number>(constraintset);
 
 
-                    std::cout << sep << "Creating new Location for deterministic event." << std::endl;
+                    std::cout << sep2 << "Creating new Location for deterministic event." << std::endl;
                     ParametricLocation newLoc = parser->addLocationForDeterministicEvent(mPetrinet->getDeterministicTransitions()["td0"],1.0,timePassed, currentParametricLocation, mPetrinet);
-                    hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, condition);
-                    std::cout << "Adding the new location to the locationQueue." << std::endl;
+                    hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, "deterministic event t=" + std::to_string(timePassed), condition);
+                    std::cout << sep2 << "Adding the new location to the locationQueue." << std::endl;
                     locationQueue.push_back({newLocation,newLoc});
                 }
                 for(int j=1; j<invariantMatrix.cols(); j++) {
@@ -108,24 +108,42 @@ namespace hpnmg {
                         halfspaceMatrix(1,j) = -1;
                         halfspaceVector(0) = boundary;
                         halfspaceVector(1) = -boundary;
+
+                        std::cout << "state set before the intersection " << segment.getSets() << std::endl;
+
                         auto newStatePair = segment.satisfiesHalfspaces(halfspaceMatrix, halfspaceVector);
                         if(newStatePair.first == hypro::CONTAINMENT::NO || boundary==0) {  // fix test if x=0 the whole time (boundary == 0 is NOT safe)
                             std::cout << "Skipping the invariant since the segment is empty!" << std::endl;
                             continue;
                         }
-                        std::cout << "New state for boundary event is \n" << newStatePair.second.getSet() << std::endl;
+                        //auto state = segment.intersectHalfspaces(halfspaceMatrix,halfspaceVector);
+                        auto state = newStatePair.second;
+                        auto set = state.getSet();
+                        std::cout << "New state for boundary event is \n" << set << std::endl;
 
-                        auto constraintset = hypro::Converter<Number>::toConstraintSet(boost::get<hypro::CarlPolytope<Number>>(newStatePair.second.getSet()));
+                        auto constraintset = hypro::Converter<Number>::toConstraintSet(boost::get<hypro::CarlPolytope<Number>>(set));
                         hypro::Condition<Number> condition = hypro::Condition<Number>(constraintset);
 
+                        // this probably can be done easier?
+                        auto carlPolytope = boost::get<hypro::CarlPolytope<Number>>(set);
+
+                        //std::cout << "carl polytope is " << carlPolytope << " and " << carlPolytope.empty() << std::endl;
+                        //std::cout << "carl polytope matrix is " << carlPolytope.matrix() << std::endl;
+                        //std::cout << "carl polytope vector is " << carlPolytope.vector() << std::endl;
+
+                        carlPolytope.make_rectangular();
+                        std::vector<carl::Interval<Number>> carlIntervalVector = carlPolytope.getIntervals();
+                        carl::Interval<Number> carlInterval = carlIntervalVector[0];
 
 
+                        std::cout << "interval vector" << carlIntervalVector.size() << std::endl;
                         // time passed is not the right time delta!!
-                        std::pair<double,double> timeInterval = {1.5,2};
-                        std::cout << sep << "Creating new Location for boundary event." << std::endl;
+                        std::pair<double,double> timeInterval = {carlInterval.lower(), carlInterval.upper()};
+                        std::cout << sep2 << "Creating new Location for boundary event (with time interval [" << carlInterval.lower() << "," << carlInterval.upper() << "])." << std::endl;
+                        //std::cout << sep2 << "Creating new Location for boundary event (with time interval [" << timeInterval.first << "," << timeInterval.second << "])." << std::endl;
                         ParametricLocation newLoc = parser->addLocationForBoundaryEventByContinuousPlaceMember(mPetrinet->getContinuousPlaces()["pc1"],timeInterval, currentParametricLocation, mPetrinet);
-                        hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, condition);
-                        std::cout << "Adding the new location to the locationQueue." << std::endl;
+                        hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, "boundary event x=" + std::to_string(boundary), condition);
+                        std::cout << sep2 <<"Adding the new location to the locationQueue." << std::endl;
                         locationQueue.push_back({newLocation,newLoc});
 
                     }
@@ -170,7 +188,7 @@ namespace hpnmg {
 
         // output
         hypro::Plotter<Number>& plotter = hypro::Plotter<Number>::getInstance();
-        std::cout << sep << "Reachability analysis results in the following locations: \n" << std::endl;
+        std::cout << sep2 << "Reachability analysis results in the following locations: \n" << std::endl;
         for(const auto& segment : segments) {
             std::cout << segment << std::endl;
             plotter.addObject(segment.vertices());
@@ -182,7 +200,7 @@ namespace hpnmg {
 
     }
 
-        hypro::Location<FlowpipeComputer::Number>* FlowpipeComputer::processParametricLocation(ParametricLocation parametricLocation, bool isInitial, hypro::Condition<Number> state) {
+        hypro::Location<FlowpipeComputer::Number>* FlowpipeComputer::processParametricLocation(ParametricLocation parametricLocation, bool isInitial, string name, hypro::Condition<Number> state) {
         // get deterministic transition firings (-> invariant && transition in HA)
         vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions = parser->ParseHybridPetrinet::processLocation(parametricLocation, mPetrinet, carl::toDouble(timeBoundN));
         std::cout << "The next deterministic transitions are:" << std::endl;
@@ -204,7 +222,7 @@ namespace hpnmg {
             state = generateInitialSet();
             loc1->setName("loc_root");
         } else {
-            loc1->setName("loc_new");
+            loc1->setName("loc_" + name);
         }
 
         // set up initial states to the correct representation - in this case CarlPolytope
@@ -246,7 +264,8 @@ namespace hpnmg {
         // time invariants (only upper)
         if (nextDeterministicTransitions.size() != 0) {
             invariantMatrix(0,0) = 1;
-            invariantVector(0) = nextDeterministicTransitions[0].second; // next det trans.
+            //invariantVector(0) = nextDeterministicTransitions[0].second; // next det trans. this is wrong, since we need the time from the beginning...
+            invariantVector(0) = nextDeterministicTransitions[0].first->getDiscTime(); // this is wrong for transitions which havent been enabled from the beginning! but should work for now
         }
         invariantMatrix(1,0) = 0;
         invariantVector(1) = 0;

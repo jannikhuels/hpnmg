@@ -21,6 +21,7 @@ namespace hpnmg {
         std::vector<double> generalDependenciesNormed;
        // RateDependencies rateDependencies = {0,0}; // factor + exponent of r
         double time; // scalar
+        std::pair<double,double> timeInterval;
         shared_ptr<ImmediateTransition> immediateTransitionMember;
         shared_ptr<GeneralTransition> generalTransitionMember;
         shared_ptr<DeterministicTransition> deterministicTransitionMember;
@@ -47,6 +48,9 @@ namespace hpnmg {
 
         double getTime() const;
         void setTime(double time);
+
+        std::pair<double,double> getTimeInterval() const;
+        void setTimeInterval(std::pair<double,double> timeInterval);
 
         shared_ptr<ImmediateTransition> getImmediateTransitionMember() const;
         void setImmediateTransitionMember(shared_ptr<ImmediateTransition> immediateTransitionMember);

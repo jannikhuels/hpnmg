@@ -24,13 +24,15 @@ namespace hpnmg {
 
     public:
         using Number = double;
+        using tNumber = mpq_class;
         typedef hypro::HPolytope<Number> Representation;
         using State = hypro::State_t<Number>;
 
     private:
 
         // cout
-        std::string sep = "\n----------------------------------------\n";
+        std::string sep = "\n --- \n";
+        std::string sep2 = "\n----------------------------------------\n";
         Eigen::IOFormat Print{Eigen::StreamPrecision, Eigen::DontAlignCols, ",", ",", "[", "]", "(",")\n"};
 
         // class member variables ---------------------------------------------
@@ -52,7 +54,7 @@ namespace hpnmg {
         // class member functions ---------------------------------------------
         void setup();
 
-        hypro::Location<Number>* processParametricLocation(ParametricLocation parametricLocation, bool isInitial, hypro::Condition<Number> state = hypro::Condition<Number>());
+        hypro::Location<Number>* processParametricLocation(ParametricLocation parametricLocation, bool isInitial, string name = "<name>", hypro::Condition<Number> state = hypro::Condition<Number>());
 
         hypro::Condition<Number> generateInvariant(vector<pair<shared_ptr<DeterministicTransition>, double>> nextDeterministicTransitions, map<string, shared_ptr<ContinuousPlace>> cplaces);
 
