@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <HPnG>
   <places>
+    <discretePlace marking="1" id="not robust"/>
+    <discretePlace marking="0" id="robust"/>
+
     <continuousPlace id="ev" capacity="%max_soc%" infiniteCapacity="0" level="0"/>
 
     <discretePlace marking="1" id="in lot"/>
@@ -14,6 +17,8 @@
     <discretePlace marking="0" id="unstable grid"/>
   </places>
   <transitions>
+    <immediateTransition id="make robust" priority="1" weight="1"/>
+
     <generalTransition id="client return" cdf="foldednormal" priority="0" weight="1" policy="resume">
       <parameter name="mu" value="%mu_return%"/>
       <parameter name="sigma" value="%sigma_return%"/>
@@ -27,26 +32,32 @@
 
     <continuousTransition id="extra charge" rate="%r_g2v%"/>
     <deterministicTransition id="price recovery" priority="0" weight="1" discTime="%t_pr%" />
-    <generalTransition id="price slump" cdf="exp" priority="0" weight="1" policy="resume"><!-- TODO: proper distribution -->
-      <parameter name="mean" value="%mean_recovery%"/>
-    </generalTransition>
-<!--    <generalTransition id="price slump" cdf="uniform" priority="0" weight="1" policy="resume">&lt;!&ndash; TODO: proper distribution &ndash;&gt;-->
-<!--        <parameter name="a" value="0"/>-->
-<!--        <parameter name="b" value="%mu_return%"/>-->
+<!--    <generalTransition id="price slump" cdf="normal" priority="0" weight="1" policy="resume">&lt;!&ndash; TODO: proper distribution &ndash;&gt;-->
+<!--      <parameter name="mu" value="%mu_return%"/>-->
+<!--      <parameter name="sigma" value="%sigma_return%"/>-->
 <!--    </generalTransition>-->
+    <generalTransition id="price slump" cdf="uniform" priority="0" weight="1" policy="resume"><!-- TODO: proper distribution -->
+        <parameter name="a" value="0"/>
+        <parameter name="b" value="%mu_return%"/>
+    </generalTransition>
 
     <continuousTransition id="charge penalty" rate="%r_v2g%"/>
     <deterministicTransition id="demand increase" priority="0" weight="1" discTime="%t_di%" />
-    <generalTransition id="demand decrease" cdf="foldednormal" priority="0" weight="1" policy="resume"><!-- TODO: proper distribution -->
-      <parameter name="mu" value="%mu_demand%"/>
-      <parameter name="sigma" value="%sigma_demand%"/>
-    </generalTransition>
-<!--    <generalTransition id="demand decrease" cdf="uniform" priority="0" weight="1" policy="resume">&lt;!&ndash; TODO: proper distribution &ndash;&gt;-->
-<!--        <parameter name="a" value="0"/>-->
-<!--        <parameter name="b" value="%mu_return%"/>-->
+<!--    <generalTransition id="demand decrease" cdf="normal" priority="0" weight="1" policy="resume">&lt;!&ndash; TODO: proper distribution &ndash;&gt;-->
+<!--      <parameter name="mu" value="%mu_return%"/>-->
+<!--      <parameter name="sigma" value="%sigma_return%"/>-->
 <!--    </generalTransition>-->
+    <generalTransition id="demand decrease" cdf="uniform" priority="0" weight="1" policy="resume"><!-- TODO: proper distribution -->
+        <parameter name="a" value="0"/>
+        <parameter name="b" value="%mu_return%"/>
+    </generalTransition>
   </transitions>
   <arcs>
+    <discreteArc weight="1" fromNode="not robust" toNode="make robust" id="not robust to make robust"/>
+    <discreteArc weight="1" fromNode="make robust" toNode="robust" id="make robust to robust"/>
+    <guardArc weight="1" isInhibitor="1" fromNode="in lot" toNode="make robust" id="in lot to make robust"/>
+    <guardArc weight="%esoc%" isInhibitor="0" fromNode="ev" toNode="make robust" id="ev to make robust"/>
+
     <discreteArc weight="1" fromNode="in lot" toNode="client return" id="in lot to client return"/>
 
     <guardArc weight="1" isInhibitor="0" fromNode="in lot" toNode="base charge" id="in lot to base charge"/>

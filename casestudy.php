@@ -19,17 +19,21 @@ define('SAMPLE_POINTS', 25);
 if (SAMPLE_POINTS < 2)
   die('please choose at least 2 sample points' . LF);
 
-if ($argc != 3)
-    die('please pass pps and ppd' . LF);
+if ($argc != 4 || !in_array($argv[1], ['formula', 'encoded']))
+    die('please pass "formula" or "encoded" pps and ppd' . LF);
 
-$pps = $argv[1];
-$ppd = $argv[2];
+$regular_formula = $argv[1] === 'formula';
+$pps = $argv[2];
+$ppd = $argv[3];
 
-$model_tpl = file_get_contents('ev_charging.xml') or die('no model' . LF);
-$formula_tpl = file_get_contents('ev_formula.xml') or die('no formula' . LF);
+$model_tpl = file_get_contents($regular_formula ? 'ev_charging.xml' : 'ev_charging_robustness.xml') or die('no model' . LF);
+$formula_tpl = file_get_contents($regular_formula ? 'ev_formula.xml' : 'ev_formula_robustness.xml') or die('no formula' . LF);
 
 $max_time = 24 * HOURS;
 $mu_return = 8 * HOURS; // average customer return time
+$mean_recovery = 1 * HOURS;
+$mu_demand = 1 * HOURS;
+$sigma_demand = 10 * MINUTES;
 $t_pr = 90 * MINUTES; // time to price recovery
 $t_di = 4 * HOURS; // time to demand increase
 $max_soc = 90 * KILOWATTHOURS;
@@ -44,6 +48,9 @@ $sigma_decrease = 20 * MINUTES;
     [
         '%max_time%',
         '%mu_return%',
+        '%mean_recovery%',
+        '%mu_demand%',
+        '%sigma_demand%',
         '%t_pr%',
         '%t_di%',
         '%max_soc%',
@@ -56,6 +63,9 @@ $sigma_decrease = 20 * MINUTES;
     [
         $max_time / TIME_PER_UNIT,
         $mu_return / TIME_PER_UNIT,
+        $mean_recovery / TIME_PER_UNIT,
+        $mu_demand / TIME_PER_UNIT,
+        $sigma_demand / TIME_PER_UNIT,
         $t_pr / TIME_PER_UNIT,
         $t_di / TIME_PER_UNIT,
         ($max_soc / TIME_PER_UNIT) + 1, //TODO: little hack to allow "place is 100% full"
@@ -110,17 +120,19 @@ foreach ($m_ps as $m_p_i => [$m_pps, $m_ppd])
 
                     $settings_string = implode('_', $settings);
 
-                    $model_file = tempnam(getcwd(), 'model_' . $settings_string);
-                    $formula_file = tempnam(getcwd(), 'formula_' . $settings_string);
+//                    $model_file = tempnam(getcwd(), 'model' . ($regular_formula ? '' : '-encoded-robustness') . '_' . $settings_string);
+//                    $formula_file = tempnam(getcwd(), 'formula' . ($regular_formula ? '' : '-encoded-robustness') . '_' . $settings_string);
+                    $model_file = getcwd() . '/' . 'model' . ($regular_formula ? '' : '-encoded-robustness') . '_' . $settings_string;
+                    $formula_file = getcwd() . '/' . 'formula' . ($regular_formula ? '' : '-encoded-robustness') . '_' . $settings_string;
                     file_put_contents($model_file, $model);
                     file_put_contents($formula_file, $formula);
 
-                    passthru('./main --model ' . $model_file
-                        . ' --formula ' . $formula_file
-                        . ' --maxtime ' . ($max_time / TIME_PER_UNIT)
-                        . ' --checktime 0'
-                        . ' --result result-pps-' . ($pps). '-ppd-' . ($ppd) . '.txt'
-                    );
+//                    passthru('./main --model ' . $model_file
+//                        . ' --formula ' . $formula_file
+//                        . ' --maxtime ' . ($max_time / TIME_PER_UNIT)
+//                        . ' --checktime ' . ($regular_formula ? 0 : ($max_time / TIME_PER_UNIT))
+//                        . ' --result result' . ($regular_formula ? '' : '-encoded-robustness') . '-pps-' . ($pps). '-ppd-' . ($ppd) . '.txt'
+//                    );
 //                 }
             }
         }
