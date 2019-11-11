@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='ASCII'?>
+<HPnG>
+  <places>
+    <continuousPlace id="ev" capacity="50" infiniteCapacity="0" level="5"/>
+    <discretePlace marking="1" id="stable_grid"/>
+    <discretePlace marking="0" id="unstable_grid"/>
+    <discretePlace marking="0" id="grid_policy_discharging"/>
+    <discretePlace marking="1" id="in_lot"/>
+    <discretePlace marking="0" id="driving"/>
+    <discretePlace marking="1" id="regular_price"/>
+    <discretePlace marking="0" id="high_price"/>
+    <discretePlace marking="0" id="grid_policy_charging"/>
+  </places>
+  <transitions>
+    <continuousTransition id="charge_penalty" rate="4"/>
+    <continuousTransition id="base_charge" rate="4"/>
+    <continuousTransition id="full_charge" rate="7"/>
+    <deterministicTransition id="disaster" discTime="6" priority="0" weight="1"/>
+    <deterministicTransition id="price_decrease" discTime="1" priority="0" weight="1"/>
+    <generalTransition id="repair" cdf="foldednormal" priority="0" weight="1" policy="resume">
+        <parameter name="mu" value="0.25"/>
+        <parameter name="sigma" value="0.5"/>
+    </generalTransition>
+    <generalTransition id="client_return" cdf="foldednormal" priority="0" weight="1" policy="resume">
+        <parameter name="mu" value="9"/>
+        <parameter name="sigma" value="1"/>
+    </generalTransition>
+    <generalTransition id="price_increase" cdf="foldednormal" priority="0" weight="1" policy="resume">
+        <parameter name="mu" value="4"/>
+        <parameter name="sigma" value="2"/>
+    </generalTransition>
+  </transitions>
+  <arcs>
+    <continuousArc share="1" priority="0" weight="1" fromNode="ev" toNode="charge_penalty" id="evtov2g"/>
+    <continuousArc share="1" priority="0" weight="1" fromNode="base_charge" toNode="ev" id="g2vtoev"/>
+    <continuousArc share="1" priority="0" weight="1" fromNode="full_charge" toNode="ev" id="powertoev"/>
+    <discreteArc weight="1" fromNode="stable_grid" toNode="disaster" id="nogridtostartdischarge"/>
+    <discreteArc weight="1" fromNode="disaster" toNode="unstable_grid" id="startdischargetotogrid"/>
+    <discreteArc weight="1" fromNode="unstable_grid" toNode="repair" id="togridtoenddischarge"/>
+    <discreteArc weight="1" fromNode="repair" toNode="stable_grid" id="enddischargetonogrid"/>
+    <discreteArc weight="1" fromNode="grid_policy_discharging" toNode="repair" id="gridpolicydischargingtoenddischarge"/>
+    <discreteArc weight="1" fromNode="in_lot" toNode="client_return" id="inlottoclientreturn"/>
+    <discreteArc weight="1" fromNode="client_return" toNode="driving" id="clientreturntodriving"/>
+    <discreteArc weight="1" fromNode="regular_price" toNode="price_increase" id="availabletooverloaded"/>
+    <discreteArc weight="1" fromNode="price_increase" toNode="high_price" id="overloadedtounavailable"/>
+    <discreteArc weight="1" fromNode="high_price" toNode="price_decrease" id="unavailabletobalanced"/>
+    <discreteArc weight="1" fromNode="price_decrease" toNode="regular_price" id="balancedtoavailable"/>
+    <discreteArc weight="1" fromNode="grid_policy_charging" toNode="price_decrease" id="gridpolicychargingtobalanced"/>
+    <guardArc weight="1" isInhibitor="0" fromNode="unstable_grid" toNode="charge_penalty" id="togridtov2g"/>
+    <guardArc weight="1" isInhibitor="0" fromNode="in_lot" toNode="base_charge" id="inlottog2v"/>
+    <guardArc weight="1" isInhibitor="0" fromNode="in_lot" toNode="full_charge" id="inlottopower"/>
+    <guardArc weight="1" isInhibitor="0" fromNode="in_lot" toNode="stable_grid" id="inlottonogrid"/>
+    <guardArc weight="1" isInhibitor="0" fromNode="in_lot" toNode="disaster" id="inlottostartdischarge"/>
+    <guardArc weight="1" isInhibitor="0" fromNode="in_lot" toNode="repair" id="inlottoenddischarge"/>
+    <guardArc weight="1" isInhibitor="0" fromNode="in_lot" toNode="client_return" id="inlottoclientreturn"/>
+    <guardArc weight="1" isInhibitor="0" fromNode="in_lot" toNode="price_increase" id="inlottooverloaded"/>
+    <guardArc weight="1" isInhibitor="0" fromNode="regular_price" toNode="full_charge" id="availabletopower"/>
+  </arcs>
+</HPnG>
