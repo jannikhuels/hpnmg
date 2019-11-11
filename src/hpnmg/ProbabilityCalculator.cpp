@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <algorithm>
 
 #include "helper/Triangulation.h"
 #include "util/logging/Logging.h"
@@ -495,11 +496,11 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
 
     double ProbabilityCalculator::getProbabilityForUnionOfPolytopesUsingMonteCarlo(
-        std::vector<HPolytope<double>> polytopes,
-        const vector<pair<string, map<string, float>>> &distributionsNormalized,
-        char algorithm,
-        int functioncalls,
-        double &error
+            std::vector<HPolytope<double>> polytopes,
+            const vector<pair<string, map<string, float>>> &distributionsNormalized,
+            char algorithm,
+            int functioncalls,
+            double &error
     ){
         COUNT_STATS("PROBABILITY_INTEGRATION_UNION")
         START_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_UNION_REMOVE_EMPTY")
@@ -549,11 +550,11 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
                 currentError = 0.0;
                 currentProb = getProbabilityForIntersectionOfPolytopesUsingMonteCarlo(
-                    regionsToIntegrate,
-                    distributionsNormalized,
-                    algorithm,
-                    functioncalls,
-                    currentError
+                        regionsToIntegrate,
+                        distributionsNormalized,
+                        algorithm,
+                        functioncalls,
+                        currentError
                 );
 
                 probability += p * currentProb;
@@ -569,6 +570,141 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
     }
 
+    double ProbabilityCalculator::getProbabilityForUnionOfPolytopesUsingDirectMonteCarlo(
+            std::vector<HPolytope<double>> polytopes,
+            const vector<pair<string, map<string, float>>> &distributionsNormalized,
+            char algorithm,
+            int functioncalls,
+            double &error
+    ){
+        COUNT_STATS("PROBABILITY_INTEGRATION_DIRECT")
+        START_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_DIRECT_REMOVE_EMPTY")
+
+        polytopes.erase(
+                std::remove_if(polytopes.begin(), polytopes.end(), [](HPolytope<double> region) {
+                    if (region.empty() || region.dimension() == 0)
+                        return true;
+
+                    auto vertices = region.vertices();
+                    if (vertices.empty())
+                        return true;
+                    long maxDim = vertices.begin()->rawCoordinates().rows();
+                    hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
+                    // use first vertex as origin, start at second vertex
+                    long rowIndex = 0;
+                    for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
+                        matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
+                    }
+                    auto effectiveDimension = int(matr.fullPivLu().rank());
+                    return effectiveDimension < region.dimension();
+                }),
+                polytopes.end()
+        );
+        STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_DIRECT_REMOVE_EMPTY")
+
+        if (polytopes.empty()) {
+            return 0.0;
+        }
+
+        functionToDirectIntegrateMonteCarloParams params {
+            polytopes, distributionsNormalized
+        };
+
+        START_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_DIRECT")
+        double result = 0.0;
+        double resultAll = 0.0;
+        double errorAll = 0.0;
+
+        const int dim = distributionsNormalized.size();
+
+        std::vector<hypro::Box<double>> boxes;
+        std::transform(polytopes.begin(), polytopes.end(),std::back_inserter(boxes),[](hypro::HPolytope<double> polytope){
+            return hypro::Converter<double>::toBox(polytope);
+        });
+
+        auto boundingBox = hypro::Box<double>::Empty(dim);
+        for (auto box : boxes) {
+            boundingBox = boundingBox.unite(box);
+        }
+
+        //Integration
+
+        if (dim > 0) {
+
+            double *xl = new double[dim];
+            double *xu = new double[dim];
+
+            assert(boundingBox.intervals().size() == dim);
+            for (int i = 0; i < dim; i++) {
+                xl[i] = boundingBox.intervals().at(i).lower();
+                xu[i] = boundingBox.intervals().at(i).upper();
+            }
+
+            size_t dimension1 = static_cast<size_t>(dim);
+
+
+            gsl_monte_function G = {&functionToDirectIntegrateMonteCarlo, dimension1, &params};
+
+            size_t calls = static_cast<size_t>(functioncalls);
+
+            const gsl_rng_type *T;
+            gsl_rng *r;
+
+
+
+            //All
+            gsl_rng_env_setup();
+
+            T = gsl_rng_default;
+            r = gsl_rng_alloc(T);
+
+            if (algorithm == 1) {
+
+                gsl_monte_plain_state *s = gsl_monte_plain_alloc(dimension1);
+                gsl_monte_plain_integrate(&G, xl, xu, dimension1, calls, r, s, &resultAll, &errorAll);
+                gsl_monte_plain_free(s);
+
+            } else if (algorithm == 2) {
+
+                gsl_monte_miser_state *s = gsl_monte_miser_alloc(dimension1);
+                gsl_monte_miser_integrate(&G, xl, xu, dimension1, calls, r, s, &resultAll, &error);
+                gsl_monte_miser_free(s);
+
+            } else if (algorithm == 3) {
+
+                gsl_monte_vegas_state *s = gsl_monte_vegas_alloc(dimension1);
+
+                //vegas warm-up
+                gsl_monte_vegas_integrate(&G, xl, xu, dimension1, calls / 50, r, s, &resultAll, &errorAll);
+
+                for (int j = 0; j < 10; j++) {
+                    gsl_monte_vegas_integrate(&G, xl, xu, dimension1, calls / 5, r, s, &resultAll, &errorAll);
+
+                    if ((fabs(gsl_monte_vegas_chisq(s) - 1.0) <= 0.5) || (error == 0.0))
+                        break;
+                }
+                gsl_monte_vegas_free(s);
+
+                if (fabs(gsl_monte_vegas_chisq(s) - 1.0) > 0.5 && errorAll > 0.0) {
+                    gsl_monte_miser_state *z = gsl_monte_miser_alloc(dimension1);
+                    gsl_monte_miser_integrate(&G, xl, xu, dimension1, calls, r, z, &resultAll, &errorAll);
+                    gsl_monte_miser_free(z);
+                }
+            }
+
+            gsl_rng_free(r);
+
+            delete[] xl;
+            delete[] xu;
+
+        }
+
+        result = resultAll;
+        error = errorAll;
+        STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_DIRECT")
+        return result;
+
+    }
 
 
     double ProbabilityCalculator::computeMultivariateIntegralUsingMonteCarlo(int functioncalls, hpnmg::allDims all, hpnmg::allDims allPlus, hpnmg::allDims allMinus, char algorithm, double &error){
@@ -845,6 +981,28 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             }
             else //Infinity case
                 result *= 0.5;
+        }
+
+        return result;
+
+    }
+
+    double ProbabilityCalculator::functionToDirectIntegrateMonteCarlo(double *k, size_t dim, void *params) {
+        functionToDirectIntegrateMonteCarloParams functionParams = *((functionToDirectIntegrateMonteCarloParams *)params);
+
+        auto point = hypro::Point<double>(std::vector<double>(k, k + dim));
+
+        bool contains = std::any_of(functionParams.unionOfPolytopes.begin(), functionParams.unionOfPolytopes.end(), [&point](const hypro::HPolytope<double> &polytope) {
+           return polytope.contains(point);
+        });
+
+        if (!contains) {
+            return 0;
+        }
+
+        double result = 1;
+        for (int i = 0; i < dim; i++) {
+            result *= getDensity(functionParams.distributions.at(i), point.at(i));
         }
 
         return result;

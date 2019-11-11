@@ -58,7 +58,7 @@ namespace hpnmg {
                 std::cout << STDPolytope<double>(integrationDomains[0]) << std::endl;
 
             double nodeError = 0.0;
-            probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
+            probability += calculator.getProbabilityForUnionOfPolytopesUsingDirectMonteCarlo(
                 integrationDomains,
                 this->plt.getDistributionsNormalized(),
                 3,
