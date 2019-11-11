@@ -4,6 +4,8 @@
 #include "datastructures/ParametricLocation.h"
 #include "datastructures/STDPolytope.h"
 
+#include <representations/GeometricObject.h>
+
 #include "Eigen/Geometry"
 
 #include <math.h>
@@ -33,7 +35,10 @@ namespace hpnmg {
 		pair<string, map<string, float>> distribution;
 	} singleDim;
 
-
+	struct  functionToDirectIntegrateMonteCarloParams{
+	    std::vector<hypro::HPolytope<double>> unionOfPolytopes;
+	    std::vector<pair<string, map<string, float>>> distributions;
+	};
 
     typedef struct {
         int current_index;
@@ -69,6 +74,8 @@ namespace hpnmg {
     	static double functionToIntegrateGauss(double x, void* data);
 
 		static double transformedFunctionToIntegrateMonteCarlo(double *k, size_t dim, void* params);
+
+        static double functionToDirectIntegrateMonteCarlo(double *k, size_t dim, void* params);
 
        	static double getDensity(pair<string, map<string, float>> distribution, double value);
 
@@ -113,6 +120,10 @@ namespace hpnmg {
                                                                        char algorithm, int functioncalls, double &error);
 
         double getProbabilityForUnionOfPolytopesUsingMonteCarlo(vector<HPolytope<double>> polytopes,
+                                                                const vector<pair<string, map<string, float>>> &distributionsNormalized,
+                                                                char algorithm, int functioncalls, double &error);
+
+        double getProbabilityForUnionOfPolytopesUsingDirectMonteCarlo(vector<HPolytope<double>> polytopes,
                                                                 const vector<pair<string, map<string, float>>> &distributionsNormalized,
                                                                 char algorithm, int functioncalls, double &error);
 

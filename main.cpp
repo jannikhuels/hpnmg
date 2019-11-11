@@ -95,12 +95,14 @@ int main (int argc, char *argv[]) {
     std::string fileLogLevel;
     std::string coutLogLevel;
     std::vector<string> appendix;
+    START_BENCHMARK_OPERATION("OVERALL_TIME")
     double maxtime;
     double checktime;
     int mode = process_command_line(argc, argv, modelfile, formulafile, maxtime, checktime, resultfile, appendix, fileLogLevel, coutLogLevel);
 
     if (mode == 2) {
         // An error occured.
+        STOP_BENCHMARK_OPERATION("OVERALL_TIME")
         return 1;
     }
     // mode==1: Only create state space, mode==0 also perform model checking.
@@ -170,6 +172,7 @@ int main (int argc, char *argv[]) {
             resultfilestream << "\t" << 0 << "\t" << prob << "\t" << err;
             resultfilestream << endl;
             resultfilestream.close();
+             STOP_BENCHMARK_OPERATION("OVERALL_TIME")
             return 1;
         }
 
@@ -198,7 +201,7 @@ int main (int argc, char *argv[]) {
     for (string s : appendix) {
         resultfilestream << "\t" << s;
     }
-
+    STOP_BENCHMARK_OPERATION("OVERALL_TIME")
     PRINT_STATS()
 
     resultfilestream << endl;

@@ -537,7 +537,7 @@ TEST(ParseHybridPetrinet, GuardArcContinuousConflict)
     ASSERT_EQ(5, children[0].getParametricLocation().getSourceEvent().getTime());
 }
 
-TEST(ParseHybridPetrinet, GuardArcEmptyTest)
+/*TEST(ParseHybridPetrinet, GuardArcEmptyTest)
 {
     auto reader = new ReadHybridPetrinet();
     auto hybridPetrinet = reader->readHybridPetrinet("guard_empty_test.xml");
@@ -557,7 +557,7 @@ TEST(ParseHybridPetrinet, GuardArcEmptyTest)
     ASSERT_NEAR(4.99, children[0].getParametricLocation().getSourceEvent().getTime(), 0.01);
 
     children= plt->getChildNodes(children[0]);
-}
+}*/
 
 TEST(ParseHybridPetrinet, GuardDiscreteConflict)
 {
