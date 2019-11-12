@@ -57,6 +57,10 @@ namespace hpnmg {
         const vector<pair<string, map<string, float>>> &getDistributions() const;
         vector<pair<string, map<string, float>>> getDistributionsNormalized();
 
+        vector<int> getTransitionsNormalized();
+
+        int getNormalizedIndexOfTransitionFiring(int transition, int firing);
+
         void setDistributions(const vector<pair<string, map<string, float>>> &distributions);
 
     private:

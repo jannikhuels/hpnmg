@@ -494,6 +494,39 @@ namespace hpnmg {
         return distributionsNormalized;
     }
 
+
+    /**
+     * @return std::vector where the i-th entry representes the ID of the transition that leads to
+     *         the i-th firing in the normalized global firing order
+     */
+    vector<int> hpnmg::ParametricLocationTree::getTransitionsNormalized() {
+        vector<int> transitionsNormalized = vector<int>();
+        transitionsNormalized.reserve(this->getDimension());
+
+        const auto &occurrings = this->getDimensionRecursively(this->getRootNode(), getRootNode().getParametricLocation().getGeneralClock().size());
+        auto it = transitionsNormalized.begin();
+        for (int transition = 0; transition < occurrings.size(); ++transition)
+            for (int i = 0; i < occurrings[transition]; ++i)
+                transitionsNormalized.push_back(transition);
+
+        return transitionsNormalized;
+    }
+
+
+    //returns the index in the normalized firing vector of the n-th (starting from zero) firing of transition with given id
+    int hpnmg::ParametricLocationTree::getNormalizedIndexOfTransitionFiring(int transition, int firing){
+        vector<int> transitionsNormalized = this->getTransitionsNormalized();
+        int count = 0;
+        for (int i = 0; i < transitionsNormalized.size(); i++){
+            if (transitionsNormalized[i] == transition){
+                if (count == firing)
+                    return i;
+                count++;
+            }
+        }
+    }
+
+
     void
     hpnmg::ParametricLocationTree::setDistributions(const vector<pair<string, map<string, float>>> &distributions) {
         ParametricLocationTree::distributions = distributions;
