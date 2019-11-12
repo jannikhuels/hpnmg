@@ -7,6 +7,22 @@
 
 using namespace hpnmg;
 
+TEST(PropertyBasedPLTBuilder, SizeAtTime) {
+    auto reader = new ReadHybridPetrinet();
+    auto hybridPetrinet = reader->readHybridPetrinet("example.xml");
+    auto parser = new PropertyBasedPLTBuilder();
+    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 5);
+    auto initState = plt->getRootNode().getParametricLocation();
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, 5);
+    ASSERT_EQ(7, plt->numberOfLocations());
+    ASSERT_EQ(2, plt->getChildNodes(plt->getRootNode()).size());
+    auto children = plt->getChildNodes(plt->getRootNode());
+    ASSERT_EQ(2, plt->getChildNodes(children[0]).size());
+    ASSERT_EQ(1, plt->getChildNodes(children[1]).size());
+}
+
+/*
 TEST(PropertyBasedPLTBuilder, InitialLocation)
 {
     auto reader = new ReadHybridPetrinet();
@@ -635,3 +651,4 @@ TEST(PropertyBasedPLTBuilder, ContinuousConflict) {
     EXPECT_EQ(1, discreteChilds.size());
     EXPECT_EQ(Timed, discreteChilds[0].getParametricLocation().getSourceEvent().getEventType());
 }
+ */
