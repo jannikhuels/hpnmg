@@ -47,7 +47,7 @@ list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testRegionModelChecker.cpp$")
 add_executable(
 		testAll
 		${TEST_SRC_FILES}
-        testFlowpipeConstruction.cpp)
+        testFlowpipeConstruction.cpp example_carlPolytope.cpp)
 
 add_dependencies(testAll googletest)
 

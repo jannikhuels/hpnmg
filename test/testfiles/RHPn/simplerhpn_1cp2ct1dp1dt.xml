@@ -11,7 +11,7 @@
     </transitions>
     <arcs>
         <continuousArc id="ca1" fromNode="tf1" toNode="pc1" priority="1" share="1.0E0"  weight="1.0E0"/>
-        <continuousArc id="ca1" fromNode="pc1" toNode="tf2" priority="1" share="1.0E0"  weight="1.0E0"/>
+        <continuousArc id="ca2" fromNode="pc1" toNode="tf2" priority="1" share="1.0E0"  weight="1.0E0"/>
         <discreteArc id="da0" fromNode="pd0" toNode="td0" weight="1.0E0"/>
         <guardArc id="ga1" fromNode="pd0" toNode="tf2" isInhibitor="0" weight="1.0E0"/>
     </arcs>

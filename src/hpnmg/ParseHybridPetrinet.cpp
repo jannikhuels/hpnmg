@@ -1997,6 +1997,7 @@ namespace hpnmg {
             continuousMarkingIntervals.push_back(newMarking);
         }
         vector<pair<double,double>> driftIntervals = getDriftIntervals(parentLocation.getDiscreteMarking(), continuousMarkingIntervals, hybridPetrinet);
+        driftIntervals[0] = {0,0};
 
         double eventTime = parentLocation.getSourceEvent().getTime() + timeInterval.first; // todo: event time needs to accept interval, add first + second!!
 
@@ -2015,7 +2016,7 @@ namespace hpnmg {
             }
             deterministicClocks[i][0] = deterministicClocks[i][0] + timeInterval.first; // todo !! first is wrong !! interval!
         }
-
+        deterministicClocks[0][0] = 0;
 
 
         newLocation.setDeterministicClock(deterministicClocks);
@@ -2038,6 +2039,7 @@ namespace hpnmg {
             shared_ptr<DeterministicTransition> detTrans = hybridPetrinet->getDeterministicTransitions()[deterministicTransitionIDs[i]];
             enablingStatusesOfDeterministicTransitions[i] = transitionIsEnabled(parentLocation.getDiscreteMarking(), continuousMarkingIntervals, detTrans, hybridPetrinet);
         }
+        enablingStatusesOfDeterministicTransitions[0] = false;
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
 
         //parametriclocationTree->setChildNode(parentNode, newLocation);

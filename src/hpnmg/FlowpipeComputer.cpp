@@ -49,7 +49,7 @@ namespace hpnmg {
             }
             std::cout << sep2 << std::endl;
 
-            if(loopNumber == 8) {
+            if(loopNumber == 12) {
                 std::cout << "Breaking now. (manually by bool stop)" << std::endl;
                 break;
             }
@@ -140,6 +140,7 @@ namespace hpnmg {
                         // time passed is not the right time delta!!
                         std::pair<double,double> timeInterval = {carlInterval.lower(), carlInterval.upper()};
                         std::cout << sep2 << "Creating new Location for boundary event (with time interval [" << carlInterval.lower() << "," << carlInterval.upper() << "])." << std::endl;
+                        if(timeInterval.second == 5.5) { std::cout << "reached missing time interval" << std::endl;}
                         //std::cout << sep2 << "Creating new Location for boundary event (with time interval [" << timeInterval.first << "," << timeInterval.second << "])." << std::endl;
                         ParametricLocation newLoc = parser->addLocationForBoundaryEventByContinuousPlaceMember(mPetrinet->getContinuousPlaces()["pc1"],timeInterval, currentParametricLocation, mPetrinet);
                         hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, "boundary event x=" + std::to_string(boundary), condition);
