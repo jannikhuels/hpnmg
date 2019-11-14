@@ -23,6 +23,7 @@
 #include "parser/antlr4-flowstar/ParserWrapper.h"
 
 
+#include <bits/stdc++.h>
 using namespace hpnmg;
 using namespace std;
 
@@ -52,9 +53,8 @@ unsigned long getNumberOfEdges(const shared_ptr<SingularAutomaton>& automaton) {
 
 
 
-
+//Test to create singular automaton
 TEST(HybridAutomaton, example) {
-
 
     ReadHybridPetrinet reader;
     PLTWriter PLTwriter;
@@ -87,11 +87,10 @@ TEST(HybridAutomaton, example) {
 // write
     PLTwriter.writePLT(plt, tauMax, "plt_example_10");
     automatonWriter.writeAutomaton(automaton, "example_10");
-
 }
 
 
-
+//Hard coded hybrid Automaton with flowpipe reachability analysis
 TEST(HybridAutomaton, exampleAutomaton) {
 
     using namespace hypro;
@@ -287,7 +286,7 @@ TEST(HybridAutomaton, exampleAutomaton) {
 }
 
 
-
+//Another hard coded hybrid Automaton with flowpipe reachability analysis
 TEST(HybridAutomaton, MinimalExample) {
 
     using namespace hypro;
@@ -617,7 +616,7 @@ TEST(HybridAutomaton, MinimalExample) {
 }
 
 
-
+//Hard coded hybrid Automaton for the bouncing ball with flowpipe reachability analysis
 TEST(HybridAutomaton, Bouncingball) {
 
     using namespace hypro;
@@ -757,7 +756,7 @@ TEST(HybridAutomaton, Bouncingball) {
 }
 
 
-
+//Flowstar parser for .model files with flowpipe reachability analysis
 TEST(HybridAutomaton, FlowParser){
 
     using namespace hypro;
@@ -803,7 +802,7 @@ TEST(HybridAutomaton, FlowParser){
 }
 
 
-//flow pipe reachability for HPnGs
+//Converter for HPnGs into hybrid Automaton with flowpipe reachability analysis
 TEST(HybridAutomaton, converter) {
 
     using namespace hypro;
@@ -835,6 +834,27 @@ TEST(HybridAutomaton, converter) {
 
 // Compute flowpipes
     auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
+
+    auto minValue = 5;
+    std::vector<Point<Number>> allPoints;
+    //Compute convex 
+    for (auto &indexPair : flowpipes) {
+        std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
+        // Plot single flowpipe
+        for (auto &set : flowpipe) {
+            std::vector<Point<Number>> points = set.vertices();
+            if (!points.empty() && points.size() >= 0) {
+                for (auto &point : points) {
+                    if(point.rawCoordinates()[1]>=minValue) {
+                    allPoints.push_back(point);
+                    }
+                }
+                points.clear();
+            }
+        }
+    }
+    auto polytope = hypro::VPolytope<Number>(allPoints);
+
 
     handler.plotTex("exampleHybrid2", flowpipes);
 
