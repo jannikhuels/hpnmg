@@ -819,7 +819,6 @@ TEST(HybridAutomaton, converter) {
 // read HPnG
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
 
-
 // transform HPnG into SingularAutomaton
     auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
 
@@ -835,8 +834,8 @@ TEST(HybridAutomaton, converter) {
 // Compute flowpipes
     auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
 
-    auto minValue = 5;
-    std::vector<Point<Number>> allPoints;
+    auto minValue = 10;
+    std::vector<Point<double>> allPoints;
     //Compute convex 
     for (auto &indexPair : flowpipes) {
         std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
@@ -845,17 +844,28 @@ TEST(HybridAutomaton, converter) {
             std::vector<Point<Number>> points = set.vertices();
             if (!points.empty() && points.size() >= 0) {
                 for (auto &point : points) {
-                    if(point.rawCoordinates()[1]>=minValue) {
-                    allPoints.push_back(point);
+                    if(point.rawCoordinates().size()> 1 && point.rawCoordinates()[1]>=minValue) {
+                        std::vector<double> coordinates;
+                        for (int i = 0; i < point.rawCoordinates().size(); i++){
+                            auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
+                            coordinates.push_back(coordinate);
+                        }
+                        Point<double> newPoint = Point<double>(coordinates);
+                    allPoints.push_back(newPoint);
                     }
                 }
                 points.clear();
             }
         }
     }
-    auto polytope = hypro::VPolytope<Number>(allPoints);
-
-
+    double totalError = 0.0;
+    auto polytope = hypro::HPolytope<double>(allPoints);
+    cout << "Polytop" <<endl; polytope.print();
+    const auto distributions = plt->getDistributionsNormalized();
+    auto prob = ProbabilityCalculator();
+    auto res = prob.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
+            {polytope},distributions,1,5000,totalError);
+    cout << "Result: " << res << endl;
     handler.plotTex("exampleHybrid2", flowpipes);
 
 }
