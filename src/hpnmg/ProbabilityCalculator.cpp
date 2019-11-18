@@ -514,22 +514,31 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         int functioncalls,
         double &error
     ){
+
+        std::cout << "ProbabilityCalculator: polytopes.size before erase" << polytopes.size() << std::endl;
         polytopes.erase(
                 std::remove_if(polytopes.begin(), polytopes.end(), [](HPolytope<double> region) {
-                    if (region.empty() || region.dimension() == 0)
-                        return true;
+                    if (region.empty() || region.dimension() == 0) {
+                    return true;
+                }
 
                     auto vertices = region.vertices();
-                    if (vertices.empty())
+                    if (vertices.empty()) {
                         return true;
+                    }
                     long maxDim = vertices.begin()->rawCoordinates().rows();
+                    std::cout << "vertices.size "<< vertices.size() << std::endl;
+                    std::cout << "maxDim " << maxDim<< std::endl;
                     hypro::matrix_t<double> matr = matrix_t<double>(vertices.size()-1, maxDim);
                     // use first vertex as origin, start at second vertex
+                    std::cout << "effectiveDim " << int(matr.fullPivLu().rank()) << std::endl;
                     long rowIndex = 0;
                     for(auto vertexIt = ++vertices.begin(); vertexIt != vertices.end(); ++vertexIt, ++rowIndex) {
                         matr.row(rowIndex) = (vertexIt->rawCoordinates() - vertices.begin()->rawCoordinates()).transpose();
                     }
                     auto effectiveDimension = int(matr.fullPivLu().rank());
+                    std::cout << "effectiveDim " << effectiveDimension << std::endl;
+                    std::cout << "region.Dimension() " << region.dimension() << std::endl;
                     return effectiveDimension < region.dimension();
                 }),
                 polytopes.end()
@@ -541,7 +550,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         double currentProb;
         double p = 1.0;
         unsigned long n = polytopes.size();
-
+        std::cout << "ProbabilityCalculator: polytopes.size after erase " << n << std::endl;
         for (int k = 1; k <= polytopes.size(); ++k){
 
             vector<bool> v(n);
@@ -568,6 +577,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
                 probability += p * currentProb;
                 error += currentError;
+                std::cout << "ProbabilityCalculator: currentProb " << currentProb << std::endl;
+                std::cout << "ProbabilityCalculator: probability " << probability << std::endl;
+                std::cout << "ProbabilityCalculator: currentError " << currentError << std::endl;
+                std::cout << "ProbabilityCalculator: error " << error << std::endl;
 
             } while (std::prev_permutation(v.begin(), v.end()));
 

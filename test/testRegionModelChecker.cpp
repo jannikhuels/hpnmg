@@ -17,7 +17,7 @@
 #include <memory>
 
 using namespace hpnmg;
-
+/*
 TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTFoldedNormal) {
     auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50);
 
@@ -78,7 +78,7 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyTest2ConflictGTUniform) {
     result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("H", 103)))), 10);
     EXPECT_NEAR(0.0, round(result.first*10)/10, result.second);
 }
-
+*/
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest1GT) {
     auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50);
     auto formula = Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 1));
@@ -89,6 +89,7 @@ TEST(RegionModelChecker, DiscreteAtomicPropertyTest1GT) {
     EXPECT_NEAR(0.9315389122223113373664299671527104472835967852691848, result.first, result.second);
 }
 
+/*
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest2GT) {
     auto hpng = ReadHybridPetrinet{}.readHybridPetrinet("norep_1_2.xml");
     auto modelChecker = RegionModelChecker(*hpng, 20);
@@ -450,3 +451,4 @@ TEST(RegionModelChecker, ChecktimeMeetsOneDeterministicEventWithTwoGT) {
     auto result = modelChecker.satisfies(Formula(std::make_shared<DiscreteAtomicProperty>("grid_failed", 1)), 18);
     EXPECT_NEAR(1.0, round(result.first * 10) / 10, result.second);
 }
+*/

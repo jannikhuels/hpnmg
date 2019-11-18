@@ -18,13 +18,15 @@
 
 using namespace hpnmg;
 
+
 TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTFoldedNormalAtTime) {
-    auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 10, 1);
+    auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 1, 1);
 
     auto result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 0)), 0);
     // Place is empty at t = 0
     EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
 
+    modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 7, 1);
     result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 3)), 3);
     // out-transition is deterministically disabled at t=5, so the place's level cannot exceed t' at time t'<=5
     EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
@@ -34,12 +36,13 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTFoldedNormalAtTime) {
     // cdf(2.5) = 0.5 * (erf((2.5 + 5) / sqrt(18)) + erf((2.5 - 5) / sqrt(18))) ~ 0.196119
     EXPECT_NEAR(0.1961187156378668902015554951380463273568632340661803, result.first, result.second);
 
+    modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 10, 1);
     result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 7)), 10);
     // folded normal distribution with mu = 5 and sigma = 3
     // (1 - cdf(6)) = (0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 0.630436
      EXPECT_NEAR(0.6304357934282712096662251163331139441485145682519407, result.first, result.second);
 }
-
+/*
 TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTUniformAtTime) {
     // TG1: uniform distribution over [0, 10]
     auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("norep_1_1.xml");
@@ -78,7 +81,7 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyTest2ConflictGTUniformAtTime) {
     result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("H", 103)))), 10);
     EXPECT_NEAR(0.0, round(result.first*10)/10, result.second);
 }
-
+*/
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest1GTAtTime) {
     auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 1 ,1);
     auto formula = Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 1));
@@ -88,7 +91,7 @@ TEST(RegionModelChecker, DiscreteAtomicPropertyTest1GTAtTime) {
     // (1 - cdf(1)) = 1 - (0.5 * (erf((1 + 5) / sqrt(18)) + erf((1 - 5) / sqrt(18)))) ~ 0.931539
     EXPECT_NEAR(0.9315389122223113373664299671527104472835967852691848, result.first, result.second);
 }
-
+/*
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest2GTAtTime) {
     auto hpng = ReadHybridPetrinet{}.readHybridPetrinet("norep_1_2.xml");
     auto modelChecker = RegionModelChecker(*hpng, 20, 13, 1);
@@ -320,3 +323,4 @@ TEST(RegionModelChecker, UntilUniformAtTime) {
     )), 8);
     EXPECT_NEAR(0.8, round(result.first * 10) / 10, result.second);
 }
+*/

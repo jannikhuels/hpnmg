@@ -62,7 +62,6 @@ namespace hpnmg {
             );
 
             std::cout << "[Location " << node.getNodeID() << "]: Integrating over " << integrationDomains.size() << " time slices." << std::endl;
-
             if (integrationDomains.size())
                 std::cout << STDPolytope<double>(integrationDomains[0]) << std::endl;
 
@@ -74,10 +73,12 @@ namespace hpnmg {
                 50000,
                 nodeError
             ) * node.getParametricLocation().getAccumulatedProbability();
+            //std::cout << "RegionModelChecker: node.getParametricLocation():getAccumulatedProbability " << node.getParametricLocation().getAccumulatedProbability() <<std::endl; ;
             std::cout << "[Location " << node.getNodeID() << "]: Running total probability: " << probability << std::endl;
             error += nodeError;
         }
 
+        std::cout << "ModelChecker final prob: " << probability <<std::endl;
         return {probability, error};
     }
 

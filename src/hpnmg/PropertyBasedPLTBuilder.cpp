@@ -1,4 +1,5 @@
 #include "PropertyBasedPLTBuilder.h"
+#include "PLTWriter.h"
 
 using namespace std;
 namespace hpnmg {
@@ -48,6 +49,9 @@ namespace hpnmg {
             locationQueue.erase(locationQueue.begin());
         }
 
+        //only for debugging
+        auto writer = new PLTWriter();
+        writer->writePLT(parametriclocationTree, atTime);
         return parametriclocationTree;
     }
 

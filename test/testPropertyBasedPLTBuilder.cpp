@@ -8,18 +8,60 @@
 using namespace hpnmg;
 
 TEST(PropertyBasedPLTBuilder, SizeAtTime) {
-    auto reader = new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("example.xml");
-    auto parser = new PropertyBasedPLTBuilder();
-    auto plt = parser->parseHybridPetrinet(hybridPetrinet, 5);
-    auto initState = plt->getRootNode().getParametricLocation();
-    auto writer = new PLTWriter();
+    auto	reader	       = new ReadHybridPetrinet();
+    auto	hybridPetrinet = reader->readHybridPetrinet("example.xml");
+    auto	builder	       = new PropertyBasedPLTBuilder();
+    //time		       = 5
+    auto	plt	       = builder->parseHybridPetrinet(hybridPetrinet, 5);
+    auto	initState      = plt->getRootNode().getParametricLocation();
+    auto	writer	       = new PLTWriter();
     writer->writePLT(plt, 5);
     ASSERT_EQ(7, plt->numberOfLocations());
     ASSERT_EQ(2, plt->getChildNodes(plt->getRootNode()).size());
-    auto children = plt->getChildNodes(plt->getRootNode());
+    auto	children       = plt->getChildNodes(plt->getRootNode());
     ASSERT_EQ(2, plt->getChildNodes(children[0]).size());
     ASSERT_EQ(1, plt->getChildNodes(children[1]).size());
+    
+}
+
+TEST(PropertyBasedPLTBuilder, BuildTimeMultipleRegions){
+    auto	reader	     = new ReadHybridPetrinet();
+    auto	hybridPetrinet = reader->readHybridPetrinet("exampleMultipleRegions.xml");
+    auto	builder	     = new PropertyBasedPLTBuilder();
+    auto	writer	     = new PLTWriter();
+    //time=3
+    const auto	startChecker = std::chrono::high_resolution_clock::now();
+     auto	plt	     = builder->parseHybridPetrinet(hybridPetrinet, 3);
+    const auto	endChecker   = std::chrono::high_resolution_clock::now();
+    auto	initTime     = std::chrono::duration_cast<std::chrono::milliseconds>(endChecker - startChecker).count();
+
+    cout << "[Parsing maxTime 3]: " << initTime << "ms" << endl;
+     ASSERT_EQ(35, plt->numberOfLocations());
+     ASSERT_EQ(2, plt->getChildNodes(plt->getRootNode()).size());
+     writer->writePLT(plt, 3);
+
+     //time=5
+    const auto startChecker2 = std::chrono::high_resolution_clock::now();
+    plt	     = builder->parseHybridPetrinet(hybridPetrinet, 5);
+    const auto endChecker2   = std::chrono::high_resolution_clock::now();
+    initTime = std::chrono::duration_cast<std::chrono::milliseconds>(endChecker2 - startChecker2).count();
+
+    cout << "[Parsing maxTime 5]: " << initTime << "ms" << endl;
+     ASSERT_EQ(131, plt->numberOfLocations());
+     ASSERT_EQ(2,		plt->getChildNodes(plt->getRootNode()).size());
+     //writer->writePLT(plt,	5);
+
+     //time=10                                                                                                                            
+    const auto startChecker3 = std::chrono::high_resolution_clock::now();
+    plt      = builder->parseHybridPetrinet(hybridPetrinet, 10);
+    const auto endChecker3   = std::chrono::high_resolution_clock::now();
+    initTime = std::chrono::duration_cast<std::chrono::milliseconds>(endChecker3 - startChecker3).count();
+
+    cout << "[Parsing maxTime 10]: " << initTime << "ms" << endl;
+     ASSERT_EQ(2123, plt->numberOfLocations());
+     ASSERT_EQ(2,               plt->getChildNodes(plt->getRootNode()).size());
+     //writer->writePLT(plt,    10); 
+
 }
 
 /*
