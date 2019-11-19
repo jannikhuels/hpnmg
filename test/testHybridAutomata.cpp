@@ -835,37 +835,54 @@ TEST(HybridAutomaton, converter) {
     auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
 
     auto minValue = 10;
-    std::vector<Point<double>> allPoints;
-    //Compute convex 
+    std::vector<std::vector<Point<double>>> allPolytopes;
+    //Compute convex
     for (auto &indexPair : flowpipes) {
         std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
-        // Plot single flowpipe
+        // Iterate over flowpipes
+        std::set<Point<double>> allPoints;
         for (auto &set : flowpipe) {
             std::vector<Point<Number>> points = set.vertices();
+            // Filter points of boxes wether property is satisfied
             if (!points.empty() && points.size() >= 0) {
                 for (auto &point : points) {
-                    if(point.rawCoordinates().size()> 1 && point.rawCoordinates()[1]>=minValue) {
+                    if(point.rawCoordinates()[1]>=minValue) {
                         std::vector<double> coordinates;
-                        for (int i = 0; i < point.rawCoordinates().size(); i++){
+                        // Convert points to type double
+                        for (int i = 0; i <1; i++){
                             auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
                             coordinates.push_back(coordinate);
+
                         }
+                        // Add point to vector
                         Point<double> newPoint = Point<double>(coordinates);
-                    allPoints.push_back(newPoint);
+                    allPoints.insert(newPoint);
                     }
                 }
                 points.clear();
             }
         }
+        allPolytopes.push_back(std::vector<Point<double>>(allPoints.begin(), allPoints.end()));
     }
     double totalError = 0.0;
-    auto polytope = hypro::HPolytope<double>(allPoints);
-    cout << "Polytop" <<endl; polytope.print();
+    // Compute HPolytope from vertices
+    std::vector<hypro::HPolytope<double>> polytopes = std::vector<hypro::HPolytope<double>>(allPolytopes.size());
+    for(int i = 0; i < allPolytopes.size(); i++){
+        std::vector<Point<double>> currentPoints = allPolytopes[i];
+        for(int j = 0; j <currentPoints.size(); j++) {
+        }
+        if(currentPoints.size() > 1) {
+            hypro::HPolytope<double> polytope = hypro::HPolytope<double>(currentPoints);
+            polytopes.push_back(polytope);
+        }
+    }
+    // Get distributions from parametric location tree
     const auto distributions = plt->getDistributionsNormalized();
     auto prob = ProbabilityCalculator();
+    // Calculate probabilty using HPolytope
     auto res = prob.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
-            {polytope},distributions,1,5000,totalError);
-    cout << "Result: " << res << endl;
+            polytopes,distributions,1,5000,totalError);
+    cout << "Probability that x >= " << minValue << " holds:" << res << endl;
     handler.plotTex("exampleHybrid2", flowpipes);
 
 }
