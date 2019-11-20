@@ -63,7 +63,7 @@ TEST(HybridAutomaton, example) {
 
 
 // setup
-    string filePath = "../../test/testfiles/example.xml";
+    string filePath = "../../test/testfiles/exampleCarina.xml";
     double tauMax = 10.0;
 
 // read
@@ -87,7 +87,6 @@ TEST(HybridAutomaton, example) {
 // write
     PLTwriter.writePLT(plt, tauMax, "plt_example_10");
     automatonWriter.writeAutomaton(automaton, "example_10");
-
 }
 
 
@@ -766,7 +765,7 @@ TEST(HybridAutomaton, FlowParser){
     typedef mpq_class Number;
     typedef Box<Number> Representation;
 
-    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/examplesHybridAutomata/exampleNondeterminism1.model"));
+    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/examplesHybridAutomata/exampleHybrid3.model"));
 
 
     hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>> reacher(ha.first, ha.second);
@@ -814,7 +813,7 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleHybrid2.xml";
+    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleNondeterminism1.xml";
     double tMax = 10.0;
 
 // read HPnG
@@ -836,6 +835,6 @@ TEST(HybridAutomaton, converter) {
 // Compute flowpipes
     auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
 
-    handler.plotTex("exampleHybrid2", flowpipes);
+    handler.plotTex("exampleNondeterminism1", flowpipes);
 
 }

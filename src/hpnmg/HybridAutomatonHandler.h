@@ -52,7 +52,7 @@ namespace hpnmg {
 
         void addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition);
 
-        void setInitialState(int initial);
+        void setInitialState(vector<int> initial) ;
 
     };
 

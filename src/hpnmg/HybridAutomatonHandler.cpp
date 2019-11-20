@@ -18,15 +18,14 @@ namespace hpnmg {
         vector<shared_ptr<SingularAutomaton::Transition>> originalTransitions;
 
         //Add all locations to automaton, make a list of outgoing transitions and save index of initial location
-        int initial = 0;
-        int id = singularAutomaton->getInitialLocation()->getLocationId();
-
+        vector<int> initial;
         for (shared_ptr<SingularAutomaton::Location> originalLocation : singularAutomaton->getLocations()) {
 
             addLocation(originalLocation, maxTime);
 
-            if (originalLocation->getLocationId() == id)
-                initial = locations.size() - 1;
+            if (singular->isInitialLocation(originalLocation))
+                initial.push_back(locations.size() - 1);
+
 
             for (shared_ptr<SingularAutomaton::Transition> originalTransition : originalLocation->getOutgoingTransitions())
                 originalTransitions.push_back(originalTransition);
@@ -248,7 +247,7 @@ namespace hpnmg {
     }
 
 
-    void HybridAutomatonHandler::setInitialState(int initial) {
+    void HybridAutomatonHandler::setInitialState(vector<int> initial) {
 
         //get initial values
         vector<double> initG = singularAutomaton->getInitialGeneral();
@@ -260,7 +259,7 @@ namespace hpnmg {
         matrix_t<Number> boxMat = matrix_t<Number>::Zero(2 * v, v);
         vector_t<Number> boxVec = vector_t<Number>::Zero(2 * v);
 
-        cout << "Initial state index: " << initial;
+        cout << "Initial state: ";
 
         for (int i = 0; i < initG.size(); i++) {
             boxVec(i) = Number(-1 * carl::rationalize<Number>(initG[i]));
@@ -286,10 +285,13 @@ namespace hpnmg {
             cout << " | c" << i  + 1 << " = " << initC[i];
         }
 
-        cout << endl;
+        // create initial states.
+        for (int index : initial){
+            automaton.addInitialState(locations[index].get(), Condition<Number>(boxMat, boxVec));
+            cout << " | location index " << index;
+        }
 
-        // create initial state.
-        automaton.addInitialState(locations[initial].get(), Condition<Number>(boxMat, boxVec));
+        cout << endl;
     }
 
 
@@ -325,9 +327,9 @@ namespace hpnmg {
 
                         for (int i = 0; i < point.rawCoordinates().size(); i++){
                             auto coordinate = point.rawCoordinates()[i];
-                            cout << carl::convert<Number, double>(coordinate) << ", ";
+                           // cout << carl::convert<Number, double>(coordinate) << ", ";
                         }
-                        cout << endl;
+                        //cout << endl;
                     }
                     points.clear();
                 }

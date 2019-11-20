@@ -42,7 +42,7 @@ namespace hpnmg {
 
     public:
         pair<shared_ptr<ParametricLocationTree>, shared_ptr<SingularAutomaton>>
-        transformIntoSingularAutomaton(shared_ptr<HybridPetrinet> hybridPetriNet, double maxTime);
+        transformIntoSingularAutomaton(shared_ptr<HybridPetrinet> hybridPetriNet, double maxTime, int mode = 2);
 
     private:
         // Adds children of currentNode
@@ -66,7 +66,7 @@ namespace hpnmg {
 
         // Compares two ordered vectors
         // Returns true, if lhs < rhs and false otherwise
-        static bool compareOrderedVectors(const vector<vector<vector<double>>> &lhs, const vector<vector<vector<double>>> &rhs);
+        //static bool compareOrderedVectors(const vector<vector<vector<double>>> &lhs, const vector<vector<vector<double>>> &rhs);
 
     };
 }

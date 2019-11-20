@@ -116,6 +116,15 @@ namespace hpnmg {
         return true;
     }
 
+    bool SingularAutomaton::Location::isToBeDeleted(){
+        return toBeDeleted;
+    }
+
+    void SingularAutomaton::Location::setToBeDeleted(){
+        toBeDeleted = true;
+    }
+
+
     SingularAutomaton::Transition::Transition(shared_ptr<SingularAutomaton::Location> predecessorLocation,
                                               const TransitionType type, const long variableIndex,
                                               const double valueGuardCompare,
@@ -141,17 +150,18 @@ namespace hpnmg {
         this->successorLocation = newSuccessorLocation;
     };
 
-    SingularAutomaton::SingularAutomaton(shared_ptr<Location> initialLocation,
+    SingularAutomaton::SingularAutomaton(vector<shared_ptr<Location>> initialLocations,
                                          SingularAutomaton::singleton initialDeterministic,
                                          SingularAutomaton::singleton initialContinuous,
                                          SingularAutomaton::singleton initialGeneral) :
-            initialLocation(initialLocation), initialDeterministic(initialDeterministic),
+            initialDeterministic(initialDeterministic),
             initialContinuous(initialContinuous), initialGeneral(initialGeneral) {
-        addLocation(initialLocation);
+
+        for (auto loc : initialLocations)
+            this->initialLocations.push_back(loc);
     }
 
-    const shared_ptr<SingularAutomaton::Location>
-    SingularAutomaton::getInitialLocation() const { return initialLocation; }
+    const vector<shared_ptr<SingularAutomaton::Location>> SingularAutomaton::getInitialLocations() const { return initialLocations; }
 
     const SingularAutomaton::singleton
     SingularAutomaton::getInitialDeterministic() const { return initialDeterministic; }
@@ -178,36 +188,49 @@ namespace hpnmg {
         shared_ptr<SingularAutomaton::Transition> newTransition = make_shared<SingularAutomaton::Transition>(
                 predecessorLocation, type, variableIndex, valuePreCompare, successorLocation);
 
-        // if transition is immediate, remove the predecessorLocation and instead go directly to successorLocation
-        if(type == Immediate) {
-            // skip predecessorLocation and go directly to successorLocation
-            for (shared_ptr<Transition> incomingTransition : predecessorLocation->getIncomingTransitions()) {
-                incomingTransition->setSuccessorLocation(successorLocation);
-                successorLocation->addIncomingTransition(incomingTransition);
-                predecessorLocation->removeIncomingTransition(incomingTransition);
-            }
-            if (initialLocation == predecessorLocation) {
-                initialLocation = successorLocation;
-            }
-            // remove predecessorLocation from the automaton
-            removeLocation(predecessorLocation);
-        }
-        else {
-            predecessorLocation->addOutgoingTransition(newTransition);
-            successorLocation->addIncomingTransition(newTransition);
 
-            // update invariant of predecessor Location
-            switch (type) {
-                case Timed:
-                    predecessorLocation->addToInvariantDeterministic(variableIndex, valuePreCompare, invOperator);
-                    break;
-                case Continuous:
-                    predecessorLocation->addToInvariantContinuous(variableIndex, valuePreCompare, invOperator);
-                    break;
-                default:
-                    // do nothing
-                    break;
-            }
+//        if(type == Immediate) {
+//            // skip predecessorLocation and go directly to successorLocation
+//            for (shared_ptr<Transition> incomingTransition : predecessorLocation->getIncomingTransitions()) {
+//                incomingTransition->setSuccessorLocation(successorLocation);
+//                successorLocation->addIncomingTransition(incomingTransition);
+//                predecessorLocation->removeIncomingTransition(incomingTransition);
+//            }
+//            if (initialLocation == predecessorLocation) {
+//                initialLocation = successorLocation;
+//            }
+//            // remove predecessorLocation from the automaton
+//            removeLocation(predecessorLocation);
+//          }
+
+
+        predecessorLocation->addOutgoingTransition(newTransition);
+        successorLocation->addIncomingTransition(newTransition);
+
+        // update invariant of predecessor Location
+        switch (type) {
+            case Immediate:
+                predecessorLocation->setToBeDeleted();
+                break;
+            case Timed:
+                predecessorLocation->addToInvariantDeterministic(variableIndex, valuePreCompare, invOperator);
+                break;
+            case Continuous:
+                predecessorLocation->addToInvariantContinuous(variableIndex, valuePreCompare, invOperator);
+                break;
+            default:
+                // do nothing
+                break;
         }
+
+    }
+
+    bool SingularAutomaton::isInitialLocation(shared_ptr<SingularAutomaton::Location> location){
+
+         for (shared_ptr<SingularAutomaton::Location> initialLocation : initialLocations){
+            if (location->getLocationId() == initialLocation->getLocationId())
+               return true;
+        }
+        return false;
     }
 }

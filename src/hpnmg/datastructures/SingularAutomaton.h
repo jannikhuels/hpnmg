@@ -37,6 +37,7 @@ namespace hpnmg {
             rectangularSet invariantsContinuous;
             vector<shared_ptr<SingularAutomaton::Transition>> incomingTransitions;
             vector<shared_ptr<SingularAutomaton::Transition>> outgoingTransitions;
+            bool toBeDeleted = false;
 
         public:
             // Generates a location
@@ -77,6 +78,10 @@ namespace hpnmg {
             void removeIncomingTransition(shared_ptr<SingularAutomaton::Transition> incomingTransition);
 
             bool isActInvOutgoingTransitionsIdentic(const shared_ptr<SingularAutomaton::Location> other) const;
+
+            bool isToBeDeleted();
+
+            void setToBeDeleted();
         };
 
         class Transition {
@@ -110,7 +115,7 @@ namespace hpnmg {
         };
 
     private:
-        shared_ptr<Location> initialLocation;
+        vector<shared_ptr<Location>> initialLocations;
         const singleton initialDeterministic;
         const singleton initialContinuous;
         const singleton initialGeneral;
@@ -123,10 +128,10 @@ namespace hpnmg {
         // @param initialDeterministic      initial values for variables, modeling deterministic clocks
         // @param initialContinuous         initial values for variables, modeling the continuous marking
         // @param initialGeneral            initial values for variables, modeling general clocks
-        SingularAutomaton(shared_ptr<Location> initialLocation, singleton initialDeterministic,
+        SingularAutomaton(vector<shared_ptr<Location>> initialLocations, singleton initialDeterministic,
                           singleton initialContinuous, singleton initialGeneral);
 
-        const shared_ptr<SingularAutomaton::Location> getInitialLocation() const;
+        const vector<shared_ptr<SingularAutomaton::Location>> getInitialLocations() const;
 
         const SingularAutomaton::singleton getInitialDeterministic() const;
 
@@ -147,5 +152,8 @@ namespace hpnmg {
                               const SingularAutomaton::Transition::TransitionType type, const long variableIndex,
                               const double valuePreCompare, const invariantOperator invOperator,
                               shared_ptr<SingularAutomaton::Location> successorLocation);
+
+        //checks if Location is initialLocation
+        bool isInitialLocation(shared_ptr<SingularAutomaton::Location> Location);
     };
 }
