@@ -78,8 +78,14 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyTest2ConflictGTUniform) {
     result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<ContinuousAtomicProperty>("H", 103)))), 10);
     EXPECT_NEAR(0.0, round(result.first*10)/10, result.second);
 }
-*/
+
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest1GT) {
+    auto	reader	       = new ReadHybridPetrinet();
+    auto	hybridPetrinet = reader->readHybridPetrinet("example.xml");
+    auto	writer	       = new PLTWriter();
+    auto	parser	       = new ParseHybridPetrinet();
+    auto	plt	       = parser->parseHybridPetrinet(hybridPetrinet, 50);
+    writer->writePLT(plt, 50);
     auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50);
     auto formula = Formula(std::make_shared<DiscreteAtomicProperty>("pd1", 1));
 
@@ -89,7 +95,7 @@ TEST(RegionModelChecker, DiscreteAtomicPropertyTest1GT) {
     EXPECT_NEAR(0.9315389122223113373664299671527104472835967852691848, result.first, result.second);
 }
 
-/*
+
 TEST(RegionModelChecker, DiscreteAtomicPropertyTest2GT) {
     auto hpng = ReadHybridPetrinet{}.readHybridPetrinet("norep_1_2.xml");
     auto modelChecker = RegionModelChecker(*hpng, 20);
@@ -223,7 +229,7 @@ TEST(RegionModelChecker, ConjunctionNegationTest) {
     // 1 - cdf(6) = 1 - (0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 1 - 0.630436
     EXPECT_NEAR(0.3696, round(result.first * 10000) / 10000, result.second);
 }
-
+*/
 TEST(RegionModelChecker, DiscreteAtomicPropertyNegationTest2GT) {
     auto hpng = ReadHybridPetrinet{}.readHybridPetrinet("norep_1_2.xml");
     auto modelChecker = RegionModelChecker(*hpng, 20);
@@ -231,19 +237,24 @@ TEST(RegionModelChecker, DiscreteAtomicPropertyNegationTest2GT) {
     auto result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 2)))), 0);
     EXPECT_NEAR(0.0, round(result.first*10)/10, result.second);
 
+    auto	writer	       = new PLTWriter();
+    auto	parser	       = new ParseHybridPetrinet();
+    auto	plt	       = parser->parseHybridPetrinet(hpng, 20);
+    writer->writePLT(plt, 20);
     result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)))), 5);
     EXPECT_NEAR(0.875, round(result.first*1000)/1000, result.second);
 
     result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 1)))), 10);
     EXPECT_NEAR(0.5, round(result.first*10)/10, result.second);
 
-    result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)))), 13);
+    /*result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 0)))), 13);
     EXPECT_NEAR(0.245, round(result.first*1000)/1000, result.second);
 
     result = modelChecker.satisfies(Formula(std::make_shared<Negation>(Formula(std::make_shared<DiscreteAtomicProperty>("pin1", 1)))), 13);
     EXPECT_NEAR(0.755, round(result.first*1000)/1000, result.second);
+    */
 }
-
+/*
 TEST(RegionModelChecker, UntilUniform) {
     const double maxTime = 20;
     // TG1: uniform distribution over [0, 10]

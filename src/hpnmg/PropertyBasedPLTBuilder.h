@@ -29,7 +29,7 @@ namespace hpnmg {
         // @param atTime           checktime time for resulting parametric location tree
         // @return                  resulting parametric location tree
         shared_ptr<ParametricLocationTree>
-        parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double atTime, int mode = 0);
+        parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, double atTime, int mode = 0);
 
         // Generates the root parametric location
         //
@@ -45,7 +45,7 @@ namespace hpnmg {
         // @param maxTime           maximal time for resulting parametric location tree
         // @param mode              mode to handle nondterministic choices
         // @return                  resulting parametric location tree
-        void processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, int mode);
+        void processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, double atTime, int mode);
 
         vector<double> getTimeDelta(shared_ptr<GuardArc> arc, vector<int> generalTransitionsFired,
                                     vector<vector<vector<double>>> generalIntervalBoundLeft,

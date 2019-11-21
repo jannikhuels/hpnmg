@@ -8,7 +8,7 @@ namespace hpnmg {
    PropertyBasedPLTBuilder::~PropertyBasedPLTBuilder() = default;
 
     shared_ptr<ParametricLocationTree>
-    PropertyBasedPLTBuilder::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double atTime, int mode) {
+    PropertyBasedPLTBuilder::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, double atTime, int mode) {
         // TODO: all floats to double?
         discretePlaceIDs = {};
         continuousPlaceIDs = {};
@@ -31,8 +31,8 @@ namespace hpnmg {
         for (auto &generalTransition : generalTransitions)
             generalTransitionIDs.push_back(generalTransition.first);
 
-        ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, atTime);
-        parametriclocationTree = make_shared<ParametricLocationTree>(rootLocation, atTime);
+        ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, maxTime);
+        parametriclocationTree = make_shared<ParametricLocationTree>(rootLocation, maxTime);
 
         // Add distributions to plt
         vector<pair<string, map<string, float>>> distributions(generalTransitionIDs.size());
@@ -45,18 +45,22 @@ namespace hpnmg {
         locationQueue.push_back(parametriclocationTree->getRootNode());
 
         while (!locationQueue.empty()) {
-            processNode(locationQueue[0], hybridPetrinet, atTime, mode);
-            locationQueue.erase(locationQueue.begin());
+            /*double leftBound=locationQueue[0].getParametricLocation();
+            if(leftBound>atTime){
+                locationQueue.erase(locationQueue.begin());
+            }else {*/
+                processNode(locationQueue[0], hybridPetrinet, maxTime, atTime, mode);
+                locationQueue.erase(locationQueue.begin());
         }
 
         //only for debugging
         auto writer = new PLTWriter();
-        writer->writePLT(parametriclocationTree, atTime);
+        writer->writePLT(parametriclocationTree, maxTime);
         return parametriclocationTree;
     }
 
     ParametricLocation
-    PropertyBasedPLTBuilder::generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double atTime) {
+    PropertyBasedPLTBuilder::generateRootParametricLocation(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime) {
         // Get root discrete markings
         vector<int> rootDiscreteMarking;
         for (string &placeId: discretePlaceIDs)
@@ -76,7 +80,7 @@ namespace hpnmg {
         vector<vector<double>> generalClocks;
         for (int i = 0; i < numGeneralTransitions; ++i) {
             leftBoundaries.push_back({{0}}); // NOLINT
-            rightBoundaries.push_back({{atTime}}); // NOLINT
+            rightBoundaries.push_back({{maxTime}}); // NOLINT
             generalClocks.push_back({0}); // NOLINT
         }
         vector<double> drift = getDrift(rootDiscreteMarking, rootContinuousMarking, hybridPetrinet, leftBoundaries,
@@ -147,7 +151,7 @@ namespace hpnmg {
         return equalTimeDeltaTransitions;
     }
 
-    void PropertyBasedPLTBuilder::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet,
+    void PropertyBasedPLTBuilder::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime,
                                           double atTime, int mode) {
 
          /* --- Nondeterministic Conflicts ---
@@ -157,6 +161,7 @@ namespace hpnmg {
           */
 
 
+         //Woher kommt diese magische Zahl?
         int nodeMax = 100000;
         ParametricLocation location = node.getParametricLocation();
         vector<int> discreteMarking = location.getDiscreteMarking();
@@ -311,7 +316,7 @@ namespace hpnmg {
         locTime[0] = location.getSourceEvent().getTime();
         for (int i = 1; i < locTime.size(); ++i)
             locTime[i] = timeGenDep[i - 1];
-        double minimalMaximum = atTime -
+        double minimalMaximum = maxTime -
                                 getBoundedTime(generalTransitionsFired, location.getGeneralIntervalBoundLeft(),
                                                location.getGeneralIntervalBoundRight(), locTime);
         for (vector<double> &timeDelta : timeDeltas) {
@@ -418,11 +423,11 @@ namespace hpnmg {
                     .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
                 // if we have no minimal timeDelta we use maxTime
                 if (timeDeltas.empty())
-                    addLocationForGeneralEvent(transition, atTime, {atTime}, {{}}, node, hybridPetrinet);
+                    addLocationForGeneralEvent(transition, maxTime, {atTime}, {{}}, node, hybridPetrinet);
 
                 // for every general transition we need one parametric location per minimal timedelta
                 for (int i = 0; i < timeDeltas.size(); ++i)
-                    addLocationForGeneralEvent(transition, atTime, timeDeltas[i], timeDeltas, node,
+                    addLocationForGeneralEvent(transition, maxTime, timeDeltas[i], timeDeltas, node,
                                                hybridPetrinet);
             }
         }
@@ -775,6 +780,8 @@ namespace hpnmg {
         // place is discrete Place
         for (pair<string, shared_ptr<DiscreteArc>> arc_entry : transition->getDiscreteInputArcs()) {
             shared_ptr<DiscreteArc> arc = arc_entry.second;
+        // discrete arcs are enabled when place has higher or equal marking than arcs weight
+        // place is discrete Place
             shared_ptr<DiscretePlace> place = hybridPetrinet->getDiscretePlaces()[arc->place->id];
             long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), place->id) - discretePlaceIDs.begin();
             double marking = discreteMarking[pos];
