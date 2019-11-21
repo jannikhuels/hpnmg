@@ -78,21 +78,21 @@ namespace hpnmg {
 
         void addLocationForImmediateEvent(shared_ptr<ImmediateTransition> transition,
                                           ParametricLocationTree::Node parentNode, float probability,
-                                          shared_ptr<HybridPetrinet> hybridPetrinet);
+                                          shared_ptr<HybridPetrinet> hybridPetrinet, double atTime);
 
         void addLocationForGeneralEvent(shared_ptr<GeneralTransition> transition, double maxTime,
                                         vector<double> timeDelta, vector<vector<double>> timeDeltas,
                                         ParametricLocationTree::Node parentNode,
-                                        shared_ptr<HybridPetrinet> hybridPetrinet);
+                                        shared_ptr<HybridPetrinet> hybridPetrinet, double atTime);
 
         void addLocationForDeterministicEvent(shared_ptr<DeterministicTransition> transition, double probability,
                                               vector<double> timeDelta, vector<vector<double>> timeDeltas,
                                               ParametricLocationTree::Node parentNode,
-                                              shared_ptr<HybridPetrinet> hybridPetrinet);
+                                              shared_ptr<HybridPetrinet> hybridPetrinet, double atTime);
 
 
-        void addLocationForBoundaryEventByArcMember(shared_ptr<GuardArc> arcMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet);
-        void addLocationForBoundaryEventByContinuousPlaceMember(shared_ptr<ContinuousPlace> placeMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet);
+        void addLocationForBoundaryEventByArcMember(shared_ptr<GuardArc> arcMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet, double atTime);
+        void addLocationForBoundaryEventByContinuousPlaceMember(shared_ptr<ContinuousPlace> placeMember, vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet,double atTime);
         //void addLocationForBoundaryEvent(vector<double> timeDelta, vector<vector<double>> timeDeltas, ParametricLocationTree::Node parentNode, shared_ptr<HybridPetrinet> hybridPetrinet, std::string);
 
 
