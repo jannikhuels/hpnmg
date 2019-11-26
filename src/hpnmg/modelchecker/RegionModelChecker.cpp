@@ -22,7 +22,7 @@ namespace hpnmg {
     RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime, double atTime=20, int mode=0) :
         hpng(std::make_shared<HybridPetrinet>(hpng)),
         plt(mode==1
-        ?*PropertyBasedPLTBuilder{}.parseHybridPetrinet(this->hpng, maxTime, atTime)
+        ?*PropertyBasedPLTBuilder{}.parseHybridPetrinet(this->hpng, maxTime, atTime, 0)
         :*ParseHybridPetrinet{}.parseHybridPetrinet(this->hpng, maxTime))
     {
         std::cout << "[Number of Model dimensions]:" << this->plt.getDimension() << std::endl;

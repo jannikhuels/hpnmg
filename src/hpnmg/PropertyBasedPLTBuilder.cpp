@@ -1,11 +1,10 @@
 #include "PropertyBasedPLTBuilder.h"
-#include "PLTWriter.h"
 
 using namespace std;
 namespace hpnmg {
+    PropertyBasedPLTBuilder::PropertyBasedPLTBuilder() = default;
 
-   PropertyBasedPLTBuilder::PropertyBasedPLTBuilder() = default;
-   PropertyBasedPLTBuilder::~PropertyBasedPLTBuilder() = default;
+    PropertyBasedPLTBuilder::~PropertyBasedPLTBuilder() = default;
 
     shared_ptr<ParametricLocationTree>
     PropertyBasedPLTBuilder::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, double atTime, int mode) {
@@ -32,6 +31,7 @@ namespace hpnmg {
             generalTransitionIDs.push_back(generalTransition.first);
 
         ParametricLocation rootLocation = generateRootParametricLocation(hybridPetrinet, maxTime);
+
         parametriclocationTree = make_shared<ParametricLocationTree>(rootLocation, maxTime);
 
         // Add distributions to plt
@@ -45,17 +45,10 @@ namespace hpnmg {
         locationQueue.push_back(parametriclocationTree->getRootNode());
 
         while (!locationQueue.empty()) {
-            /*double leftBound=locationQueue[0].getParametricLocation();
-            if(leftBound>atTime){
-                locationQueue.erase(locationQueue.begin());
-            }else {*/
-                processNode(locationQueue[0], hybridPetrinet, maxTime, atTime, mode);
-                locationQueue.erase(locationQueue.begin());
+            processNode(locationQueue[0], hybridPetrinet, maxTime, atTime, mode);
+            locationQueue.erase(locationQueue.begin());
         }
 
-        //only for debugging
-        auto writer = new PLTWriter();
-        writer->writePLT(parametriclocationTree, maxTime);
         return parametriclocationTree;
     }
 
@@ -151,8 +144,8 @@ namespace hpnmg {
         return equalTimeDeltaTransitions;
     }
 
-    void PropertyBasedPLTBuilder::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime,
-                                          double atTime, int mode) {
+    void PropertyBasedPLTBuilder::processNode(ParametricLocationTree::Node node, shared_ptr<HybridPetrinet> hybridPetrinet,
+                                          double maxTime, double atTime, int mode) {
 
          /* --- Nondeterministic Conflicts ---
          Mode 0: Nondeterminism resolved by priorities and conflicts (default)
@@ -161,7 +154,6 @@ namespace hpnmg {
           */
 
 
-         //Woher kommt diese magische Zahl?
         int nodeMax = 100000;
         ParametricLocation location = node.getParametricLocation();
         vector<int> discreteMarking = location.getDiscreteMarking();
@@ -385,7 +377,7 @@ namespace hpnmg {
                 else
                     newLocTime.push_back(locTime[i] + timeDelta[i]);
             }
-            if (atTime >= getBoundedTime(generalTransitionsFired, location.getGeneralIntervalBoundLeft(),
+            if (maxTime >= getBoundedTime(generalTransitionsFired, location.getGeneralIntervalBoundLeft(),
                                           location.getGeneralIntervalBoundRight(), newLocTime))
                 allowedTimeDeltas.push_back(timeDelta);
         }
@@ -423,7 +415,7 @@ namespace hpnmg {
                     .getGeneralIntervalBoundLeft(), location.getGeneralIntervalBoundRight(), location.getGeneralTransitionsFired())) {
                 // if we have no minimal timeDelta we use maxTime
                 if (timeDeltas.empty())
-                    addLocationForGeneralEvent(transition, maxTime, {atTime}, {{}}, node, hybridPetrinet, atTime);
+                    addLocationForGeneralEvent(transition, maxTime, {maxTime}, {{}}, node, hybridPetrinet, atTime);
 
                 // for every general transition we need one parametric location per minimal timedelta
                 for (int i = 0; i < timeDeltas.size(); ++i)
@@ -456,7 +448,7 @@ namespace hpnmg {
                 if (minimumTime <= minimalMaximum) {
                     alreadyConsidered.push_back(timeDelta);
                     addLocationForBoundaryEventByArcMember(arcItem.second, timeDelta, timeDeltas, node, hybridPetrinet, atTime);
-                    //addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet, arcItem.second->place->id, atTime);
+                    //addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet, arcItem.second->place->id);
                 }
             }
         }
@@ -575,7 +567,7 @@ namespace hpnmg {
             if (minimumTime <= minimalMaximum) {
                 newConsideredPlace.push_back(timeDelta);
                 addLocationForBoundaryEventByContinuousPlaceMember(place, timeDelta, timeDeltas, node, hybridPetrinet, atTime);
-                //addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet, place->id), atTime;
+                //addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet, place->id);
             }
             vector<pair<double, shared_ptr<ContinuousTransition>>> nextContinuousGuards;
             for (auto transitionItem : hybridPetrinet->getContinuousTransitions()) {
@@ -598,7 +590,7 @@ namespace hpnmg {
                     if (minimumTime <= minimalMaximum) {
                         newConsideredPlace.push_back(timeDelta);
                         addLocationForBoundaryEventByArcMember(arcItem.second, timeDelta, timeDeltas, node, hybridPetrinet, atTime);
-                        //addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet, arcItem.second->id, atTime);
+                        //addLocationForBoundaryEvent(timeDelta, timeDeltas, node, hybridPetrinet, arcItem.second->id);
                     }
                 }
             }
@@ -780,8 +772,6 @@ namespace hpnmg {
         // place is discrete Place
         for (pair<string, shared_ptr<DiscreteArc>> arc_entry : transition->getDiscreteInputArcs()) {
             shared_ptr<DiscreteArc> arc = arc_entry.second;
-        // discrete arcs are enabled when place has higher or equal marking than arcs weight
-        // place is discrete Place
             shared_ptr<DiscretePlace> place = hybridPetrinet->getDiscretePlaces()[arc->place->id];
             long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), place->id) - discretePlaceIDs.begin();
             double marking = discreteMarking[pos];
@@ -886,17 +876,6 @@ namespace hpnmg {
         Event event = Event(EventType::Immediate, generalDependecies, eventTime);
         event.setImmediateTransitionMember(transition);
 
-        //only create new Location if left Bounds are below atTime
-        std::vector<std::vector<std::vector<double>>> generalIntervalBoundsLeft = parentLocation.getGeneralIntervalBoundLeft();
-        for(int i = 0; i<generalIntervalBoundsLeft.size();i++){
-            for(int j=0; j<generalIntervalBoundsLeft[i].size(); j++){
-                for(int k=0; k<generalIntervalBoundsLeft[i][j].size(); k++){
-                    if(generalIntervalBoundsLeft[i][j][k]>atTime)
-                        return;
-                }
-
-            }
-        }
         ParametricLocation newLocation = ParametricLocation(markings, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
                                                             parentLocation.getGeneralIntervalBoundLeft(),
@@ -924,6 +903,11 @@ namespace hpnmg {
             enablingStatusesOfDeterministicTransitions[i] = transitionIsEnabled(markings, continuousMarking, detTrans, hybridPetrinet, parentLocation.getGeneralIntervalBoundLeft(), parentLocation.getGeneralIntervalBoundRight(), parentLocation.getGeneralTransitionsFired());
         }
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
+
+        //if location cant be reached until atTime, do not at to PLT
+        if(newLocation.getEarliestEntryTime()>atTime){
+            return;
+        }
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
@@ -1021,16 +1005,6 @@ namespace hpnmg {
         Event event = Event(EventType::Timed, generalDependecies, eventTime);
         event.setDeterministicTransitionMember(transition);
 
-        //only create new Location if left intervall Bound below atTime
-        for(int i = 0; i<generalIntervalBoundLeft.size();i++){
-            for(int j=0; j<generalIntervalBoundLeft[i].size(); j++){
-                for(int k=0; k<generalIntervalBoundLeft[i][j].size(); k++){
-                    if(generalIntervalBoundLeft[i][j][k]>atTime)
-                        return;
-                }
-
-            }
-        }
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
                                                             generalIntervalBoundLeft, generalIntervalBoundRight);
@@ -1101,6 +1075,11 @@ namespace hpnmg {
             enablingStatusesOfDeterministicTransitions[i] = transitionIsEnabled(discreteMarking, continuousMarking, detTrans, hybridPetrinet, generalIntervalBoundLeft, generalIntervalBoundRight, parentLocation.getGeneralTransitionsFired());
         }
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
+
+        //if location cant be reached until atTime, do not at to PLT
+        if(newLocation.getEarliestEntryTime()>atTime){
+            return;
+        }
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
@@ -1179,18 +1158,6 @@ namespace hpnmg {
             generalDependecies[i - 1] += timeDelta[i];
         Event event = Event(EventType::Continuous, generalDependecies, eventTime);
         event.setArcMember(arcMember);
-
-
-        //only create new Location if left Bounds are below atTime
-        for(int i = 0; i<generalIntervalBoundLeft.size();i++){
-            for(int j=0; j<generalIntervalBoundLeft[i].size(); j++){
-                for(int k=0; k<generalIntervalBoundLeft[i][j].size(); k++){
-                    if(generalIntervalBoundLeft[i][j][k]>atTime)
-                        return;
-                }
-
-            }
-        }
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
                                                             generalIntervalBoundLeft, generalIntervalBoundRight);
@@ -1253,6 +1220,11 @@ namespace hpnmg {
             enablingStatusesOfDeterministicTransitions[i] = transitionIsEnabled(discreteMarking, continuousMarking, detTrans, hybridPetrinet, generalIntervalBoundLeft,generalIntervalBoundRight, parentLocation.getGeneralTransitionsFired());
         }
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
+
+        //if location cant be reached until atTime, do not at to PLT
+        if(newLocation.getEarliestEntryTime()>atTime){
+            return;
+        }
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
@@ -1333,16 +1305,6 @@ namespace hpnmg {
         Event event = Event(EventType::Continuous, generalDependecies, eventTime);
         event.setPlaceMember(placeMember);
 
-        //only create new Location if left Bounds are below atTime
-        for(int i = 0; i<generalIntervalBoundLeft.size();i++){
-            for(int j=0; j<generalIntervalBoundLeft[i].size(); j++){
-                for(int k=0; k<generalIntervalBoundLeft[i][j].size(); k++){
-                    if(generalIntervalBoundLeft[i][j][k]>atTime)
-                        return;
-                }
-
-            }
-        }
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
                                                             generalIntervalBoundLeft, generalIntervalBoundRight);
@@ -1405,6 +1367,11 @@ namespace hpnmg {
             enablingStatusesOfDeterministicTransitions[i] = transitionIsEnabled(discreteMarking, continuousMarking, detTrans, hybridPetrinet, generalIntervalBoundLeft,generalIntervalBoundRight, parentLocation.getGeneralTransitionsFired());
         }
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
+
+        //if location cant be reached until atTime, do not at to PLT
+        if(newLocation.getEarliestEntryTime()>atTime){
+            return;
+        }
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
@@ -1521,7 +1488,7 @@ namespace hpnmg {
         }
         generalDependecies.push_back(1.0);
 
-        vector<double> maxTimeVector{atTime};
+        vector<double> maxTimeVector{maxTime};
         // adjust general bounds
         // adjust fired transition bounds
         for (int i = 0; i < generalTransitionIDs.size(); ++i) {
@@ -1538,7 +1505,7 @@ namespace hpnmg {
                 vector<double> vectorRight = vector<double>(currentBoundRight[currentBoundRight.size() - 1].size() + 1);
                 fill(vectorLeft.begin(), vectorLeft.end(), 0);
                 fill(vectorRight.begin(), vectorRight.end(), 0);
-                vectorRight[0] = atTime;
+                vectorRight[0] = maxTime;
                 currentBoundLeft.push_back(vectorLeft);
                 currentBoundRight.push_back(vectorRight);
                 generalIntervalBoundLeft[i] = currentBoundLeft;
@@ -1567,19 +1534,8 @@ namespace hpnmg {
             }
         }
 
-        //only create new Location if left Bounds are below atTime
-        for(int i = 0; i<generalIntervalBoundLeft.size();i++){
-            for(int j=0; j<generalIntervalBoundLeft[i].size(); j++){
-                for(int k=0; k<generalIntervalBoundLeft[i][j].size(); k++){
-                    if(generalIntervalBoundLeft[i][j][k]>atTime)
-                        return;
-                }
-
-            }
-        }
         Event event = Event(EventType::General, generalDependecies, eventTime);
         event.setGeneralTransitionMember(transition);
-
         ParametricLocation newLocation = ParametricLocation(discreteMarking, continuousMarking, drift,
                                                             static_cast<int>(numGeneralTransitions), event,
                                                             generalIntervalBoundLeft, generalIntervalBoundRight);
@@ -1608,6 +1564,11 @@ namespace hpnmg {
             enablingStatusesOfDeterministicTransitions[i] = transitionIsEnabled(discreteMarking, continuousMarking, detTrans, hybridPetrinet, generalIntervalBoundLeft,generalIntervalBoundRight, generalTransitionsFired);
         }
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
+
+        //if location cant be reached until atTime, do not at to PLT
+        if(newLocation.getEarliestEntryTime()>atTime){
+            return;
+        }
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }

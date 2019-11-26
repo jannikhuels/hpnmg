@@ -36,13 +36,14 @@ TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTFoldedNormalAtTime) {
     // cdf(2.5) = 0.5 * (erf((2.5 + 5) / sqrt(18)) + erf((2.5 - 5) / sqrt(18))) ~ 0.196119
     EXPECT_NEAR(0.1961187156378668902015554951380463273568632340661803, result.first, result.second);
 
-    //    modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 10, 1);
-    // result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 7)), 10);
-    // folded normal distribution with mu = 5 and sigma = 3
-    // (1 - cdf(6)) = (0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 0.630436
-    // EXPECT_NEAR(0.6304357934282712096662251163331139441485145682519407, result.first, result.second);
+     modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 10, 1);
+    result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 7)), 10);
+    //folded normal distribution with mu = 5 and sigma = 3
+    //(1 - cdf(6)) = (0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 0.630436
+    EXPECT_NEAR(0.6304357934282712096662251163331139441485145682519407, result.first, result.second);
 }
-/*
+
+
 TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTUniformAtTime) {
     // TG1: uniform distribution over [0, 10]
     auto hpn = ReadHybridPetrinet{}.readHybridPetrinet("norep_1_1.xml");
@@ -265,7 +266,7 @@ TEST(RegionModelChecker, DiscreteAtomicPropertyNegationTest2GTAtTime) {
 }
 
 //until needs to evaluate the whole path up to the end. Hence the property based PLT builder cant be used (yet).
-
+/*
 TEST(RegionModelChecker, UntilUniformAtTime) {
     const double maxTime = 20;
     // TG1: uniform distribution over [0, 10]
