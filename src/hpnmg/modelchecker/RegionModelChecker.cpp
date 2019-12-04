@@ -19,21 +19,22 @@
 
 namespace hpnmg {
 
-    RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime, double atTime=20, int mode=0) :
+    RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime, int mode, double atTime, const Formula &formula) :
         hpng(std::make_shared<HybridPetrinet>(hpng)),
         plt(mode==1
-        ?*PropertyBasedPLTBuilder{}.parseHybridPetrinet(this->hpng, maxTime, atTime, 0)
+        ?*PropertyBasedPLTBuilder{}.parseHybridPetrinet(this->hpng, maxTime, atTime, 0, formula)
         :*ParseHybridPetrinet{}.parseHybridPetrinet(this->hpng, maxTime))
     {
         std::cout << "[Number of Model dimensions]:" << this->plt.getDimension() << std::endl;
     }
 
     //second constructor since default parameters dont work
-    RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :
-        RegionModelChecker(hpng, maxTime, 0.0, 0)
+    /*RegionModelChecker::RegionModelChecker(HybridPetrinet hpng, double maxTime) :
+        RegionModelChecker(hpng, maxTime, 0)
     {
         std::cout << "[Number of Model dimensions]:" << this->plt.getDimension() << std::endl;
     }
+     */
 
 
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {

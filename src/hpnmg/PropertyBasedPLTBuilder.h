@@ -3,6 +3,7 @@
 #include <vector>
 #include "datastructures/HybridPetrinet.h"
 #include "ParametricLocationTree.h"
+#include "modelchecker/Formula.h"
 
 namespace hpnmg {
     class PropertyBasedPLTBuilder {
@@ -13,8 +14,18 @@ namespace hpnmg {
         vector<string> deterministicTransitionIDs;
         vector<string> generalTransitionIDs;
         vector<ParametricLocationTree::Node> locationQueue;
+        //states, whether the present formula is an until formula, then untilMode=1
+        int untilMode;
+        shared_ptr<HybridPetrinet> hybridPetrinet;
 
         std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> sortByEqualTimeDelta(std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> deterministicTransitions);
+        //Method to modelcheck while building
+        bool nodeSatisfiesProperty(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
+        //helper methods
+        bool cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value, bool negate);
+        bool dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value, bool negate);
+        bool conj(const ParametricLocationTree::Node& node, const Conjunction& conj, double atTime);
+        bool neg(const ParametricLocationTree::Node& node, const Negation& formula, double atTime);
 
     public:
         //TODO Check to make it a singleton
@@ -26,10 +37,11 @@ namespace hpnmg {
         // Parses a hybrid petrinet recursively until reaching maximal time and generates a parametric location tree
         //
         // @param hybridPetrinet    hybrid petrinet that should be parsed
+        // @formula                 formula that should be checked
         // @param atTime           checktime time for resulting parametric location tree
         // @return                  resulting parametric location tree
         shared_ptr<ParametricLocationTree>
-        parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, double atTime, int mode = 0);
+        parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, double atTime, int mode = 0, const Formula &formula = Formula(std::shared_ptr<::hpnmg::True>()));
 
         // Generates the root parametric location
         //
