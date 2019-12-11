@@ -2,6 +2,7 @@
 #include "modelchecker/Formula.h"
 #include "modelchecker/Until.h"
 #include "modelchecker/Negation.h"
+#include "modelchecker/Conjunction.h"
 
 using namespace std;
 namespace hpnmg {
@@ -11,6 +12,7 @@ namespace hpnmg {
 
     shared_ptr<ParametricLocationTree>
     PropertyBasedPLTBuilder::parseHybridPetrinet(shared_ptr<HybridPetrinet> hybridPetrinet, double maxTime, double atTime, int mode, const Formula &formula) {
+
         // TODO: all floats to double?
         discretePlaceIDs = {};
         continuousPlaceIDs = {};
@@ -56,8 +58,12 @@ namespace hpnmg {
 
         while (!locationQueue.empty()) {
             if (locationQueue[0].getParametricLocation().getEarliestEntryTime() >= atTime && untilMode == 1) {
+                cout<<"will not process node that satisfies b"<<endl;
                 if (nodeSatisfiesProperty(locationQueue[0], Until(*formula.getUntil()).goal, atTime)) {
+                    cout<<"will eleminate node that satisfies b"<<endl;
                     locationQueue.erase(locationQueue.begin());
+                    cout<<"did not process node that satisfies b"<<endl;
+
                 }
             } else {
                 processNode(locationQueue[0], hybridPetrinet, maxTime, atTime, mode);
@@ -1936,9 +1942,11 @@ namespace hpnmg {
     bool
     PropertyBasedPLTBuilder::nodeSatisfiesProperty(const ParametricLocationTree::Node &node, const Formula &formula,
                                                    double atTime) {
+        cout<<"hal01"<<endl;
         switch (formula.getType()) {
             case Formula::Type::Conjunction:
-                return true; //this->conj(node, *formula.getConjunction(), atTime);
+                cout<<"hallo3"<<endl;
+                return this->conj(node, *formula.getConjunction(), atTime);
             case Formula::Type::ContinuousAtomicProperty: {
                 return this->cfml(node, formula.getContinuousAtomicProperty()->place,
                                   formula.getContinuousAtomicProperty()->value, false);
@@ -1958,114 +1966,77 @@ namespace hpnmg {
 
     //TODO this checks x_p <= u. Should I change this?
     bool PropertyBasedPLTBuilder::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value, bool negate) {
-        const auto &continuousPlaces = this->hybridPetrinet->getContinuousPlaces();
-        if (continuousPlaces.count(placeId) == 0)
-            throw std::invalid_argument(std::string("no such continuous place in model: ") + placeId);
+        cout<<"hallo6"<<endl;
+        //const auto &continuousPlaces = this->hybridPetrinet->getContinuousPlaces();
 
+        /*
+         vector<int> discreteMarking = parentLocation.getDiscreteMarking();
+        for (auto arcItem : transition->getDiscreteInputArcs()) {
+            shared_ptr<DiscreteArc> arc = arcItem.second;
+            long pos =
+                    find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
+            discreteMarking[pos] -= arc->weight;
+        }
+         */
+
+        cout<<"placeOffset to be calculated"<<endl;
         auto placeOffset = std::distance(continuousPlaces.begin(), continuousPlaces.find(placeId));
+        cout<<"number of continuous places: " << node.getParametricLocation().getContinuousMarking().size()<<endl;
+        std::vector<double> fluidAtPlace = node.getParametricLocation().getContinuousMarking().at(placeOffset);
 
         //auto it = continuousPlaces.find("placeID");
         //it -> second->getLevel() == value
-        node.getParametricLocation().getContinuousMarking().at(placeOffset);
 
-        return (node.getParametricLocation().getContinuousMarking().at(placeOffset).at(0) == value);
+        //determin level of fluid in place
+        double level;
+        for(int i=0; i<fluidAtPlace.size(); i++){
+            level+=fluidAtPlace[i];
+        }
+
+        return (level == value);
     }
 
     bool PropertyBasedPLTBuilder::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value, bool negate) {
-        const auto &discretePlaces = this->hybridPetrinet->getDiscretePlaces();
-        if (discretePlaces.count(placeId) == 0)
-            throw std::invalid_argument(std::string("no such discrete place in model: ") + placeId);
+        //const auto &discretePlaces = this->hybridPetrinet->getDiscretePlaces();
 
-        auto placeOffset = std::distance(discretePlaces.begin(), discretePlaces.find(placeId));
-        const bool satisfied = (node.getParametricLocation().getDiscreteMarking().at(placeOffset) == value);
-        if (satisfied != negate)
-            return satisfied;
-        else
+        /*
+         vector<int> discreteMarking = parentLocation.getDiscreteMarking();
+        for (auto arcItem : transition->getDiscreteInputArcs()) {
+            shared_ptr<DiscreteArc> arc = arcItem.second;
+            long pos =
+                    find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
+            discreteMarking[pos] -= arc->weight;
+        }
+         */
+
+        long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), placeId) - discretePlaceIDs.begin();
+        //auto placeOffset = std::distance(discretePlaces.begin(), discretePlaces.find(placeId));
+        const bool satisfied = (node.getParametricLocation().getDiscreteMarking().at(pos) == value);
+        if (negate)
             return !satisfied;
+        else
+            return satisfied;
     }
 
-    /*
-    bool PropertyBasedPLTBuilder::conj(const ParametricLocationTree::Node& node, const Conjunction& conj, double atTime) {
-         // In general, sat(psi AND phi) equals to the pairwise intersection of sat(psi) and sat(phi). However, for
-         // trivial sub-formulae we can skip the intersection:
-         //    - sat(true AND phi) -> sat(phi)
-         //    - sat(false AND phi) -> empty set
-        const auto lhsTrivial = conj.left.isTrivial();
-        const auto rhsTrivial = conj.right.isTrivial();
 
-        std::vector<STDPolytope<mpq_class>> sat;
-        if (lhsTrivial.first && rhsTrivial.first) { // Both formulae are trivial -> return full region or empty region
-            if (lhsTrivial.second.getType() == Formula::Type::True && rhsTrivial.second.getType() == Formula::Type::True)
-                sat = {STDPolytope<mpq_class>(node.getRegion())};
-            else
-                sat = {};
-        } else if(!lhsTrivial.first && !rhsTrivial.first) { // Neither formula is trivial -> evaluate both and intersect
+    bool PropertyBasedPLTBuilder::conj(const ParametricLocationTree::Node& node, const Conjunction& conj, double atTime) {
+
+        cout<<"hallo4"<<endl;
+
             const auto leftSat = this->nodeSatisfiesProperty(node, conj.left, atTime);
             const auto rightSat = this->nodeSatisfiesProperty(node, conj.right, atTime);
-            sat = {};
-            sat.reserve(leftSat.size() * rightSat.size());
-            for(const STDPolytope<mpq_class>& ai : leftSat) {
-                for (const STDPolytope<mpq_class>& bi : rightSat) {
-                    STDPolytope<mpq_class> res = ai.intersect(bi);
-                    if (!res.empty()) {
-                        sat.push_back(res);
-                    }
-                }
-            }
-            sat.shrink_to_fit();
-        } else { // One is trivial -> return sat(other) or empty region
-            const auto& trivialFormula = lhsTrivial.first ? lhsTrivial : rhsTrivial;
-            const auto& nonTrivialFormula = lhsTrivial.first ? rhsTrivial : lhsTrivial;
 
-            if (trivialFormula.second.getType() == Formula::Type::True)
-                sat = this->nodeSatisfiesProperty(node, nonTrivialFormula.second, atTime);
-            else
-                sat = {};
-        }
-
-        return sat;
+            cout<<"hallo5"<<endl;
+        return (leftSat & rightSat);
     }
+
 
     bool PropertyBasedPLTBuilder::neg(const ParametricLocationTree::Node& node, const Negation& formula, double atTime) {
-        const STDPolytope<mpq_class>& nodeRegion = STDPolytope<mpq_class>(node.getRegion());
 
         const auto innerFormula = formula.formula;
-        const auto innerTrivial = innerFormula.isTrivial();
-        if (innerTrivial.first) {
-            if (innerTrivial.second.getType() == Formula::Type::True)
-                return true ;
-            else
-                return {nodeRegion};
-        }
 
-        // Even if the formula is non-trivial, we might still skip the expensive computation of the set-differences.
-        switch (innerFormula.getType()) {
-            case Formula::Type::ContinuousAtomicProperty: {
-                const auto cap = innerFormula.getContinuousAtomicProperty();
-                return {this->cfml(node, cap->place, cap->value, true)};
-            }
-            case Formula::Type::DiscreteAtomicProperty: {
-                const auto dap = innerFormula.getDiscreteAtomicProperty();
-                return {this->dfml(node, dap->place, dap->value, true)};
-            }
-            case Formula::Type::Negation: {
-                return this->satisfiesHandler(node, innerFormula.getNegation()->formula, atTime);
-            }
-            // These formulae cannot be negated easily in general:
-            case Formula::Type::Conjunction:
-            case Formula::Type::Until:
-                break;
-            default:
-                throw std::logic_error("unhandled non-trivial formula type in RegionModelChecker::neg");
-        }
-
-        const auto subSat = this->satisfiesHandler(node, innerFormula, atTime);
-        // If the nested satisfaction set is empty, the whole region satisfies the negation
-        if (subSat.empty())
-            return {nodeRegion};
-        return sat;
+        return !nodeSatisfiesProperty(node,innerFormula, atTime);
     }
-     */
 
 
 }

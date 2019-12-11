@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STLFormula>
+  <UntilFormula maxtime="20">
+  <PreFormula>
+  <True />
+  </PreFormula>
+  <GoalFormula>
+  <ContinuousAtomicProperty place="pc1" value="9" />
+  </GoalFormula>
+  </UntilFormula>
+</STLFormula>
