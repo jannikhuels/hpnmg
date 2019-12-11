@@ -75,8 +75,7 @@ TEST(PropertyBasedPLTBuilder, ExampleUntilFormula){
     auto	reader	       = new ReadHybridPetrinet();
     auto	hybridPetrinet = reader->readHybridPetrinet("example.xml");
     auto formula = Formula(std::make_shared<Until>(
-        Formula(std::make_shared<True>()), Formula(std::make_shared<Conjunction>(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 9)),
-            Formula(std::make_shared<ContinuousAtomicProperty>("pc2", 4)))), 10));
+        Formula(std::make_shared<True>()), Formula(std::make_shared<DiscreteAtomicProperty>("pd2", 0)), 10));
 
     auto	builder	       = new PropertyBasedPLTBuilder();
     auto	plt	       = builder->parseHybridPetrinet(hybridPetrinet, 10, 10, 0, formula);
@@ -154,10 +153,10 @@ TEST(PropertyBasedPLTBuilder, BuildWithUntil){
     cout << "[Parsing with ParseHybridPetrinet]: " << initTime << "ms" << endl;
     ASSERT_EQ(79, plt->numberOfLocations());
 }
-
+/*
 TEST(PropertyBasedPLTBuilder, BuildPLTForQuest1){
     auto reader = new ReadHybridPetrinet();
-    auto hybridPetrinet = reader->readHybridPetrinet("quest_1.xml");
+    auto hybridPetrinet = reader->readHybridPetrinet("qest_1.xml");
     auto parser = new PropertyBasedPLTBuilder();
     auto plt = parser->parseHybridPetrinet(hybridPetrinet, 10, 1);
     auto writer = new PLTWriter();
@@ -173,7 +172,7 @@ TEST(PropertyBasedPLTBuilder, BuildPLTForQuest1){
 
 //alte Tests aus testParseHybridPtrinet
 
-/*
+
 TEST(PropertyBasedPLTBuilder, InitialLocation)
 {
     auto reader = new ReadHybridPetrinet();

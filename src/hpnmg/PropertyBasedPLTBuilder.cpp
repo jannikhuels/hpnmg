@@ -1942,10 +1942,8 @@ namespace hpnmg {
     bool
     PropertyBasedPLTBuilder::nodeSatisfiesProperty(const ParametricLocationTree::Node &node, const Formula &formula,
                                                    double atTime) {
-        cout<<"hal01"<<endl;
         switch (formula.getType()) {
             case Formula::Type::Conjunction:
-                cout<<"hallo3"<<endl;
                 return this->conj(node, *formula.getConjunction(), atTime);
             case Formula::Type::ContinuousAtomicProperty: {
                 return this->cfml(node, formula.getContinuousAtomicProperty()->place,
@@ -1958,7 +1956,7 @@ namespace hpnmg {
             case Formula::Type::False:
                 return false;
             case Formula::Type::Negation:
-                return true; //this->neg(node, formula.getNegation()->formula, atTime);
+                return this->neg(node, formula.getNegation()->formula, atTime);
             case Formula::Type::True:
                 return true;
         }
@@ -1966,23 +1964,13 @@ namespace hpnmg {
 
     //TODO this checks x_p <= u. Should I change this?
     bool PropertyBasedPLTBuilder::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value, bool negate) {
-        cout<<"hallo6"<<endl;
         //const auto &continuousPlaces = this->hybridPetrinet->getContinuousPlaces();
 
-        /*
-         vector<int> discreteMarking = parentLocation.getDiscreteMarking();
-        for (auto arcItem : transition->getDiscreteInputArcs()) {
-            shared_ptr<DiscreteArc> arc = arcItem.second;
-            long pos =
-                    find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
-            discreteMarking[pos] -= arc->weight;
-        }
-         */
-
-        cout<<"placeOffset to be calculated"<<endl;
-        auto placeOffset = std::distance(continuousPlaces.begin(), continuousPlaces.find(placeId));
+        long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) - continuousPlaceIDs.begin();
+        //auto placeOffset = std::distance(continuousPlaces.begin(), continuousPlaces.find(placeId));
         cout<<"number of continuous places: " << node.getParametricLocation().getContinuousMarking().size()<<endl;
-        std::vector<double> fluidAtPlace = node.getParametricLocation().getContinuousMarking().at(placeOffset);
+        cout<<"pos: " <<pos <<endl;
+        std::vector<double> fluidAtPlace = node.getParametricLocation().getContinuousMarking().at(pos);
 
         //auto it = continuousPlaces.find("placeID");
         //it -> second->getLevel() == value
@@ -1999,16 +1987,6 @@ namespace hpnmg {
     bool PropertyBasedPLTBuilder::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value, bool negate) {
         //const auto &discretePlaces = this->hybridPetrinet->getDiscretePlaces();
 
-        /*
-         vector<int> discreteMarking = parentLocation.getDiscreteMarking();
-        for (auto arcItem : transition->getDiscreteInputArcs()) {
-            shared_ptr<DiscreteArc> arc = arcItem.second;
-            long pos =
-                    find(discretePlaceIDs.begin(), discretePlaceIDs.end(), arc->place->id) - discretePlaceIDs.begin();
-            discreteMarking[pos] -= arc->weight;
-        }
-         */
-
         long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), placeId) - discretePlaceIDs.begin();
         //auto placeOffset = std::distance(discretePlaces.begin(), discretePlaces.find(placeId));
         const bool satisfied = (node.getParametricLocation().getDiscreteMarking().at(pos) == value);
@@ -2021,12 +1999,9 @@ namespace hpnmg {
 
     bool PropertyBasedPLTBuilder::conj(const ParametricLocationTree::Node& node, const Conjunction& conj, double atTime) {
 
-        cout<<"hallo4"<<endl;
-
             const auto leftSat = this->nodeSatisfiesProperty(node, conj.left, atTime);
             const auto rightSat = this->nodeSatisfiesProperty(node, conj.right, atTime);
 
-            cout<<"hallo5"<<endl;
         return (leftSat & rightSat);
     }
 
@@ -2037,6 +2012,4 @@ namespace hpnmg {
 
         return !nodeSatisfiesProperty(node,innerFormula, atTime);
     }
-
-
 }
