@@ -1,4 +1,5 @@
 #include "HybridAutomatonHandler.h"
+#include <ProbabilityCalculator.h>
 
 using namespace std;
 using namespace hypro;
@@ -367,5 +368,150 @@ namespace hpnmg {
         plotter.plotTex();
     }
 
+    bool HybridAutomatonHandler::CheckIfRelevant(Point<double> toCheck, Point<double> ref, std::vector<int> transitions) {
+        for(int i : transitions) {
+            if(toCheck[i] != ref[i]) return false;
+        }
+        return true;
+    }
 
+    double HybridAutomatonHandler::CalculateProbabiltyForProperty( shared_ptr<SingularAutomaton> automaton,vector<pair<string, map<string, float>>>  distributions, double tMax, int continiousPlace, double value, bool min) {
+        //get Petri net from file
+
+        HybridAutomatonHandler handler(automaton, tMax);
+
+// Compute flowpipes
+        std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, 0.1, 5);
+        // indizes of all generall transistions
+        std::vector<int> transitions = std::vector<int>(automaton->getInitialGeneral().size());
+        std::iota(transitions.begin(), transitions.end(),0);
+        // Defines which coordinate is the one to check property for
+        auto index = transitions.size() + continiousPlace;
+        // property for element at coordinate[index]
+        // Defines wether the element at coordinate[index] is <= than (true) or >= than (false) value
+        std::vector<std::vector<Point<double>>> allPolytopes;
+        //Compute convex
+        std::set<Point<double>> newPoly;
+        //Variante: Flowpipe-weise Polytope
+        cout << "amount of flowpipes" << flowpipes.size() <<endl;
+        for (auto &indexPair : flowpipes) {
+            std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
+            // Iterate over flowpipes
+            for (auto &set : flowpipe) {
+                std::vector<Point<Number>> points = set.vertices();
+                // Filter points of boxes wether property is satisfied
+                if (!points.empty() && points.size() >= 0) {
+                    for (auto &point : points) {
+                        if(min? point.rawCoordinates()[index] <= value : point.rawCoordinates()[index] >= value) {
+                        std::vector<double> coordinates;
+                        // Convert points to type double
+                        for (int i : transitions){
+                            auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
+                            coordinates.push_back(coordinate);
+                        }
+                        //coordinates.push_back(carl::convert<Number, double>(point.rawCoordinates()[index]));
+                        Point<double> newPoint = Point<double>(coordinates);
+
+                            newPoly.insert(newPoint);
+                        }
+
+                    }
+
+                }
+
+            }if(newPoly.size() > 0){
+                allPolytopes.push_back(std::vector<Point<double>>(newPoly.begin(), newPoly.end()));
+                newPoly.clear();
+            }
+        }
+
+
+        /*std::set<Point<double>> allPoints;
+        for (auto &indexPair : flowpipes) {
+            std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
+            // Iterate over flowpipes
+            for (auto &set : flowpipe) {
+                std::vector<Point<Number>> points = set.vertices();
+                // Filter points of boxes wether property is satisfied
+                if (!points.empty() && points.size() >= 0) {
+                    for (auto &point : points) {
+                        std::vector<double> coordinates;
+                        // Convert points to type double
+                        for (int i : transitions){
+                            auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
+                            coordinates.push_back(coordinate);
+                        }
+                        coordinates.push_back(carl::convert<Number, double>(point.rawCoordinates()[index]));
+                        // Add point to vector
+                        Point<double> newPoint = Point<double>(coordinates);
+                        allPoints.insert(newPoint);
+                    }
+                }
+                points.clear();
+            }
+        }
+        cout <<"Punkte:" << endl;
+        for(auto p : allPoints) {
+                for (int k = 0; k < p.rawCoordinates().size(); k++){
+                    cout << p.rawCoordinates()[k] << ", ";
+                }
+                cout << endl;
+        }
+        std::vector<Point<double>> pointVector =  std::vector<Point<double>>(allPoints.begin(), allPoints.end());
+        std::set<Point<double>> newPoly;
+        for(int i = 0; i < pointVector.size(); i++) {
+            Point<double> currP = pointVector[i];
+            std::vector<double> coordinates;
+            for(int j : transitions) {
+                coordinates.push_back(currP.rawCoordinates()[j]);
+            }
+            Point<double> relCoordinates = Point<double>(coordinates);
+            std::vector<Point<double>> sameValue;
+            int k = 0;
+            while((i+k < pointVector.size()) && handler.CheckIfRelevant(pointVector[i+k], relCoordinates, transitions)) {
+                sameValue.push_back(pointVector[i+k]);
+                k++;
+            }
+            i += (k-1);
+            bool satisfied = false;
+            for(auto p : sameValue) {
+                if(min? p.rawCoordinates()[index] <= value : p.rawCoordinates()[index] >= value) {
+                    newPoly.insert(relCoordinates);
+                    satisfied = true;
+                    break;
+                }
+            }
+            if(!satisfied & (newPoly.size() > 0)) {
+                allPolytopes.push_back(std::vector<Point<double>>(newPoly.begin(), newPoly.end()));
+                newPoly.clear();
+            }
+        }
+        if(newPoly.size() > 0) {
+            allPolytopes.push_back(std::vector<Point<double>>(newPoly.begin(), newPoly.end()));
+        }*/
+        for(int i = 0; i < allPolytopes.size(); i++) {
+            cout << "Polytope Nr. " <<(i+1) <<endl;
+            for(int j = 0; j < allPolytopes[i].size();j++) {
+                for (int k = 0; k < allPolytopes[i][j].rawCoordinates().size(); k++){
+                    cout << allPolytopes[i][j].rawCoordinates()[k] << ", ";
+                }
+                cout << endl;
+            }
+        }
+        double totalError = 0.0;
+        // Compute HPolytope from vertices
+        cout << "Amount of Polytopes:" << allPolytopes.size() << endl;
+        std::vector<hypro::HPolytope<double>> polytopes;
+        for(int i = 0; i < allPolytopes.size(); i++){
+            std::vector<Point<double>> currentPoints = allPolytopes[i];
+            hypro::HPolytope<double> polytope = hypro::HPolytope<double>(currentPoints);
+            polytopes.push_back(polytope);
+        }
+        cout << "Polytopes succesful" <<endl;
+        auto prob = ProbabilityCalculator();
+        // Calculate probabilty using HPolytope
+        auto res = prob.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
+                polytopes,distributions,1,5000,totalError);
+        return res;
+    }
 }

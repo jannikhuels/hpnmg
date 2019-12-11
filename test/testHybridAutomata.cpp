@@ -813,6 +813,43 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
+    string filePath = "../../test/testfiles/qest_1.xml";
+    double tMax = 5.0;
+
+// read HPnG
+    shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
+
+// transform HPnG into SingularAutomaton
+    auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
+
+// Get and export PLT (not necessary for reachability)
+    shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, tMax);
+
+// Pass Singular Automaton to Handler
+    shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
+    HybridAutomatonHandler handler(automaton, tMax);
+
+// Compute flowpipes
+    auto flowpipes = handler.computeFlowpipes(tMax, 0.1, 5);
+
+    handler.plotTex("example2general", flowpipes);
+
+}
+
+
+
+TEST(HybridAutomaton, probabilty) {
+
+    using namespace hypro;
+    typedef HPolytope<Number> Representation;
+
+    ReadHybridPetrinet reader;
+    SingularAutomatonCreator transformer;
+    SingularAutomatonWriter automatonWriter;
+
+// setup
     string filePath = "../../test/testfiles/examplesHybridAutomata/exampleHybrid2.xml";
     double tMax = 10.0;
 
@@ -831,58 +868,9 @@ TEST(HybridAutomaton, converter) {
     shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
     HybridAutomatonHandler handler(automaton, tMax);
 
-// Compute flowpipes
-    auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
-
-    auto minValue = 10;
-    std::vector<std::vector<Point<double>>> allPolytopes;
-    //Compute convex
-    for (auto &indexPair : flowpipes) {
-        std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
-        // Iterate over flowpipes
-        std::set<Point<double>> allPoints;
-        for (auto &set : flowpipe) {
-            std::vector<Point<Number>> points = set.vertices();
-            // Filter points of boxes wether property is satisfied
-            if (!points.empty() && points.size() >= 0) {
-                for (auto &point : points) {
-                    if(point.rawCoordinates()[1]>=minValue) {
-                        std::vector<double> coordinates;
-                        // Convert points to type double
-                        for (int i = 0; i <1; i++){
-                            auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
-                            coordinates.push_back(coordinate);
-
-                        }
-                        // Add point to vector
-                        Point<double> newPoint = Point<double>(coordinates);
-                    allPoints.insert(newPoint);
-                    }
-                }
-                points.clear();
-            }
-        }
-        allPolytopes.push_back(std::vector<Point<double>>(allPoints.begin(), allPoints.end()));
-    }
-    double totalError = 0.0;
-    // Compute HPolytope from vertices
-    std::vector<hypro::HPolytope<double>> polytopes = std::vector<hypro::HPolytope<double>>(allPolytopes.size());
-    for(int i = 0; i < allPolytopes.size(); i++){
-        std::vector<Point<double>> currentPoints = allPolytopes[i];
-        for(int j = 0; j <currentPoints.size(); j++) {
-        }
-        if(currentPoints.size() > 1) {
-            hypro::HPolytope<double> polytope = hypro::HPolytope<double>(currentPoints);
-            polytopes.push_back(polytope);
-        }
-    }
-    // Get distributions from parametric location tree
-    const auto distributions = plt->getDistributionsNormalized();
-    auto prob = ProbabilityCalculator();
-    // Calculate probabilty using HPolytope
-    auto res = prob.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
-            polytopes,distributions,1,5000,totalError);
-    cout << "Probability that x >= " << minValue << " holds:" << res << endl;
-    handler.plotTex("exampleHybrid2", flowpipes);
-
+// Calculate probabilty for property
+    bool min =true;
+    double value = 8;
+    double res = handler.CalculateProbabiltyForProperty(automaton,plt->getDistributionsNormalized(),tMax,0,value,min);
+    cout << "Probability that x " <<  (min? "<=" : ">=") << value << " holds:" << res << endl;
 }
