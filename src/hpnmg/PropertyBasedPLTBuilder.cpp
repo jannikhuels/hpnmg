@@ -61,14 +61,13 @@ namespace hpnmg {
                 cout<<"will not process node that satisfies b"<<endl;
                 if (nodeSatisfiesProperty(locationQueue[0], Until(*formula.getUntil()).goal, atTime)) {
                     cout<<"will eleminate node that satisfies b"<<endl;
-                    locationQueue.erase(locationQueue.begin());
-                    cout<<"did not process node that satisfies b"<<endl;
-
+                }else{
+                    processNode(locationQueue[0], hybridPetrinet, maxTime, atTime, mode);
                 }
             } else {
                 processNode(locationQueue[0], hybridPetrinet, maxTime, atTime, mode);
-                locationQueue.erase(locationQueue.begin());
             }
+            locationQueue.erase(locationQueue.begin());
         }
 
         return parametriclocationTree;
@@ -965,7 +964,7 @@ namespace hpnmg {
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
 
         //if location cant be reached until atTime, do not add to PLT
-        if (newLocation.getEarliestEntryTime() > atTime) {
+        if (newLocation.getEarliestEntryTime() > atTime & (untilMode!=1)) {
             return;
         }
 
@@ -1145,8 +1144,8 @@ namespace hpnmg {
         }
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
 
-        //if location cant be reached until atTime, do not at to PLT
-        if (newLocation.getEarliestEntryTime() > atTime) {
+        //if location cant be reached until atTime, do not add to PLT
+        if ((newLocation.getEarliestEntryTime() > atTime) & (untilMode!=1)) {
             return;
         }
 
@@ -1304,7 +1303,7 @@ namespace hpnmg {
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
 
         //if location cant be reached until atTime, do not at to PLT
-        if (newLocation.getEarliestEntryTime() > atTime) {
+        if (newLocation.getEarliestEntryTime() > atTime & (untilMode!=1)) {
             return;
         }
 
@@ -1464,8 +1463,8 @@ namespace hpnmg {
         }
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
 
-        //if location cant be reached until atTime, do not at to PLT
-        if (newLocation.getEarliestEntryTime() > atTime) {
+        //if location cant be reached until atTime, do not add to PLT
+        if (newLocation.getEarliestEntryTime() > atTime & (untilMode!=1)) {
             return;
         }
 
@@ -1668,8 +1667,8 @@ namespace hpnmg {
         }
         newLocation.setDeterministicTransitionsEnabled(enablingStatusesOfDeterministicTransitions);
 
-        //if location cant be reached until atTime, do not at to PLT
-        if (newLocation.getEarliestEntryTime() > atTime) {
+        //if location cant be reached until atTime, do not add to PLT
+        if (newLocation.getEarliestEntryTime() > atTime & (untilMode!=1)) {
             return;
         }
 

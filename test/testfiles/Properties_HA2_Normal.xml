@@ -5,7 +5,7 @@
   <True />
   </PreFormula>
   <GoalFormula>
-  <ContinuousAtomicProperty place="pc1" value="8" />
+  <ContinuousAtomicProperty place="pc1" value="9" />
   </GoalFormula>
   </UntilFormula>
 </STLFormula>
