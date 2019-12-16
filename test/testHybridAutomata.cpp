@@ -850,8 +850,8 @@ TEST(HybridAutomaton, probabilty) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleHybrid2.xml";
-    double tMax = 10.0;
+    string filePath = "../../test/testfiles/lisa_example.xml";
+    double tMax = 60.0;
 
 // read HPnG
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
@@ -869,8 +869,35 @@ TEST(HybridAutomaton, probabilty) {
     HybridAutomatonHandler handler(automaton, tMax);
 
 // Calculate probabilty for property
-    bool min =true;
-    double value = 8;
-    double res = handler.CalculateProbabiltyForProperty(automaton,plt->getDistributionsNormalized(),tMax,0,value,min);
-    cout << "Probability that x " <<  (min? "<=" : ">=") << value << " holds:" << res << endl;
+    std::vector<int> index = {0,1};
+    std::vector<double> value = {9,4};
+    std::vector<string> op = {">=", ">="};
+    double res = handler.CalculateProbabiltyForProperty(automaton,plt->getDistributionsNormalized(),tMax,index,op,value);
+    string prob ="";
+    for(int i = 0;i < index.size();i++) {
+        prob+=to_string(index[i]);
+        prob+=" ";
+        prob+= op[i];
+        prob+=" " ;
+        prob+= to_string(value[i]);
+        prob+= " ";
+        if(index.size()-i  >1) prob += "and ";
+    }
+    cout << "Probability that" <<  prob << " holds:" << res << endl;
+
+    index = {0,1};
+    value = {9,1};
+    op = {">=", "<="};
+    res = handler.CalculateProbabiltyForProperty(automaton,plt->getDistributionsNormalized(),tMax,index,op,value);
+    prob ="";
+    for(int i = 0;i < index.size();i++) {
+        prob+=to_string(index[i]);
+        prob+=" ";
+        prob+= op[i];
+        prob+=" " ;
+        prob+= to_string(value[i]);
+        prob+= " ";
+        if(index.size()-i  >1) prob += "and ";
+    }
+    cout << "Probability that" <<  prob << " holds:" << res << endl;
 }

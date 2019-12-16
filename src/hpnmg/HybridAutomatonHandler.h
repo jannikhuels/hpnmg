@@ -46,9 +46,9 @@ namespace hpnmg {
 
         bool CheckIfRelevant(Point<double> toCheck, Point<double> ref, std::vector<int> transitions);
 
-        double CalculateProbabiltyForProperty( shared_ptr<SingularAutomaton> automaton,vector<pair<string, map<string, float>>>  distributions, double tMax, int continiousPlace, double value, bool min);
+        double CalculateProbabiltyForProperty(shared_ptr<SingularAutomaton> automaton,vector<pair<string, map<string, float>>>  distributions, double tMax,  std::vector<int> continiousPlace,  std::vector<string> op,  std::vector<double> value);
 
-
+        bool CompareValuesWithOp(string op, double val1, double val2);
 
     private:
 
