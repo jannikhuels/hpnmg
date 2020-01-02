@@ -19,9 +19,11 @@
 using namespace hpnmg;
 
 TEST(RegionModelChecker, LisaTest){
-    auto formula = Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 6));
-    auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("SimpleDist.xml"), 50);
-    auto result = modelChecker.satisfies(formula, 10);
+    auto formula = Formula(std::make_shared<Until>(
+        Formula(std::make_shared<True>()), Formula(std::make_shared<Conjunction>(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 9)),
+            Formula(std::make_shared<ContinuousAtomicProperty>("pc2", 4)))), 10));
+    auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("lisa_example.xml"), 10);
+    auto result = modelChecker.satisfies(formula, 1);
     cout << "prob for x=6 at time 10: " << result.first << endl;
     cout << "error was: " << result.second << endl;
 
@@ -29,33 +31,6 @@ TEST(RegionModelChecker, LisaTest){
     EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
 }
 
-TEST(RegionModelChecker, ContinuousAtomicPropertyTest1GTNormalAtTime) {
-    auto modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 1,1);
-
-    auto result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 0)), 0);
-    // Place is empty at t = 0
-    cout<<"prob for 0 at time 0"<<result.first<<endl;
-    EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
-
-    modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 1,3);
-    result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 3)), 3);
-    // out-transition is deterministically disabled at t=5, so the place's level cannot exceed t' at time t'<=5
-    cout<<"prob for 3 at time 3"<<result.first<<endl;
-    EXPECT_NEAR(1.0, round(result.first*10)/10, result.second);
-
-    result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 2)), 3);
-    // folded normal distribution with mu = 5 and sigma = 3
-    // cdf(2.5) = 0.5 * (erf((2.5 + 5) / sqrt(18)) + erf((2.5 - 5) / sqrt(18))) ~ 0.196119
-    cout<<"prob for 2 at time 3"<<result.first<<endl;
-    EXPECT_NEAR(0.1961187156378668902015554951380463273568632340661803, result.first, result.second);
-
-     modelChecker = RegionModelChecker(*ReadHybridPetrinet{}.readHybridPetrinet("example.xml"), 50, 1,10);
-    result = modelChecker.satisfies(Formula(std::make_shared<ContinuousAtomicProperty>("pc1", 7)), 10);
-    //folded normal distribution with mu = 5 and sigma = 3
-    //(1 - cdf(6)) = (0.5 * (erf((6 + 5) / sqrt(18)) + erf((6 - 5) / sqrt(18)))) ~ 0.630436
-    cout<<"prob for 7 at time 10"<<result.first<<endl;
-    EXPECT_NEAR(0.6304357934282712096662251163331139441485145682519407, result.first, result.second);
-}
 
 /*
 

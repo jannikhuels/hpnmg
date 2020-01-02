@@ -23,6 +23,8 @@ namespace hpnmg {
         //determin,whether the formula is of Type until
         if (formula.getType() == Formula::Type::Until) {
             untilMode = 1;
+            pre = Until(*formula.getUntil()).pre;
+            goal = Until(*formula.getUntil()).goal;
             //setUntilFormulaPreGoal(*formula.getUntil());
         }
 
@@ -57,10 +59,11 @@ namespace hpnmg {
         locationQueue.push_back(parametriclocationTree->getRootNode());
 
         while (!locationQueue.empty()) {
+            //in untilmode dont process a node that already fulfills the goal formula
             if (locationQueue[0].getParametricLocation().getEarliestEntryTime() >= atTime && untilMode == 1) {
                 cout<<"will not process node that satisfies b"<<endl;
-                if (nodeSatisfiesProperty(locationQueue[0], Until(*formula.getUntil()).goal, atTime)) {
-                    cout<<"will eleminate node that satisfies b"<<endl;
+                if (nodeSatisfiesProperty(locationQueue[0].getParametricLocation(), Until(*formula.getUntil()).goal, atTime)) {
+                    cout<<"did not process node that satisfies b"<<endl;
                 }else{
                     processNode(locationQueue[0], hybridPetrinet, maxTime, atTime, mode);
                 }
@@ -968,6 +971,14 @@ namespace hpnmg {
             return;
         }
 
+        //if the untilMode is set and neither the pre nor the goal condition are fulfiled, do not add node
+        if(untilMode==1 & newLocation.getEarliestEntryTime() >= atTime){
+            if(!nodeSatisfiesProperty(newLocation, pre, atTime)){
+                if(!nodeSatisfiesProperty(newLocation, goal, atTime))
+                    return;
+            }
+        }
+
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
@@ -1149,6 +1160,14 @@ namespace hpnmg {
             return;
         }
 
+        //if the untilMode is set and neither the pre nor the goal condition are fulfiled, do not add node
+        if(untilMode==1 & newLocation.getEarliestEntryTime() >= atTime){
+            if(!nodeSatisfiesProperty(newLocation, pre, atTime)){
+                if(!nodeSatisfiesProperty(newLocation, goal, atTime))
+                    return;
+            }
+        }
+
         parametriclocationTree->setChildNode(parentNode, newLocation);
     }
 
@@ -1305,6 +1324,14 @@ namespace hpnmg {
         //if location cant be reached until atTime, do not at to PLT
         if (newLocation.getEarliestEntryTime() > atTime & (untilMode!=1)) {
             return;
+        }
+
+        //if the untilMode is set and neither the pre nor the goal condition are fulfiled, do not add node
+        if(untilMode==1 & newLocation.getEarliestEntryTime() >= atTime){
+            if(!nodeSatisfiesProperty(newLocation, pre, atTime)){
+                if(!nodeSatisfiesProperty(newLocation, goal, atTime))
+                    return;
+            }
         }
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
@@ -1466,6 +1493,14 @@ namespace hpnmg {
         //if location cant be reached until atTime, do not add to PLT
         if (newLocation.getEarliestEntryTime() > atTime & (untilMode!=1)) {
             return;
+        }
+
+        //if the untilMode is set and neither the pre nor the goal condition are fulfiled, do not add node
+        if(untilMode==1 & newLocation.getEarliestEntryTime() >= atTime){
+            if(!nodeSatisfiesProperty(newLocation, pre, atTime)){
+                if(!nodeSatisfiesProperty(newLocation, goal, atTime))
+                    return;
+            }
         }
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
@@ -1670,6 +1705,14 @@ namespace hpnmg {
         //if location cant be reached until atTime, do not add to PLT
         if (newLocation.getEarliestEntryTime() > atTime & (untilMode!=1)) {
             return;
+        }
+
+        //if the untilMode is set and neither the pre nor the goal condition are fulfiled, do not add node
+        if(untilMode==1 & newLocation.getEarliestEntryTime() >= atTime){
+            if(!nodeSatisfiesProperty(newLocation, pre, atTime)){
+                if(!nodeSatisfiesProperty(newLocation, goal, atTime))
+                    return;
+            }
         }
 
         parametriclocationTree->setChildNode(parentNode, newLocation);
@@ -1939,56 +1982,59 @@ namespace hpnmg {
 
     //Methods to modelcheck while building
     bool
-    PropertyBasedPLTBuilder::nodeSatisfiesProperty(const ParametricLocationTree::Node &node, const Formula &formula,
+    PropertyBasedPLTBuilder::nodeSatisfiesProperty(const ParametricLocation loc, const Formula &formula,
                                                    double atTime) {
         switch (formula.getType()) {
             case Formula::Type::Conjunction:
-                return this->conj(node, *formula.getConjunction(), atTime);
+                return this->conj(loc, *formula.getConjunction(), atTime);
             case Formula::Type::ContinuousAtomicProperty: {
-                return this->cfml(node, formula.getContinuousAtomicProperty()->place,
+                return this->cfml(loc, formula.getContinuousAtomicProperty()->place,
                                   formula.getContinuousAtomicProperty()->value, false);
             }
             case Formula::Type::DiscreteAtomicProperty: {
-                return this->dfml(node, formula.getDiscreteAtomicProperty()->place,
+                return this->dfml(loc, formula.getDiscreteAtomicProperty()->place,
                                   formula.getDiscreteAtomicProperty()->value, false);
             }
             case Formula::Type::False:
                 return false;
             case Formula::Type::Negation:
-                return this->neg(node, formula.getNegation()->formula, atTime);
+                return this->neg(loc, formula.getNegation()->formula, atTime);
             case Formula::Type::True:
                 return true;
         }
     }
 
     //TODO this checks x_p <= u. Should I change this?
-    bool PropertyBasedPLTBuilder::cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value, bool negate) {
+    bool PropertyBasedPLTBuilder::cfml(const ParametricLocation loc, const std::string& placeId, int value, bool negate) {
         //const auto &continuousPlaces = this->hybridPetrinet->getContinuousPlaces();
 
         long pos = find(continuousPlaceIDs.begin(), continuousPlaceIDs.end(), placeId) - continuousPlaceIDs.begin();
         //auto placeOffset = std::distance(continuousPlaces.begin(), continuousPlaces.find(placeId));
-        cout<<"number of continuous places: " << node.getParametricLocation().getContinuousMarking().size()<<endl;
+        cout<<"number of continuous places: " << loc.getContinuousMarking().size()<<endl;
         cout<<"pos: " <<pos <<endl;
-        std::vector<double> fluidAtPlace = node.getParametricLocation().getContinuousMarking().at(pos);
+        std::vector<double> fluidAtPlace = loc.getContinuousMarking().at(pos);
 
         //auto it = continuousPlaces.find("placeID");
         //it -> second->getLevel() == value
 
-        //determin level of fluid in place
+        //determin level of fluid in place, add only positiv values to get maximum
         double level;
-        for(int i=0; i<fluidAtPlace.size(); i++){
-            level+=fluidAtPlace[i];
+        for(int i=0; i<fluidAtPlace.size(); i++) {
+            if (fluidAtPlace[i] >= 0) {
+            cout << "fluid levelentry " << i << "is " << fluidAtPlace[i] << endl;
+            level += fluidAtPlace[i];
+            }
         }
 
-        return (level == value);
+        return (value <= level);
     }
 
-    bool PropertyBasedPLTBuilder::dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value, bool negate) {
+    bool PropertyBasedPLTBuilder::dfml(const ParametricLocation loc, const std::string& placeId, int value, bool negate) {
         //const auto &discretePlaces = this->hybridPetrinet->getDiscretePlaces();
 
         long pos = find(discretePlaceIDs.begin(), discretePlaceIDs.end(), placeId) - discretePlaceIDs.begin();
         //auto placeOffset = std::distance(discretePlaces.begin(), discretePlaces.find(placeId));
-        const bool satisfied = (node.getParametricLocation().getDiscreteMarking().at(pos) == value);
+        const bool satisfied = (loc.getDiscreteMarking().at(pos) == value);
         if (negate)
             return !satisfied;
         else
@@ -1996,19 +2042,19 @@ namespace hpnmg {
     }
 
 
-    bool PropertyBasedPLTBuilder::conj(const ParametricLocationTree::Node& node, const Conjunction& conj, double atTime) {
+    bool PropertyBasedPLTBuilder::conj(const ParametricLocation loc, const Conjunction& conj, double atTime) {
 
-            const auto leftSat = this->nodeSatisfiesProperty(node, conj.left, atTime);
-            const auto rightSat = this->nodeSatisfiesProperty(node, conj.right, atTime);
+            const auto leftSat = this->nodeSatisfiesProperty(loc, conj.left, atTime);
+            const auto rightSat = this->nodeSatisfiesProperty(loc, conj.right, atTime);
 
         return (leftSat & rightSat);
     }
 
 
-    bool PropertyBasedPLTBuilder::neg(const ParametricLocationTree::Node& node, const Negation& formula, double atTime) {
+    bool PropertyBasedPLTBuilder::neg(const ParametricLocation loc, const Negation& formula, double atTime) {
 
         const auto innerFormula = formula.formula;
 
-        return !nodeSatisfiesProperty(node,innerFormula, atTime);
+        return !nodeSatisfiesProperty(loc, innerFormula, atTime);
     }
 }

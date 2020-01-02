@@ -3,6 +3,7 @@
 #include <vector>
 #include "datastructures/HybridPetrinet.h"
 #include "ParametricLocationTree.h"
+#include "datastructures/ParametricLocation.h"
 #include "modelchecker/Formula.h"
 
 namespace hpnmg {
@@ -16,16 +17,18 @@ namespace hpnmg {
         vector<ParametricLocationTree::Node> locationQueue;
         //states, whether the present formula is an until formula, then untilMode=1
         int untilMode;
+        Formula pre = Formula(std::shared_ptr<::hpnmg::True>());
+        Formula goal = Formula(std::shared_ptr<::hpnmg::True>());
         shared_ptr<HybridPetrinet> hybridPetrinet;
 
         std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> sortByEqualTimeDelta(std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> deterministicTransitions);
         //Method to modelcheck while building
-        bool nodeSatisfiesProperty(const ParametricLocationTree::Node& node, const Formula &formula, double atTime);
+        bool nodeSatisfiesProperty(const ParametricLocation loc, const Formula &formula, double atTime);
         //helper methods
-        bool cfml(const ParametricLocationTree::Node& node, const std::string& placeId, int value, bool negate);
-        bool dfml(const ParametricLocationTree::Node &node, const std::string& placeId, int value, bool negate);
-        bool conj(const ParametricLocationTree::Node& node, const Conjunction& conj, double atTime);
-        bool neg(const ParametricLocationTree::Node& node, const Negation& formula, double atTime);
+        bool cfml(const ParametricLocation loc, const std::string& placeId, int value, bool negate);
+        bool dfml(const ParametricLocation loc, const std::string& placeId, int value, bool negate);
+        bool conj(const ParametricLocation loc, const Conjunction& conj, double atTime);
+        bool neg(const ParametricLocation loc, const Negation& formula, double atTime);
 
     public:
         //TODO Check to make it a singleton

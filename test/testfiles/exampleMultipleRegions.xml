@@ -11,9 +11,9 @@
             <parameter name="mu" value="5.0"/>
             <parameter name="sigma" value="3.0"/>
         </generalTransition>
-        <deterministicTransition id="td1" discTime="1.0" priority="0"
+        <deterministicTransition id="td1" discTime="1.0" priority="1"
 				 weight="1.0E0"/>
-	 <deterministicTransition id="td2" discTime="2.0" priority="0" weight="1.0E0"/>
+	 <deterministicTransition id="td2" discTime="2.0" priority="1" weight="1.0E0"/>
     </transitions>
     <arcs>
         <discreteArc id="da1" fromNode="pd1" toNode="td1" weight="1.0E0"/>
