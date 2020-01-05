@@ -44,12 +44,6 @@ namespace hpnmg {
 
         void plotTex(string outputfile, std::vector<std::pair<unsigned, flowpipe_t>> flowpipes);
 
-        bool CheckIfRelevant(Point<double> toCheck, Point<double> ref, std::vector<int> transitions);
-
-        double CalculateProbabiltyForProperty(shared_ptr<SingularAutomaton> automaton,vector<pair<string, map<string, float>>>  distributions, double tMax,  std::vector<int> continiousPlace,  std::vector<string> op,  std::vector<double> value);
-
-        bool CompareValuesWithOp(string op, double val1, double val2);
-
     private:
 
         void addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime);

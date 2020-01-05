@@ -8,6 +8,7 @@
 #include <SingularAutomatonCreator.h>
 #include <SingularAutomatonWriter.h>
 #include <HybridAutomatonHandler.h>
+#include <ProbabilityOnFlowpipe.h>
 #include "gtest/gtest.h"
 #include "PLTWriter.h"
 #include <chrono>
@@ -813,8 +814,8 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/qest_1.xml";
-    double tMax = 5.0;
+    string filePath = "../../test/testfiles/ev_charging.xml";
+    double tMax = 10.0;
 
 // read HPnG
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
@@ -838,66 +839,3 @@ TEST(HybridAutomaton, converter) {
 
 }
 
-
-
-TEST(HybridAutomaton, probabilty) {
-
-    using namespace hypro;
-    typedef HPolytope<Number> Representation;
-
-    ReadHybridPetrinet reader;
-    SingularAutomatonCreator transformer;
-    SingularAutomatonWriter automatonWriter;
-
-// setup
-    string filePath = "../../test/testfiles/lisa_example.xml";
-    double tMax = 60.0;
-
-// read HPnG
-    shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
-
-// transform HPnG into SingularAutomaton
-    auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
-
-// Get and export PLT (not necessary for reachability)
-    shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
-    auto writer = new PLTWriter();
-    writer->writePLT(plt, tMax);
-
-// Pass Singular Automaton to Handler
-    shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
-    HybridAutomatonHandler handler(automaton, tMax);
-
-// Calculate probabilty for property
-    std::vector<int> index = {0,1};
-    std::vector<double> value = {9,4};
-    std::vector<string> op = {">=", ">="};
-    double res = handler.CalculateProbabiltyForProperty(automaton,plt->getDistributionsNormalized(),tMax,index,op,value);
-    string prob ="";
-    for(int i = 0;i < index.size();i++) {
-        prob+=to_string(index[i]);
-        prob+=" ";
-        prob+= op[i];
-        prob+=" " ;
-        prob+= to_string(value[i]);
-        prob+= " ";
-        if(index.size()-i  >1) prob += "and ";
-    }
-    cout << "Probability that" <<  prob << " holds:" << res << endl;
-
-    index = {0,1};
-    value = {9,1};
-    op = {">=", "<="};
-    res = handler.CalculateProbabiltyForProperty(automaton,plt->getDistributionsNormalized(),tMax,index,op,value);
-    prob ="";
-    for(int i = 0;i < index.size();i++) {
-        prob+=to_string(index[i]);
-        prob+=" ";
-        prob+= op[i];
-        prob+=" " ;
-        prob+= to_string(value[i]);
-        prob+= " ";
-        if(index.size()-i  >1) prob += "and ";
-    }
-    cout << "Probability that" <<  prob << " holds:" << res << endl;
-}

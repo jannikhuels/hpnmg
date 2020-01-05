@@ -3,7 +3,6 @@
 
 using namespace std;
 using namespace hypro;
-using namespace hypro;
 typedef mpq_class Number;
 
 namespace hpnmg {
@@ -326,9 +325,9 @@ namespace hpnmg {
 
                         for (int i = 0; i < point.rawCoordinates().size(); i++){
                             auto coordinate = point.rawCoordinates()[i];
-                            cout << carl::convert<Number, double>(coordinate) << ", ";
+                            //cout << carl::convert<Number, double>(coordinate) << ", ";
                         }
-                        cout << endl;
+                        //cout << endl;
                     }
                     points.clear();
                 }
@@ -368,105 +367,5 @@ namespace hpnmg {
         plotter.plotTex();
     }
 
-    bool HybridAutomatonHandler::CheckIfRelevant(Point<double> toCheck, Point<double> ref, std::vector<int> transitions) {
-        for(int i : transitions) {
-            if(toCheck[i] != ref[i]) return false;
-        }
-        return true;
-    }
 
-    double HybridAutomatonHandler::CalculateProbabiltyForProperty( shared_ptr<SingularAutomaton> automaton,vector<pair<string, map<string, float>>>  distributions, double tMax, std::vector<int> continiousPlace,  std::vector<string> op,  std::vector<double> value) {
-        //get Petri net from file
-
-        HybridAutomatonHandler handler(automaton, tMax);
-
-// Compute flowpipes
-        std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
-        // indizes of all generall transistions
-        std::vector<int> transitions = std::vector<int>(automaton->getInitialGeneral().size());
-        std::iota(transitions.begin(), transitions.end(),0);
-        // Defines which coordinate is the one to check property for
-        std::vector<int> index = std::vector<int>(continiousPlace.size());
-        for(int i = 0;i < continiousPlace.size();i++) {
-            index[i] = transitions.size() + continiousPlace[i];
-        }
-        // property for element at coordinate[index]
-        // Defines wether the element at coordinate[index] is <= than (true) or >= than (false) value
-        std::vector<std::vector<Point<double>>> allPolytopes;
-        //Compute convex
-        std::set<Point<double>> newPoly;
-        //Variante: Flowpipe-weise Polytope
-        cout << "amount of flowpipes" << flowpipes.size() <<endl;
-        for (auto &indexPair : flowpipes) {
-            std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
-            // Iterate over flowpipes
-            for (auto &set : flowpipe) {
-                std::vector<Point<Number>> points = set.vertices();
-                // Filter points of boxes wether property is satisfied
-                if (!points.empty() && points.size() >= 0) {
-                    for (auto &point : points) {
-                        bool satisfied = false;
-                        for(int i = 0; i < value.size(); i++) {
-                            auto coordinate = index[i];
-                            satisfied &= CompareValuesWithOp(op[i],carl::convert<Number, double>(point.rawCoordinates()[coordinate]),value[i]);
-                        }
-                        if(satisfied) {
-                        std::vector<double> coordinates;
-                        // Convert points to type double
-                        for (int i : transitions){
-                            auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
-                            coordinates.push_back(coordinate);
-                        }
-                        //coordinates.push_back(carl::convert<Number, double>(point.rawCoordinates()[index]));
-                        Point<double> newPoint = Point<double>(coordinates);
-
-                            newPoly.insert(newPoint);
-                        }
-
-                    }
-
-                }
-
-            }if(newPoly.size() > 0){
-                allPolytopes.push_back(std::vector<Point<double>>(newPoly.begin(), newPoly.end()));
-                newPoly.clear();
-            }
-        }
-
-
-        for(int i = 0; i < allPolytopes.size(); i++) {
-            cout << "Polytope Nr. " <<(i+1) <<endl;
-            for(int j = 0; j < allPolytopes[i].size();j++) {
-                for (int k = 0; k < allPolytopes[i][j].rawCoordinates().size(); k++){
-                    cout << allPolytopes[i][j].rawCoordinates()[k] << ", ";
-                }
-                cout << endl;
-            }
-        }
-        double totalError = 0.0;
-        // Compute HPolytope from vertices
-        cout << "Amount of Polytopes:" << allPolytopes.size() << endl;
-        std::vector<hypro::HPolytope<double>> polytopes;
-        for(int i = 0; i < allPolytopes.size(); i++){
-            std::vector<Point<double>> currentPoints = allPolytopes[i];
-            hypro::HPolytope<double> polytope = hypro::HPolytope<double>(currentPoints);
-            polytopes.push_back(polytope);
-        }
-        cout << "Polytopes succesful" <<endl;
-        auto prob = ProbabilityCalculator();
-        // Calculate probabilty using HPolytope
-        auto res = prob.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
-                polytopes,distributions,1,5000,totalError);
-        handler.plotTex("lisa", flowpipes);
-        return res;
-
-    }
-
-    bool HybridAutomatonHandler::CompareValuesWithOp(string op, double val1, double val2) {
-        if(op == "<") return val1 < val2;
-        if(op == "<=") return val1<= val2;
-        if(op == "==") return val1 == val2;
-        if(op == ">") return val1 > val2;
-        if(op == ">=") return val1 >= val2;
-     }
 }

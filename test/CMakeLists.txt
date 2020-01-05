@@ -43,7 +43,7 @@ list(FILTER TEST_SRC_FILES EXCLUDE REGEX ".*testValuetools.cpp$")
 add_executable(
 		testAll
 		${TEST_SRC_FILES}
-)
+        )
 
 add_dependencies(testAll googletest)
 
