@@ -80,10 +80,5 @@ latter command should include lines like these:
 ```
 Build HyPro's resources and HyPro itself with `make resources && make hypro`. This may take 10 minutes.
 
-## Instructions
-
-Nondetermnistic scheduling (QEST):
-
-There exist a number of googletest files in the folder "test". The The file "testNondeterministicConflicts.cpp" contains tests for all versions of the case study used in the QEST paper, both for nonprophetic and prophetic scheduling. Using Google Test, these can be executed. The model files are available in the folder "test/testfiles/nondeterministicModelsQEST".
 
 
