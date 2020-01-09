@@ -1,0 +1,166 @@
+hybrid reachability
+{
+ state var g, x, c
+
+ setting
+ {
+  fixed steps 0.01
+  time 10
+  remainder estimation 1e-5
+  identity precondition
+  gnuplot octagon g, x, c
+  fixed orders 5
+  cutoff 1e-15
+  precision 128
+  output exampleeasier
+  max jumps 5
+  print on
+ }
+
+ modes
+ {
+  l1
+  {
+   poly ode 1
+   {
+    g' = 1
+    x' = 1
+    c' = 1
+   }
+
+   inv
+   {
+   c <= 5
+   }
+  }
+
+
+  l2
+   {
+    poly ode 1
+    {
+    g' = 0
+    x' = -1
+    c' = 1
+    }
+
+    inv
+    {
+   c <= 5
+   x >= 0
+    }
+   }
+
+
+   l3
+     {
+      poly ode 1
+      {
+    g' = 1
+    x' = 2
+    c' = 0
+      }
+
+      inv
+      {
+    x <= 10
+      }
+     }
+
+ l4
+   {
+    poly ode 1
+    {
+    g' = 0
+    x' = 0
+    c' = 0
+    }
+
+   }
+
+    l5
+      {
+       poly ode 1
+       {
+       g' = 0
+       x' = 0
+       c' = 1
+       }
+
+      inv
+      {
+      c <= 5
+      }
+
+      }
+
+   l6
+     {
+      poly ode 1
+      {
+      g' = 1
+      x' = 0
+      c' = 0
+      }
+
+     }
+}
+
+ jumps
+ {
+  l1 -> l2
+  reset { g' := 0}
+  parallelotope aggregation {}
+
+  l1 -> l3
+  guard { c = 5.0 }
+  reset { c' := 0}
+  parallelotope aggregation {}
+
+    l2 -> l4
+    guard { c = 5.0 }
+    reset { c' := 0}
+    parallelotope aggregation {}
+
+      l3 -> l4
+      reset { g' := 0}
+      parallelotope aggregation {}
+
+        l2 -> l5
+        guard { x = 0.0 }
+        parallelotope aggregation {}
+
+        l3 -> l6
+        guard { x = 10.0 }
+        parallelotope aggregation {}
+
+    l5 -> l4
+    guard { c = 5.0 }
+    reset { c' := 0}
+    parallelotope aggregation {}
+
+        l6 -> l4
+        reset { g' := 0}
+        parallelotope aggregation {}
+
+ }
+
+ init
+ {
+  l1
+  {
+   g in [0,0]
+   x in [0,0]
+   c in [0,0]
+  }
+ }
+
+}
+
+ unsafe set{
+
+    l6{}
+
+ }
+
+

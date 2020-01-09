@@ -618,7 +618,6 @@ TEST(NondeterministicConflicts, Nonprophetic3d) {
     double maxTime = 24.0;
 
 
-
     ReadHybridPetrinet reader;
     shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/nondeterministicModelsCharging/charging_ver3d.xml");
     ParseHybridPetrinet parser;
@@ -892,4 +891,6 @@ TEST(NondeterministicConflicts, Prophetic3d) {
 //    cout << "Max probability to take right decision: " << maxprob << " +- " << error << endl;
 //
 //}
+
+
 

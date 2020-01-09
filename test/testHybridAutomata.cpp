@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "PLTWriter.h"
 #include <chrono>
+#include "NondeterminismSolver.h"
 
 #include "config.h"
 #include "datastructures/HybridAutomaton/Location.h"
@@ -51,7 +52,33 @@ unsigned long getNumberOfEdges(const shared_ptr<SingularAutomaton>& automaton) {
 }
 
 
+TEST(HybridAutomaton, NondeterministicConflict) {
 
+    cout << endl << "Nondeterministic computation started." << endl;
+    double maxTime = 24.0;
+
+    ReadHybridPetrinet reader;
+    shared_ptr<hpnmg::HybridPetrinet> hybridPetrinet = reader.readHybridPetrinet("../../test/testfiles/examplesHybridAutomata/exampleNondeterminism4.xml");
+    ParseHybridPetrinet parser;
+    shared_ptr<hpnmg::ParametricLocationTree> plt = parser.parseHybridPetrinet(hybridPetrinet, maxTime, 1);
+    auto writer = new PLTWriter();
+    writer->writePLT(plt, maxTime);
+
+    std::vector<ParametricLocationTree::Node> locations = plt->getAllLocations();
+    NondeterminismSolver solver;
+    double error;
+
+    clock_t begin0 = clock();
+
+    double maxprob = solver.solveNondeterminism(plt, plt->getRootNode(), locations, 3, 50000, 128, false, true, error, 5);
+
+    clock_t end0 = clock();
+    double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
+    cout << elapsed_secs << " seconds" << endl;
+
+    cout << "Max probability to take right decision: " << maxprob << " +- " << error << endl;
+
+}
 
 TEST(HybridAutomaton, example) {
 
@@ -63,19 +90,28 @@ TEST(HybridAutomaton, example) {
 
 
 // setup
-    string filePath = "../../test/testfiles/exampleCarina.xml";
-    double tauMax = 10.0;
+    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleNondeterminism4.xml";
+    double tauMax = 72.0;
 
 // read
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
 
     auto parser = new ParseHybridPetrinet();
+
+    clock_t begin0 = clock();
     auto plt0 = parser->parseHybridPetrinet(hybridPetriNet, tauMax);
+    clock_t end0 = clock();
+    double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
+    cout << "PLT build: " << elapsed_secs << " seconds" << endl;
 
 // transform
+    begin0 = clock();
     auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tauMax));
     shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
     shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
+    end0 = clock();
+    elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
+    cout << "Transformation: " << elapsed_secs << " seconds" << endl;
 
 // print
     unsigned long p = getNodes(plt, plt->getRootNode()) + 1;
@@ -85,8 +121,13 @@ TEST(HybridAutomaton, example) {
     cout << "t_max=" << tauMax << ", #PL=" << p << ", #Loc=" << l << ", #Edge=" << e << "\n" << endl;
 
 // write
-    PLTwriter.writePLT(plt, tauMax, "plt_example_10");
-    automatonWriter.writeAutomaton(automaton, "example_10");
+    PLTwriter.writePLT(plt, tauMax, "plt_nfm1");
+
+    begin0 = clock();
+    automatonWriter.writeAutomaton(automaton, "nfm1");
+    end0 = clock();
+    elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
+    cout << "Write JANI: " << elapsed_secs << " seconds" << endl;
 }
 
 
@@ -813,7 +854,7 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleNondeterminism1.xml";
+    string filePath = "../../test/testfiles/example2general.xml";
     double tMax = 10.0;
 
 // read HPnG

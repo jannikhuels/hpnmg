@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="pd1" marking="2"/>
+        <discretePlace id="pd2" marking="0"/>
+    </places>
+    <transitions>
+        <generalTransition id="tg1" cdf="foldednormal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <generalTransition id="tg2" cdf="normal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+        <deterministicTransition id="td1" discTime="5.0" priority="1" weight="1.0E0"/>
+    </transitions>
+    <arcs>
+        <discreteArc id="da2" fromNode="pd1" toNode="td1" weight="1.0E0"/>
+        <discreteArc id="da1" fromNode="td1" toNode="pd2" weight="1.0E0"/>
+        <discreteArc id="da3" fromNode="pd2" toNode="tg1" weight="1.0E0"/>
+         <discreteArc id="da5" fromNode="pd2" toNode="tg2" weight="1.0E0"/>
+    </arcs>
+</HPnG>

@@ -48,9 +48,13 @@ namespace hpnmg {
 
 
         outputFile << "\t\t\t\"initial-locations\": [";
-        for (shared_ptr<SingularAutomaton::Location> initialLocation : automaton->getInitialLocations() )
+        bool isFirstVar = true;
+        for (shared_ptr<SingularAutomaton::Location> initialLocation : automaton->getInitialLocations() ) {
+            outputFile << (isFirstVar ? "" : ",");
+            isFirstVar = false;
             outputFile << "\"L" << initialLocation->getLocationId() << "\"";
-        outputFile << "],\\n\"";
+        }
+        outputFile << "],\n";
 
         writeEdges(automaton);
     }

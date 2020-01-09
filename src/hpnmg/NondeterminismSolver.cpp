@@ -32,9 +32,26 @@ namespace hpnmg {
         if ((discreteMarking[2] > 0 && !empty && discreteMarking[1] == 0) || (discreteMarking[3] > 0 && empty && discreteMarking[1] > 0)) //right decision
             return true;
 
-    } else if (version == 3 || version == 4) {
+    } else if (version == 3) {
 
-        vector<double> levelCar = continuousMarking[1]; //charging_ver3 + charging_ver4
+                vector<double> levelCar = continuousMarking[0]; //charging_ver3
+                bool emptyCar = true;
+                for (int p = 0; p < levelCar.size(); p++)
+                    if (levelCar[p] > 0)
+                        emptyCar = false;
+                vector<double> levelDistance = continuousMarking[1];
+                bool emptyDistance = true;
+                for (int q = 0; q < levelDistance.size(); q++)
+                    if (levelDistance[q] > 0)
+                        emptyDistance = false;
+
+                if ((discreteMarking[4] > 0 && !emptyCar && emptyDistance) || (discreteMarking[5] > 0 && emptyCar && !emptyDistance)) //right decision
+                    return true;
+
+
+    } else if (version == 4) {
+
+        vector<double> levelCar = continuousMarking[1]; //charging_ver4
         bool emptyCar = true;
         for (int p = 0; p < levelCar.size(); p++)
             if (levelCar[p] > 0)
@@ -48,6 +65,19 @@ namespace hpnmg {
         if ((discreteMarking[6] > 0 && !emptyCar && emptyDistance) || (discreteMarking[7] > 0 && emptyCar && !emptyDistance)) //right decision
             return true;
 
+    } else if (version == 5) {
+
+        if (continuousMarking[0][0] >= 100.0 && continuousMarking[0][1] >= 0.0){
+            cout << "fulfilled by node " << node.getNodeID() << endl;
+            return true;
+        }
+//        vector<double> level = continuousMarking[0]; //nfm
+//        bool placeEmpty = true;
+//        for (int p = 0; p < level.size(); p++)
+//            if (level[p] > 0)
+//                placeEmpty = false;
+//
+//            return placeEmpty;
     }
 
 
@@ -178,8 +208,7 @@ namespace hpnmg {
                 maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
             else
                 //Monte Carlo
-                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, currentError);
-
+                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, currentError);//TODO hard fix, need to be fixed when finding candidates
             error += currentError;
         }
 
@@ -297,8 +326,8 @@ namespace hpnmg {
 
         if (conflictSet.size() >= 2) {
 
-            real_1d_array x0 = "[8]";
-            real_1d_array s = "[12]";
+            real_1d_array x0 = "[4]";
+            real_1d_array s = "[8]";
             double epsx = 0.01;//0.000001;
             ae_int_t maxits = 0;//0; for unlimited
             minnlcstate state; //state object
@@ -348,7 +377,7 @@ namespace hpnmg {
                         currentParams.rvIndex = 0.0; //currentNode.getParametricLocation().getGeneralTransitionsFired()[0] + 1;
 
                         if (currentNode.getParametricLocation().getGeneralTransitionsFired().size() <= 0)
-                            cout << "Warning NondeterminsmSolver: no general transition has fired yet when non-deterministic choice is taken." << endl;
+                            cout << "Error: no GT has fired yet when non-deterministic choice is taken." << endl;
 
                         currentParams.lowerBounded = currentLocationsVector[lowerBounded];
                         currentParams.upperBounded = currentLocationsVector[upperBounded];

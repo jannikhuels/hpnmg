@@ -177,7 +177,14 @@ namespace hpnmg {
     }
 
     void SingularAutomaton::removeLocation(shared_ptr<Location> oldLocation) {
+
+        for (shared_ptr<Location> initialLocation : initialLocations )
+            if (oldLocation->getLocationId() == initialLocation->getLocationId()){
+                initialLocations.erase(remove(initialLocations.begin(),initialLocations.end(),initialLocation),initialLocations.end());
+            break;
+            }
         locations.erase(remove(locations.begin(),locations.end(),oldLocation),locations.end());
+
     }
 
     void SingularAutomaton::insertTransition(shared_ptr<SingularAutomaton::Location> predecessorLocation,

@@ -327,9 +327,9 @@ namespace hpnmg {
 
                         for (int i = 0; i < point.rawCoordinates().size(); i++){
                             auto coordinate = point.rawCoordinates()[i];
-                           // cout << carl::convert<Number, double>(coordinate) << ", ";
+                            cout << carl::convert<Number, double>(coordinate) << ", ";
                         }
-                        //cout << endl;
+                        cout << endl;
                     }
                     points.clear();
                 }
