@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STLFormula>
+  <Formula><Negation><Formula><ContinuousAtomicProperty place="pc1" value="9"/></Formula></Negation></Formula>
+</STLFormula>
