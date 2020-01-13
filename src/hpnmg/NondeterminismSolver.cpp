@@ -131,11 +131,13 @@ namespace hpnmg {
 
         if (isCandidateForProperty(node, candidates, version))
             list.push_back(node.getParametricLocation());
+        else {
 
-        vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(node);
+            vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(node);
 
-        for (ParametricLocationTree::Node child : children)
-            recursivelyGetCandidateLocations(list, child, candidates, version);
+            for (ParametricLocationTree::Node child : children)
+                recursivelyGetCandidateLocations(list, child, candidates, version);
+        }
     }
 
 
@@ -153,52 +155,6 @@ namespace hpnmg {
 
         auto calculator = new ProbabilityCalculator();
 
-
-        vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(currentNode);
-        vector<ParametricLocationTree::Node> conflictSet = NondeterminismSolver::determineConflictSet(children);
-
-        if (conflictSet.size() > 0) {
-
-            bool first = true;
-            vector<pair<int, string>> currentBestChildLocations;
-
-
-            for (ParametricLocationTree::Node child: conflictSet) {
-
-                currentChildId = child.getNodeID();
-                currentComponent = child.getParametricLocation().getSourceEvent().getMemberID();
-                currentError = 0.0;
-                currentProbability = recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError, version);
-
-                if (first || (currentProbability - currentError > maxOrMinProbability + error && minimum == false) || (currentProbability + currentError < maxOrMinProbability - error && minimum == true)) {
-                //error intervals do not overlap
-                    currentBestChildLocations.clear();
-                    currentBestChildLocations.push_back(make_pair(currentChildId, currentComponent));
-                    maxOrMinProbability = currentProbability;
-                    error = currentError;
-                    first = false;
-
-                } else if (currentProbability + currentError >= maxOrMinProbability - error && currentProbability - currentError <= maxOrMinProbability + error) {
-                //overlapping error intervals
-                    currentBestChildLocations.push_back(make_pair(currentChildId, currentComponent));
-                    if ((currentProbability > maxOrMinProbability && minimum == false) || (currentProbability < maxOrMinProbability && minimum == true)) {
-                        maxOrMinProbability = currentProbability;
-                        error = currentError;
-                    }
-                }
-            }
-
-            (this->bestChildLocations).push_back(currentBestChildLocations);
-        }
-
-
-
-        for (ParametricLocationTree::Node child: children){
-            maxOrMinProbability += recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError, version);
-            error += currentError;
-        }
-
-
         if (isCandidateForProperty(currentNode, candidates, version)){
 
             currentError = 0.0;
@@ -210,7 +166,53 @@ namespace hpnmg {
                 //Monte Carlo
                 maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, currentError);//TODO hard fix, need to be fixed when finding candidates
             error += currentError;
+
+        } else {
+
+            vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(currentNode);
+            vector<ParametricLocationTree::Node> conflictSet = NondeterminismSolver::determineConflictSet(children);
+
+            if (conflictSet.size() > 0) {
+
+                bool first = true;
+                vector<pair<int, string>> currentBestChildLocations;
+
+
+                for (ParametricLocationTree::Node child: conflictSet) {
+
+                    currentChildId = child.getNodeID();
+                    currentComponent = child.getParametricLocation().getSourceEvent().getMemberID();
+                    currentError = 0.0;
+                    currentProbability = recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError, version);
+
+                    if (first || (currentProbability - currentError > maxOrMinProbability + error && minimum == false) || (currentProbability + currentError < maxOrMinProbability - error && minimum == true)) {
+                        //error intervals do not overlap
+                        currentBestChildLocations.clear();
+                        currentBestChildLocations.push_back(make_pair(currentChildId, currentComponent));
+                        maxOrMinProbability = currentProbability;
+                        error = currentError;
+                        first = false;
+
+                    } else if (currentProbability + currentError >= maxOrMinProbability - error && currentProbability - currentError <= maxOrMinProbability + error) {
+                        //overlapping error intervals
+                        currentBestChildLocations.push_back(make_pair(currentChildId, currentComponent));
+                        if ((currentProbability > maxOrMinProbability && minimum == false) || (currentProbability < maxOrMinProbability && minimum == true)) {
+                            maxOrMinProbability = currentProbability;
+                            error = currentError;
+                        }
+                    }
+                }
+
+                (this->bestChildLocations).push_back(currentBestChildLocations);
+            }
+
+
+            for (ParametricLocationTree::Node child: children) {
+                maxOrMinProbability += recursivelySolveNondeterminismNonProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError, version);
+                error += currentError;
+            }
         }
+
 
         return maxOrMinProbability;
     }
@@ -323,233 +325,229 @@ namespace hpnmg {
         vector<ParametricLocationTree::Node> children = (*this->plt).getChildNodes(currentNode);
         vector<ParametricLocationTree::Node> conflictSet = determineConflictSet(children);
 
-
-        if (conflictSet.size() >= 2) {
-
-            real_1d_array x0 = "[4]";
-            real_1d_array s = "[8]";
-            double epsx = 0.01;//0.000001;
-            ae_int_t maxits = 0;//0; for unlimited
-            minnlcstate state; //state object
-            minnlcreport rep;
-            real_1d_array x1;
-            double diffstep = 0.1;
-
-            int upperBounded;
-            int lowerBounded;
-
-            vector<vector<ParametricLocation>> currentLocationsVector;
-            vector<ParametricLocation> currentLocations;
-            recursivelyGetCandidateLocations(currentLocations, conflictSet[0], candidates, version);
-            currentLocationsVector.push_back(currentLocations);
-
-            //pairwise consideration
-            for (int k = 0; k < conflictSet.size(); k++) {
-
-                for (int j = k + 1; j < conflictSet.size(); j++) {
-
-                    currentLocations.clear();
-                    recursivelyGetCandidateLocations(currentLocations, conflictSet[j], candidates, version);
-                    currentLocationsVector.push_back(currentLocations);
-
-                    vector<nondetParams> params;
-
-                    //two ways for ordering
-//START AUSKOMMENTIEREN
-                    for (int i = 0; i <= 1; i++) {
-
-                        if (i == 0) {
-                            upperBounded = k;
-                            lowerBounded = j;
-                        } else {
-                            upperBounded = j;
-                            lowerBounded = k;
-                        }
-
-                        nondetParams currentParams;
-                        currentParams.algorithm = algorithm;
-                        currentParams.evaluations = min(64, evaluations);
-                        currentParams.functioncalls = min(1000, functioncalls);
-                        currentParams.distributions = (*this->plt).getDistributions();
-                        currentParams.maxTime = (*this->plt).getMaxTime();
-                        currentParams.minimum = minimum;
-                        //only for first fired general transition
-                        currentParams.rvIndex = 0.0; //currentNode.getParametricLocation().getGeneralTransitionsFired()[0] + 1;
-
-                        if (currentNode.getParametricLocation().getGeneralTransitionsFired().size() <= 0)
-                            cout << "Error: no GT has fired yet when non-deterministic choice is taken." << endl;
-
-                        currentParams.lowerBounded = currentLocationsVector[lowerBounded];
-                        currentParams.upperBounded = currentLocationsVector[upperBounded];
-
-                        currentParams.prob = -1.0;
-                        if (minimum)
-                            currentParams.prob = 2.0;
-                        currentParams.result = -1.0;
-
-                        minnlccreatef(1, x0, diffstep, state); //create, use f at the end for automatic gradient calculation
-                        minnlcsetalgoslp(state); //activate
-                        minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
-                        minnlcsetscale(state, s); //set scale (here always 1)
-                        minnlcsetstpmax(state, 0.0); //settings
-                        minnlcsetnlc(state, 0, 2);
-                        minnlcoptimize(state, optimizationFunction, NULL, &currentParams); //start optimizer
-                        minnlcresults(state, x1, rep); //get results
-
-                        if (rep.terminationtype == 2) {
-                            cout << "Pre-computation " << i + 1 << " succeeded: x = " << currentParams.result << " with P_max = " << currentParams.prob << " +- " << currentParams.error << endl;
-                            cout << "Upper bounded: " << conflictSet[upperBounded].getNodeID() << ", lower bounded: " << conflictSet[lowerBounded].getNodeID() << endl;
-                        } else
-                            cout << "Pre-computation " << i + 1 << " failed" << endl;
-
-                        params.push_back(currentParams);
-
-                    }
-//ENDE AUSKOMMENTIEREN
-
-                    int i;
-                    if (params[0].prob >= params[1].prob) {
-                        i = 0;
-                        upperBounded = k;
-                        lowerBounded = j;
-                    } else {
-                        i = 1;
-                        upperBounded = j;
-                        lowerBounded = k;
-                     }
-
-                    params[i].functioncalls = functioncalls;
-                    params[i].evaluations = evaluations;
-                    params[i].prob = -1.0;
-                    if (minimum)
-                        params[i].prob = 2.0;
-                    params[i].result = -1.0;
-                    minnlccreatef(1, x0, diffstep, state); //create, use f at the end for automatic gradient calculation
-                    minnlcsetalgoslp(state); //activate
-                    minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
-                    minnlcsetscale(state, s); //set scale (here always 1)
-                    minnlcsetstpmax(state, 0.0); //settings
-                    minnlcsetnlc(state, 0, 2);
-                    minnlcoptimize(state, optimizationFunction, NULL, &params[i]); //start optimizer
-                    minnlcresults(state, x1, rep); //get results
-
-                    if (rep.terminationtype == 2) {
-                        cout << "Main computation succeeded: x = " << params[i].result << " with P_max = " << params[i].prob << " +- " << params[i].error << endl;
-                        cout << "Upper bounded: " << conflictSet[upperBounded].getNodeID() << ", lower bounded: " << conflictSet[lowerBounded].getNodeID() << endl;
-                    } else
-                        cout << "Main computation failed" << endl;
-
-
-                    double a = params[i].result;
-
-                    //adjust upper bound for first
-                    for (int l = 0; l < currentLocationsVector[upperBounded].size(); l++){
-
-                        ParametricLocation location = currentLocationsVector[upperBounded][l];
-                        vector<vector<pair<int, pair<vector<double>, vector<double>>>>> originalIntegrationIntervals = location.getIntegrationIntervals();
-
-                        vector<vector<pair<int, pair<vector<double>, vector<double>>>>> newIntegrationIntervals;
-
-                        int dim = location.getDimension();
-                        std::vector<double> LinEqLeft(dim, 0.0);
-                        std::vector<double> LinEqRight(dim, 0.0);
-
-                        LinEqLeft[1] = 1.0; // s  <=  a
-                        LinEqRight[0] = a;
-
-                        LinearEquation equation(LinEqLeft, LinEqRight);
-
-                        for (DomainWithIndex domainWithIndex : originalIntegrationIntervals) {
-                            Domain domain = LinearDomain::createDomain(domainWithIndex);
-                            LinearBoundsTree tree(domain, equation);
-                            std::vector<LinearDomain> domains = tree.getUniqueDomains();
-                            for (LinearDomain resultDomain : domains) {
-                                newIntegrationIntervals.push_back(resultDomain.toDomainWithIndex(domainWithIndex));
-                            }
-                        }
-                        currentLocationsVector[upperBounded][l].overwriteIntegrationIntervals(newIntegrationIntervals);
-
-                    }
-
-
-
-                    //adjust lower bound for second
-                    for (int l = 0; l < currentLocationsVector[lowerBounded].size(); l++){
-
-                       ParametricLocation location = currentLocationsVector[lowerBounded][l];
-                       vector<vector<pair<int, pair<vector<double>, vector<double>>>>> originalIntegrationIntervals = location.getIntegrationIntervals();
-
-                       vector<vector<pair<int, pair<vector<double>, vector<double>>>>> newIntegrationIntervals;
-
-                       int dim = location.getDimension();
-                       std::vector<double> LinEqLeft(dim, 0.0);
-                       std::vector<double> LinEqRight(dim, 0.0);
-
-                       LinEqLeft[0] = a;
-                       LinEqRight[1] = 1.0; // a  <=  s
-
-                       LinearEquation equation(LinEqLeft, LinEqRight);
-
-                       for (DomainWithIndex domainWithIndex : originalIntegrationIntervals) {
-                           Domain domain = LinearDomain::createDomain(domainWithIndex);
-                           LinearBoundsTree tree(domain, equation);
-                           std::vector<LinearDomain> domains = tree.getUniqueDomains();
-                           for (LinearDomain resultDomain : domains) {
-                               newIntegrationIntervals.push_back(resultDomain.toDomainWithIndex(domainWithIndex));
-                           }
-                       }
-                       currentLocationsVector[lowerBounded][l].overwriteIntegrationIntervals(newIntegrationIntervals);
-
-
-                    }
-                }
-            }
-
-                maxOrMinProbability = 0.0;
-                error = 0.0;
-
-                for (vector<ParametricLocation> locations : currentLocationsVector){
-                    for (ParametricLocation location : locations){
-
-                        if (algorithm == 0)
-                            //Gauss Legendre
-                            maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(location, (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
-                        else
-                            //Monte Carlo
-                            maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(location, (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, 1000000, currentError);
-
-                        error += currentError;
-
-                    }
-                }
-
-            cout << "Local probability: " << maxOrMinProbability << " +- " << error << endl;
-
-        }
-
-
-        //add probability for sub-trees which are not in the conflict set
-        for (ParametricLocationTree::Node child: children){
-            maxOrMinProbability += recursivelySolveNondeterminismProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError, version);
-            error += currentError;
-        }
-
-
-    //add probability for currentNode if it is a candidate
+        //add probability for currentNode if it is a candidate
         if (isCandidateForProperty(currentNode, candidates, version)){
 
             currentError = 0.0;
 
             if (algorithm == 0)
-                //Gauss Legendre
-                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
+               //Gauss Legendre
+               maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
             else
-                //Monte Carlo
-                maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, currentError);
+               //Monte Carlo
+               maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(currentNode.getParametricLocation(), (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, functioncalls, currentError);
 
             error += currentError;
-        }
+        } else {
 
+           if (conflictSet.size() >= 2) {
+
+               real_1d_array x0 = "[8]";
+               real_1d_array s = "[12]"; //HSCC: x0 = 8; s=12 - NFM: x0=4, x=8
+               double epsx = 0.01;//0.000001;
+               ae_int_t maxits = 0;//0; for unlimited
+               minnlcstate state; //state object
+               minnlcreport rep;
+               real_1d_array x1;
+               double diffstep = 0.1;
+
+               int upperBounded;
+               int lowerBounded;
+
+               vector<vector<ParametricLocation>> currentLocationsVector;
+               vector<ParametricLocation> currentLocations;
+               recursivelyGetCandidateLocations(currentLocations, conflictSet[0], candidates, version);
+               currentLocationsVector.push_back(currentLocations);
+
+               //pairwise consideration
+               for (int k = 0; k < conflictSet.size(); k++) {
+
+                   for (int j = k + 1; j < conflictSet.size(); j++) {
+
+                       currentLocations.clear();
+                       recursivelyGetCandidateLocations(currentLocations, conflictSet[j], candidates, version);
+                       currentLocationsVector.push_back(currentLocations);
+
+                       vector<nondetParams> params;
+
+                       //two ways for ordering
+                       for (int i = 0; i <= 1; i++) {
+
+                           if (i == 0) {
+                               upperBounded = k;
+                               lowerBounded = j;
+                           } else {
+                               upperBounded = j;
+                               lowerBounded = k;
+                           }
+
+                           nondetParams currentParams;
+                           currentParams.algorithm = algorithm;
+                           currentParams.evaluations = min(64, evaluations);
+                           currentParams.functioncalls = min(1000, functioncalls);
+                           currentParams.distributions = (*this->plt).getDistributions();
+                           currentParams.maxTime = (*this->plt).getMaxTime();
+                           currentParams.minimum = minimum;
+                           //only for first fired general transition
+                           currentParams.rvIndex = 0.0; //currentNode.getParametricLocation().getGeneralTransitionsFired()[0] + 1;
+
+                           if (currentNode.getParametricLocation().getGeneralTransitionsFired().size() <= 0)
+                               cout << "Error: no GT has fired yet when non-deterministic choice is taken." << endl;
+
+                           currentParams.lowerBounded = currentLocationsVector[lowerBounded];
+                           currentParams.upperBounded = currentLocationsVector[upperBounded];
+
+                           currentParams.prob = -1.0;
+                           if (minimum)
+                               currentParams.prob = 2.0;
+                           currentParams.result = -1.0;
+
+                           minnlccreatef(1, x0, diffstep, state); //create, use f at the end for automatic gradient calculation
+                           minnlcsetalgoslp(state); //activate
+                           minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
+                           minnlcsetscale(state, s); //set scale (here always 1)
+                           minnlcsetstpmax(state, 0.0); //settings
+                           minnlcsetnlc(state, 0, 2);
+                           minnlcoptimize(state, optimizationFunction, NULL, &currentParams); //start optimizer
+                           minnlcresults(state, x1, rep); //get results
+
+                           if (rep.terminationtype == 2) {
+                               cout << "Pre-computation " << i + 1 << " succeeded: x = " << currentParams.result << " with P_max = " << currentParams.prob << " +- " << currentParams.error << endl;
+                               cout << "Upper bounded: " << conflictSet[upperBounded].getNodeID() << ", lower bounded: " << conflictSet[lowerBounded].getNodeID() << endl;
+                           } else
+                               cout << "Pre-computation " << i + 1 << " failed" << endl;
+
+                           params.push_back(currentParams);
+
+                       }
+
+                       int i;
+                       if (params[0].prob >= params[1].prob) {
+                           i = 0;
+                           upperBounded = k;
+                           lowerBounded = j;
+                       } else {
+                           i = 1;
+                           upperBounded = j;
+                           lowerBounded = k;
+                       }
+
+                       params[i].functioncalls = functioncalls;
+                       params[i].evaluations = evaluations;
+                       params[i].prob = -1.0;
+                       if (minimum)
+                           params[i].prob = 2.0;
+                       params[i].result = -1.0;
+                       minnlccreatef(1, x0, diffstep, state); //create, use f at the end for automatic gradient calculation
+                       minnlcsetalgoslp(state); //activate
+                       minnlcsetcond(state, epsx, maxits); //select stopping criteria for inner iterations
+                       minnlcsetscale(state, s); //set scale (here always 1)
+                       minnlcsetstpmax(state, 0.0); //settings
+                       minnlcsetnlc(state, 0, 2);
+                       minnlcoptimize(state, optimizationFunction, NULL, &params[i]); //start optimizer
+                       minnlcresults(state, x1, rep); //get results
+
+                       if (rep.terminationtype == 2) {
+                           cout << "Main computation succeeded: x = " << params[i].result << " with P_max = " << params[i].prob << " +- " << params[i].error << endl;
+                           cout << "Upper bounded: " << conflictSet[upperBounded].getNodeID() << ", lower bounded: " << conflictSet[lowerBounded].getNodeID() << endl;
+                       } else
+                           cout << "Main computation failed" << endl;
+
+
+                       double a = params[i].result;
+
+                       //adjust upper bound for first
+                       for (int l = 0; l < currentLocationsVector[upperBounded].size(); l++) {
+
+                           ParametricLocation location = currentLocationsVector[upperBounded][l];
+                           vector<vector<pair<int, pair<vector<double>, vector<double>>>>> originalIntegrationIntervals = location.getIntegrationIntervals();
+
+                           vector<vector<pair<int, pair<vector<double>, vector<double>>>>> newIntegrationIntervals;
+
+                           int dim = location.getDimension();
+                           std::vector<double> LinEqLeft(dim, 0.0);
+                           std::vector<double> LinEqRight(dim, 0.0);
+
+                           LinEqLeft[1] = 1.0; // s  <=  a
+                           LinEqRight[0] = a;
+
+                           LinearEquation equation(LinEqLeft, LinEqRight);
+
+                           for (DomainWithIndex domainWithIndex : originalIntegrationIntervals) {
+                               Domain domain = LinearDomain::createDomain(domainWithIndex);
+                               LinearBoundsTree tree(domain, equation);
+                               std::vector<LinearDomain> domains = tree.getUniqueDomains();
+                               for (LinearDomain resultDomain : domains) {
+                                   newIntegrationIntervals.push_back(resultDomain.toDomainWithIndex(domainWithIndex));
+                               }
+                           }
+                           currentLocationsVector[upperBounded][l].overwriteIntegrationIntervals(newIntegrationIntervals);
+
+                       }
+
+
+
+                       //adjust lower bound for second
+                       for (int l = 0; l < currentLocationsVector[lowerBounded].size(); l++) {
+
+                           ParametricLocation location = currentLocationsVector[lowerBounded][l];
+                           vector<vector<pair<int, pair<vector<double>, vector<double>>>>> originalIntegrationIntervals = location.getIntegrationIntervals();
+
+                           vector<vector<pair<int, pair<vector<double>, vector<double>>>>> newIntegrationIntervals;
+
+                           int dim = location.getDimension();
+                           std::vector<double> LinEqLeft(dim, 0.0);
+                           std::vector<double> LinEqRight(dim, 0.0);
+
+                           LinEqLeft[0] = a;
+                           LinEqRight[1] = 1.0; // a  <=  s
+
+                           LinearEquation equation(LinEqLeft, LinEqRight);
+
+                           for (DomainWithIndex domainWithIndex : originalIntegrationIntervals) {
+                               Domain domain = LinearDomain::createDomain(domainWithIndex);
+                               LinearBoundsTree tree(domain, equation);
+                               std::vector<LinearDomain> domains = tree.getUniqueDomains();
+                               for (LinearDomain resultDomain : domains) {
+                                   newIntegrationIntervals.push_back(resultDomain.toDomainWithIndex(domainWithIndex));
+                               }
+                           }
+                           currentLocationsVector[lowerBounded][l].overwriteIntegrationIntervals(newIntegrationIntervals);
+
+
+                       }
+                   }
+               }
+
+               maxOrMinProbability = 0.0;
+               error = 0.0;
+
+               for (vector<ParametricLocation> locations : currentLocationsVector) {
+                   for (ParametricLocation location : locations) {
+
+                       if (algorithm == 0)
+                           //Gauss Legendre
+                           maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingGauss(location, (*this->plt).getDistributions(), (*this->plt).getMaxTime(), evaluations);
+                       else
+                           //Monte Carlo
+                           maxOrMinProbability += calculator->ProbabilityCalculator::getProbabilityForLocationUsingMonteCarlo(location, (*this->plt).getDistributions(), (*this->plt).getMaxTime(), algorithm, 1000000, currentError);
+
+                       error += currentError;
+
+                   }
+               }
+
+               cout << "Local probability: " << maxOrMinProbability << " +- " << error << endl;
+
+           }
+
+
+           //add probability for sub-trees which are not in the conflict set
+           for (ParametricLocationTree::Node child: children) {
+               maxOrMinProbability += recursivelySolveNondeterminismProphetic(child, candidates, algorithm, functioncalls, evaluations, minimum, currentError, version);
+               error += currentError;
+           }
+       }
 
        return maxOrMinProbability;
    }
