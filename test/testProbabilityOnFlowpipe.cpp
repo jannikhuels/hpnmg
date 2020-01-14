@@ -29,19 +29,25 @@ using namespace hpnmg;
 using namespace std;
 
 std::tuple<bool, string> Check1(int startIndex, Point<Number> point) {
+	if(startIndex == -1) return std::tuple(true, "x >= 9");
 	return  std::tuple(point[startIndex] >= 9, "x >= 9");
 }
 
 std::tuple<bool, string> Check2(int startIndex, Point<Number> point) {
+
+	if(startIndex == -1) return std::tuple(true, "x <= 7");
 	return  std::tuple(point[startIndex] <= 7 , "x <= 7");
 }
 
 std::tuple<bool, string> Check3(int startIndex, Point<Number> point) {
+
+	if(startIndex == -1) return std::tuple(true, "x >= 8 && x <= 10");
 	return  std::tuple(point[startIndex] >= 8 && point[startIndex] <= 10, "x >= 8 && x <= 10");
 }
 
 std::tuple<bool, string> Check4(int startIndex, Point<Number> point) {
-	return  std::tuple(point[startIndex+1] >= 4, "y >= 4");
+	if(startIndex == -1) return std::tuple(true, "x >= 8 && x <= 10");
+	return  std::tuple(point[startIndex] >= 8 && point[startIndex] <= 10, "x >= 8 && x <= 10");
 }
 
 std::tuple<bool, string> Check5(int startIndex, Point<Number> point) {
@@ -55,11 +61,11 @@ TEST(ProbabilityFlowpipe, probability) {
 	ProbabilityOnFlowpipe p;
 	ReadHybridPetrinet reader;
 
-	string filePath = "../../test/testfiles/examplePauline1.xml";
+	string filePath = "../../test/testfiles/examplePauline2.xml";
 
 	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
 
 	double dfactor = 0.01;
-	double tMax = 20.0;
-	p.CalculateProbabilityOnReachableSet(hybridPetriNet, {Check1}, dfactor,tMax);
+	double tMax = 10.0;
+	p.CalculateProbabilityOnReachableSet(hybridPetriNet, {Check2}, dfactor,tMax);
 }
