@@ -5,47 +5,6 @@
 
 namespace hpnmg {
 
-//    bool SingularAutomatonCreator::compareOrderedVectors(const vector<vector<vector<double>>> &lhs, const vector<vector<vector<double>>> &rhs) {
-//        int coincidingTransitionNumber = min(lhs.size(),rhs.size()); // the maximal general transition that fired in both states
-//        // for each coinciding transition (and the firing-independent values at index 0)
-//        for(int transitionNumber = 0; transitionNumber < coincidingTransitionNumber; transitionNumber++) {
-//            int coincidingFiringAmount = min(lhs[transitionNumber].size(),rhs[transitionNumber].size()); // number of firing of that general transition that already took place in both states
-//            // for each coinciding firing (of that transition)
-//            for(int firing = 0; firing < coincidingFiringAmount; firing++) {
-//                // if one state contains more variables
-//                if(lhs[transitionNumber][firing].size() != rhs[transitionNumber][firing].size()) {
-//                    return lhs[transitionNumber][firing].size() < rhs[transitionNumber][firing].size();
-//                }
-//                // for each coinciding variable (of that firing)
-//                for(int posOfVar = 0; posOfVar < lhs[transitionNumber][firing].size(); posOfVar++) {
-//                    if(lhs[transitionNumber][firing][posOfVar] != rhs[transitionNumber][firing][posOfVar]) {
-//                        return lhs[transitionNumber][firing][posOfVar] < rhs[transitionNumber][firing][posOfVar];
-//                    }
-//                }
-//            }
-//            const vector<vector<double>>& largerVector = lhs[transitionNumber].size() > rhs[transitionNumber].size() ? lhs[transitionNumber] : rhs[transitionNumber];
-//            // for each firing (of that transition) that took place in only one state
-//            for(int firing = coincidingFiringAmount; firing < largerVector.size(); firing++) {
-//                for(int j = 0; j < largerVector[firing].size(); j++) {
-//                    if(largerVector[firing][j] != 0) {
-//                        return lhs[transitionNumber].size() < rhs[transitionNumber].size();
-//                    }
-//                }
-//            }
-//        }
-//        const vector<vector<vector<double>>>& largerVector = lhs.size() > rhs.size() ? lhs : rhs;
-//        // for each transition that fired in only one state
-//        for(int transitionNumber = coincidingTransitionNumber; transitionNumber < largerVector.size(); transitionNumber++) {
-//            for(int firing = 0; firing < largerVector[transitionNumber].size(); firing++) {
-//                for(int k = 0; k < largerVector[transitionNumber][firing].size(); k++) {
-//                    if(largerVector[transitionNumber][firing][k] != 0) {
-//                        return lhs.size() < rhs.size();
-//                    }
-//                }
-//            }
-//        }
-//        return false; // vectors are equal
-//    }
 
     pair<shared_ptr<ParametricLocationTree>, shared_ptr<SingularAutomaton>>
     SingularAutomatonCreator::transformIntoSingularAutomaton(shared_ptr<HybridPetrinet> hybridPetriNet,
@@ -61,12 +20,6 @@ namespace hpnmg {
         vector<ParametricLocationTree::Node> rootNodes;
         //
 
-//        PetriNetState state;
-//        state.discreteMarking = rootParametricLocation.getDiscreteMarking();
-//        state.orderedContinuousMarking = sortByOrder(rootParametricLocation.getContinuousMarking(),
-//                rootParametricLocation.getGeneralTransitionsFired());
-//        state.orderedDeterministicClock = sortByOrder(rootParametricLocation.getDeterministicClock(),
-//                                                      rootParametricLocation.getGeneralTransitionsFired());
 
         //For initially enabled immediate transitions, skip location(s)
         bool immediate;
@@ -105,7 +58,7 @@ namespace hpnmg {
             SingularAutomaton::singleton activitiesContinuous = rootParametricLocation.getDrift();
 
             // Adaption for general transition firing order
-            vector<bool> activitiesGeneral(totalGeneral, false); // = rootParametricLocation.getGeneralTransitionsEnabled();
+            vector<short int> activitiesGeneral(totalGeneral, false); // = rootParametricLocation.getGeneralTransitionsEnabled();
             vector<bool> enabledTransitions = rootParametricLocation.getGeneralTransitionsEnabled();
             for (int i = 0; i < enabledTransitions.size(); i++) {
                 if (enabledTransitions[i])
@@ -161,11 +114,6 @@ namespace hpnmg {
                                                            ParametricLocationTree::Node *parentNode,
                                                            shared_ptr<SingularAutomaton::Location> locationForParent) {
 
-//        // every time a leaf is reached, print an information
-//        if (parametricLocationTree->getChildNodes(*parentNode).empty()) {
-//            cout << "Location with no outgoing transition added to singular automaton. "
-//                 << "You might increase the time horizon. (This does not necessarily help.)" << endl;
-//        }
 
         // variable to check whether non-leaf parametric locations are considered, in which only non-stochastic events occur
         bool allEventsAreGeneral = true;
@@ -183,25 +131,12 @@ namespace hpnmg {
                 allEventsAreGeneral = false;
             }
 
-            // determine represented state (m, x, c, g)
-//            PetriNetState state;
-//            state.discreteMarking = childParametricLocation.getDiscreteMarking();
-//            state.orderedContinuousMarking = sortByOrder(childParametricLocation.getContinuousMarking(),
-//                                                         childParametricLocation.getGeneralTransitionsFired());
-//            state.orderedDeterministicClock = sortByOrder(childParametricLocation.getDeterministicClock(),
-//                                                          childParametricLocation.getGeneralTransitionsFired());
-//
-//            // search for location in singular automaton with same state (m, x, c, g)
-//            auto iteratorLocation = mapStateToLocation.find(state);
-//
-//            if (iteratorLocation == mapStateToLocation.end()) { // if no location found
-
-            // determine activities in the new location for this child
+              // determine activities in the new location for this child
             LOCATION_ID id = childNode.getNodeID();
             vector<bool> activitiesDeterministic = childParametricLocation.getDeterministicTransitionsEnabled();
             SingularAutomaton::singleton activitiesContinuous = childParametricLocation.getDrift();
 
-            vector<bool> activitiesGeneral (totalGeneral, false); // = childParametricLocation.getGeneralTransitionsEnabled();
+            vector<short int> activitiesGeneral (totalGeneral, false); // = childParametricLocation.getGeneralTransitionsEnabled();
             vector<bool> enabledTransitions = childParametricLocation.getGeneralTransitionsEnabled();
             for (int i = 0; i < enabledTransitions.size();i++){
                 if (enabledTransitions[i]) {
@@ -209,7 +144,7 @@ namespace hpnmg {
                     for (int transition : childParametricLocation.getGeneralTransitionsFired())
                         if (transition == i)
                             firing++;
-                    activitiesGeneral[parametricLocationTree->getNormalizedIndexOfTransitionFiring(i, firing)] = true;
+                    activitiesGeneral[parametricLocationTree->getNormalizedIndexOfTransitionFiring(i, firing)] = 1;
                 }
             }
 
@@ -229,11 +164,7 @@ namespace hpnmg {
                 // also add locations for the children of the current node
                 addLocationsForChildren(hybridPetriNetParser, parametricLocationTree, singularAutomaton, &childNode,
                                         locationForThisChild);
-//            } else { // if location found
-//                // insert a transition between the two locations
-//                transformEventIntoTransition(hybridPetriNetParser, parametricLocationTree, singularAutomaton, &parentParametricLocation, locationForParent, stateOfParent,
-//                                             &childParametricLocation, iteratorLocation->second);
-//            }
+
         }
 
         if (locationForParent->isToBeDeleted()){
@@ -385,11 +316,7 @@ namespace hpnmg {
         // insert transition in automaton
         singularAutomaton->insertTransition(move(locationForParent), type, variableIndex, valuePreCompare, invOperator,
                                             locationForChild);
-//        if (type == Immediate) {
-//            // locationForParent was removed by the previous insertTransition
-//            // and its state is represented by locationForChild
-//            mapStateToLocation[stateOfParent] = locationForChild;
-//        }
+
     }
 
     void SingularAutomatonCreator::mergeIdenticalLocations(shared_ptr<SingularAutomaton> singularAutomaton) {
@@ -420,30 +347,83 @@ namespace hpnmg {
         }
     }
 
-//    vector<vector<vector<double>>> SingularAutomatonCreator::sortByOrder(const vector<vector<double>>& values,
-//                                                                         const vector<int>& order) {
-//
-//        if (values.size() == 0)
-//            return {};
-//
-//        // get amount of different general transitions that fired and create vector accordingly
-//        unsigned long amount = order.empty() ? 0 : *max_element(order.begin(), order.end())+1;
-//
-//        vector<vector<vector<double>>> orderedValues(amount+1);
-//
-//        vector<double> valuesAtThisTime(values.size());
-//
-//        for(int pointInTime = 0; pointInTime < values[0].size(); pointInTime++) {
-//            for(int posOfVar = 0; posOfVar < values.size(); posOfVar++) {
-//                valuesAtThisTime[posOfVar] = values[posOfVar][pointInTime];
-//            }
-//            if(pointInTime == 0) {
-//                orderedValues[0] = {valuesAtThisTime};
-//            }
-//            else {
-//                orderedValues[order[pointInTime-1]+1].push_back(valuesAtThisTime);
-//            }
-//        }
-//        return orderedValues;
-//    }
+
+    shared_ptr<SingularAutomaton> SingularAutomatonCreator::addDistributions(shared_ptr<SingularAutomaton> automaton, vector<pair<string, map<string, float>>> distributionsNormalized){
+
+        vector<shared_ptr<SingularAutomaton::Location>> initialLocations;
+        shared_ptr<SingularAutomaton::Location> previousLocation;
+        automaton->setDistributionsNormalized(distributionsNormalized);
+
+        vector<bool> activitiesDeterministic(automaton->getInitialDeterministic().size(), false);
+        vector<double> activitiesContinuous(automaton->getInitialContinuous().size(), 0.0);
+        int id = 0;
+
+
+        for ( shared_ptr<SingularAutomaton::Location> initialLocation : automaton->getInitialLocations()){
+
+            bool first = true;
+            int counter = 0;
+            int index = 0;
+
+            for (bool enabled : initialLocation->getActivitiesGeneral()){
+
+                if (enabled){
+                    vector<short int> activitiesGeneral(automaton->getInitialGeneral().size(), false);
+                    activitiesGeneral[index] = 1;
+                    shared_ptr<SingularAutomaton::Location> newLocation = make_shared<SingularAutomaton::Location>(id, activitiesDeterministic,  activitiesContinuous, activitiesGeneral);
+                    newLocation->addToInvariantGeneral(id, 0.0, LOWER_EQUAL);
+                    id--;
+
+                    automaton->addLocation(newLocation);
+                    if (first)
+                        initialLocations.push_back(newLocation);
+                    else {
+                        shared_ptr<SingularAutomaton::Transition> transition = automaton->insertTransition(move(previousLocation), Root, index-1, -1, UNLIMITED, move(newLocation));
+                        transition->addSamplingVariable((long)(index-1));
+                    }
+
+                    first = false;
+                    counter++;
+                    previousLocation = newLocation;
+                }
+                index++;
+
+            }
+
+            shared_ptr<SingularAutomaton::Transition> transition = automaton->insertTransition(move(previousLocation), Root, index-2, -1, UNLIMITED, initialLocation);
+            transition->addSamplingVariable((long)(index-2));
+        }
+
+        automaton->overwriteInitialLocations(initialLocations);
+
+        for (shared_ptr<SingularAutomaton::Location> location : automaton->getLocations()){
+
+            if (location->getLocationId()>0) {
+
+                vector<short int> actGen = location->getActivitiesGeneral();
+                for (int i = 0; i < actGen.size(); i++) {
+
+                    if (actGen[i] == 1) {
+                        actGen[i] = -1;
+                        location->addToInvariantGeneral(i, 0.0, GREATER_EQUAL);
+
+                       for (shared_ptr<SingularAutomaton::Transition> transition : location->getIncomingTransitions()){
+
+                           if (transition->getPredecessorLocation()->getActivitiesGeneral()[i] == 0){
+                                transition->addSamplingVariable((long)(i));
+                           }
+                       }
+                    }
+                }
+
+                location->overwriteActivitiesGeneral(actGen);
+            }
+        }
+
+
+        return automaton;
+    }
+
+
 }
+

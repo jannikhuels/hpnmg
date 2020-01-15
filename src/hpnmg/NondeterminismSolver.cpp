@@ -342,8 +342,8 @@ namespace hpnmg {
 
            if (conflictSet.size() >= 2) {
 
-               real_1d_array x0 = "[8]";
-               real_1d_array s = "[12]"; //HSCC: x0 = 8; s=12 - NFM: x0=4, x=8
+               real_1d_array x0 = "[4]";
+               real_1d_array s = "[8]"; //HSCC: x0 = 8; s=12 - NFM: x0=4, x=8
                double epsx = 0.01;//0.000001;
                ae_int_t maxits = 0;//0; for unlimited
                minnlcstate state; //state object
