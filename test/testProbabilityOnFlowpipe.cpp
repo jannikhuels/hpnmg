@@ -8,7 +8,7 @@
 #include <SingularAutomatonCreator.h>
 #include <SingularAutomatonWriter.h>
 #include <HybridAutomatonHandler.h>
-#include <ProbabilityOnFlowpipe.h>
+#include <ProbabilityOnReachableSets.h>
 #include "gtest/gtest.h"
 #include "PLTWriter.h"
 #include <chrono>
@@ -28,44 +28,21 @@
 using namespace hpnmg;
 using namespace std;
 
-std::tuple<bool, string> Check1(int startIndex, Point<Number> point) {
-	if(startIndex == -1) return std::tuple(true, "x >= 9");
-	return  std::tuple(point[startIndex] >= 9, "x >= 9");
-}
-
-std::tuple<bool, string> Check2(int startIndex, Point<Number> point) {
-
-	if(startIndex == -1) return std::tuple(true, "x <= 7");
-	return  std::tuple(point[startIndex] <= 7 , "x <= 7");
-}
-
-std::tuple<bool, string> Check3(int startIndex, Point<Number> point) {
-
-	if(startIndex == -1) return std::tuple(true, "x >= 8 && x <= 10");
-	return  std::tuple(point[startIndex] >= 8 && point[startIndex] <= 10, "x >= 8 && x <= 10");
-}
-
-std::tuple<bool, string> Check4(int startIndex, Point<Number> point) {
-	if(startIndex == -1) return std::tuple(true, "x >= 8 && x <= 10");
-	return  std::tuple(point[startIndex] >= 8 && point[startIndex] <= 10, "x >= 8 && x <= 10");
-}
-
-std::tuple<bool, string> Check5(int startIndex, Point<Number> point) {
-	return  std::tuple(point[startIndex] >= 2* point[startIndex+1], "x >= 2*y");
+bool Check1(int startIndex, Point<Number> point) {
+	return  point.rawCoordinates()[startIndex] >= 9;
 }
 
 TEST(ProbabilityFlowpipe, probability) {
 
 	using namespace hypro;
 
-	ProbabilityOnFlowpipe p;
+	ProbabilityOnReachableSets p;
 	ReadHybridPetrinet reader;
 
 	string filePath = "../../test/testfiles/examplePauline2.xml";
 
 	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
 
-	double dfactor = 0.01;
-	double tMax = 10.0;
-	p.CalculateProbabilityOnReachableSet(hybridPetriNet, {Check2}, dfactor,tMax);
+	double tMax = 20.0;
+	p.calculateProbabilityOnReachableSet(hybridPetriNet, {Check1}, {"x >= 9"},tMax);
 }

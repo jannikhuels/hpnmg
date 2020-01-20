@@ -8,7 +8,7 @@
 #include <SingularAutomatonCreator.h>
 #include <SingularAutomatonWriter.h>
 #include <HybridAutomatonHandler.h>
-#include <ProbabilityOnFlowpipe.h>
+#include <ProbabilityOnReachableSets.h>
 #include "gtest/gtest.h"
 #include "PLTWriter.h"
 #include <chrono>
