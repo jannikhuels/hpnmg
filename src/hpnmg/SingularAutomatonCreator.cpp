@@ -371,14 +371,14 @@ namespace hpnmg {
                     vector<short int> activitiesGeneral(automaton->getInitialGeneral().size(), false);
                     activitiesGeneral[index] = 1;
                     shared_ptr<SingularAutomaton::Location> newLocation = make_shared<SingularAutomaton::Location>(id, activitiesDeterministic,  activitiesContinuous, activitiesGeneral);
-                    newLocation->addToInvariantGeneral(id, 0.0, LOWER_EQUAL);
+                    newLocation->addToInvariantGeneral(index, 0.0, LOWER_EQUAL);
                     id--;
 
                     automaton->addLocation(newLocation);
                     if (first)
                         initialLocations.push_back(newLocation);
                     else {
-                        shared_ptr<SingularAutomaton::Transition> transition = automaton->insertTransition(move(previousLocation), Root, index-1, -1, UNLIMITED, move(newLocation));
+                        shared_ptr<SingularAutomaton::Transition> transition = automaton->insertTransition(move(previousLocation), Root, index-1, -1, UNLIMITED, newLocation);
                         transition->addSamplingVariable((long)(index-1));
                     }
 
@@ -390,8 +390,8 @@ namespace hpnmg {
 
             }
 
-            shared_ptr<SingularAutomaton::Transition> transition = automaton->insertTransition(move(previousLocation), Root, index-2, -1, UNLIMITED, initialLocation);
-            transition->addSamplingVariable((long)(index-2));
+            shared_ptr<SingularAutomaton::Transition> transition = automaton->insertTransition(move(previousLocation), Root, index-1, -1, UNLIMITED, initialLocation);
+            transition->addSamplingVariable((long)(index-1));
         }
 
         automaton->overwriteInitialLocations(initialLocations);
