@@ -8,6 +8,7 @@
 #include <SingularAutomatonCreator.h>
 #include <SingularAutomatonWriter.h>
 #include <HybridAutomatonHandler.h>
+#include <ProbabilityOnReachableSets.h>
 #include "gtest/gtest.h"
 #include "PLTWriter.h"
 #include <chrono>
@@ -24,6 +25,7 @@
 #include "parser/antlr4-flowstar/ParserWrapper.h"
 
 
+#include <bits/stdc++.h>
 using namespace hpnmg;
 using namespace std;
 
@@ -82,7 +84,6 @@ TEST(HybridAutomaton, NondeterministicConflict) {
 
 TEST(HybridAutomaton, example) {
 
-
     ReadHybridPetrinet reader;
     PLTWriter PLTwriter;
     SingularAutomatonCreator transformer;
@@ -90,7 +91,7 @@ TEST(HybridAutomaton, example) {
 
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/examplePauline2.xml";
+    string filePath = "../../test/testfiles/example.xml";
     double tauMax = 10.0;
 
 // read
@@ -122,10 +123,10 @@ TEST(HybridAutomaton, example) {
     cout << "t_max=" << tauMax << ", #PL=" << p << ", #Loc=" << l << ", #Edge=" << e << "\n" << endl;
 
 // write
-    PLTwriter.writePLT(plt, tauMax, "plt_pauline");
+    PLTwriter.writePLT(plt, tauMax, "plt_example");
 
     begin0 = clock();
-    automatonWriter.writeAutomaton(automaton, "pauline");
+    automatonWriter.writeAutomaton(automaton, "example");
     end0 = clock();
     elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
     cout << "Write JANI: " << elapsed_secs << " seconds" << endl;
@@ -338,12 +339,11 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/examplePauline2.xml";
+    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleHybrid2.xml";
     double tMax = 10.0;
 
 // read HPnG
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
-
 
 // transform HPnG into SingularAutomaton
     auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
@@ -360,6 +360,6 @@ TEST(HybridAutomaton, converter) {
 // Compute flowpipes
     auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
 
-    handler.plotTex("exampleNondeterminism1", flowpipes);
+    handler.plotTex("example", flowpipes);
 
 }

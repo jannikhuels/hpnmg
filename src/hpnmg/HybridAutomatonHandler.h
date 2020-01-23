@@ -44,8 +44,6 @@ namespace hpnmg {
 
         void plotTex(string outputfile, std::vector<std::pair<unsigned, flowpipe_t>> flowpipes);
 
-
-
     private:
 
         void addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime);

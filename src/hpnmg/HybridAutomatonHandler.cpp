@@ -1,7 +1,7 @@
 #include "HybridAutomatonHandler.h"
+#include <ProbabilityCalculator.h>
 
 using namespace std;
-using namespace hypro;
 using namespace hypro;
 typedef mpq_class Number;
 
@@ -327,9 +327,9 @@ namespace hpnmg {
 
                         for (int i = 0; i < point.rawCoordinates().size(); i++){
                             auto coordinate = point.rawCoordinates()[i];
-                            cout << carl::convert<Number, double>(coordinate) << ", ";
+                            //cout << carl::convert<Number, double>(coordinate) << ", ";
                         }
-                        cout << endl;
+                        //cout << endl;
                     }
                     points.clear();
                 }
@@ -368,4 +368,6 @@ namespace hpnmg {
         // write output.
         plotter.plotTex();
     }
+
+
 }
