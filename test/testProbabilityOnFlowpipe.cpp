@@ -24,7 +24,7 @@
 #include "parser/antlr4-flowstar/ParserWrapper.h"
 #include <ReadFormula.h>
 #include <modelchecker/RegionModelChecker.h>
-#include <bits/stdc++.h>
+
 using namespace hpnmg;
 using namespace std;
 
@@ -39,7 +39,7 @@ TEST(ProbabilityFlowpipe, probability) {
 	ProbabilityOnReachableSets p;
 	ReadHybridPetrinet reader;
 
-	string filePath = "../../test/testfiles/examplePauline2.xml";
+	string filePath = "../../test/testfiles/examplesHybridAutomata/exampleHybrid2.xml";
 
 	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
 

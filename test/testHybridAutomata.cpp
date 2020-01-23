@@ -24,8 +24,6 @@
 #include "util/plotting/Plotter.h"
 #include "parser/antlr4-flowstar/ParserWrapper.h"
 
-
-#include <bits/stdc++.h>
 using namespace hpnmg;
 using namespace std;
 
