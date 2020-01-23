@@ -90,8 +90,8 @@ TEST(HybridAutomaton, example) {
 
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleNondeterminism4.xml";
-    double tauMax = 72.0;
+    string filePath = "../../test/testfiles/examplesHybridAutomata/examplePauline2.xml";
+    double tauMax = 10.0;
 
 // read
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
@@ -122,10 +122,10 @@ TEST(HybridAutomaton, example) {
     cout << "t_max=" << tauMax << ", #PL=" << p << ", #Loc=" << l << ", #Edge=" << e << "\n" << endl;
 
 // write
-    PLTwriter.writePLT(plt, tauMax, "plt_nfm2");
+    PLTwriter.writePLT(plt, tauMax, "plt_pauline");
 
     begin0 = clock();
-    automatonWriter.writeAutomaton(automaton, "nfm2");
+    automatonWriter.writeAutomaton(automaton, "pauline");
     end0 = clock();
     elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
     cout << "Write JANI: " << elapsed_secs << " seconds" << endl;
@@ -282,16 +282,16 @@ TEST(HybridAutomaton, FlowParser){
 
     // typedefs for simplification.
     typedef mpq_class Number;
-    typedef Box<Number> Representation;
+    typedef HPolytope<Number> Representation;
 
-    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/examplesHybridAutomata/exampleHybrid3.model"));
+    std::pair<hypro::HybridAutomaton<Number>, hypro::ReachabilitySettings> ha = std::move(hypro::parseFlowstarFile<Number>("../../test/testfiles/examplesHybridAutomata/examplePauline2.model"));
 
 
     hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>> reacher(ha.first, ha.second);
 
 
     ReachabilitySettings settings = reacher.settings();
-    settings.timeBound = Number(20); //time bound
+    settings.timeBound = Number(10); //time bound
     settings.jumpDepth = 5;
     reacher.setSettings(settings);
     reacher.setRepresentationType(Representation::type());
@@ -308,8 +308,14 @@ TEST(HybridAutomaton, FlowParser){
                 std::vector<Point<Number>> points = set.vertices();
                 if(!points.empty() && points.size() >= 0) {
                     for(auto& point : points) {
+                        for (int i = 0; i < point.rawCoordinates().size(); i++){
+                            auto coordinate = point.rawCoordinates()[i];
+                            cout << carl::convert<Number, double>(coordinate) << ", ";
+                        }
+                        cout << endl;
                         point.reduceDimension(2);
                     }
+                    cout << "new set" << endl;
                     plotter.addObject(points);
                     points.clear();
                 }
@@ -332,7 +338,7 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/example2general.xml";
+    string filePath = "../../test/testfiles/examplesHybridAutomata/examplePauline2.xml";
     double tMax = 10.0;
 
 // read HPnG
