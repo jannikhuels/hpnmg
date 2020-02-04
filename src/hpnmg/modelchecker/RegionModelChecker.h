@@ -17,8 +17,7 @@
 namespace hpnmg {
     class RegionModelChecker {
     public:
-        RegionModelChecker(HybridPetrinet hpng, double maxTime, int mode = 0, double atTime = 0, const Formula &formula = Formula(std::shared_ptr<::hpnmg::True>()));
-       // RegionModelChecker(HybridPetrinet hpng, double maxTime);
+        RegionModelChecker(HybridPetrinet hpng, double maxTime);
 
         /**
          * Compute the probability of <code>formula</code> holding at time <code>atTime</code> in the model associated
