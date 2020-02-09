@@ -32,17 +32,46 @@ bool Check1(int startIndex, Point<Number> point) {
 	return  point.rawCoordinates()[startIndex] >= 9;
 }
 
-TEST(ProbabilityFlowpipe, probability) {
+bool Check2(int startIndex, Point<Number> point) {
+	return  point.rawCoordinates()[startIndex] <= 7;
+}
+
+bool Check3(int startIndex, Point<Number> point) {
+	return  point.rawCoordinates()[startIndex] <= 10 && point.rawCoordinates()[startIndex] >= 8;
+}
+
+TEST(ProbabilityOnReachableSets, functionbased) {
 
 	using namespace hypro;
 
 	ProbabilityOnReachableSets p;
 	ReadHybridPetrinet reader;
 
-	string filePath = "../../test/testfiles/examplePauline2.xml";
+	string filePath = "../../test/testfiles/paulineExamples/examplePauline1.xml";
 
 	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
 
 	double tMax = 20.0;
-	p.calculateProbabilityOnReachableSet(hybridPetriNet, {Check1}, {"x >= 9"},tMax);
+
+	p.calculateProbabilityOnReachableSet(hybridPetriNet, {Check1, Check2, Check3}, {"x >= 9", "x <= 7", "x >=8 && x <= 10"},tMax);
+}
+
+TEST(ProbabilityOnReachableSets, atomicbased) {
+
+	using namespace hypro;
+
+	ProbabilityOnReachableSets p;
+	ReadHybridPetrinet reader;
+
+	string filePath = "../../test/testfiles/paulineExamples/examplePauline1.xml";
+
+	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
+
+	double tMax = 10.0;
+	std::vector<int> propContinuous = {0,0};
+	std::vector<string> propOps = {">=", "<="};
+	std::vector<double> propValues = {8.0, 10.0};
+	bool conjunction = true;
+
+	p.calculateProbabilityOnReachableSet(hybridPetriNet, propContinuous, propOps, propValues, conjunction, "x >= 8 && x <= 10",tMax);
 }

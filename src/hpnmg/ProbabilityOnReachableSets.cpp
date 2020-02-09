@@ -50,15 +50,15 @@ namespace hpnmg {
 		// Compute flowpipes
 		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);
 		//if wanted:
-		handler.plotTex("flowpipe_results", flowpipes);
+		//handler.plotTex("flowpipe_results", flowpipes);
 
 		std::vector<std::pair<double,double>> results;
 
 
-		// for each property: compute polytopes that fulfill the property and calculate the corresponding probability
+		// for each property: compute polytopes that fulfil the property and calculate the corresponding probability
 		for(int i = 0; i < properties.size(); i++) {
-			auto allPolytopes = computePolytopesThatFulfillProperty(flowpipes,properties[i],automaton -> getInitialGeneral().size());
-			//if wanted: PrintPolytopes(allPolytopes);
+			auto allPolytopes = computePolytopesThatFulfilProperty(flowpipes,properties[i],automaton -> getInitialGeneral().size());
+			
 			auto res = calculateProbabilityForPolytopes(allPolytopes,distributions);
 			results.push_back(res);
 		}
@@ -103,9 +103,9 @@ namespace hpnmg {
 		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);
 		//if wanted: handler.plotTex("flowpipe_results", flowpipes);
 
-		//compute polytopes that fulfill the property
-		auto allPolytopes = computePolytopesThatFulfillProperty(flowpipes,property,automaton -> getInitialGeneral().size());
-		//if wanted: printPolytopes(allPolytopes);
+		//compute polytopes that fulfil the property
+		auto allPolytopes = computePolytopesThatFulfilProperty(flowpipes,property,automaton -> getInitialGeneral().size());
+
 		//compute the probability over the polytop
 		auto result = calculateProbabilityForPolytopes(allPolytopes,distributions);
 
@@ -116,14 +116,14 @@ namespace hpnmg {
 
 
 	/**
-	 * Computes a polytope that fulfills a given property for each flowpipe segment.
+	 * Computes a polytope that fulfils a given property for each flowpipe segment.
 	 * The points that make up the polytope are reduced to the general transition values.
 	 * @param flowpipes results of the reachability analysis
 	 * @param property property to check each point for
 	 * @param transitions number of general transition values
-	 * @return HPolytope for each flowpipe segment that fulfills the given property
+	 * @return HPolytope for each flowpipe segment that fulfils the given property
 	 */
-	std::vector<hypro::HPolytope<double>> ProbabilityOnReachableSets::computePolytopesThatFulfillProperty(std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes, std::function<bool(int, Point<Number>)> property , int transitions) {
+	std::vector<hypro::HPolytope<double>> ProbabilityOnReachableSets::computePolytopesThatFulfilProperty(std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes, std::function<bool(int, Point<Number>)> property , int transitions) {
 		std::set<Point<double>> newPoly;
 		std::vector<std::vector<Point<double>>> allPolytopes;
 
@@ -137,14 +137,7 @@ namespace hpnmg {
 					for (auto & point: points) {
 						//filter points for given property
 						if (property(transitions, point)) {
-							if(point.rawCoordinates()[0] < 7 || point.rawCoordinates()[1] < 7){
-								for (int i = 0; i < point.rawCoordinates().size(); i++){
-									auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
-									cout << coordinate << ", ";
-								}
-								cout << endl;
-							}
-							//if point fulfills property reduce to general transitions only and add to set representing the new polytope
+							//if point fulfils property reduce to general transitions only and add to set representing the new polytope
 							std::vector<double> coordinates;
 							for (int i = 0; i < transitions; i++){
 								auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
@@ -162,8 +155,7 @@ namespace hpnmg {
 				newPoly.clear();
 			}
 		}
-		//if wanted:
-		//printPointsOfPolytopes(allPolytopes);
+		//if wanted: printPointsOfPolytopes(allPolytopes);
 		//transform the vectors of points representing the polytopes to HPolytopes
 		std::vector<hypro::HPolytope<double>> polytopes = createHPolytopes(allPolytopes);
 		return polytopes;
