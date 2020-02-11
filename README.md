@@ -82,8 +82,10 @@ Build HyPro's resources and HyPro itself with `make resources && make hypro`. Th
 
 ## Instructions
 
-Nondetermnistic scheduling (QEST):
+Replication of results for HSCC 2020 Submission "Classic and Non-Prophetic Model Checking for Hybrid Petri Nets with Stochastic Firings":
 
-There exist a number of googletest files in the folder "test". The The file "testNondeterministicConflicts.cpp" contains tests for all versions of the case study used in the QEST paper, both for nonprophetic and prophetic scheduling. Using Google Test, these can be executed. The model files are available in the folder "test/testfiles/nondeterministicModelsQEST".
+The GoogleTest file `test/testNondeterministicConflicts.cpp` holds tests for all versions of the case study used in the HSCC 2020 submission, for both nonprophetic and prophetic scheduling. The core algorithms presented in the submission can be found inside the file: `src/hpnmg/NondeterminismSolver.cpp`.
+The model files can be found in the folder `/test/testfiles/nondeterministicModelsCharging/`. This folder also includes a PDF file `PLTsHSCC.pdf` that shows the Parametric Location Trees of the models presented in the submission.
+
 
 
