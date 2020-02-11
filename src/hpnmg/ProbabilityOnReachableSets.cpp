@@ -9,10 +9,11 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-using namespace std;
+
 using namespace hypro;
 
 namespace hpnmg {
+    using namespace std;
 
 	//defines which Monte Carlo algorithm will be used
 	char algorithm = 1;
@@ -45,7 +46,10 @@ namespace hpnmg {
 		shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
 		//if wanted: w.writeAutomaton(automaton,"singularAutomaton");
 
-		HybridAutomatonHandler handler(automaton, tMax);
+
+        map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
+        HybridAutomatonHandler handler(automaton, tMax, mappingGT, hybridPetriNet->getGeneralTransitions().size());
+
 
 		// Compute flowpipes
 		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);
@@ -97,7 +101,8 @@ namespace hpnmg {
 		//transform given property into a function
 		auto property = transformPropertyIntoFunction(automaton->getInitialGeneral().size(),automaton->getInitialContinuous().size(), propPlaces, propOps,propValues,conjunction);
 
-		HybridAutomatonHandler handler(automaton, tMax);
+        map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
+        HybridAutomatonHandler handler(automaton, tMax, mappingGT, hybridPetriNet->getGeneralTransitions().size());
 
 		// Compute flowpipes
 		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);

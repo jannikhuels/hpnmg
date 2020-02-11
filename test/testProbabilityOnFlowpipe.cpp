@@ -26,7 +26,6 @@
 #include <modelchecker/RegionModelChecker.h>
 
 using namespace hpnmg;
-using namespace std;
 
 bool Check1(int startIndex, Point<Number> point) {
 	return  point.rawCoordinates()[startIndex] >= 9;

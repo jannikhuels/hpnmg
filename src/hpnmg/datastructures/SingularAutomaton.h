@@ -136,6 +136,7 @@ namespace hpnmg {
         const singleton initialGeneral;
         vector<shared_ptr<Location>> locations;
 
+
     public:
         // Generates a singular automaton with the given initial Location and initializes it
         //

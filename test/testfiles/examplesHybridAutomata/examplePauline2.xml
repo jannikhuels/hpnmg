@@ -4,7 +4,7 @@
        <discretePlace id="pd1" marking="1"/>
         <discretePlace id="pd2" marking="1"/>
         <discretePlace id="pd3" marking="1"/>
-         <discretePlace id="pd4" marking="0"/>
+        <discretePlace id="pd4" marking="0"/>
         <continuousPlace id="pc1" capacity="0" infiniteCapacity="1" level="0.0"/>
     </places>
     <transitions>

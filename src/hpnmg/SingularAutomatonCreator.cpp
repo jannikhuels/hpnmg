@@ -60,9 +60,12 @@ namespace hpnmg {
             // Adaption for general transition firing order
             vector<short int> activitiesGeneral(totalGeneral, false); // = rootParametricLocation.getGeneralTransitionsEnabled();
             vector<bool> enabledTransitions = rootParametricLocation.getGeneralTransitionsEnabled();
-            for (int i = 0; i < enabledTransitions.size(); i++) {
-                if (enabledTransitions[i])
-                    activitiesGeneral[parametricLocationTree->getNormalizedIndexOfTransitionFiring(i, 0)] = true;
+            for (int j = 0; j < enabledTransitions.size(); j++) {
+                if (enabledTransitions[j]) {
+                    int index = parametricLocationTree->getNormalizedIndexOfTransitionFiring(j, 0);
+                    activitiesGeneral[index] = 1;
+                    mapNormalizedIndexToGeneralTransitionFiring[index] = make_pair(j,0);
+                }
             }
 
             shared_ptr<SingularAutomaton::Location> initialLocation = make_shared<SingularAutomaton::Location>(id, activitiesDeterministic,  activitiesContinuous, activitiesGeneral);
@@ -144,7 +147,11 @@ namespace hpnmg {
                     for (int transition : childParametricLocation.getGeneralTransitionsFired())
                         if (transition == i)
                             firing++;
-                    activitiesGeneral[parametricLocationTree->getNormalizedIndexOfTransitionFiring(i, firing)] = 1;
+
+                    int index = parametricLocationTree->getNormalizedIndexOfTransitionFiring(i, firing);
+                    activitiesGeneral[index] = 1;
+                    //mapNormalizedIndexToGeneralTransitionFiring.try_emplace(index, mypair);//make_pair(index, make_pair(i, firing)));
+                    mapNormalizedIndexToGeneralTransitionFiring[index] = make_pair(i,firing);
                 }
             }
 
@@ -422,6 +429,10 @@ namespace hpnmg {
 
 
         return automaton;
+    }
+
+    map<int,pair<int,int>> SingularAutomatonCreator::getMapNormalizedIndexToGeneralTransitionFiring() {
+        return mapNormalizedIndexToGeneralTransitionFiring;
     }
 
 

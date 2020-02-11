@@ -11,7 +11,7 @@
 #include "hpnmg/helper/Triangulation.h"
 
 using namespace hpnmg;
-using namespace std;
+
 
 TEST(ProbabilityCalculator, example){
 
@@ -29,6 +29,7 @@ TEST(ProbabilityCalculator, example){
    ASSERT_EQ (((round(result - error) <= 1) && (1 <= round(result+error))), true);
 
 }
+
 
 TEST(ProbabilityCalculator, example2general){
 

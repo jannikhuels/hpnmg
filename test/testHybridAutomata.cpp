@@ -25,8 +25,6 @@
 #include "parser/antlr4-flowstar/ParserWrapper.h"
 
 using namespace hpnmg;
-using namespace std;
-
 
 
 unsigned long getNodes(const shared_ptr<ParametricLocationTree>& plt, const ParametricLocationTree::Node& node) {
@@ -330,14 +328,13 @@ TEST(HybridAutomaton, FlowParser){
 TEST(HybridAutomaton, converter) {
 
     using namespace hypro;
-    typedef HPolytope<Number> Representation;
 
     ReadHybridPetrinet reader;
     SingularAutomatonCreator transformer;
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleHybrid2.xml";
+    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleLateFiring.xml";
     double tMax = 10.0;
 
 // read HPnG
@@ -345,6 +342,8 @@ TEST(HybridAutomaton, converter) {
 
 // transform HPnG into SingularAutomaton
     auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
+    map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
+
 
 // Get and export PLT (not necessary for reachability)
     shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
@@ -353,10 +352,10 @@ TEST(HybridAutomaton, converter) {
 
 // Pass Singular Automaton to Handler
     shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
-    HybridAutomatonHandler handler(automaton, tMax);
+    HybridAutomatonHandler handler(automaton, tMax, mappingGT, hybridPetriNet->getGeneralTransitions().size());
 
 // Compute flowpipes
-    auto flowpipes = handler.computeFlowpipes(tMax, 0.01, 5);
+    auto flowpipes = handler.computeFlowpipes(tMax, 0.1, 5);
 
     handler.plotTex("example", flowpipes);
 

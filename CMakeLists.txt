@@ -14,6 +14,8 @@ set(PROJECT_VERSION "${hpnmg_VERSION}")
 set(hpnmg_NAME "hpnmg" )
 set(hpnmg_DESCRIPTION ${PROJECT_DESCRIPTION})
 
+set(CMAKE_CXX_COMPILER_ID "GNU")
+
 # Configuration Header File
 # -----------------------------------------------------------------
 

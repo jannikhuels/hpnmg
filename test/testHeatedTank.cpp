@@ -13,8 +13,6 @@
 
 
 using namespace hpnmg;
-using namespace std;
-
 
 
 unsigned long getNodes(const shared_ptr<ParametricLocationTree>& plt, const ParametricLocationTree::Node& node) {

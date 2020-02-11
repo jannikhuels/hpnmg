@@ -22,7 +22,6 @@
 #include "../src/hpnmg/optimization/optimization.h"
 
 using namespace hpnmg;
-using namespace std;
 
 using namespace alglib;
 

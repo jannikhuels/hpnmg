@@ -11,10 +11,11 @@
 #include "util/plotting/Plotter.h"
 #include <modelchecker/Formula.h>
 
-using namespace std;
+
 using namespace hypro;
 
 namespace hpnmg {
+    using namespace std;
 
 	class ProbabilityOnReachableSets {
 

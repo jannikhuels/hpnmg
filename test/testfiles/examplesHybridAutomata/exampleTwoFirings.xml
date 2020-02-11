@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HPnG>
+    <places>
+        <discretePlace id="pd1" marking="2"/>
+    </places>
+    <transitions>
+        <generalTransition id="tg1" cdf="foldednormal" priority="0" weight="1.0E0" policy="resume">
+            <parameter name="mu" value="5.0"/>
+            <parameter name="sigma" value="3.0"/>
+        </generalTransition>
+    </transitions>
+    <arcs>
+        <discreteArc id="da1" fromNode="pd1" toNode="tg1" weight="1.0E0"/>
+    </arcs>
+</HPnG>

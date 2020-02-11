@@ -39,9 +39,16 @@ namespace hpnmg {
 //    private:
 //        map<PetriNetState, shared_ptr<SingularAutomaton::Location>> mapStateToLocation;
 
+    private:
+        map<int,pair<int,int>> mapNormalizedIndexToGeneralTransitionFiring; //first: transition, second: firing
+
+
     public:
         pair<shared_ptr<ParametricLocationTree>, shared_ptr<SingularAutomaton>> transformIntoSingularAutomaton(shared_ptr<HybridPetrinet> hybridPetriNet, double maxTime, int mode = 2);
+
         shared_ptr<SingularAutomaton> addDistributions(shared_ptr<SingularAutomaton> automaton, vector<pair<string, map<string, float>>> distributionsNormalized);
+
+        map<int,pair<int,int>> getMapNormalizedIndexToGeneralTransitionFiring();
 
     private:
         // Adds children of currentNode
