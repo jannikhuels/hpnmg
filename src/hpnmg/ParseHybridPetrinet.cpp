@@ -1,4 +1,6 @@
 #include "ParseHybridPetrinet.h"
+#include "util/logging/Logging.h"
+#include "util/statistics/Statistics.h"
 
 using namespace std;
 namespace hpnmg {
@@ -14,6 +16,7 @@ namespace hpnmg {
         deterministicTransitionIDs = {};
         generalTransitionIDs = {};
 
+        START_BENCHMARK_OPERATION("READ_PLT")
         // Add place IDs from map to vector, so the places have an order
         map<string, shared_ptr<DiscretePlace>> discretePlaces = hybridPetrinet->getDiscretePlaces();
         for (auto &discretePlace : discretePlaces)
@@ -43,11 +46,14 @@ namespace hpnmg {
         parametriclocationTree->setDistributions(distributions);
 
         locationQueue.push_back(parametriclocationTree->getRootNode());
+        STOP_BENCHMARK_OPERATION("READ_PLT")
 
         while (!locationQueue.empty()) {
             processNode(locationQueue[0], hybridPetrinet, maxTime, mode);
             locationQueue.erase(locationQueue.begin());
         }
+
+        INFOLOG("hpnmg.ParseHybridPetrinet", "[Number of locations]: " << parametriclocationTree->getAllLocations().size())
 
         return parametriclocationTree;
     }
@@ -153,7 +159,8 @@ namespace hpnmg {
          Mode 2: Nondeterminism conflict set includes all transitions that might fire (ignoring priorities and weights)
           */
 
-
+        START_BENCHMARK_OPERATION("CREATE_PARAMETRICLOCATION")
+        COUNT_STATS("CREATE_PARAMETRICLOCATION")
         int nodeMax = 100000;
         ParametricLocation location = node.getParametricLocation();
         vector<int> discreteMarking = location.getDiscreteMarking();
@@ -196,7 +203,7 @@ namespace hpnmg {
                 if (childNode.getNodeID() <= nodeMax) { // to avoid zeno behavior
                     locationQueue.push_back(childNode);
                     if (childNode.getNodeID() == nodeMax)
-                        cout << nodeMax << " locations or more, some locations may not be shown" << endl;
+                        WARNLOG("hpnmg.ParseHybridPetriNet", "Maximum number of locations (" << nodeMax << ") reached. Some locations may not be shown.")
                 }
             }
             return; // no other event has to be considered
@@ -646,11 +653,15 @@ namespace hpnmg {
             }
         }
 
+        STOP_BENCHMARK_OPERATION("CREATE_PARAMETRICLOCATION")
+
         for (ParametricLocationTree::Node &childNode : parametriclocationTree->getChildNodes(node)) {
             if (childNode.getNodeID() <= nodeMax) { // to avoid zeno behavior
                 locationQueue.push_back(childNode);
-                if (childNode.getNodeID() == nodeMax)
-                    cout << nodeMax << " locations or more, some locations may not be shown" << endl;
+                if (childNode.getNodeID() == nodeMax) {
+                    WARNLOG("hpnmg.ParseHybridPetriNet",
+                            "Maximum number of locations (" << nodeMax << ") reached. Some locations may not be shown.")
+                }
             }
         }
     }

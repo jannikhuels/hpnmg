@@ -1,5 +1,6 @@
 #include "STDPolytope.h"
 #include "STDPolytope.tpp"
+#include "util/logging/Logging.h"
 
 #include <gmpxx.h>
 
