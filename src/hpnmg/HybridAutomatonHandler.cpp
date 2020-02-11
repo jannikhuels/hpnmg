@@ -126,11 +126,11 @@ namespace hpnmg {
         matrix_t<Number> flowMatrix = matrix_t<Number>::Zero(v + 1, v + 1);
 
         //flow for general transition evolution
-        vector<bool> actG = originalLocation->getActivitiesGeneral();
+        vector<short int> actG = originalLocation->getActivitiesGeneral();
         for (int i = 0; i < actG.size(); i++) {
-            if (actG[i]) {
-                flowMatrix(i, v) = Number(1);
-                cout << " | Flow g" << (i + 1) << "'=" << 1;
+            if (actG[i] != 0) {
+                flowMatrix(i, v) = Number(carl::rationalize<Number>(actG[i]));
+                cout << " | Flow g" << (i + 1) << "'=" << actG[i];
             }
         }
 

@@ -24,6 +24,7 @@ namespace hpnmg {
     public:
         typedef vector<pair<invariantOperator, double>> rectangularSet;
         typedef vector<double> singleton;
+        vector<pair<string, map<string, float>>> distributionsNormalized;
 
         class Transition;
 
@@ -32,12 +33,14 @@ namespace hpnmg {
             const LOCATION_ID id;
             const vector<bool> activitiesDeterministic;
             const singleton activitiesContinuous;
-            const vector<bool> activitiesGeneral;
+            vector<short int> activitiesGeneral;
             rectangularSet invariantsDeterministic;
             rectangularSet invariantsContinuous;
+            rectangularSet invariantsGeneral;
             vector<shared_ptr<SingularAutomaton::Transition>> incomingTransitions;
             vector<shared_ptr<SingularAutomaton::Transition>> outgoingTransitions;
             bool toBeDeleted = false;
+
 
         public:
             // Generates a location
@@ -47,7 +50,7 @@ namespace hpnmg {
             // @param activitiesContinuous          activities for for variables, modeling the continuous marking
             // @param activitiesGeneral             activities for for variables, modeling general clocks
             Location(LOCATION_ID id, vector<bool> activitiesDeterministic, singleton activitiesContinuous,
-                     vector<bool> activitiesGeneral);
+                     vector<short int> activitiesGeneral);
 
             const LOCATION_ID getLocationId() const;
 
@@ -55,11 +58,13 @@ namespace hpnmg {
 
             const singleton getActivitiesContinuous() const;
 
-            const vector<bool> getActivitiesGeneral() const;
+            const vector<short int> getActivitiesGeneral() const;
 
             const rectangularSet getInvariantsDeterministic() const;
 
             const rectangularSet getInvariantsContinuous() const;
+
+            const rectangularSet getInvariantsGeneral() const;
 
             const vector<shared_ptr<SingularAutomaton::Transition>> getOutgoingTransitions() const;
 
@@ -68,6 +73,8 @@ namespace hpnmg {
             void addToInvariantDeterministic(long variableIndex, double valuePreCompare, invariantOperator invOperator);
 
             void addToInvariantContinuous(long variableIndex, double valuePreCompare, invariantOperator invOperator);
+
+            void addToInvariantGeneral(long variableIndex, double valuePreCompare, invariantOperator invOperator);
 
             void addOutgoingTransition(shared_ptr<SingularAutomaton::Transition> outgoingTransition);
 
@@ -82,6 +89,8 @@ namespace hpnmg {
             bool isToBeDeleted();
 
             void setToBeDeleted();
+
+            void overwriteActivitiesGeneral(vector<short int> actGen);
         };
 
         class Transition {
@@ -95,6 +104,8 @@ namespace hpnmg {
             const long variableIndex; // indices of the variables, which is compared and/or reset
             const double valueGuardCompare; // the value to compare to
             shared_ptr<Location> successorLocation;
+            vector<long> samplingVariables;
+
 
         public:
             Transition(shared_ptr<SingularAutomaton::Location> predecessorLocation, const TransitionType type,
@@ -109,9 +120,13 @@ namespace hpnmg {
 
             const double getValueGuardCompare() const;
 
+            const vector<long> getSamplingVariables() const;
+
             const shared_ptr<Location> getSuccessorLocation() const;
 
             void setSuccessorLocation(shared_ptr<Location> newSuccessorLocation);
+
+            void addSamplingVariable(long index);
         };
 
     private:
@@ -148,12 +163,18 @@ namespace hpnmg {
         void removeLocation(shared_ptr<Location> oldLocation);
 
         // inserts transition
-        void insertTransition(shared_ptr<SingularAutomaton::Location> predecessorLocation,
+        shared_ptr<SingularAutomaton::Transition> insertTransition(shared_ptr<SingularAutomaton::Location> predecessorLocation,
                               const SingularAutomaton::Transition::TransitionType type, const long variableIndex,
                               const double valuePreCompare, const invariantOperator invOperator,
                               shared_ptr<SingularAutomaton::Location> successorLocation);
 
         //checks if Location is initialLocation
         bool isInitialLocation(shared_ptr<SingularAutomaton::Location> Location);
+
+        void overwriteInitialLocations(vector<shared_ptr<Location>> locations);
+
+        vector<pair<string, map<string, float>>> getDistributionsNormalized();
+
+        void setDistributionsNormalized(vector<pair<string, map<string, float>>> distributions);
     };
 }

@@ -11,8 +11,21 @@ namespace hpnmg {
         outputFile << "{\n"
                    << "\t\"jani-version\": 1,\n"
                    << "\t\"name\": \"" << filename << "\",\n"
-                   << "\t\"type\": \"ha\",\n"
-                   << "\t\"automata\": [\n"
+                   << "\t\"type\": \"sha\",\n"
+                   << "\t\"features\": [ \"derived-operators\" ],\n";
+
+
+        SingularAutomaton::singleton initX = automaton->getInitialContinuous();
+        SingularAutomaton::singleton initC = automaton->getInitialDeterministic();
+        SingularAutomaton::singleton initG = automaton->getInitialGeneral();
+        if (initX.size() + initC.size() + initG.size() > 0) {
+            outputFile << "\t\"variables\": [\n";
+            writeVariables(initX, initC, initG);
+            outputFile << "\t],\n";
+        }
+
+
+        outputFile << "\t\"automata\": [\n"
                    << "\t\t{\n";
 
         writeAutomata(move(automaton), automatonname);
@@ -35,17 +48,7 @@ namespace hpnmg {
     void SingularAutomatonWriter::writeAutomata(shared_ptr<SingularAutomaton> automaton, string automatonname) {
         outputFile << "\t\t\t\"name\": \"" << automatonname << "\",\n";
 
-        SingularAutomaton::singleton initX = automaton->getInitialContinuous();
-        SingularAutomaton::singleton initC = automaton->getInitialDeterministic();
-        SingularAutomaton::singleton initG = automaton->getInitialGeneral();
-        if (initX.size() + initC.size() + initG.size() > 0) {
-            outputFile << "\t\t\t\"variables\": [\n";
-            writeVariables(initX, initC, initG);
-            outputFile << "\t\t\t],\n";
-        }
-
         writeLocations(automaton);
-
 
         outputFile << "\t\t\t\"initial-locations\": [";
         bool isFirstVar = true;
@@ -66,29 +69,29 @@ namespace hpnmg {
         for (int i = 1; i <= initX.size(); i++) {
             outputFile << (isFirstVar ? "" : ",\n");
             isFirstVar = false;
-            outputFile << "\t\t\t\t{\n"
-                       << "\t\t\t\t\t\"name\": \"x" << i << "\",\n"
-                       << "\t\t\t\t\t\"type\": \"continuous\",\n"
-                       << "\t\t\t\t\t\"initial-value\": " << initX[i - 1] << "\n"
-                       << "\t\t\t\t}";
+            outputFile << "\t\t{\n"
+                       << "\t\t\t\"name\": \"x" << i << "\",\n"
+                       << "\t\t\t\"type\": \"continuous\",\n"
+                       << "\t\t\t\"initial-value\": " << initX[i - 1] << "\n"
+                       << "\t\t}";
         }
         for (int i = 1; i <= initC.size(); i++) {
             outputFile << (isFirstVar ? "" : ",\n");
             isFirstVar = false;
-            outputFile << "\t\t\t\t{\n"
-                       << "\t\t\t\t\t\"name\": \"c" << i << "\",\n"
-                       << "\t\t\t\t\t\"type\": \"continuous\",\n"
-                       << "\t\t\t\t\t\"initial-value\": " << initC[i - 1] << "\n"
-                       << "\t\t\t\t}";
+            outputFile << "\t\t{\n"
+                       << "\t\t\t\"name\": \"c" << i << "\",\n"
+                       << "\t\t\t\"type\": \"continuous\",\n"
+                       << "\t\t\t\"initial-value\": " << initC[i - 1] << "\n"
+                       << "\t\t}";
         }
         for (int i = 1; i <= initG.size(); i++) {
             outputFile << (isFirstVar ? "" : ",\n");
             isFirstVar = false;
-            outputFile << "\t\t\t\t{\n"
-                       << "\t\t\t\t\t\"name\": \"g" << i << "\",\n"
-                       << "\t\t\t\t\t\"type\": \"continuous\",\n"
-                       << "\t\t\t\t\t\"initial-value\": " << initG[i - 1] << "\n"
-                       << "\t\t\t\t}";
+            outputFile << "\t\t{\n"
+                       << "\t\t\t\"name\": \"g" << i << "\",\n"
+                       << "\t\t\t\"type\": \"continuous\",\n"
+                       << "\t\t\t\"initial-value\": " << initG[i - 1] << "\n"
+                       << "\t\t}";
         }
         outputFile << "\n";
     }
@@ -106,12 +109,13 @@ namespace hpnmg {
 
             SingularAutomaton::singleton actX = location->getActivitiesContinuous();
             vector<bool> actC = location->getActivitiesDeterministic();
-            vector<bool> actG = location->getActivitiesGeneral();
+            vector<short int> actG = location->getActivitiesGeneral();
             SingularAutomaton::rectangularSet invX = location->getInvariantsContinuous();
             SingularAutomaton::rectangularSet invC = location->getInvariantsDeterministic();
-            if (actX.size() + actC.size() + actG.size() + invX.size() + invC.size() > 0) {
+            SingularAutomaton::rectangularSet invG = location->getInvariantsGeneral();
+            if (actX.size() + actC.size() + actG.size() + invX.size() + invC.size() + invG.size() > 0) {
                 outputFile << "\t\t\t\t\t\t\"exp\": {\n";
-                writeExpression(actX, actC, actG, invX, invC);
+                writeExpression(actX, actC, actG, invX, invC, invG);
                 outputFile << "\t\t\t\t\t\t}\n";
             }
 
@@ -134,15 +138,15 @@ namespace hpnmg {
                 isFirstEdge = false;
                 outputFile << "\t\t\t\t{\n"
                            << "\t\t\t\t\t\"location\": \"L" << location->getLocationId() << "\",\n";
-                if (transition->getType() == Continuous || transition->getType() == Timed) {
+                if (transition->getType() == Continuous || transition->getType() == Timed || transition->getType() == General) {
                     writeGuard(transition);
                 }
                 outputFile << "\t\t\t\t\t\"destinations\": [\n"
                            << "\t\t\t\t\t\t{\n"
                            << "\t\t\t\t\t\t\t\"location\": \"L" << transition->getSuccessorLocation()->getLocationId()
                            << "\"";
-                if (transition->getType() == Timed || transition->getType() == General) {
-                    writeAssignments(transition);
+                if (transition->getType() == Timed || transition->getType() == General || transition->getType() == Root) {
+                    writeAssignments(transition, automaton);
                 }
                 outputFile << "\n"
                            << "\t\t\t\t\t\t}\n"
@@ -156,43 +160,130 @@ namespace hpnmg {
     }
 
     void SingularAutomatonWriter::writeGuard(shared_ptr<SingularAutomaton::Transition> transition) {
-        outputFile << "\t\t\t\t\t\"guard\": {\n"
-                   << "\t\t\t\t\t\t\"exp\": {\n";
 
-        string var = (transition->getType() == Continuous ? "\"x" : "\"c") + to_string(transition->getVariableIndex()+1) + "\"";
-        double value = transition->getValueGuardCompare();
-        for (const string& line : op_bin(EQUAL, var, to_string(value))) {
-            outputFile << "\t\t\t\t\t\t\t" << line << "\n";
+        if (transition->getType() == Continuous || transition->getType() == Timed) {
+            outputFile << "\t\t\t\t\t\"guard\": {\n"
+                       << "\t\t\t\t\t\t\"exp\": {\n";
+
+            string var = (transition->getType() == Continuous ? "\"x" : "\"c") + to_string(transition->getVariableIndex() + 1) + "\"";
+            double value = transition->getValueGuardCompare();
+            for (const string &line : op_bin(EQUAL, var, to_string(value))) {
+                outputFile << "\t\t\t\t\t\t\t" << line << "\n";
+            }
+            outputFile << "\t\t\t\t\t\t}\n"
+                       << "\t\t\t\t\t},\n";
+
+        } else if (transition->getType() == General && transition->getPredecessorLocation()->getActivitiesGeneral()[transition->getVariableIndex()] == -1){
+            outputFile << "\t\t\t\t\t\"guard\": {\n"
+                       << "\t\t\t\t\t\t\"exp\": {\n";
+
+            string var = "\"g" + to_string(transition->getVariableIndex() + 1) + "\"";
+            for (const string &line : op_bin(EQUAL, var, to_string(0.0))) {
+                outputFile << "\t\t\t\t\t\t\t" << line << "\n";
+            }
+            outputFile << "\t\t\t\t\t\t}\n"
+                       << "\t\t\t\t\t},\n";
         }
-
-        outputFile << "\t\t\t\t\t\t}\n"
-                   << "\t\t\t\t\t},\n";
     }
 
-    void SingularAutomatonWriter::writeAssignments(shared_ptr<SingularAutomaton::Transition> transition) {
-        string var = (transition->getType() == Timed ? "c" : "g") + to_string(transition->getVariableIndex()+1);
+    void SingularAutomatonWriter::writeAssignments(shared_ptr<SingularAutomaton::Transition> transition, shared_ptr<SingularAutomaton> automaton) {
+        string var = (transition->getType() == Timed ? "c" : "g") + to_string(transition->getVariableIndex() + 1);
+
+        vector<long> samplingVariables = transition->getSamplingVariables();
+        bool comma = false;
+
+        if (transition->getType() == Timed || transition->getType() == Root || transition->getPredecessorLocation()->getActivitiesGeneral()[transition->getVariableIndex()] == 1 || samplingVariables.size()>0) {
+
+            outputFile << ",\n"
+                       << "\t\t\t\t\t\t\t\"assignments\": [\n";
+
+            if (transition->getType() == Timed || (transition->getType() != Root && transition->getPredecessorLocation()->getActivitiesGeneral()[transition->getVariableIndex()] == 1)) {
+
+                outputFile << "\t\t\t\t\t\t\t\t{\n"
+                           << "\t\t\t\t\t\t\t\t\t\"ref\": \"" << var << "\",\n"
+                           << "\t\t\t\t\t\t\t\t\t\"value\": 0\n"
+                           << "\t\t\t\t\t\t\t\t}";
+
+                comma = true;
+            }
+
+
+            for (long index : samplingVariables) {
+
+                var = "g" + to_string(index + 1);
+                string dist = "";
+                string args = "";
+                pair<string, map<string, float>> distribution = automaton->getDistributionsNormalized()[index];
+
+                if (distribution.first == "normal" || distribution.first == "foldednormal") {
+                    dist = "Normal";
+                    args = to_string((double) distribution.second.at("mu")) + string(", ") + to_string((double) distribution.second.at("sigma"));
+                } else if (distribution.first == "uniform") {
+                    dist = "Uniform";
+                    args = to_string((double) distribution.second.at("a")) + string(", ") + to_string((double) distribution.second.at("b"));
+                } else if (distribution.first == "exp") {
+                    dist = "Exponential";
+                    args = to_string((double) distribution.second.at("lambda"));
+                }
+
+                if (comma)
+                    outputFile << ",";
+
+                outputFile << "\n\t\t\t\t\t\t\t\t{\n"
+                           << "\t\t\t\t\t\t\t\t\t\"ref\": \"" << var << "\",\n"
+                           << "\t\t\t\t\t\t\t\t\t\"value\": {\n"
+                           << "\t\t\t\t\t\t\t\t\t\t\"distribution\": \"" << dist << "\",\n"
+                           << "\t\t\t\t\t\t\t\t\t\t\"args\": [" << args << "]\n"
+                           << "\t\t\t\t\t\t\t\t\t}\n"
+                           << "\t\t\t\t\t\t\t\t}";
+
+                comma = true;
+            }
+
+            outputFile << "\n\t\t\t\t\t\t\t]";
+        }
+    }
+
+/*    void SingularAutomatonWriter::writeAssignmentDistribution(shared_ptr<SingularAutomaton::Transition> transition, pair<string, map<string, float>> distribution) {
+        string var = "g" + to_string(transition->getVariableIndex()+1);
+        string dist = "";
+        string args = "";
+
+        if (distribution.first == "normal" || distribution.first == "foldednormal") {
+            dist = "Normal";
+            args = to_string((double)distribution.second.at("mu")) + string(", ") + to_string((double)distribution.second.at("sigma"));
+        } else if (distribution.first == "uniform") {
+            dist = "Uniform";
+            args = to_string((double)distribution.second.at("a")) + string(", ") + to_string((double)distribution.second.at("b"));
+        }  else if (distribution.first ==  "exp"){
+            dist = "Exponential";
+            args = to_string((double)distribution.second.at("lambda"));
+        }
 
         outputFile << ",\n"
                    << "\t\t\t\t\t\t\t\"assignments\": [\n"
                    << "\t\t\t\t\t\t\t\t{\n"
                    << "\t\t\t\t\t\t\t\t\t\"ref\": \"" << var << "\",\n"
-                   << "\t\t\t\t\t\t\t\t\t\"value\": 0\n"
+                   << "\t\t\t\t\t\t\t\t\t\"value\": {\n"
+                   << "\t\t\t\t\t\t\t\t\t\"distribution\": \"" << dist << "\"\n"
+                   << "\t\t\t\t\t\t\t\t\t\"args\": [" << args << "]\n"
+                   << "\t\t\t\t\t\t\t\t\t}\n"
                    << "\t\t\t\t\t\t\t\t}\n"
                    << "\t\t\t\t\t\t\t]";
-    }
+    }*/
 
     void SingularAutomatonWriter::SingularAutomatonWriter::writeExpression(SingularAutomaton::singleton actX,
-                                                                           vector<bool> actC, vector<bool> actG,
+                                                                           vector<bool> actC, vector<short int> actG,
                                                                            SingularAutomaton::rectangularSet invX,
-                                                                           SingularAutomaton::rectangularSet invC) {
-        for (const string& line : expressionToString(actX, actC, actG, invX, invC)) {
+                                                                           SingularAutomaton::rectangularSet invC, SingularAutomaton::rectangularSet invG) {
+        for (const string& line : expressionToString(actX, actC, actG, invX, invC, invG)) {
             outputFile << "\t\t\t\t\t\t\t" << line << "\n";
         }
     }
 
     vector<string> SingularAutomatonWriter::SingularAutomatonWriter::expressionToString(
-            SingularAutomaton::singleton actX, vector<bool> actC, vector<bool> actG,
-            SingularAutomaton::rectangularSet invX, SingularAutomaton::rectangularSet invC) {
+            SingularAutomaton::singleton actX, vector<bool> actC, vector<short int> actG,
+            SingularAutomaton::rectangularSet invX, SingularAutomaton::rectangularSet invC, SingularAutomaton::rectangularSet invG) {
 
         vector<string> exp;
         for (int i = 0; i < actX.size(); i++) {
@@ -211,9 +302,9 @@ namespace hpnmg {
         }
         for (int i = 0; i < actG.size(); i++) {
             if (exp.empty()) {
-                exp = boolIndexToString(actG, "g", i);
+                exp = shortIntIndexToString(actG, "g", i);
             } else {
-                exp = op_bin(AND, exp, boolIndexToString(actG, "g", i));
+                exp = op_bin(AND, exp, shortIntIndexToString(actG, "g", i));
             }
         }
         for (int i = 0; i < invX.size(); i++) {
@@ -234,6 +325,15 @@ namespace hpnmg {
                 }
             }
         }
+        for (int i = 0; i < invG.size(); i++) {
+            if (invG[i].first != UNLIMITED) {
+                if (exp.empty()) {
+                    exp = rectangularSetIndexToString(invG, "g", i);
+                } else {
+                    exp = op_bin(AND, exp, rectangularSetIndexToString(invG, "g", i));
+                }
+            }
+        }
         return exp;
     }
 
@@ -243,7 +343,11 @@ namespace hpnmg {
     }
 
     vector<string> SingularAutomatonWriter::boolIndexToString(vector<bool> boolean, string name, int index) {
-        return vector<string>{op_bin(EQUAL, op_der("\"" + name + to_string(index + 1) + "\""), to_string(boolean[index]))};
+            return vector<string>{op_bin(EQUAL, op_der("\"" + name + to_string(index + 1) + "\""), to_string(boolean[index]))};
+    }
+
+    vector<string> SingularAutomatonWriter::shortIntIndexToString(vector<short int> integer, string name, int index) {
+            return vector<string>{op_bin(EQUAL, op_der("\"" + name + to_string(index + 1) + "\""), to_string(integer[index]))};
     }
 
     vector<string>

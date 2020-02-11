@@ -8,7 +8,7 @@ namespace hpnmg {
     SingularAutomaton::Location::Location(LOCATION_ID id,
                                           vector<bool> activitiesDeterministic,
                                           SingularAutomaton::singleton activitiesContinuous,
-                                          vector<bool> activitiesGeneral) :
+                                          vector<short int> activitiesGeneral) :
             id(id),
             activitiesDeterministic(activitiesDeterministic),
             activitiesContinuous(activitiesContinuous),
@@ -17,6 +17,8 @@ namespace hpnmg {
                                                  pair<invariantOperator, double>(UNLIMITED, -1));
         invariantsContinuous = rectangularSet(activitiesContinuous.size(),
                                               pair<invariantOperator, double>(UNLIMITED, -1));
+        invariantsGeneral = rectangularSet(activitiesGeneral.size(),
+                                                     pair<invariantOperator, double>(UNLIMITED, -1));
     }
 
     const LOCATION_ID SingularAutomaton::Location::getLocationId() const { return id; }
@@ -27,13 +29,16 @@ namespace hpnmg {
     const SingularAutomaton::singleton
     SingularAutomaton::Location::getActivitiesContinuous() const { return activitiesContinuous; }
 
-    const vector<bool> SingularAutomaton::Location::getActivitiesGeneral() const { return activitiesGeneral; }
+    const vector<short int> SingularAutomaton::Location::getActivitiesGeneral() const { return activitiesGeneral; }
 
     const SingularAutomaton::rectangularSet
     SingularAutomaton::Location::getInvariantsDeterministic() const { return invariantsDeterministic; }
 
     const SingularAutomaton::rectangularSet
     SingularAutomaton::Location::getInvariantsContinuous() const { return invariantsContinuous; }
+
+    const SingularAutomaton::rectangularSet
+    SingularAutomaton::Location::getInvariantsGeneral() const { return invariantsGeneral; }
 
     const vector<shared_ptr<SingularAutomaton::Transition>>
     SingularAutomaton::Location::getOutgoingTransitions() const { return outgoingTransitions; }
@@ -49,6 +54,11 @@ namespace hpnmg {
     void SingularAutomaton::Location::addToInvariantContinuous(long variableIndex, double valuePreCompare,
                                                                invariantOperator invOperator) {
         invariantsContinuous[variableIndex] = pair<invariantOperator, double>(invOperator, valuePreCompare);
+    }
+
+    void SingularAutomaton::Location::addToInvariantGeneral(long variableIndex, double valuePreCompare,
+                                                               invariantOperator invOperator) {
+        invariantsGeneral[variableIndex] = pair<invariantOperator, double>(invOperator, valuePreCompare);
     }
 
     void SingularAutomaton::Location::addOutgoingTransition(shared_ptr<Transition> outgoingTransition) {
@@ -124,6 +134,10 @@ namespace hpnmg {
         toBeDeleted = true;
     }
 
+    void SingularAutomaton::Location::overwriteActivitiesGeneral(vector<short int> actGen){
+        activitiesGeneral = actGen;
+    }
+
 
     SingularAutomaton::Transition::Transition(shared_ptr<SingularAutomaton::Location> predecessorLocation,
                                               const TransitionType type, const long variableIndex,
@@ -143,11 +157,17 @@ namespace hpnmg {
 
     const double SingularAutomaton::Transition::getValueGuardCompare() const { return valueGuardCompare; }
 
+    const vector<long> SingularAutomaton::Transition::getSamplingVariables() const { return samplingVariables; }
+
     const shared_ptr<SingularAutomaton::Location>
     SingularAutomaton::Transition::getSuccessorLocation() const { return successorLocation; }
 
     void SingularAutomaton::Transition::setSuccessorLocation(shared_ptr<Location> newSuccessorLocation) {
         this->successorLocation = newSuccessorLocation;
+    }
+
+    void SingularAutomaton::Transition::addSamplingVariable(long index){
+        this->samplingVariables.push_back(index);
     };
 
     SingularAutomaton::SingularAutomaton(vector<shared_ptr<Location>> initialLocations,
@@ -163,8 +183,7 @@ namespace hpnmg {
 
     const vector<shared_ptr<SingularAutomaton::Location>> SingularAutomaton::getInitialLocations() const { return initialLocations; }
 
-    const SingularAutomaton::singleton
-    SingularAutomaton::getInitialDeterministic() const { return initialDeterministic; }
+    const SingularAutomaton::singleton SingularAutomaton::getInitialDeterministic() const { return initialDeterministic; }
 
     const SingularAutomaton::singleton SingularAutomaton::getInitialContinuous() const { return initialContinuous; }
 
@@ -187,7 +206,7 @@ namespace hpnmg {
 
     }
 
-    void SingularAutomaton::insertTransition(shared_ptr<SingularAutomaton::Location> predecessorLocation,
+    shared_ptr<SingularAutomaton::Transition> SingularAutomaton::insertTransition(shared_ptr<SingularAutomaton::Location> predecessorLocation,
                                              const SingularAutomaton::Transition::TransitionType type,
                                              const long variableIndex,
                                              const double valuePreCompare, const invariantOperator invOperator,
@@ -229,7 +248,7 @@ namespace hpnmg {
                 // do nothing
                 break;
         }
-
+        return newTransition;
     }
 
     bool SingularAutomaton::isInitialLocation(shared_ptr<SingularAutomaton::Location> location){
@@ -239,5 +258,17 @@ namespace hpnmg {
                return true;
         }
         return false;
+    }
+
+    void SingularAutomaton::overwriteInitialLocations(vector<shared_ptr<Location>> locations){
+        initialLocations = locations;
+    }
+
+    vector<pair<string, map<string, float>>> SingularAutomaton::getDistributionsNormalized(){
+        return distributionsNormalized;
+    }
+
+    void SingularAutomaton::setDistributionsNormalized(vector<pair<string, map<string, float>>> distributions){
+        distributionsNormalized = distributions;
     }
 }

@@ -34,17 +34,21 @@ namespace hpnmg {
 
         void writeGuard(shared_ptr<SingularAutomaton::Transition> transition);
 
-        void writeAssignments(shared_ptr<SingularAutomaton::Transition> transition);
+        void writeAssignments(shared_ptr<SingularAutomaton::Transition> transition, shared_ptr<SingularAutomaton> automaton);
 
-        void writeExpression(SingularAutomaton::singleton actX, vector<bool> actC, vector<bool> actG,
-                                       SingularAutomaton::rectangularSet invX, SingularAutomaton::rectangularSet invC);
+        //void writeAssignmentDistribution(shared_ptr<SingularAutomaton::Transition> transition, pair<string, map<string, float>> distribution);
 
-        vector<string> expressionToString(SingularAutomaton::singleton actX, vector<bool> actC, vector<bool> actG,
-                SingularAutomaton::rectangularSet invX, SingularAutomaton::rectangularSet invC);
+        void writeExpression(SingularAutomaton::singleton actX, vector<bool> actC, vector<short int> actG,
+                                       SingularAutomaton::rectangularSet invX, SingularAutomaton::rectangularSet invC, SingularAutomaton::rectangularSet invG);
+
+        vector<string> expressionToString(SingularAutomaton::singleton actX, vector<bool> actC, vector<short int> actG,
+                SingularAutomaton::rectangularSet invX, SingularAutomaton::rectangularSet invC, SingularAutomaton::rectangularSet invG);
 
         vector<string> singletonIndexToString(SingularAutomaton::singleton singleton, string name, int index);
 
         vector<string> boolIndexToString(vector<bool> boolean, string name, int index);
+
+        vector<string> shortIntIndexToString(vector<short int> integer, string name, int index);
 
         vector<string> rectangularSetIndexToString(SingularAutomaton::rectangularSet rectangularSet, string name, int index);
 
