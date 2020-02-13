@@ -63,6 +63,9 @@ endif()
 
 add_subdirectory(resources)
 find_package(hypro CONFIG REQUIRED)
+if(hypro_FOUND)
+	message(STATUS "hypro was found!")
+endif()
 find_package(carl CONFIG REQUIRED)
 find_package(XercesC REQUIRED)
 

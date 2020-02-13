@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "datastructures/HybridPetrinet.h"
-#include "representations/GeometricObject.h"
+#include <representations/GeometricObject.h>
 
 namespace hpnmg {
 
