@@ -2,15 +2,19 @@
 #include <ProbabilityCalculator.h>
 
 using namespace hypro;
-typedef mpq_class Number;
 
 namespace hpnmg {
     using namespace std;
 
-    HybridAutomatonHandler::HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions):singularAutomaton(singular)  {//, automaton(std::make_unique<HybridAutomaton<Number>>()) {
+    HybridAutomatonHandler::HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions):singularAutomaton(singular), reacher(automaton)  {//, automaton(std::make_unique<HybridAutomaton<Number>>()) {
+
+        this->numberGeneralTransitions = numberGeneralTransitions;
 
         //get number of variables
-        g = numberGeneralTransitions;
+        if (dimPerFiring)
+            g = singularAutomaton->getInitialGeneral().size();
+        else
+            g = numberGeneralTransitions;
         x = singularAutomaton->getInitialContinuous().size();
         c = singularAutomaton->getInitialDeterministic().size();
         v = g + x + c + 1;
@@ -21,7 +25,7 @@ namespace hpnmg {
         vector<int> initial;
         for (shared_ptr<SingularAutomaton::Location> originalLocation : singularAutomaton->getLocations()) {
 
-            addLocation(originalLocation, maxTime, mapGeneralTransitions);
+            addLocation(originalLocation, maxTime, dimPerFiring, mapGeneralTransitions);
 
             if (singular->isInitialLocation(originalLocation))
                 initial.push_back(locations.size() - 1);
@@ -35,11 +39,11 @@ namespace hpnmg {
 
         //Add all transitions in list to automaton
         for (shared_ptr<SingularAutomaton::Transition> transition : originalTransitions) {
-            addTransition(transition, mapGeneralTransitions);
+            addTransition(transition, dimPerFiring, mapGeneralTransitions);
         }
 
         //set initial state from initial location
-        setInitialState(initial, mapGeneralTransitions);
+        setInitialState(initial, dimPerFiring, mapGeneralTransitions);
 
         //add locations and transitions to automaton
         for (int i = 0; i < locations.size(); i++) {
@@ -48,7 +52,7 @@ namespace hpnmg {
     }
 
 
-    void HybridAutomatonHandler::addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime, map<int,pair<int,int>> mapGeneralTransitions) {
+    void HybridAutomatonHandler::addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions) {
 
         hypro::Location<Number> newLocation = hypro::Location<Number>();
 
@@ -129,9 +133,16 @@ namespace hpnmg {
         vector<short int> actG = originalLocation->getActivitiesGeneral();
         for (int i = 0; i < actG.size(); i++) {
             if (actG[i] != 0) {
-                int transition = mapGeneralTransitions.at(i).first;
-                flowMatrix(transition + 1, v) = Number(carl::rationalize<Number>(actG[i]));
-                cout << " | Flow g" << (transition + 1) << "'=" << actG[i];
+
+                int transition;
+                if (dimPerFiring)
+                    transition = i;
+                else
+                    transition = mapGeneralTransitions.at(i).first;
+
+                   flowMatrix(transition + 1, v) = Number(carl::rationalize<Number>(actG[i]));
+                   cout << " | Flow g" << (transition + 1) << "'=" << actG[i];
+
             }
         }
 
@@ -156,7 +167,7 @@ namespace hpnmg {
         //flow for time
         flowMatrix(0, v) = Number(1);
 
-        cout << endl;
+        std::cout << endl;
 
         newLocation.setFlow(flowMatrix);
 
@@ -164,7 +175,7 @@ namespace hpnmg {
     }
 
 
-    void HybridAutomatonHandler::addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition, map<int,pair<int,int>> mapGeneralTransitions) {
+    void HybridAutomatonHandler::addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions) {
 
 
         hypro::Transition<Number> newTransition = hypro::Transition<Number>();
@@ -234,13 +245,11 @@ namespace hpnmg {
             linearReset(varIndex, varIndex) = Number(0);
             cout << " | Reset Timed" << "(" << (varIndex-1) << ") =" << 0;
 
-//        } else if (type == General) {
-//            int transition = mapGeneralTransitions.at(varIndex-1).first;
-//            linearReset(transition + 1, transition + 1) = Number(0);
-//            cout << " | Reset General" << "(" << transition << ") =" << 0;
+        } else if (type == General && !dimPerFiring) {
+            int transition = mapGeneralTransitions.at(varIndex-1).first;
+            linearReset(transition + 1, transition + 1) = Number(0);
+            cout << " | Reset General" << "(" << transition << ") =" << 0;
         }
-
-        //
 
         cout << endl;
 
@@ -257,7 +266,7 @@ namespace hpnmg {
     }
 
 
-    void HybridAutomatonHandler::setInitialState(vector<int> initial, map<int,pair<int,int>> mapGeneralTransitions) {
+    void HybridAutomatonHandler::setInitialState(vector<int> initial, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions) {
 
         //get initial values
         vector<double> initG = singularAutomaton->getInitialGeneral();
@@ -276,28 +285,35 @@ namespace hpnmg {
         cout << "Initial state: ";
 
         for (int i = 0; i < initG.size(); i++) {
-            int transition = mapGeneralTransitions.at(i).first;
-            boxVec(transition + 2) = Number(-1 * carl::rationalize<Number>(initG[i]));
-            boxVec(transition + 3) = Number(carl::rationalize<Number>(initG[i]));
-            boxMat(2 * transition + 2, transition) = Number(-1);
-            boxMat(2 * transition + 3, transition) = Number(1);
+
+            int transition;
+            if (dimPerFiring)
+                transition = i;
+            else
+                transition = mapGeneralTransitions.at(i).first;
+
+            boxVec(2 * transition + 2) = Number(-1 * carl::rationalize<Number>(initG[i]));
+            boxVec(2 * transition + 3) = Number(carl::rationalize<Number>(initG[i]));
+            boxMat(2 * transition + 2, transition + 1) = Number(-1);
+            boxMat(2 * transition + 3, transition + 1) = Number(1);
             cout << " | g" << transition + 1 << " = " << initG[i];
+
         }
 
         for (int i = 0; i < initX.size(); i++) {
-            boxVec(2 * g + i + 2) = Number(-1 * carl::rationalize<Number>(initX[i]));
-            boxVec(2 * g + i + 3) = Number(carl::rationalize<Number>(initX[i]));
-            boxMat(2 * g + 2 * i + 2, g + i) = Number(-1);
-            boxMat(2 * g + 2 * i + 3, g + i) = Number(1);
-            cout << " | x" << i  + 1 << " = " << initX[i];
+            boxVec(2 * g + 2 * i + 2) = Number(-1 * carl::rationalize<Number>(initX[i]));
+            boxVec(2 * g + 2 * i + 3) = Number(carl::rationalize<Number>(initX[i]));
+            boxMat(2 * g + 2 * i + 2, g + i + 1) = Number(-1);
+            boxMat(2 * g + 2 * i + 3, g + i + 1) = Number(1);
+            cout << " | x" << i + 1 << " = " << initX[i];
         }
 
         for (int i = 0; i < initC.size(); i++) {
-            boxVec(2 * g + 2 * x + i + 2) = Number(-1 * carl::rationalize<Number>(initC[i]));
-            boxVec(2 * g + 2 * x + i + 3) = Number(carl::rationalize<Number>(initC[i]));
-            boxMat(2 * g + 2 * x + 2 * i + 2, g + x + i) = Number(-1);
-            boxMat(2 * g + 2 * x + 2 * i + 3, g + x + i) = Number(1);
-            cout << " | c" << i  + 1 << " = " << initC[i];
+            boxVec(2 * g + 2 * x + 2 * i + 2) = Number(-1 * carl::rationalize<Number>(initC[i]));
+            boxVec(2 * g + 2 * x + 2 * i + 3) = Number(carl::rationalize<Number>(initC[i]));
+            boxMat(2 * g + 2 * x + 2 * i + 2, g + x + i + 1) = Number(-1);
+            boxMat(2 * g + 2 * x + 2 * i + 3, g + x + i + 1) = Number(1);
+            cout << " | c" << i + 1 << " = " << initC[i];
         }
 
         // create initial states.
@@ -305,6 +321,18 @@ namespace hpnmg {
             automaton.addInitialState(locations[index].get(), Condition<Number>(boxMat, boxVec));
             cout << " | location index " << index;
         }
+
+
+        std::vector<State_t<Number>> initialStates;
+        for (const auto &locationConditionPair : automaton.getInitialStates()) {
+            State_t<Number> tmp{locationConditionPair.first};
+            tmp.setSet(Representation(locationConditionPair.second.getMatrix(),
+            locationConditionPair.second.getVector()));
+            initialStates.emplace_back(tmp);
+        }
+        reacher.setInitialStates(std::move(initialStates));
+
+
 
         cout << endl;
     }
@@ -314,16 +342,12 @@ namespace hpnmg {
 
            std::vector<std::pair<unsigned, flowpipe_t>> flowpipes;
 
-           typedef HPolytope<Number> Representation;
-
-           // instanciate reachability analysis algorithm
-           reachability::Reach<Number, reachability::ReachSettings, hypro::State_t<Number>> reacher(this->automaton);
-           ReachabilitySettings settings = reacher.settings();
-           settings.timeStep = carl::convert<double, Number>(timestep);
-           settings.timeBound = Number(maxTime);
-           settings.jumpDepth = jumpDepth;
-           reacher.setSettings(settings);
-           reacher.setRepresentationType(Representation::type());
+            ReachabilitySettings settings = reacher.settings();
+            settings.timeStep = carl::convert<double, Number>(timestep);
+            settings.timeBound = Number(maxTime);
+            settings.jumpDepth = jumpDepth;
+            reacher.setSettings(settings);
+            reacher.setRepresentationType(Representation::type());
 
            // perform reachability analysis.
            flowpipes = reacher.computeForwardReachability();
@@ -372,13 +396,24 @@ namespace hpnmg {
             // Plot single flowpipe
             for (auto &set : flowpipe) {
                 std::vector<Point<Number>> points = set.vertices();
+                std::vector<Point<Number>> newPoints;
                 if (!points.empty() && points.size() >= 0) {
                     for (auto &point : points) {
                         //cout << point;
-                        point.reduceDimension(2);
+                        std::vector<Number> coordinates;
+                        //time
+                        coordinates.push_back(point.rawCoordinates()[0]);
+                        //first continuous variable
+                        coordinates.push_back(point.rawCoordinates()[numberGeneralTransitions + 1]);
+                        Point<Number> newPoint(coordinates);
+                        newPoints.push_back(newPoint);
+
+                        //point.reduceDimension(2);
+
                     }
-                    plotter.addObject(points);
+                    plotter.addObject(newPoints);
                     points.clear();
+                    newPoints.clear();
                 }
             }
         }

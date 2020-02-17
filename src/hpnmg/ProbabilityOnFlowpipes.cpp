@@ -1,6 +1,6 @@
 #include <HybridAutomatonHandler.h>
 #include <ProbabilityCalculator.h>
-#include <ProbabilityOnReachableSets.h>
+#include <ProbabilityOnFlowpipes.h>
 #include <modelchecker/RegionModelChecker.h>
 #include <tuple>
 #include <PLTWriter.h>
@@ -16,9 +16,9 @@ namespace hpnmg {
     using namespace std;
 
 	//defines which Monte Carlo algorithm will be used
-	char algorithm = 1;
+	char algorithm = 3;
 	//amount of function calls for the Monte Carlo algorithm
-	int functioncalls = 5000;
+	int functioncalls = 10000;
 	//discretization factor for flowpipe construction
 	double dfactor = 0.01;
 	//jump depth needed for flowpipe construction
@@ -33,7 +33,7 @@ namespace hpnmg {
 	 * @param tMax time horizon for the PLT and flowpipe construction
 	 * @return probabilities for the given properties
 	 */
-	std::vector<std::pair<double,double>>  ProbabilityOnReachableSets::calculateProbabilityOnReachableSet(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax) {
+	std::vector<std::pair<double,double>>  ProbabilityOnFlowpipes::computeProbabilityOnFlowpipes(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax) {
 		SingularAutomatonCreator transformer;
 		SingularAutomatonWriter w;
 
@@ -48,7 +48,7 @@ namespace hpnmg {
 
 
         map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
-        HybridAutomatonHandler handler(automaton, tMax, mappingGT, hybridPetriNet->getGeneralTransitions().size());
+        HybridAutomatonHandler handler(automaton, tMax, true, mappingGT, hybridPetriNet->getGeneralTransitions().size());
 
 
 		// Compute flowpipes
@@ -63,7 +63,7 @@ namespace hpnmg {
 		for(int i = 0; i < properties.size(); i++) {
 			auto allPolytopes = computePolytopesThatFulfillProperty(flowpipes,properties[i],automaton -> getInitialGeneral().size());
 			//if wanted: PrintPolytopes(allPolytopes);
-			auto res = calculateProbabilityForPolytopes(allPolytopes,distributions);
+			auto res = computeProbabilityForPolytopes(allPolytopes, distributions);
 			results.push_back(res);
 		}
 
@@ -85,7 +85,7 @@ namespace hpnmg {
 	 * @return probability for the given property
 	 * @param tMax
 	 */
-	std::vector<std::pair<double,double>> ProbabilityOnReachableSets::calculateProbabilityOnReachableSet(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<int> propPlaces, std::vector<string> propOps, std::vector<double> propValues, bool conjunction, string printProperty, double tMax) {
+	std::vector<std::pair<double,double>> ProbabilityOnFlowpipes::computeProbabilityOnFlowpipes(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<int> propPlaces, std::vector<string> propOps, std::vector<double> propValues, bool conjunction, string printProperty, double tMax) {
 		SingularAutomatonCreator transformer;
 		SingularAutomatonWriter w;
 
@@ -102,7 +102,7 @@ namespace hpnmg {
 		auto property = transformPropertyIntoFunction(automaton->getInitialGeneral().size(),automaton->getInitialContinuous().size(), propPlaces, propOps,propValues,conjunction);
 
         map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
-        HybridAutomatonHandler handler(automaton, tMax, mappingGT, hybridPetriNet->getGeneralTransitions().size());
+        HybridAutomatonHandler handler(automaton, tMax, true, mappingGT, hybridPetriNet->getGeneralTransitions().size());
 
 		// Compute flowpipes
 		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);
@@ -112,7 +112,7 @@ namespace hpnmg {
 		auto allPolytopes = computePolytopesThatFulfillProperty(flowpipes,property,automaton -> getInitialGeneral().size());
 		//if wanted: printPolytopes(allPolytopes);
 		//compute the probability over the polytop
-		auto result = calculateProbabilityForPolytopes(allPolytopes,distributions);
+		auto result = computeProbabilityForPolytopes(allPolytopes, distributions);
 
 		printResults({printProperty}, {result});
 		return {result};
@@ -128,7 +128,7 @@ namespace hpnmg {
 	 * @param transitions number of general transition values
 	 * @return HPolytope for each flowpipe segment that fulfills the given property
 	 */
-	std::vector<hypro::HPolytope<double>> ProbabilityOnReachableSets::computePolytopesThatFulfillProperty(std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes, std::function<bool(int, Point<Number>)> property , int transitions) {
+	std::vector<hypro::HPolytope<double>> ProbabilityOnFlowpipes::computePolytopesThatFulfillProperty(std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes, std::function<bool(int, Point<Number>)> property , int transitions) {
 		std::set<Point<double>> newPoly;
 		std::vector<std::vector<Point<double>>> allPolytopes;
 
@@ -141,18 +141,18 @@ namespace hpnmg {
 				if (!points.empty() && points.size() >= 0) {
 					for (auto & point: points) {
 						//filter points for given property
-						if (property(transitions, point)) {
-							if(point.rawCoordinates()[0] < 7 || point.rawCoordinates()[1] < 7){
-								for (int i = 0; i < point.rawCoordinates().size(); i++){
-									auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
-									cout << coordinate << ", ";
-								}
-								cout << endl;
-							}
+						if (property(transitions + 1, point)) {
+//							if(point.rawCoordinates()[0] < 7 || point.rawCoordinates()[1] < 7){
+//								for (int i = 0; i < point.rawCoordinates().size(); i++){
+//									auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
+//									cout << coordinate << ", ";
+//								}
+//								cout << endl;
+//							}
 							//if point fulfills property reduce to general transitions only and add to set representing the new polytope
 							std::vector<double> coordinates;
 							for (int i = 0; i < transitions; i++){
-								auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
+								auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i + 1]);
 								coordinates.push_back(coordinate);
 							}
 							Point<double> newPoint = Point<double>(coordinates);
@@ -180,7 +180,7 @@ namespace hpnmg {
 	 * @param distributions distributions for the general transtions
 	 * @return probability that the general transition fire at time points included in the polytopes and an error value
 	 */
-	std::pair<double, double> ProbabilityOnReachableSets::calculateProbabilityForPolytopes(std::vector<hypro::HPolytope<double>> polytopes, vector<pair<string, map<string, float>>> distributions) {
+	std::pair<double, double> ProbabilityOnFlowpipes::computeProbabilityForPolytopes(std::vector<hypro::HPolytope<double>> polytopes, vector<pair<string, map<string, float>>> distributions) {
 		ProbabilityCalculator probability;
 		double error = 0.0;
 		double totalError = 0.0;
@@ -204,7 +204,7 @@ namespace hpnmg {
 	 * @param conjunction if the single operations should be conjoint or not
 	 * @return function that corresponds to the given property
 	 */
-	std::function<bool(int, Point<Number>)> ProbabilityOnReachableSets::transformPropertyIntoFunction(int general, int continuous, vector<int> propPlaces, std::vector<string> propOps, std::vector<double> propValues, bool conjunction) {
+	std::function<bool(int, Point<Number>)> ProbabilityOnFlowpipes::transformPropertyIntoFunction(int general, int continuous, vector<int> propPlaces, std::vector<string> propOps, std::vector<double> propValues, bool conjunction) {
 		//check if property is valid
 		if(propPlaces.size() != propOps.size() || propPlaces.size() != propValues.size() || propOps.size() != propValues.size()) {
 			cout << "The given property is not valid. Please make sure that each place has a corresponding value and operation!" << endl;
@@ -238,7 +238,7 @@ namespace hpnmg {
 	 * @param polytopes vector of points per flowpipe segment
 	 * @return HPolytope per flowpipe segment
 	 */
-	std::vector<hypro::HPolytope<double>>  ProbabilityOnReachableSets::createHPolytopes(std::vector<std::vector<Point<double>>> polytopes){
+	std::vector<hypro::HPolytope<double>>  ProbabilityOnFlowpipes::createHPolytopes(std::vector<std::vector<Point<double>>> polytopes){
 		std::vector<hypro::HPolytope<double>> hpolytopes;
 		for (int i = 0; i < polytopes.size(); i++) {
 			std::vector<Point<double >> currentPoints = polytopes[i];
@@ -255,7 +255,7 @@ namespace hpnmg {
 	 * @param value the value to check against
 	 * @return result of the operation, if operation is invalid false is returned in all cases
 	 */
-	bool ProbabilityOnReachableSets::compareValuesWithOperation(string op, double place, double value) {
+	bool ProbabilityOnFlowpipes::compareValuesWithOperation(string op, double place, double value) {
 		if (op == "<") return place < value;
 		if (op == "<=") return place <= value;
 		if (op == "==") return place == value;
@@ -271,7 +271,7 @@ namespace hpnmg {
 	 * @param properties names of the properties
 	 * @param res probabilities and error values for each property
 	 */
-	void ProbabilityOnReachableSets::printResults(std::vector<string> properties, std::vector<std::pair<double,double>> res) {
+	void ProbabilityOnFlowpipes::printResults(std::vector<string> properties, std::vector<std::pair<double,double>> res) {
 		for(int i = 0; i < properties.size(); i++) {
 			cout << "[Property] " << properties[i] << " [Probability] " << res[i].first << " [Error] " <<res[i].second  << endl;
 		}
@@ -281,7 +281,7 @@ namespace hpnmg {
 	 * Prints all points that have been added to a polytope
 	 * @param polytopes vector of points per polytope
 	 */
-	void ProbabilityOnReachableSets::printPointsOfPolytopes(std::vector<std::vector<Point<double>>> polytopes) {
+	void ProbabilityOnFlowpipes::printPointsOfPolytopes(std::vector<std::vector<Point<double>>> polytopes) {
 		for (int i = 0; i < polytopes.size(); i++) {
 			cout << "Polytope Nr. " << (i + 1) << endl;
 			for (int j = 0; j < polytopes[i].size(); j++) {

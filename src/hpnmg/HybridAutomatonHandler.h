@@ -16,6 +16,7 @@ namespace hpnmg {
     using namespace std;
 
     typedef mpq_class Number;
+    typedef Box<Number> Representation;
 
     class HybridAutomatonHandler {
 
@@ -23,6 +24,7 @@ namespace hpnmg {
 
         HybridAutomaton<Number> automaton;
         shared_ptr<SingularAutomaton> singularAutomaton;
+        reachability::Reach<Number, reachability::ReachSettings, hypro::State_t<Number>> reacher;
         int g;
         int x;
         int c;
@@ -30,12 +32,13 @@ namespace hpnmg {
         vector<unique_ptr<hypro::Location<Number>>> locations;
        // vector<hypro::Transition<Number>> transitions;
         bool flowpipesComputed = false;
+        int numberGeneralTransitions;
 
     public:
 
         //shared_ptr<HybridAutomaton<Number>> automaton;
 
-        HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions);
+        HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions);
 
         using flowpipe_t = hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>>::flowpipe_t;
 
@@ -45,11 +48,11 @@ namespace hpnmg {
 
     private:
 
-        void addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime, map<int,pair<int,int>> mapGeneralTransitions);
+        void addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions);
 
-        void addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition, map<int,pair<int,int>> mapGeneralTransitions);
+        void addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions);
 
-        void setInitialState(vector<int> initial, map<int,pair<int,int>> mapGeneralTransitions) ;
+        void setInitialState(vector<int> initial, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions) ;
 
     };
 

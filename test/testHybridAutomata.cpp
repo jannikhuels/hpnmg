@@ -8,7 +8,7 @@
 #include <SingularAutomatonCreator.h>
 #include <SingularAutomatonWriter.h>
 #include <HybridAutomatonHandler.h>
-#include <ProbabilityOnReachableSets.h>
+#include <ProbabilityOnFlowpipes.h>
 #include "gtest/gtest.h"
 #include "PLTWriter.h"
 #include <chrono>
@@ -78,6 +78,7 @@ TEST(HybridAutomaton, NondeterministicConflict) {
 
 }
 
+
 TEST(HybridAutomaton, example) {
 
     ReadHybridPetrinet reader;
@@ -127,10 +128,6 @@ TEST(HybridAutomaton, example) {
     elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
     cout << "Write JANI: " << elapsed_secs << " seconds" << endl;
 }
-
-
-
-
 
 
 TEST(HybridAutomaton, Bouncingball) {
@@ -272,7 +269,6 @@ TEST(HybridAutomaton, Bouncingball) {
 }
 
 
-
 TEST(HybridAutomaton, FlowParser){
 
     using namespace hypro;
@@ -334,7 +330,7 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleLateFiring.xml";
+    string filePath = "../../test/testfiles/examplesHybridAutomata/examplePauline2.xml";
     double tMax = 10.0;
 
 // read HPnG
@@ -352,11 +348,33 @@ TEST(HybridAutomaton, converter) {
 
 // Pass Singular Automaton to Handler
     shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
-    HybridAutomatonHandler handler(automaton, tMax, mappingGT, hybridPetriNet->getGeneralTransitions().size());
+    HybridAutomatonHandler handler(automaton, tMax, true, mappingGT, hybridPetriNet->getGeneralTransitions().size());
 
 // Compute flowpipes
     auto flowpipes = handler.computeFlowpipes(tMax, 0.1, 5);
 
     handler.plotTex("example", flowpipes);
 
+}
+
+
+//Function definition for probability computation, index 0 is time, startindex is index of first continuous variable
+bool Check1(int startIndex, Point<Number> point) {
+	return ((point.rawCoordinates()[0] <= 7) && (point.rawCoordinates()[startIndex] >= 9));
+}
+
+//Probability computation (cannot handle non-deterministic choices yet)
+TEST(HybridAutomaton, probability) {
+
+	using namespace hypro;
+
+	ProbabilityOnFlowpipes p;
+	ReadHybridPetrinet reader;
+
+	string filePath = "../../test/testfiles/examplesHybridAutomata/exampleHybrid2.xml";
+
+	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
+
+	double tMax = 20.0;
+    p.computeProbabilityOnFlowpipes(hybridPetriNet, {Check1}, {"x >= 9"}, tMax);
 }
