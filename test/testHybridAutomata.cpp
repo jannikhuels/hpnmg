@@ -360,21 +360,44 @@ TEST(HybridAutomaton, converter) {
 
 //Function definition for probability computation, index 0 is time, startindex is index of first continuous variable
 bool Check1(int startIndex, Point<Number> point) {
-	return ((point.rawCoordinates()[0] <= 7) && (point.rawCoordinates()[startIndex] >= 9));
+	return ((point.rawCoordinates()[0] <= 10) && (point.rawCoordinates()[startIndex] >= 4));
 }
 
 //Probability computation (cannot handle non-deterministic choices yet)
-TEST(HybridAutomaton, probability) {
+TEST(HybridAutomaton, probabilityWithoutReset) {
 
 	using namespace hypro;
 
 	ProbabilityOnFlowpipes p;
 	ReadHybridPetrinet reader;
 
-	string filePath = "../../test/testfiles/examplesHybridAutomata/exampleHybrid2.xml";
+	string filePath = "../../test/testfiles/examplesHybridAutomata/examplePauline2.xml";
 
 	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
 
-	double tMax = 20.0;
-    p.computeProbabilityOnFlowpipes(hybridPetriNet, {Check1}, {"x >= 9"}, tMax);
+	double tMax = 10.0;
+    p.computeProbabilityOnFlowpipesWithoutReset(hybridPetriNet, {Check1}, {"x >= 4"}, tMax);
+}
+
+
+
+//Function definition for probability computation, index 0 is time, startindex is index of first continuous variable
+bool Check2(int startIndex, Point<Number> point) {
+	return ((point.rawCoordinates()[0] <= 10) && (point.rawCoordinates()[startIndex] >= 5));
+}
+
+//Probability computation (cannot handle non-deterministic choices yet)
+TEST(HybridAutomaton, probabilityWithReset) {
+
+	using namespace hypro;
+
+	ProbabilityOnFlowpipes p;
+	ReadHybridPetrinet reader;
+
+	string filePath = "../../test/testfiles/examplesHybridAutomata/exampleLateFiring.xml";
+
+	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
+
+	double tMax = 10.0;
+    p.computeProbabilityOnFlowpipes(hybridPetriNet, {Check2}, {"x >= 5"}, tMax);
 }

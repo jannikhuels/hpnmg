@@ -16,7 +16,7 @@ namespace hpnmg {
     using namespace std;
 
     typedef mpq_class Number;
-    typedef Box<Number> Representation;
+    typedef HPolytope<Number> Representation;
 
     class HybridAutomatonHandler {
 
@@ -33,18 +33,20 @@ namespace hpnmg {
        // vector<hypro::Transition<Number>> transitions;
         bool flowpipesComputed = false;
         int numberGeneralTransitions;
+        bool aggregation;
+        int clusterBound;
 
     public:
 
-        //shared_ptr<HybridAutomaton<Number>> automaton;
-
-        HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions);
+        HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions, bool aggregation = true, int clusterBound = 5);
 
         using flowpipe_t = hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>>::flowpipe_t;
 
-        std::vector<std::pair<unsigned, flowpipe_t>> computeFlowpipes(double maxTime, double timestep, int jumpDepth);
+        std::vector<std::pair<unsigned, flowpipe_t>> computeFlowpipes(double maxTime, double timestep, int jumpDepth, bool print = false);
 
         void plotTex(string outputfile, std::vector<std::pair<unsigned, flowpipe_t>> flowpipes);
+
+        ReachTree<hypro::State_t<Number>>* getReachTree();
 
     private:
 

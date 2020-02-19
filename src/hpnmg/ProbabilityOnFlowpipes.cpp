@@ -18,11 +18,121 @@ namespace hpnmg {
 	//defines which Monte Carlo algorithm will be used
 	char algorithm = 3;
 	//amount of function calls for the Monte Carlo algorithm
-	int functioncalls = 10000;
+	int functioncalls = 5000;
 	//discretization factor for flowpipe construction
-	double dfactor = 0.01;
+	double dfactor = 0.1;
 	//jump depth needed for flowpipe construction
 	int jumpDepth = 5;
+
+
+   	std::vector<std::pair<double,double>>  ProbabilityOnFlowpipes::computeProbabilityOnFlowpipes(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax) {
+   		SingularAutomatonCreator transformer;
+   		SingularAutomatonWriter w;
+
+   		//calculate parametric location tree and singular automaton
+   		auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
+   		shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
+   		auto writer = new PLTWriter();
+   		writer->writePLT(plt, tMax);
+   		auto distributions = plt->getDistributionsNormalized();
+   		shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
+   		//if wanted: w.writeAutomaton(automaton,"singularAutomaton");
+
+   		map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
+   		HybridAutomatonHandler handler(automaton, tMax, false, mappingGT, hybridPetriNet->getGeneralTransitions().size());
+
+   		int transitions = hybridPetriNet->getGeneralTransitions().size();
+
+   		// Compute flowpipes
+   		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);
+   		//handler.plotTex("flowpipe_results", flowpipes);
+
+   		auto reachTree = handler.getReachTree();
+
+        std::vector<HPolytope<double>> polytopes;
+
+      		//iterate over the flowpipe segments
+      		//TODO use tree instead and access flopipes via nodes in order  to have access to their path
+      		for (std::pair<unsigned, HybridAutomatonHandler::flowpipe_t> & indexPair: flowpipes) {
+
+                //get polytope/box
+                std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
+
+                for (hypro::State_t<Number> &set: flowpipe) {
+                    Representation segment = std::get<Representation>(set.getSet());
+
+                    //halfspace intersection to filter for t <= tmax
+                    vector_t <Number> planeVectorTime = vector_t<Number>::Zero(3);
+                    planeVectorTime(0) = Number(1);
+                    Halfspace planeTime (planeVectorTime, Number(carl::rationalize<Number>(tMax)));
+                    auto intersection = segment.satisfiesHalfspace(planeTime);
+                    if (intersection.first != CONTAINMENT::NO){
+                        segment = intersection.second;
+
+                        //halfspace intersection to filter for x >= 5
+                        //TODO Formel parser
+                        vector_t <Number> planeVectorValue = vector_t<Number>::Zero(3);
+                        planeVectorValue(transitions + 1) = Number(-1);
+                        Halfspace planeValue (planeVectorValue, Number(-5));
+                        intersection = segment.satisfiesHalfspace(planeValue);
+                        if (intersection.first != CONTAINMENT::NO) {
+                            segment = intersection.second;
+
+
+                            //TODO Backwards analysis, intersection with initial set of current node
+
+
+                            //TODO Project and lift to get tube
+
+
+                            //TODO get predecessor node and flowpipe and intersect with tube
+
+
+
+
+
+                            //transform from Number to double, reduce to random variables only and add to vector of polytopes
+                            std::vector<Point<Number>> points = segment.vertices();
+                            std::vector<Point<double>> pointsDouble;
+                            if (!points.empty() && points.size() >= 0) {
+                                for (auto & point: points) {
+                                    std::vector<double> coordinates;
+                                    for (int i = 0; i < point.rawCoordinates().size(); i++){ //if only rv printed, it suffices to take:  for (int i = 1; i < transitions + 1; i++){
+                                        auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
+                                        cout << coordinate << ", ";
+                                        if (i > 0 && i <= transitions)
+                                            coordinates.push_back(coordinate);
+                                    }
+                                    cout << endl;
+                                    Point<double> newPoint = Point<double>(coordinates);
+                                    pointsDouble.push_back(newPoint);
+                                }
+                                polytopes.push_back(HPolytope<double>(pointsDouble));
+                            }
+
+                            cout << "next state" << endl;
+                        }
+                    }
+                }
+                cout << "next flowpipe" << endl;
+            }
+
+        cout << "numbers of polytopes to integrate: " << polytopes.size() << endl;
+        double error;
+        ProbabilityCalculator calculator;
+        double res = 0;//calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(polytopes, distributions, algorithm, functioncalls, error);
+
+        std::vector<std::pair<double,double>> results = {std::pair(res,error)};
+        printResults({printProperties}, {results});
+
+		return results;
+
+   	}
+
+
+
+
+
 
 	/**
 	 * Computes the probability that the given properties are fulfilled for a random state and timepoint
@@ -33,7 +143,7 @@ namespace hpnmg {
 	 * @param tMax time horizon for the PLT and flowpipe construction
 	 * @return probabilities for the given properties
 	 */
-	std::vector<std::pair<double,double>>  ProbabilityOnFlowpipes::computeProbabilityOnFlowpipes(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax) {
+	std::vector<std::pair<double,double>>  ProbabilityOnFlowpipes::computeProbabilityOnFlowpipesWithoutReset(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax) {
 		SingularAutomatonCreator transformer;
 		SingularAutomatonWriter w;
 
@@ -46,15 +156,12 @@ namespace hpnmg {
 		shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
 		//if wanted: w.writeAutomaton(automaton,"singularAutomaton");
 
-
         map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
         HybridAutomatonHandler handler(automaton, tMax, true, mappingGT, hybridPetriNet->getGeneralTransitions().size());
 
-
 		// Compute flowpipes
 		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);
-		//if wanted:
-		handler.plotTex("flowpipe_results", flowpipes);
+		//handler.plotTex("flowpipe_results", flowpipes);
 
 		std::vector<std::pair<double,double>> results;
 
@@ -85,7 +192,7 @@ namespace hpnmg {
 	 * @return probability for the given property
 	 * @param tMax
 	 */
-	std::vector<std::pair<double,double>> ProbabilityOnFlowpipes::computeProbabilityOnFlowpipes(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<int> propPlaces, std::vector<string> propOps, std::vector<double> propValues, bool conjunction, string printProperty, double tMax) {
+	std::vector<std::pair<double,double>> ProbabilityOnFlowpipes::computeProbabilityOnFlowpipesWithoutReset(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<int> propPlaces, std::vector<string> propOps, std::vector<double> propValues, bool conjunction, string printProperty, double tMax) {
 		SingularAutomatonCreator transformer;
 		SingularAutomatonWriter w;
 
@@ -185,11 +292,17 @@ namespace hpnmg {
 		double error = 0.0;
 		double totalError = 0.0;
 		double res = 0.0;
-		for(auto p : polytopes) {
-			//Missing: Multiply the probability for each flowpipe segment with the probability to reach the flowpipe segment
-			res += probability.getProbabilityForUnionOfPolytopesUsingMonteCarlo({p}, distributions, algorithm, functioncalls, error);
-			totalError += error;
-		}
+
+		cout << "Starting integration" << endl;
+
+//		for(auto p : polytopes) {
+//			//TODO Missing: Multiply the probability for each flowpipe segment with the probability to reach the flowpipe segment
+//			res += probability.getProbabilityForUnionOfPolytopesUsingMonteCarlo({p}, distributions, algorithm, functioncalls, error);
+//			totalError += error;
+//		}
+        res = probability.getProbabilityForUnionOfPolytopesUsingMonteCarlo(polytopes, distributions, algorithm, functioncalls, error);
+        totalError = error;
+
 
 		return std::pair(res,totalError);
 	}

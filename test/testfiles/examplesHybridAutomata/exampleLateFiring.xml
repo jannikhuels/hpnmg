@@ -6,10 +6,10 @@
         <discretePlace id="pd2" marking="0"/>
     </places>
     <transitions>
-        <generalTransition id="tg1" cdf="foldednormal" priority="0" weight="1.0E0" policy="resume">
-            <parameter name="mu" value="5.0"/>
-            <parameter name="sigma" value="3.0"/>
-        </generalTransition>
+        <generalTransition id="tg1" cdf="uniform" priority="0" weight="1.0E0" policy="resume">
+              <parameter name="a" value="0.0"/>
+              <parameter name="b" value="10.0"/>
+          </generalTransition>
         <continuousTransition id="tf1" rate="1.0"/>
     </transitions>
     <arcs>

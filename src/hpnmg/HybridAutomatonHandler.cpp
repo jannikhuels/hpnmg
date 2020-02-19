@@ -6,9 +6,11 @@ using namespace hypro;
 namespace hpnmg {
     using namespace std;
 
-    HybridAutomatonHandler::HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions):singularAutomaton(singular), reacher(automaton)  {//, automaton(std::make_unique<HybridAutomaton<Number>>()) {
+    HybridAutomatonHandler::HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions, bool aggregation, int clusterBound):singularAutomaton(singular), reacher(automaton)  {//, automaton(std::make_unique<HybridAutomaton<Number>>()) {
 
         this->numberGeneralTransitions = numberGeneralTransitions;
+        this->aggregation = aggregation;
+        this->clusterBound = clusterBound;
 
         //get number of variables
         if (dimPerFiring)
@@ -179,7 +181,11 @@ namespace hpnmg {
 
 
         hypro::Transition<Number> newTransition = hypro::Transition<Number>();
-        //newTransition.setAggregation(Aggregation::parallelotopeAgg);
+        if (aggregation) {
+            //newTransition.setAggregation(Aggregation::parallelotopeAgg);
+            newTransition.setAggregation(Aggregation::clustering);
+            newTransition.setClusterBound(clusterBound);
+        }
 
         //Find connected locations indices
         int index = 0;
@@ -338,7 +344,7 @@ namespace hpnmg {
     }
 
 
-    std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> HybridAutomatonHandler::computeFlowpipes(double maxTime, double timestep, int jumpDepth) {
+    std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> HybridAutomatonHandler::computeFlowpipes(double maxTime, double timestep, int jumpDepth, bool print) {
 
            std::vector<std::pair<unsigned, flowpipe_t>> flowpipes;
 
@@ -351,34 +357,70 @@ namespace hpnmg {
 
            // perform reachability analysis.
            flowpipes = reacher.computeForwardReachability();
-
+           cout << endl << "Flowpipe computation finished. Size: " << flowpipes.size() << endl;
            flowpipesComputed = true;
 
-           cout << endl;
 
-        for (auto &indexPair : flowpipes) {
-            std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
-            // Plot single flowpipe
-            for (auto &set : flowpipe) {
-                std::vector<Point<Number>> points = set.vertices();
-                if (!points.empty() && points.size() >= 0) {
-                    for (auto &point : points) {
+        // Test if we can get the tree and check its contents
+         auto reachtree = reacher.getReachabilityTree();
+         std::cout << "Reach tree depth: " << reachtree->getDepth()
+         << " and number nodes: "
+         << reachtree->getNumberNodes() << std::endl;
 
-                        for (int i = 0; i < point.rawCoordinates().size(); i++){
-                            auto coordinate = point.rawCoordinates()[i];
-                            cout << carl::convert<Number, double>(coordinate) << ", ";
+        // write tree in dot-format to file.
+        std::string dotString = reacher.getReachabilityTree()->getDotRepresentation();
+        std::fstream outfile = std::fstream("reachTree.gv", std::ios_base::out);
+        outfile << dotString;
+        outfile.close();
+
+
+            if (print) {
+                for (auto &indexPair : flowpipes) {
+                    std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
+                    // Plot single flowpipe
+                    for (auto &set : flowpipe) {
+                        std::vector<Point<Number>> points = set.vertices();
+                        if (!points.empty() && points.size() >= 0) {
+                            for (auto &point : points) {
+
+                                for (int i = 0; i < point.rawCoordinates().size(); i++) {
+                                    auto coordinate = point.rawCoordinates()[i];
+                                    cout << carl::convert<Number, double>(coordinate) << ", ";
+                                }
+                                cout << endl;
+                            }
+                            points.clear();
+                            cout << "new point set" << endl;
                         }
-                        cout << endl;
                     }
-                    points.clear();
-                    cout << "new point set" << endl;
+                    cout << "new flowpipe" << endl;
                 }
             }
-            cout << "new flowpipe" << endl;
-        }
 
            return flowpipes;
        }
+
+
+    ReachTree<hypro::State_t<Number>>* HybridAutomatonHandler::getReachTree(){
+
+        if (!flowpipesComputed) {
+            cout << "No reach tree exists.";
+        }
+
+        // Test if we can get the tree and check its contents
+        ReachTree<hypro::State_t<Number>>* reachtree = reacher.getReachabilityTree();
+         std::cout << "Reach tree depth: " << reachtree->getDepth()
+         << " and number nodes: "
+         << reachtree->getNumberNodes() << std::endl;
+
+        // write tree in dot-format to file.
+        std::string dotString = reacher.getReachabilityTree()->getDotRepresentation();
+        std::fstream outfile = std::fstream("reachTree.gv", std::ios_base::out);
+        outfile << dotString;
+        outfile.close();
+
+        return reachtree;
+    }
 
 
     void HybridAutomatonHandler::plotTex(string outputfile, std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes) {
