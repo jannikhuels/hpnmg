@@ -84,15 +84,15 @@ namespace hpnmg {
                         std::cout << "Skipping the invariant since the segment is empty!" << std::endl;
                         continue;
                     }
-                    std::cout << "New state for deterministic event is \n" << newStatePair.second.getSet() << std::endl;
+                    std::cout << "New state for deterministic event is \n" << std::get<hypro::CarlPolytope<Number>>(newStatePair.second.getSet()) << std::endl;
 
-                    auto constraintset = hypro::Converter<Number>::toConstraintSet(boost::get<hypro::CarlPolytope<Number>>(newStatePair.second.getSet()));
+                    auto constraintset = hypro::Converter<Number>::toConstraintSet(std::get<hypro::CarlPolytope<Number>>(newStatePair.second.getSet()));
                     hypro::Condition<Number> condition = hypro::Condition<Number>(constraintset);
 
 
                     std::cout << sep2 << "Creating new Location for deterministic event." << std::endl;
                     ParametricLocation newLoc = parser->addLocationForDeterministicEvent(mPetrinet->getDeterministicTransitions()["td0"],1.0,timePassed, currentParametricLocation, mPetrinet);
-                    hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, "deterministic event t=" + std::to_string(timePassed), condition);
+                    hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, "[deterministic event t=" + std::to_string(timePassed) + "] ", condition);
                     std::cout << sep2 << "Adding the new location to the locationQueue." << std::endl;
                     locationQueue.push_back({newLocation,newLoc});
                 }
@@ -109,7 +109,7 @@ namespace hpnmg {
                         halfspaceVector(0) = boundary;
                         halfspaceVector(1) = -boundary;
 
-                        std::cout << "state set before the intersection " << segment.getSets() << std::endl;
+                        std::cout << "state set before the intersection " << std::get<hypro::CarlPolytope<Number>>(segment.getSet()) << std::endl;
 
                         auto newStatePair = segment.satisfiesHalfspaces(halfspaceMatrix, halfspaceVector);
                         if(newStatePair.first == hypro::CONTAINMENT::NO || boundary==0) {  // fix test if x=0 the whole time (boundary == 0 is NOT safe)
@@ -119,13 +119,13 @@ namespace hpnmg {
                         //auto state = segment.intersectHalfspaces(halfspaceMatrix,halfspaceVector);
                         auto state = newStatePair.second;
                         auto set = state.getSet();
-                        std::cout << "New state for boundary event is \n" << set << std::endl;
+                        std::cout << "New state for boundary event is \n" << std::get<hypro::CarlPolytope<Number>>(set) << std::endl;
 
-                        auto constraintset = hypro::Converter<Number>::toConstraintSet(boost::get<hypro::CarlPolytope<Number>>(set));
+                        auto constraintset = hypro::Converter<Number>::toConstraintSet(std::get<hypro::CarlPolytope<Number>>(set));
                         hypro::Condition<Number> condition = hypro::Condition<Number>(constraintset);
 
                         // this probably can be done easier?
-                        auto carlPolytope = boost::get<hypro::CarlPolytope<Number>>(set);
+                        auto carlPolytope = std::get<hypro::CarlPolytope<Number>>(set);
 
                         //std::cout << "carl polytope is " << carlPolytope << " and " << carlPolytope.empty() << std::endl;
                         //std::cout << "carl polytope matrix is " << carlPolytope.matrix() << std::endl;
@@ -143,7 +143,7 @@ namespace hpnmg {
                         if(timeInterval.second == 5.5) { std::cout << "reached missing time interval" << std::endl;}
                         //std::cout << sep2 << "Creating new Location for boundary event (with time interval [" << timeInterval.first << "," << timeInterval.second << "])." << std::endl;
                         ParametricLocation newLoc = parser->addLocationForBoundaryEventByContinuousPlaceMember(mPetrinet->getContinuousPlaces()["pc1"],timeInterval, currentParametricLocation, mPetrinet);
-                        hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, "boundary event x=" + std::to_string(boundary), condition);
+                        hypro::Location<Number>* newLocation = processParametricLocation(newLoc, false, "[boundary event x=" + std::to_string(boundary) + "] ", condition);
                         std::cout << sep2 <<"Adding the new location to the locationQueue." << std::endl;
                         locationQueue.push_back({newLocation,newLoc});
 
