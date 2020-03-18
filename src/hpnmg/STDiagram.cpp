@@ -354,7 +354,7 @@ namespace hpnmg {
                     if(l[i].upper() == r[i].upper()) {
                         r[i] = carl::Interval<double>(r[i].lower(), r[i].upper()+1);
                     }
-                    bool twofold = l[i].difference(r[i], left, right);
+                    bool twofold = carl::set_difference(l[i], r[i], left, right);
                     if (twofold) {
                         res = duplicate(res, left, right);
                     } else {
@@ -388,7 +388,7 @@ namespace hpnmg {
                 for (int i = 0; i < size; i++) {
                     carl::Interval<double> intersection;
 
-                    intersection = l[i].intersect(r[i]);
+                    intersection = carl::set_intersection(l[i],r[i]);
                     res.push_back(intersection);
                 }
                 result.push_back(res);
@@ -418,7 +418,7 @@ namespace hpnmg {
                 for (int i = 0; i < size; i++) {
                     carl::Interval<double> left;
                     carl::Interval<double> right;
-                    bool twofold = l[i].unite(r[i], left, right);
+                    bool twofold = carl::set_union(l[i], r[i], left, right);
                     if (twofold) {
                         res = duplicate(res, left, right);
                     } else {
