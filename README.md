@@ -24,7 +24,7 @@ For some branches (`integrationOnPolytopes`, `nondeterministicRates`, `hybridAut
 #### Dependencies
 0. Install CMake.
    ```
-   sudo apt install cmake
+   $ sudo apt install cmake
    ```
 1. These are needed for both CArl and HyPro
    ```
