@@ -6,7 +6,7 @@
 
 Almost all dependencies can be installed via `apt`. Only [CArL](https://smtrat.github.io/carl/) and
 [Hypro](https://hypro.github.io/hypro/html/) need to be compiled manually. However, they register themselves with CMake
-upon compilation so that no steps other than compiling them need to be taken.
+upon compilation so that no steps other than compiling them need to be taken. 
 
 ##### A note on CArL and HyPro versions
 Not all versions of CArl and HyPro work with each other or with HPnmG. Unfortunately, it is not always so clear which
@@ -19,7 +19,13 @@ Not all versions of CArl and HyPro work with each other or with HPnmG. Unfortuna
 As of now (2019-07-22), you should be able to use [this revision](https://github.com/smtrat/carl/commit/ace90eb5daad)
 for CArl and [this one](https://github.com/hypro/hypro/commit/9d26f57b5f62) for HyPro.
 
+For some branches (`integrationOnPolytopes`, `nondeterministicRates`, `hybridAutomata`) you need the C++17 features of CArl. You should then use [this revision](https://github.com/smtrat/carl/commit/112ab9ffec0ce2252aec641c72905771c4729223) of CArl and [this one](https://github.com/hypro/hypro/commit/0754e84580dc0da450e809698f176a02e18bee25) for HyPro.
+
 #### Dependencies
+0. Install CMake.
+   ```
+   sudo apt install cmake
+   ```
 1. These are needed for both CArl and HyPro
    ```
    # gmp and gmpxx, the Gnu Multiprecision library and its C++ interface
@@ -64,7 +70,7 @@ command should include lines similar to these:
 -- Use system version of Eigen3 3.3.4
 
 ```
-Build carl with `make lib_carl`. This may take a minute.
+Build carl with `make carl`. This may take a minute.
 
 #### HyPro
 Download [HyPro](https://github.com/hypro/hypro) and pick a [version](#a-note-on-carl-and-hypro-versions)
