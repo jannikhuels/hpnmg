@@ -25,110 +25,152 @@ namespace hpnmg {
 	int jumpDepth = 5;
 
 
-   	std::vector<std::pair<double,double>>  ProbabilityOnFlowpipes::computeProbabilityOnFlowpipes(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax) {
-   		SingularAutomatonCreator transformer;
-   		SingularAutomatonWriter w;
-
-   		//calculate parametric location tree and singular automaton
-   		auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
-   		shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
-   		auto writer = new PLTWriter();
-   		writer->writePLT(plt, tMax);
-   		auto distributions = plt->getDistributionsNormalized();
-   		shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
-   		//if wanted: w.writeAutomaton(automaton,"singularAutomaton");
-
-   		map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
-   		HybridAutomatonHandler handler(automaton, tMax, false, mappingGT, hybridPetriNet->getGeneralTransitions().size());
-
-   		int transitions = hybridPetriNet->getGeneralTransitions().size();
-
-   		// Compute flowpipes
-   		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);
-   		//handler.plotTex("flowpipe_results", flowpipes);
-
-   		auto reachTree = handler.getReachTree();
-
-        std::vector<HPolytope<double>> polytopes;
-
-      		//iterate over the flowpipe segments
-      		//TODO use tree instead and access flopipes via nodes in order  to have access to their path
-      		for (std::pair<unsigned, HybridAutomatonHandler::flowpipe_t> & indexPair: flowpipes) {
-
-                //get polytope/box
-                std::vector<hypro::State_t<Number>> flowpipe = indexPair.second;
-
-                for (hypro::State_t<Number> &set: flowpipe) {
-                    Representation segment = std::get<Representation>(set.getSet());
-
-                    //halfspace intersection to filter for t <= tmax
-                    vector_t <Number> planeVectorTime = vector_t<Number>::Zero(3);
-                    planeVectorTime(0) = Number(1);
-                    Halfspace planeTime (planeVectorTime, Number(carl::rationalize<Number>(tMax)));
-                    auto intersection = segment.satisfiesHalfspace(planeTime);
-                    if (intersection.first != CONTAINMENT::NO){
-                        segment = intersection.second;
-
-                        //halfspace intersection to filter for x >= 5
-                        //TODO Formel parser
-                        vector_t <Number> planeVectorValue = vector_t<Number>::Zero(3);
-                        planeVectorValue(transitions + 1) = Number(-1);
-                        Halfspace planeValue (planeVectorValue, Number(-5));
-                        intersection = segment.satisfiesHalfspace(planeValue);
-                        if (intersection.first != CONTAINMENT::NO) {
-                            segment = intersection.second;
-
-
-                            //TODO Backwards analysis, intersection with initial set of current node
-
-
-                            //TODO Project and lift to get tube
-
-
-                            //TODO get predecessor node and flowpipe and intersect with tube
-
-
-
-
-
-                            //transform from Number to double, reduce to random variables only and add to vector of polytopes
-                            std::vector<Point<Number>> points = segment.vertices();
-                            std::vector<Point<double>> pointsDouble;
-                            if (!points.empty() && points.size() >= 0) {
-                                for (auto & point: points) {
-                                    std::vector<double> coordinates;
-                                    for (int i = 0; i < point.rawCoordinates().size(); i++){ //if only rv printed, it suffices to take:  for (int i = 1; i < transitions + 1; i++){
-                                        auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
-                                        cout << coordinate << ", ";
-                                        if (i > 0 && i <= transitions)
-                                            coordinates.push_back(coordinate);
-                                    }
-                                    cout << endl;
-                                    Point<double> newPoint = Point<double>(coordinates);
-                                    pointsDouble.push_back(newPoint);
-                                }
-                                polytopes.push_back(HPolytope<double>(pointsDouble));
-                            }
-
-                            cout << "next state" << endl;
-                        }
-                    }
-                }
-                cout << "next flowpipe" << endl;
-            }
-
-        cout << "numbers of polytopes to integrate: " << polytopes.size() << endl;
-        double error;
-        ProbabilityCalculator calculator;
-        double res = 0;//calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(polytopes, distributions, algorithm, functioncalls, error);
-
-        std::vector<std::pair<double,double>> results = {std::pair(res,error)};
-        printResults({printProperties}, {results});
-
-		return results;
-
-   	}
-
+//    double ProbabilityOnFlowpipes::computeProbabilityOnFlowpipes(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax, double &error) {
+//   		SingularAutomatonCreator transformer;
+//   		SingularAutomatonWriter w;
+//
+//   		//calculate parametric location tree and singular automaton
+//   		auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tMax));
+//   		shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
+//   		auto writer = new PLTWriter();
+//   		writer->writePLT(plt, tMax);
+//
+//   		//TODO re-think if this is the right order, probably own vector is needed
+//   		auto distributions = plt->getDistributionsNormalized();
+//   		shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
+//
+//   		map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
+//   		HybridAutomatonHandler handler(automaton, tMax, false, mappingGT, hybridPetriNet->getGeneralTransitions().size());
+//
+//   		int transitions = hybridPetriNet->getGeneralTransitions().size();
+//
+//   		// Compute flowpipes
+//   		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);
+//
+//        auto reachTree = handler.getReachTree();
+//
+//        //get root
+//        ReachTreeNode<State_t<Number>>* root = reachTree->getRoot();
+//
+//        error = 0.0;
+//        double result = recursivelyProbabilityForCurrentReachTreeNode(root, tMax, transitions, error);
+//
+//        cout << " [Probability] " << result << " [Error] " << error  << endl;
+//
+//		return result;
+//
+//   	}
+//
+//
+//    double ProbabilityOnFlowpipes::recursivelyProbabilityForCurrentReachTreeNode(ReachTreeNode<State_t<Number>>* node, double tMax, double transitions, double &error){
+//
+//            double localResult = 0.0;
+//            double localError = 0.0;
+//
+//
+//            //access flowpipe of current tree node
+//            Representation segment = std::get<Representation>(node->getState().getSet());
+//
+//            //halfspace intersection to filter for t <= tmax
+//            vector_t <Number> planeVectorTime = vector_t<Number>::Zero(3);
+//            planeVectorTime(0) = Number(1);
+//            Halfspace planeTime (planeVectorTime, Number(carl::rationalize<Number>(tMax)));
+//            auto intersection = segment.satisfiesHalfspace(planeTime);
+//
+//            //if intersection not empty
+//            if (intersection.first != CONTAINMENT::NO){
+//                segment = intersection.second;
+//
+//                //halfspace intersection to filter for x0 >= 5
+//                //TODO Formel parser
+//                vector_t <Number> planeVectorValue = vector_t<Number>::Zero(3);
+//                planeVectorValue(transitions + 1) = Number(-1);
+//                Halfspace planeValue (planeVectorValue, Number(-5));
+//                intersection = segment.satisfiesHalfspace(planeValue);
+//
+//                //if intersection not empty
+//                if (intersection.first != CONTAINMENT::NO) {
+//                    segment = intersection.second;
+//
+//                    localResult = backwardsAnalysisForCurrentFlowpipe(node, segment, transitions, localError);
+//
+//                }
+//
+//                //TODO check for conflict and iterate child nodes as follows:
+//                //if conflict, handle separately and take maximum
+//                //otherwise, handle and sum up
+//
+//
+//                //for all children of node
+//                for (auto childNode : node->getChildren()){
+//                    double currentError = 0.0;
+//                    localResult += recursivelyProbabilityForCurrentReachTreeNode(childNode, tMax, transitions, currentError);
+//                    localError += currentError;
+//                }
+//
+//            } else
+//                return 0.0;
+//
+//        cout << "next flowpipe" << endl;
+//    }
+//
+//
+//
+//
+//
+//    double ProbabilityOnFlowpipes::backwardsAnalysisForCurrentFlowpipe(ReachTreeNode<State_t<Number>>* node, Representation segment, double transitions, double &error){
+//
+//        //Multiplication over different flowpipes
+//        // double res = calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(polytopes, distributions, algorithm, functioncalls, error);
+//
+//        //TODO check for enabled distributions in current segment and integrate
+//
+//        //TODO IF previous event = general transition firing (how to check and how to get index of rv?):
+//
+//
+//             //Backwards analysis -> get segment and intersect with initial set of current node
+//             std::vector<HPolytope<double>> polytopes;
+//             auto calculator = new ProbabilityCalculator();
+//            //lift to get tube of fired rv
+//            //TODO get predecessor node and flowpipe and intersect with tube to get new segment
+//            //TODO store distributions of all enabled s in predecessor
+//
+//            //transform from Number to double, reduce to random variables only and add to vector of polytopes
+//            std::vector<Point<Number>> points = segment.vertices();
+//            std::vector<Point<double>> pointsDouble;
+//            if (!points.empty() && points.size() >= 0) {
+//                for (auto & point: points) {
+//                    std::vector<double> coordinates;
+//                    for (int i = 0; i < point.rawCoordinates().size(); i++){ //if only rv printed, it suffices to take:  for (int i = 1; i < transitions + 1; i++){
+//                        auto coordinate = carl::convert<Number, double>(point.rawCoordinates()[i]);
+//                        cout << coordinate << ", ";
+//                        if (i > 0 && i <= transitions) //TODO only if enabled
+//                            coordinates.push_back(coordinate);
+//                    }
+//                    cout << endl;
+//                    Point<double> newPoint = Point<double>(coordinates);
+//                    pointsDouble.push_back(newPoint);
+//                }
+//
+//                polytopes.push_back(HPolytope<double>(pointsDouble));
+//            }
+//
+//            cout << "next state" << endl;
+//            //repeat with predecessor node
+//
+//
+//        //ELSE (deterministic event)
+//
+//            //TODO get predecessor node and flowpipe and call function recursively
+//
+//
+//
+//
+//
+//
+//
+//    }
+//
 
 
 
@@ -156,8 +198,8 @@ namespace hpnmg {
 		shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
 		//if wanted: w.writeAutomaton(automaton,"singularAutomaton");
 
-        map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
-        HybridAutomatonHandler handler(automaton, tMax, true, mappingGT, hybridPetriNet->getGeneralTransitions().size());
+        //map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
+        HybridAutomatonHandler handler(automaton, tMax, hybridPetriNet->getGeneralTransitions().size());
 
 		// Compute flowpipes
 		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);
@@ -209,7 +251,7 @@ namespace hpnmg {
 		auto property = transformPropertyIntoFunction(automaton->getInitialGeneral().size(),automaton->getInitialContinuous().size(), propPlaces, propOps,propValues,conjunction);
 
         map<int,pair<int,int>> mappingGT = transformer.getMapNormalizedIndexToGeneralTransitionFiring();
-        HybridAutomatonHandler handler(automaton, tMax, true, mappingGT, hybridPetriNet->getGeneralTransitions().size());
+        HybridAutomatonHandler handler(automaton, tMax, hybridPetriNet->getGeneralTransitions().size());
 
 		// Compute flowpipes
 		std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes = handler.computeFlowpipes(tMax, dfactor, jumpDepth);

@@ -436,7 +436,7 @@ namespace hpnmg {
                 vector<double> timeDelta = getTimeDelta(arcItem.second, generalTransitionsFired,
                                                         generalIntervalBoundLeft, generalIntervalBoundRight, levels,
                                                         drifts);
-                if (timeDelta.empty())
+                 if (!timeDelta.empty() && (std::any_of(timeDelta.begin(), timeDelta.end(), [](double coefficient){ return coefficient != 0.0;})))
                     continue;
                 // timedelta is not minimal
                 if (find(timeDeltas.begin(), timeDeltas.end(), timeDelta) == timeDeltas.end())

@@ -23,9 +23,17 @@ namespace hpnmg {
 
 		std::vector<std::pair<double,double>> computeProbabilityOnFlowpipesWithoutReset(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax);
 
-        std::vector<std::pair<double,double>>  computeProbabilityOnFlowpipes(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax);
+        //double computeProbabilityOnFlowpipes(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<std::function<bool(int, Point<Number>)>> properties, std::vector<string> printProperties, double tMax, double &error);
 
 		std::vector<std::pair<double,double>> computeProbabilityOnFlowpipesWithoutReset(shared_ptr<HybridPetrinet>  hybridPetriNet, std::vector<int> propPlaces, std::vector<string> propOps, std::vector<double> propValues, bool conjunction, string printProperty, double tMax);
+
+
+    private:
+
+       //double recursivelyProbabilityForCurrentReachTreeNode(ReachTreeNode<State_t<Number>>* node, double tMax, double transitions, double &error);
+
+       //double backwardsAnalysisForCurrentFlowpipe(ReachTreeNode<State_t<Number>>* node, Representation segment, double transitions, double &error);
+
 
 		// Computes a polytope that fulfills a given property for each flowpipe segment.
 		std::vector<hypro::HPolytope<double>> computePolytopesThatFulfillProperty(std::vector<std::pair<unsigned, HybridAutomatonHandler::flowpipe_t>> flowpipes,std::function<bool(int, Point<Number>)> property ,int transitions);
@@ -44,6 +52,8 @@ namespace hpnmg {
 		void printResults(std::vector<string> properties, std::vector<std::pair<double,double>> res);
 
 		void printPointsOfPolytopes(std::vector<std::vector<Point<double>>> polytopes);
+
+
 
 	};
 

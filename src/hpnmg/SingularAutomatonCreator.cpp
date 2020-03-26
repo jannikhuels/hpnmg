@@ -206,12 +206,12 @@ namespace hpnmg {
         }
 
 
-        // all occurring events in this parametric location are general
-        if (allEventsAreGeneral) {
-            cout << "The parametric location tree contains a (considered) parametric location where only general events occur. "
-                 << "This might indicate, that the non-stochastic events first occur after the time horizon "
-                 << "and were cut by the time horizon. You might rerun with an increased time horizon." << endl;
-        }
+//        // all occurring events in this parametric location are general
+//        if (allEventsAreGeneral) {
+//            cout << "The parametric location tree contains a (considered) parametric location where only general events occur. "
+//                 << "This might indicate, that the non-stochastic events first occur after the time horizon "
+//                 << "and were cut by the time horizon. You might rerun with an increased time horizon." << endl;
+//        }
     }
 
     void SingularAutomatonCreator::transformEventIntoTransition(

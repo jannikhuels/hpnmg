@@ -38,7 +38,7 @@ namespace hpnmg {
 
     public:
 
-        HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions, bool aggregation = true, int clusterBound = 5);
+        HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, int numberGeneralTransitions, bool aggregation = true, int clusterBound = 5);
 
         using flowpipe_t = hypro::reachability::Reach<Number, hypro::reachability::ReachSettings, hypro::State_t<Number>>::flowpipe_t;
 
@@ -50,11 +50,11 @@ namespace hpnmg {
 
     private:
 
-        void addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions);
+        void addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime);
 
-        void addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions);
+        void addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition);
 
-        void setInitialState(vector<int> initial, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions) ;
+        void setInitialState(vector<int> initial);
 
     };
 

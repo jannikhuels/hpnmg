@@ -49,7 +49,7 @@ unsigned long getNumberOfEdges(const shared_ptr<SingularAutomaton>& automaton) {
     return numberOfEdges;
 }
 
-
+//NFM Case study
 TEST(HybridAutomaton, NondeterministicConflict) {
 
     cout << endl << "Nondeterministic computation started." << endl;
@@ -88,8 +88,8 @@ TEST(HybridAutomaton, example) {
 
 
 // setup
-    string filePath = "../../test/testfiles/example.xml";
-    double tauMax = 10.0;
+    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleNondeterminism4.xml";
+    double maxTime = 24.0;
 
 // read
     shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
@@ -97,14 +97,14 @@ TEST(HybridAutomaton, example) {
     auto parser = new ParseHybridPetrinet();
 
     clock_t begin0 = clock();
-    auto plt0 = parser->parseHybridPetrinet(hybridPetriNet, tauMax);
+    auto plt0 = parser->parseHybridPetrinet(hybridPetriNet, maxTime);
     clock_t end0 = clock();
     double elapsed_secs = double(end0 - begin0) / CLOCKS_PER_SEC;
     cout << "PLT build: " << elapsed_secs << " seconds" << endl;
 
 // transform
     begin0 = clock();
-    auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, tauMax));
+    auto treeAndAutomaton(transformer.transformIntoSingularAutomaton(hybridPetriNet, maxTime));
     shared_ptr<ParametricLocationTree> plt(treeAndAutomaton.first);
     shared_ptr<SingularAutomaton> automaton = transformer.addDistributions(treeAndAutomaton.second, plt0->getDistributionsNormalized());
     //shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
@@ -117,10 +117,10 @@ TEST(HybridAutomaton, example) {
     unsigned long l = getNumberOfLocations(automaton);
     unsigned long e = getNumberOfEdges(automaton);
 
-    cout << "t_max=" << tauMax << ", #PL=" << p << ", #Loc=" << l << ", #Edge=" << e << "\n" << endl;
+    cout << "t_max=" << maxTime << ", #PL=" << p << ", #Loc=" << l << ", #Edge=" << e << "\n" << endl;
 
 // write
-    PLTwriter.writePLT(plt, tauMax, "plt_example");
+    PLTwriter.writePLT(plt, maxTime, "plt_example");
 
     begin0 = clock();
     automatonWriter.writeAutomaton(automaton, "example");
@@ -330,7 +330,7 @@ TEST(HybridAutomaton, converter) {
     SingularAutomatonWriter automatonWriter;
 
 // setup
-    string filePath = "../../test/testfiles/examplesHybridAutomata/examplePauline2.xml";
+    string filePath = "../../test/testfiles/examplesHybridAutomata/exampleTwoFirings.xml";
     double tMax = 10.0;
 
 // read HPnG
@@ -348,7 +348,7 @@ TEST(HybridAutomaton, converter) {
 
 // Pass Singular Automaton to Handler
     shared_ptr<SingularAutomaton> automaton(treeAndAutomaton.second);
-    HybridAutomatonHandler handler(automaton, tMax, true, mappingGT, hybridPetriNet->getGeneralTransitions().size());
+    HybridAutomatonHandler handler(automaton, tMax, hybridPetriNet->getGeneralTransitions().size());
 
 // Compute flowpipes
     auto flowpipes = handler.computeFlowpipes(tMax, 0.1, 5);
@@ -364,7 +364,7 @@ bool Check1(int startIndex, Point<Number> point) {
 }
 
 //Probability computation (cannot handle non-deterministic choices yet)
-TEST(HybridAutomaton, probabilityWithoutReset) {
+TEST(HybridAutomaton, probability) {
 
 	using namespace hypro;
 
@@ -381,23 +381,24 @@ TEST(HybridAutomaton, probabilityWithoutReset) {
 
 
 
-//Function definition for probability computation, index 0 is time, startindex is index of first continuous variable
-bool Check2(int startIndex, Point<Number> point) {
-	return ((point.rawCoordinates()[0] <= 10) && (point.rawCoordinates()[startIndex] >= 5));
-}
-
-//Probability computation (cannot handle non-deterministic choices yet)
-TEST(HybridAutomaton, probabilityWithReset) {
-
-	using namespace hypro;
-
-	ProbabilityOnFlowpipes p;
-	ReadHybridPetrinet reader;
-
-	string filePath = "../../test/testfiles/examplesHybridAutomata/exampleLateFiring.xml";
-
-	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
-
-	double tMax = 10.0;
-    p.computeProbabilityOnFlowpipes(hybridPetriNet, {Check2}, {"x >= 5"}, tMax);
-}
+////Function definition for probability computation, index 0 is time, startindex is index of first continuous variable
+//bool Check2(int startIndex, Point<Number> point) {
+//	return ((point.rawCoordinates()[0] <= 10) && (point.rawCoordinates()[startIndex] >= 5));
+//}
+//
+////Probability computation (cannot handle non-deterministic choices yet)
+//TEST(HybridAutomaton, probabilityWithReset) {
+//
+//	using namespace hypro;
+//
+//	ProbabilityOnFlowpipes p;
+//	ReadHybridPetrinet reader;
+//
+//	string filePath = "../../test/testfiles/examplesHybridAutomata/exampleLateFiring.xml";
+//
+//	shared_ptr<HybridPetrinet> hybridPetriNet = reader.readHybridPetrinet(filePath);
+//
+//	double tMax = 10.0;
+//	double error = 0.0;
+//    p.computeProbabilityOnFlowpipes(hybridPetriNet, {Check2}, {"x >= 5"}, tMax, error);
+//}

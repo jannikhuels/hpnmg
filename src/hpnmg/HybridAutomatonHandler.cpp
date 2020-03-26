@@ -6,17 +6,17 @@ using namespace hypro;
 namespace hpnmg {
     using namespace std;
 
-    HybridAutomatonHandler::HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions, int numberGeneralTransitions, bool aggregation, int clusterBound):singularAutomaton(singular), reacher(automaton)  {//, automaton(std::make_unique<HybridAutomaton<Number>>()) {
+    HybridAutomatonHandler::HybridAutomatonHandler(shared_ptr<SingularAutomaton> singular, double maxTime, int numberGeneralTransitions, bool aggregation, int clusterBound):singularAutomaton(singular), reacher(automaton)  {//, automaton(std::make_unique<HybridAutomaton<Number>>()) {
 
         this->numberGeneralTransitions = numberGeneralTransitions;
         this->aggregation = aggregation;
         this->clusterBound = clusterBound;
 
         //get number of variables
-        if (dimPerFiring)
+        //if (dimPerFiring)
             g = singularAutomaton->getInitialGeneral().size();
-        else
-            g = numberGeneralTransitions;
+        //else
+            //g = numberGeneralTransitions;
         x = singularAutomaton->getInitialContinuous().size();
         c = singularAutomaton->getInitialDeterministic().size();
         v = g + x + c + 1;
@@ -27,7 +27,7 @@ namespace hpnmg {
         vector<int> initial;
         for (shared_ptr<SingularAutomaton::Location> originalLocation : singularAutomaton->getLocations()) {
 
-            addLocation(originalLocation, maxTime, dimPerFiring, mapGeneralTransitions);
+            addLocation(originalLocation, maxTime);
 
             if (singular->isInitialLocation(originalLocation))
                 initial.push_back(locations.size() - 1);
@@ -41,11 +41,11 @@ namespace hpnmg {
 
         //Add all transitions in list to automaton
         for (shared_ptr<SingularAutomaton::Transition> transition : originalTransitions) {
-            addTransition(transition, dimPerFiring, mapGeneralTransitions);
+            addTransition(transition);
         }
 
         //set initial state from initial location
-        setInitialState(initial, dimPerFiring, mapGeneralTransitions);
+        setInitialState(initial);
 
         //add locations and transitions to automaton
         for (int i = 0; i < locations.size(); i++) {
@@ -54,7 +54,7 @@ namespace hpnmg {
     }
 
 
-    void HybridAutomatonHandler::addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions) {
+    void HybridAutomatonHandler::addLocation(shared_ptr<SingularAutomaton::Location> originalLocation, double maxTime) {
 
         hypro::Location<Number> newLocation = hypro::Location<Number>();
 
@@ -137,10 +137,10 @@ namespace hpnmg {
             if (actG[i] != 0) {
 
                 int transition;
-                if (dimPerFiring)
+                //if (dimPerFiring)
                     transition = i;
-                else
-                    transition = mapGeneralTransitions.at(i).first;
+                //else
+                    //transition = mapGeneralTransitions.at(i).first;
 
                    flowMatrix(transition + 1, v) = Number(carl::rationalize<Number>(actG[i]));
                    cout << " | Flow g" << (transition + 1) << "'=" << actG[i];
@@ -177,7 +177,7 @@ namespace hpnmg {
     }
 
 
-    void HybridAutomatonHandler::addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions) {
+    void HybridAutomatonHandler::addTransition(shared_ptr<SingularAutomaton::Transition> originalTransition) {
 
 
         hypro::Transition<Number> newTransition = hypro::Transition<Number>();
@@ -251,11 +251,11 @@ namespace hpnmg {
             linearReset(varIndex, varIndex) = Number(0);
             cout << " | Reset Timed" << "(" << (varIndex-1) << ") =" << 0;
 
-        } else if (type == General && !dimPerFiring) {
+        } /*else if (type == General && !dimPerFiring) {
             int transition = mapGeneralTransitions.at(varIndex-1).first;
             linearReset(transition + 1, transition + 1) = Number(0);
             cout << " | Reset General" << "(" << transition << ") =" << 0;
-        }
+        }*/
 
         cout << endl;
 
@@ -272,7 +272,7 @@ namespace hpnmg {
     }
 
 
-    void HybridAutomatonHandler::setInitialState(vector<int> initial, bool dimPerFiring, map<int,pair<int,int>> mapGeneralTransitions) {
+    void HybridAutomatonHandler::setInitialState(vector<int> initial) {
 
         //get initial values
         vector<double> initG = singularAutomaton->getInitialGeneral();
@@ -293,10 +293,10 @@ namespace hpnmg {
         for (int i = 0; i < initG.size(); i++) {
 
             int transition;
-            if (dimPerFiring)
+            //if (dimPerFiring)
                 transition = i;
-            else
-                transition = mapGeneralTransitions.at(i).first;
+            //else
+                //transition = mapGeneralTransitions.at(i).first;
 
             boxVec(2 * transition + 2) = Number(-1 * carl::rationalize<Number>(initG[i]));
             boxVec(2 * transition + 3) = Number(carl::rationalize<Number>(initG[i]));
