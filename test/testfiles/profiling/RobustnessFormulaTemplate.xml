@@ -7,7 +7,7 @@
         <GoalFormula>
             <Negation>
                 <Formula>
-                    <ContinuousAtomicProperty place="ev" value="##esoc##" />
+                    <ContinuousAtomicProperty place="ev" value="50" />
                 </Formula>
             </Negation>
         </GoalFormula>

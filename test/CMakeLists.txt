@@ -3,6 +3,7 @@ include_directories(${GTEST_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/src)
 # Copy Model files for unit Tests
 # -----------------------------------------------------------------
 file(GLOB MODEL_TEST_FILES ${PROJECT_SOURCE_DIR}/test/testfiles/*.xml)
+file(GLOB MODEL_TEST_FILES ${PROJECT_SOURCE_DIR}/test/testfiles/profiling/*.xml)
 
 foreach(MODEL_FILE ${MODEL_TEST_FILES})
 	configure_file(${MODEL_FILE} ${PROJECT_BINARY_DIR}/test)
