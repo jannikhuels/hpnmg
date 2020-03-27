@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<STLFormula>
+    <Formula>
+        <Negation>
+            <Formula>
+                <Conjunction>
+                    <Formula>
+                        <Negation>
+                            <Formula>
+                                <DiscreteAtomicProperty place="in_lot" value="1" />
+                            </Formula>
+                        </Negation>
+                    </Formula>
+                    <Formula>
+                        <ContinuousAtomicProperty place="ev" value="30" />
+                    </Formula>
+                </Conjunction>
+            </Formula>
+        </Negation>
+    </Formula>
+</STLFormula>
