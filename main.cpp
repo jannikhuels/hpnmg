@@ -150,9 +150,10 @@ int main (int argc, char *argv[]) {
                             "[Model file]\t" <<
                             "[Read duration (ms)]\t" <<
                             "[Parse duration (ms)]\t" <<
+                            "[Locations]" <<
                             "[Model checking duration (ms)]\t" <<
                             "[Probability]\t[Error]" << endl <<
-                            "start\tmodel\tread\tparse\tcheck\tprob\terr" << endl;
+                            "start\tmodel\tread\tparse\tlocs\tcheck\tprob\terr" << endl;
     }
 
     //Remove line break from startTimeString
@@ -164,6 +165,8 @@ int main (int argc, char *argv[]) {
     if (mode == 1) {
         cout << "[Mode]: State space creation only was chosen." << endl;
         cout << "[Results]: " << resultfile << endl;
+        hpnmg::PLTWriter writer = hpnmg::PLTWriter();
+        writer.writePLT(make_shared<hpnmg::ParametricLocationTree>(checker.getPlt()), maxtime);
     } else {
         const auto startSatisfy = std::chrono::high_resolution_clock::now();
 
@@ -195,7 +198,7 @@ int main (int argc, char *argv[]) {
     const auto totalTime= std::chrono::duration_cast<std::chrono::milliseconds>(endTotal - startTotal).count();
     cout << "[Complete]: " << totalTime  << endl;
 
-    resultfilestream << "\t" << totalTime << "\t" << prob << "\t" << err;
+    resultfilestream << "\t" << checker.getPlt().getAllLocations().size() << "\t" << totalTime << "\t" << prob << "\t" << err;
 
     // Write appendix to resultfile
     for (string s : appendix) {

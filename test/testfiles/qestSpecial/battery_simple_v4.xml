@@ -25,7 +25,7 @@
             <parameter name="b" value="10.0"/>
         </generalTransition>
         <!-- transition td0: charge to no charge -->
-        <deterministicTransition id="td0" discTime="8.0" priority="1" weight="1.0E0"/>
+        <deterministicTransition id="td0" discTime="1.0" priority="1" weight="1.0E0"/>
         <!-- transition demand level -->
         <deterministicTransition id="tdl01" discTime="5.0" priority="1" weight="1.0E0"/>
         <!--<deterministicTransition id="tdl12" discTime="2.0" priority="1" weight="1.0E0"/>

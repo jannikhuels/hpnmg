@@ -26,6 +26,10 @@ namespace hpnmg {
         INFOLOG("hpnmg.RegionModelChecker", "[Number of Model dimensions]:" << this->plt.getDimension())
     }
 
+    ParametricLocationTree RegionModelChecker::getPlt() {
+        return plt;
+    }
+
     std::pair<double, double> RegionModelChecker::satisfies(const Formula &formula, double atTime) {
         double probability = 0.0;
         double error = 0.0;
@@ -58,7 +62,7 @@ namespace hpnmg {
                 std::cout << STDPolytope<double>(integrationDomains[0]) << std::endl;
 
             double nodeError = 0.0;
-            probability += calculator.getProbabilityForUnionOfPolytopesUsingDirectMonteCarlo(
+            probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
                 integrationDomains,
                 this->plt.getDistributionsNormalized(),
                 3,

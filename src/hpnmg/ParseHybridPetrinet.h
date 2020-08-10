@@ -12,7 +12,7 @@ namespace hpnmg {
         vector<string> continuousPlaceIDs;
         vector<string> deterministicTransitionIDs;
         vector<string> generalTransitionIDs;
-        vector<ParametricLocationTree::Node> locationQueue;
+        list<ParametricLocationTree::Node> locationQueue;
 
         std::vector<std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>>> sortByEqualTimeDelta(std::vector<pair<shared_ptr<DeterministicTransition>, vector<double>>> deterministicTransitions);
 

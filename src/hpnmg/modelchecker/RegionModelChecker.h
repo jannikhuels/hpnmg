@@ -39,6 +39,8 @@ namespace hpnmg {
          */
         std::pair<double, double> satisfies(const Formula &formula, double atTime);
 
+        ParametricLocationTree getPlt();
+
     private:
         STDPolytope<mpq_class> cfml(const ParametricLocationTree::Node& node, const string& placeIndex, int value, bool negate = false);
         STDPolytope<mpq_class> dfml(const ParametricLocationTree::Node &node, const string& placeIndex, int value, bool negate = false);

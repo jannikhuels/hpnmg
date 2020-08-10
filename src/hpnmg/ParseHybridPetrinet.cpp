@@ -49,7 +49,7 @@ namespace hpnmg {
         STOP_BENCHMARK_OPERATION("READ_PLT")
 
         while (!locationQueue.empty()) {
-            processNode(locationQueue[0], hybridPetrinet, maxTime, mode);
+            processNode(locationQueue.front(), hybridPetrinet, maxTime, mode);
             locationQueue.erase(locationQueue.begin());
         }
 
@@ -364,10 +364,16 @@ namespace hpnmg {
                     if (timeDelta[k] != timeDelta2[k])
                         duplicate = false;
                 if (duplicate) {
-                    if (timeDelta[0] < timeDelta2[0])
+                    if (timeDelta[0] < timeDelta2[0]) {
                         timeDeltas.erase(timeDeltas.begin() + j);
-                    else
+                        i--;
+                        j--;
+                    }
+                    else {
                         timeDeltas.erase(timeDeltas.begin() + i);
+                        i--;
+                        j--;
+                    }
 
                 }
             }
