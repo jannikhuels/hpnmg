@@ -39,6 +39,7 @@ namespace hpnmg {
         size_t dimension() const { return this->hPolytope.dimension(); }
         size_t effectiveDimension() const;
         bool empty() const;
+        size_t size() const { return this->hPolytope.size(); }
 
         /**
          * Inserts a new half space into the polytope. That is, intersects the underlying polytope and all open facets

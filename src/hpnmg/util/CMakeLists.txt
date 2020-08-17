@@ -1,2 +1,2 @@
-add_subdirectory(logging)
+padd_subdirectory(logging)
 add_subdirectory(statistics)

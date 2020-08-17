@@ -379,7 +379,9 @@ ProbabilityCalculator::ProbabilityCalculator(){}
             return 0.0;
         }
 
+        START_BENCHMARK_OPERATION("CHECK_NUMBER_VERTICES")
         auto vertices = region.vertices();
+        STOP_BENCHMARK_OPERATION("CHECK_NUMBER_VERTICES")
         if (vertices.empty()) {
             STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_POLYTOPE")
             return 0.0;
@@ -402,8 +404,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         assert(distributions.size() == region.dimension());
         double result = 0.0;
 
+        START_BENCHMARK_OPERATION("SIMPLEX_INTEGRATION")
         for(const auto &simplex : Triangulation::create(region))
         {
+            COUNT_STATS("SIMPLEX_INTEGRATION")
             std::vector<std::pair<std::vector<double>, std::vector<double>>> integrationIntervals = simplex.getIntegrationIntervals();
 
             allDims all;
@@ -458,10 +462,11 @@ ProbabilityCalculator::ProbabilityCalculator(){}
                 }
             }
 
-
+            START_BENCHMARK_OPERATION("GSL_INTEGRATION")
             result += computeMultivariateIntegralUsingMonteCarlo(functioncalls, all, allPlus,  allMinus, algorithm, error);
+            STOP_BENCHMARK_OPERATION("GSL_INTEGRATION")
         }
-
+        STOP_BENCHMARK_OPERATION("SIMPLEX_INTEGRATION")
         STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_POLYTOPE")
         return result;
     }
@@ -617,6 +622,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         const int dim = distributionsNormalized.size();
 
+        START_BENCHMARK_OPERATION("BOUNDING_BOX_COMPUTATION")
         std::vector<hypro::Box<double>> boxes;
         std::transform(polytopes.begin(), polytopes.end(),std::back_inserter(boxes),[](hypro::HPolytope<double> polytope){
             return hypro::Converter<double>::toBox(polytope);
@@ -626,8 +632,10 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         for (auto box : boxes) {
             boundingBox = boundingBox.unite(box);
         }
+        STOP_BENCHMARK_OPERATION("BOUNDING_BOX_COMPUTATION")
 
         //Integration
+        START_BENCHMARK_OPERATION("GSL_INTEGRATION")
 
         if (dim > 0) {
 
@@ -701,6 +709,7 @@ ProbabilityCalculator::ProbabilityCalculator(){}
 
         result = resultAll;
         error = errorAll;
+        STOP_BENCHMARK_OPERATION("GSL_INTEGRATION")
         STOP_BENCHMARK_OPERATION("PROBABILITY_INTEGRATION_DIRECT")
         return result;
 
@@ -988,6 +997,8 @@ ProbabilityCalculator::ProbabilityCalculator(){}
     }
 
     double ProbabilityCalculator::functionToDirectIntegrateMonteCarlo(double *k, size_t dim, void *params) {
+        COUNT_STATS("CONTAINS")
+        START_BENCHMARK_OPERATION("POLYTOPE_CONTAINS")
         functionToDirectIntegrateMonteCarloParams functionParams = *((functionToDirectIntegrateMonteCarloParams *)params);
 
         auto point = hypro::Point<double>(std::vector<double>(k, k + dim));
@@ -995,16 +1006,18 @@ ProbabilityCalculator::ProbabilityCalculator(){}
         bool contains = std::any_of(functionParams.unionOfPolytopes.begin(), functionParams.unionOfPolytopes.end(), [&point](const hypro::HPolytope<double> &polytope) {
            return polytope.contains(point);
         });
-
+        STOP_BENCHMARK_OPERATION("POLYTOPE_CONTAINS")
         if (!contains) {
             return 0;
         }
+
+        START_BENCHMARK_OPERATION("POLYTOPE_DENSITY")
 
         double result = 1;
         for (int i = 0; i < dim; i++) {
             result *= getDensity(functionParams.distributions.at(i), point.at(i));
         }
-
+        STOP_BENCHMARK_OPERATION("POLYTOPE_DENSITY")
         return result;
 
     }

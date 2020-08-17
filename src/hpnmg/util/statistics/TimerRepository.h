@@ -29,10 +29,20 @@ namespace hpnmg {
                 auto timerIt = timerMap.find(name);
                 if(timerIt == timerMap.end()) {
                     timerMap[name] = new OperationTimer();
-                    timerMap[name]->start();
+                    try {
+                        timerMap[name]->start();
+                    } catch(const std::exception& e) {
+                        throw std::logic_error("Timer with name " + name + " already started.");
+                    }
                     return;
                 }
-                timerIt->second->start();
+
+                try {
+                    timerIt->second->start();
+                } catch(const std::exception& e) {
+                    throw std::logic_error("Timer with name " + name + " already started.");
+                }
+
             }
 
             void reset() {

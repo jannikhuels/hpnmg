@@ -206,6 +206,7 @@ namespace hpnmg {
                         WARNLOG("hpnmg.ParseHybridPetriNet", "Maximum number of locations (" << nodeMax << ") reached. Some locations may not be shown.")
                 }
             }
+            STOP_BENCHMARK_OPERATION("CREATE_PARAMETRICLOCATION")
             return; // no other event has to be considered
         }
 

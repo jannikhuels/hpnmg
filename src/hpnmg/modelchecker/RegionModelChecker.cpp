@@ -35,31 +35,54 @@ namespace hpnmg {
         double error = 0.0;
         auto calculator = ProbabilityCalculator();
 
-        for (auto &node : this->plt.getCandidateLocationsForTime(atTime)) {
+        auto numberOfNodes = 0;
+        auto numberOfConstraints = 0;
+
+        auto candidates = this->plt.getCandidateLocationsForTime(atTime);
+
+        for (auto &node : candidates) {
+            numberOfNodes++;
+            node.computeRegion(this->plt);
+            numberOfConstraints += node.getRegion().size();
+        }
+        TRACELOG("hpnmg.RegionModelChecker", "[Total number of constraints]: " << numberOfConstraints);
+        TRACELOG("hpnmg.RegionModelChecker", "[Total number of polytopes]: " << numberOfNodes);
+        TRACELOG("hpnmg.RegionModelChecker", "[Average number of constraints]: " << numberOfConstraints/numberOfNodes);
+
+        for (auto &node : candidates) {
+
             COUNT_STATS("MODELCHECKING_OVERALL")
             START_BENCHMARK_OPERATION("MODELCHECKING_OVERALL")
+            START_BENCHMARK_OPERATION("MODELCHECKING_PREPARATION")
             TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Computing STD region.")
             node.computeRegion(this->plt);
 
             TRACELOG("hpnmg.RegionModelChecker", "Done. Dimensions: (vertex dim, effective dim) = (" << node.getRegion().dimension() << ", " << node.getRegion().effectiveDimension() << ")")
 
             TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Computing sat.")
+            START_BENCHMARK_OPERATION("MODELCHECKING_SATISFIESHANDLER")
             const auto& sat = this->satisfiesHandler(node, formula, atTime);
+            STOP_BENCHMARK_OPERATION("MODELCHECKING_SATISFIESHANDLER")
             TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Computing time slice of " << sat.size() << " polytopes.")
+            START_BENCHMARK_OPERATION("MODELCHECKING_INTEGRATIONDOMAINS")
             std::vector<hypro::HPolytope<double>> integrationDomains{};
             // Add all result polytopes intersected with the check-time hyperplane to sat
             std::transform(sat.begin(), sat.end(), std::back_inserter(integrationDomains), [atTime](const STDPolytope<mpq_class> &region) {
                 return convertHPolytope(region.timeSlice(atTime));
             });
+            STOP_BENCHMARK_OPERATION("MODELCHECKING_INTEGRATIONDOMAINS")
+            START_BENCHMARK_OPERATION("MODELCHECKING_INTEGRATIONDOMAINS_ERASE")
             integrationDomains.erase(
                 std::remove_if(integrationDomains.begin(), integrationDomains.end(), [](const auto &region) { return region.empty(); }),
                 integrationDomains.end()
             );
+            STOP_BENCHMARK_OPERATION("MODELCHECKING_INTEGRATIONDOMAINS_ERASE")
 
             TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Integrating over " << integrationDomains.size() << " time slices.")
 
             if (integrationDomains.size())
                 std::cout << STDPolytope<double>(integrationDomains[0]) << std::endl;
+            STOP_BENCHMARK_OPERATION("MODELCHECKING_PREPARATION")
 
             double nodeError = 0.0;
             probability += calculator.getProbabilityForUnionOfPolytopesUsingMonteCarlo(
@@ -73,7 +96,6 @@ namespace hpnmg {
             TRACELOG("hpnmg.RegionModelChecker", "[Location " << node.getNodeID() << "]: Running total probability: " << probability)
             error += nodeError;
         }
-
         return {probability, error};
     }
 
